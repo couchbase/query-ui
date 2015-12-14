@@ -56,7 +56,8 @@
 
     qc.query = query;
     qc.save = save;
-
+    qc.save_query = save_query;
+    
     //
     // options for the two Ace editors, the input and the output
     //
@@ -261,7 +262,7 @@
     //
 
     var dialogScope = $rootScope.$new(true);
-    dialogScope.file = {name: "data.json"};
+    dialogScope.data_file = {name: "data.json"};
 
     function save() {
       var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
@@ -274,6 +275,9 @@
       }
 
       // but for those that do, get a name for the file
+      dialogScope.file_type = 'json ';
+      dialogScope.file = dialogScope.data_file;
+      
       var promise = $uibModal.open({
         templateUrl: '/query/ui/file_dialog/mn_query_file_dialog.html',
         scope: dialogScope
@@ -283,6 +287,41 @@
       promise.then(function (res) {
         //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
         var file = new Blob([qc.lastResult.result],{type: "text/json"});
+        saveAs(file,dialogScope.file.name);
+      });
+    };
+
+
+    //
+    // save the current query to a file. Here we need to use a scope to to send the file name
+    // to the file name dialog and get it back again.
+    //
+
+    dialogScope.query_file = {name: "n1ql_query.txt"};
+
+    function save_query() {
+      var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
+
+      // safari does'nt support saveAs
+      if (isSafari) {
+        var file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
+        saveAs(file,dialogScope.query_file.name);      
+        return;
+      }
+
+      // but for those that do, get a name for the file
+      dialogScope.file_type = 'query ';
+      dialogScope.file = dialogScope.query_file;
+
+      var promise = $uibModal.open({
+        templateUrl: '/query/ui/file_dialog/mn_query_file_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      // now save it
+      promise.then(function (res) {
+        //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
+        var file = new Blob([qc.lastResult.result],{type: "text/plain"});
         saveAs(file,dialogScope.file.name);
       });
     };

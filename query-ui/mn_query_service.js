@@ -18,7 +18,7 @@
     mnQueryService.isSelected = function(checkTab) {return mnQueryService.outputTab === checkTab;};
 
     mnQueryService.outputTab = 1;     // remember selected output tab
-    mnQueryService.limit = {max: 50};
+    mnQueryService.limit = {max: 100};
     
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -243,16 +243,16 @@
 
       var queryData = {statement: queryText};
       var credString = "";
-//      for (var i = 0; i < mnQueryService.buckets.length; i++) { 
-//        if (credString.length > 0)
-//          credString += ",";
-//
-//        var pw = mnQueryService.buckets[i].password ? 
-//            mnQueryService.buckets[i].password : "";
-//
-//            credString += '{"user":"local:'+mnQueryService.buckets[i].id+'","pass":"' + 
-//            pw +'"}';
-//      }
+      for (var i = 0; i < mnQueryService.buckets.length; i++) { 
+        if (credString.length > 0)
+          credString += ",";
+
+        var pw = mnQueryService.buckets[i].password ? 
+            mnQueryService.buckets[i].password : "";
+
+            credString += '{"user":"local:'+mnQueryService.buckets[i].id+'","pass":"' + 
+            pw +'"}';
+      }
 
       if (credString.length > 0)
         queryData.creds = '[' + credString + ']';
@@ -381,20 +381,27 @@
         refreshAutoCompleteArray();      
 
         //
-        // after the screen refreshes, find out which buckets require passwords
+        // get the passwords from the REST API (how gross!)
         //
         
-//        if (bucket_names.length > 0) $timeout(function(){
-//        	mnQueryService.authenticateBuckets(bucket_names,passwords,
-//        			function(data, status, headers, config) {
-//        		if (data && data.success) for (var i=0; i < data.success.length; i++) 
-//        			mnQueryService.buckets[i].passwordNeeded = !data.success[i]; 
-//        	},
-//        	function(data, status, headers, config) {
-//        		console.log(data.errors);
-//        	}
-//        	);
-//        },10);
+        res1 = mnHttp.get("/pools/default/buckets")
+        .success(function(data) {
+          //
+          // bucket data should be an array of objects, where each object has
+          // 'name' and  'saslPassword' fields (amoung much other data)
+          //
+          
+          if (_.isArray(data)) _.forEach(data, function(bucket, index) {
+            if (bucket.name && _.isString(bucket.saslPassword)) 
+              _.forEach(mnQueryService.buckets, function(mBucket, i) {
+                if (mBucket.id === bucket.name) {
+                  mBucket.password = bucket.saslPassword;
+                  return(false);
+                }
+              });
+          });
+            
+        });
 
 
         mnQueryService.busyGettingBuckets = false;
