@@ -1,0 +1,89 @@
+
+<div id="query_ui" mn-spinner="queryInProgress" class="contents">
+
+
+	<div class="ui-layout-center">
+	<div id="query_box" class="query_box" style="height: 200px">
+		<div class="shadow_box" style="height: 180px">
+			<div class="header_2">
+				<h4 style="float: left; line-height: 34px;">N1QL Statement</h4>
+				<div class="right" style="overflow: hidden; line-height: 34px;">
+					Result limit: <input type="text" ng-model="limit.max"
+						ng-pattern="/^[0-9]+$/" /> <a ng-click="prev()" class="btn_1"
+						ng-class="{dynamic_disabled: !hasPrev()}"><span>&uarr;</span></a>
+					<a ng-click="next()" class="btn_1"
+						ng-class="{dynamic_disabled: !hasNext()}"><span>&darr;</span></a>
+					<a ng-click="query()" class="btn_1" 
+						ng-class="{dynamic_disabled: busyExecutingQuery()}"><span>Execute</span></a>
+					<!-- a ng-click="explain()" class="btn_1 dynamic_enabled"><span>Explain</span></a -->
+				</div>
+			</div>
+			<ui-codemirror ui-codemirror-opts="queryEditorOptions"
+				ng-model="lastResult.query" query-editor></ui-codemirror>
+		</div>
+	</div>
+
+	<div id="result_box" class="result_box" >
+		<div class="shadow_box" style="height: 60vh; resizable: both">
+			<div class="header_2">
+				<h4 style="float: left; line-height: 34px; padding-right: 15px">Results</h4>
+
+				<ul class="tabs"
+					style="float: left; line-height: 34px; padding-right: 15px">
+					<li class="tab_left"><a ng-click="selectTab(1)"
+						ng-class="{selected: isSelected(1)}">JSON</a></li>
+					<li class="tab_middle"><a ng-click="selectTab(2)"
+						ng-class="{selected: isSelected(2)}">Table</a></li>
+					<!-- li class="tab_middle"><a ng-click="selectTab(4)"
+						ng-class="{selected: isSelected(4)}">Table2</a></li-->
+					<li class="tab_right"><a ng-click="selectTab(3)"
+						ng-class="{selected: isSelected(3)}">Tree</a></li>
+				</ul>
+
+				<div class="right" style="overflow: hidden; line-height: 34px;">
+					<a ng-click="save()" class="btn_1 dynamic_enabled"><span>Save</span></a>
+				</div>
+			</div>
+
+
+			<div ng-hide="lastResult.hide" class="panes">
+				<div class="views_list">
+					<table class="list">
+						<thead>
+							<tr>
+								<th style="text-align: center;">Status</th>
+								<th style="text-align: center;">Elapsed Time</th>
+								<th style="text-align: center;">Execution Time</th>
+								<th style="text-align: center;">Result Count</th>
+								<th style="text-align: center;">Result Size</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-model="lastResult">
+								<td class="ajtd-value">{{lastResult.status}}</td>
+								<td class="ajtd-value">{{lastResult.elapsedTime}}</td>
+								<td class="ajtd-value">{{lastResult.executionTime}}</td>
+								<td class="ajtd-value">{{lastResult.resultCount}}</td>
+								<td class="ajtd-value">{{lastResult.resultSize}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<ui-codemirror style="height:55vh" ng-show="isSelected(1)"
+				ui-codemirror-opts="resultsEditorOptions"
+				ng-model="lastResult.result"></ui-codemirror>
+			<div style="height: 50vh; margin: 0em" ng-show="isSelected(2)"
+				class="shadow_box ajtd-scrollable" mn-json-table="lastResult.result"></div>
+			<!-- div style="height: 50vh; margin: 0em" ng-show="isSelected(4)"
+				class="shadow_box ajtd-scrollable" mn-json-tables="lastResult.data"></div -->
+
+			<!-- div style="height: 50vh; margin: 0em" ng-show="isSelected(3)"
+				class="shadow_box ajtd-scrollable" mn-json-tree="lastResult.result"></div -->
+		</div>
+
+	</div>
+	</div>
+</div>
+</body>

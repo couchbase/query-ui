@@ -1,0 +1,138 @@
+
+<div id="query_pane" style="background-color: #f0f0f0"
+	ng-controller="mnQueryController as qc"
+	class="container ui-layout-center">
+
+	<div id="query_ui" mn-spinner="queryInProgress" class="contents">
+
+
+		<div id="query_box" class="query_box">
+			<row class="query_header align-right cbui-header-oldgray"
+				style="margin-right: 0em; margin-left: 0em; overflow: hidden; line-height: 34px;">
+			<span class="left" style="float: left">
+				<h4 style="float: left; line-height: 34px;">Query History</h4>&nbsp
+				<a title="View previous queries/results" ng-click="qc.prev()"
+				class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}"><span>&uarr;</span></a>
+				<a title="View subsequent queries/results" ng-click="qc.next()"
+				class="btn_1 cbui-rightmargin"
+				ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&darr;</span></a>
+			</span> <a ng-click="qc.save_query()" class="btn_1"
+				ng-class="{dynamic_disabled: busyExecutingQuery()}"> <span>Save
+					Query</span></a> </row>
+			<row id="query_editor" ui-ace="qc.aceInputOptions"
+				style="height: 120px" ng-model="qc.lastResult.query">Ace</row>
+			<row class="query_header cbui-header-oldgray" style="height: 30px"> <a
+				ng-click="qc.query()" class="btn_1 cbui-query-executebutton"
+				ng-class="{dynamic_disabled: busyExecutingQuery()}"
+				title="(or hit enter after a semicolon)"> <span>Execute</span></a> <span
+				class="right cbui-query-resultsnumber" style="float: right">
+				Result limit: <input type="number" placeholder="50"
+				ng-model="qc.limit.max" ng-pattern="/^[0-9]+$/" required
+				style="width: 4em" />
+			</span> </row>
+		</div>
+
+		<!-- Next we want the metadata and result boxes side by side -->
+		<row class="align-top">
+		<div id="metadata" class="cbui-column25">
+			<div id="sidebar_header" class="header_2" style="">
+				<h4 style="float: left; display: table-row; line-height: 34px;">
+					<img ng-hide="qc.busyGettingIndexedBuckets"
+						ng-click="qc.updateBuckets()" style="height: 0.75em"
+						src="/query/ui/images/spinner/spinner_lightbox_static.gif" /> <img
+						ng-show="qc.busyGettingIndexedBuckets" style="height: 0.75em"
+						src="/query/ui/images/spinner/spinner_lightbox.gif" /> Metadata
+				</h4>
+			</div>
+			<div id="sidebar_body"
+				style="margin: 0.5em; background-color: #ffffff; flex: 1 1 auto; -webkit-flex: 1 1 auto">
+				<div title="Buckets with a primary index support all queries.">
+					Fully Queryable Buckets
+					<ul style="margin-left: 0.5em">
+						<li class="bucket" ng-repeat="bucket in qc.buckets"
+							ng-show="bucket.has_prim">
+							<div bucket-display="bucket"></div>
+						</li>
+					</ul>
+				</div>
+
+				<div
+					title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">
+					Queryable on Indexed Fields
+					<ul style="margin-left: 0.5em">
+						<li class="bucket" ng-repeat="bucket in qc.buckets"
+							ng-show="!bucket.has_prim && bucket.has_sec">
+							<div bucket-display="bucket"></div>
+						</li>
+					</ul>
+				</div>
+
+				<div title="Buckets with no index cannot be queried.">
+					Non-Indexed Buckets
+					<ul style="margin-left: 0.5em">
+						<li class="bucket" ng-repeat="bucket in qc.buckets"
+							ng-show="!bucket.has_prim && !bucket.has_sec">
+							<div bucket-display="bucket"></div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<!-- Result panel -->
+		<div id="result_box" class="cbui-column75"
+			style="border-left: 1px solid black;">
+			<div id="result_inner">
+				<div id="result_header" class="header_2">
+
+					<h4
+						style="float: left; overflow: hidden; line-height: 34px; padding-right: 10px">Results</h4>
+
+					<ul class="tabs"
+						style="float: left; line-height: 34px; padding-right: 15px">
+						<li class="tab_left"><a ng-click="qc.selectTab(1)"
+							ng-class="{selected: qc.isSelected(1)}">JSON</a></li>
+						<li class="tab_middle"><a ng-click="qc.selectTab(2)"
+							ng-class="{selected: qc.isSelected(2)}">Table</a></li>
+						<li class="tab_right"><a ng-click="qc.selectTab(3)"
+							ng-class="{selected: qc.isSelected(3)}">Tree</a></li>
+					</ul>
+					<a style="float: right; overflow: hidden; line-height: 34px;"
+						ng-click="qc.save()" class="btn_1 dynamic_enabled"><span>Save</span></a>
+				</div>
+
+
+				<div id="result_summary" ng-hide="qc.lastResult.hide" class="panes">
+					<div class="views_list">
+						<table class="list">
+							<thead>
+								<tr>
+									<th style="text-align: center;">Status:
+										{{qc.lastResult.status}}</th>
+									<th style="text-align: center;">Elapsed:
+										{{qc.lastResult.elapsedTime}}</th>
+									<th style="text-align: center;">Execution:
+										{{qc.lastResult.executionTime}}</th>
+									<th style="text-align: center;">Result Count:
+										{{qc.lastResult.resultCount}}</th>
+									<th style="text-align: center;">Result Size:
+										{{qc.lastResult.resultSize}}</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+
+				<div id="result_editor" ui-ace="qc.aceOutputOptions"
+					ng-if="qc.isSelected(1)" ng-model="qc.lastResult.result" style="">Ace</div>
+				<div id="result_table" style="margin: 0em; overflow: auto"
+					ng-if="qc.isSelected(2)" mn-json-table="qc.lastResult.data"></div>
+				<div id="result_tree" style="margin: 0em; overflow: auto"
+					ng-if="qc.isSelected(3)" mn-json-tree="qc.lastResult.data"></div>
+
+			</div>
+
+		</div>
+		</row>
+
+	</div>

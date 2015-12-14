@@ -1,0 +1,26 @@
+@CHARSET "UTF-8";
+
+.bucket {
+  font-weight: normal;
+  color: #5286BC;
+  white-space: nowrap;
+}
+
+.schema {
+  color: #839B00;
+  font-style: italic;
+  font-size: small;
+  white-space: nowrap;
+}
+
+.schema {
+  color: #839B00;
+  font-style: italic;
+  font-size: small;
+  white-space: nowrap;
+}
+
+.schema .indexed {
+  color: #839B00;
+  font-weight: bold;
+}
