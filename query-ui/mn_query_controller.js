@@ -36,6 +36,9 @@
     qc.hasNext = mnQueryService.hasNextResult;
     qc.hasPrev = mnQueryService.hasPrevResult;
 
+    qc.getCurrentIndex = mnQueryService.getCurrentIndex;
+    qc.clearHistory= mnQueryService.clearHistory;
+
     // variable and code for managing the choice of output format in different tabs
 
     qc.selectTab = selectTab;

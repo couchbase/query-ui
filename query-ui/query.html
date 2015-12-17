@@ -7,21 +7,25 @@
 
 
 		<div id="query_box" class="query_box">
-			<row class="query_header align-right cbui-header-oldgray"
-				style="margin-right: 0em; margin-left: 0em; overflow: hidden; line-height: 34px;">
-			<span class="left" style="float: left">
-				<h4 style="float: left; line-height: 34px;">Query History</h4>&nbsp
+			<row class="query_header header_2 align-right cbui-header-oldgray">
+				<h4>Query History</h4>
+				&nbsp
 				<a title="View previous queries/results" ng-click="qc.prev()"
-				class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}"><span>&uarr;</span></a>
+				class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}"><span>&larr;</span></a>
+				<span class="cbui-rightmargin">{{qc.getCurrentIndex()}}</span>
 				<a title="View subsequent queries/results" ng-click="qc.next()"
 				class="btn_1 cbui-rightmargin"
-				ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&darr;</span></a>
-			</span> <a ng-click="qc.save_query()" class="btn_1"
+				ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span></a>
+				
+			<a ng-click="qc.clearHistory()"
+				class="btn_1 cbui-rightmargin"><span>Clear History</span></a>
+
+			<a ng-click="qc.save_query()" class="btn_1"
 				ng-class="{dynamic_disabled: busyExecutingQuery()}"> <span>Save
 					Query</span></a> </row>
 			<row id="query_editor" ui-ace="qc.aceInputOptions"
 				style="height: 120px" ng-model="qc.lastResult.query">Ace</row>
-			<row class="query_header cbui-header-oldgray" style="height: 30px"> <a
+			<row class="query_header cbui-header-oldgray" > <a
 				ng-click="qc.query()" class="btn_1 cbui-query-executebutton"
 				ng-class="{dynamic_disabled: busyExecutingQuery()}"
 				title="(or hit enter after a semicolon)"> <span>Execute</span></a> <span
@@ -35,15 +39,15 @@
 		<!-- Next we want the metadata and result boxes side by side -->
 		<row class="align-top">
 		<div id="metadata" class="cbui-column25">
-			<div id="sidebar_header" class="header_2" style="">
-				<h4 style="float: left; display: table-row; line-height: 34px;">
-					<img ng-hide="qc.busyGettingIndexedBuckets"
-						ng-click="qc.updateBuckets()" style="height: 0.75em"
-						src="/query/ui/images/spinner/spinner_lightbox_static.gif" /> <img
-						ng-show="qc.busyGettingIndexedBuckets" style="height: 0.75em"
-						src="/query/ui/images/spinner/spinner_lightbox.gif" /> Metadata
-				</h4>
-			</div>
+			<row id="sidebar_header" class="header_2">
+				<h4>Metadata
+				<img ng-hide="qc.busyGettingIndexedBuckets"
+					ng-click="qc.updateBuckets()" style="height: 0.75em"
+					src="/query/ui/images/spinner/spinner_lightbox_static.gif" /> <img
+					ng-show="qc.busyGettingIndexedBuckets" style="height: 0.75em"
+					src="/query/ui/images/spinner/spinner_lightbox.gif" /> 
+			</h4>
+						</row>
 			<div id="sidebar_body"
 				style="margin: 0.5em; background-color: #ffffff; flex: 1 1 auto; -webkit-flex: 1 1 auto">
 				<div title="Buckets with a primary index support all queries.">

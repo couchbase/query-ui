@@ -2,12 +2,10 @@
 
   angular.module('mnQuery').factory('mnQueryService', getMnQueryService);
   
-  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHttp', 'mnHelper'];
+  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper'];
   
-  function getMnQueryService($q, $timeout, $http, mnHttp, mnHelper) {
+  function getMnQueryService($q, $timeout, $http, mnHelper) {
 
-    var fakePromise = {then: function() {}};
-   
     var mnQueryService = {};
     
     //
@@ -24,6 +22,8 @@
     // of different results
 
     mnQueryService.getResult = function() {return lastResult;};
+    mnQueryService.getCurrentIndex = function() {return currentQueryIndex;};
+    mnQueryService.clearHistory = clearHistory; 
     mnQueryService.hasPrevResult = hasPrevResult; 
     mnQueryService.hasNextResult = hasNextResult; 
     mnQueryService.prevResult = prevResult; 
@@ -50,15 +50,140 @@
     mnQueryService.authenticateBuckets = authenticateBuckets; // check password    
 
     //
+    // this structure holds the current query text, the current query result,
+    // and defines the object for holding the query history
+    //
+
+    function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,data,query,requestID) {
+      this.status = status;
+      this.resultCount = resultCount;
+      this.resultSize = resultSize;
+      this.result = result;
+      this.data = data;
+      this.query = query;
+      this.requestID = requestID;
+      
+      this.elapsedTime = truncateTime(elapsedTime);
+      this.executionTime = truncateTime(executionTime);
+    };
+    
+    
+    // elapsed and execution time come back with ridiculous amounts of
+    // precision, and some letters at the end indicating units.
+
+    function truncateTime(timeStr)
+    {
+        var timeEx = /([0-9.]+)([a-z]+)/i; // number + time unit string
+
+        if (timeStr && timeEx.test(timeStr)) {
+          var parts = timeEx.exec(timeStr);
+          var num = Number(parts[1]).toFixed(2); // truncate number part
+          if (!isNaN(num))
+              return(num + parts[2]);
+        }
+        
+        return(timeStr); // couldn't match, just return orig value      
+    }
+    
+    
+    QueryResult.prototype.clone = function()
+    {
+      return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
+          this.resultSize,this.result,this.data,this.query,this.requestID);
+    };
+    QueryResult.prototype.copyIn = function(other)
+    {
+      this.status = other.status;
+      this.elapsedTime = other.elapsedTime;
+      this.executionTime = other.executionTime;
+      this.resultCount = other.resultCount;
+      this.resultSize = other.resultSize;
+      this.result = other.result;
+      this.data = other.data;
+      this.query = other.query;
+      this.requestID = other.requestID;
+    };
+
+
+    //
     // structures for remembering queries and results
     //
     
-    var lastResult = new QueryResult(false,'N/A','N/A','N/A','N/A','N/A','',{},'');
-    var dummyResult = new QueryResult(false,'dummy','dummy','dummy','dummy','dummy','',{},'dummy');
+    var dummyResult = new QueryResult('-','-','-','-','-','',{},'');
+    var lastResult = dummyResult.clone();
+    var savedResultTemplate = dummyResult.clone();
+    savedResultTemplate.status = "cached query";
+    savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
+    savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
 
+ 
     var pastQueries = [];       // keep a history of past queries and their results 
-    var currentQueryIndex = -1; // where in the array are we?
+    var currentQueryIndex = 0;  // where in the array are we? we start past the
+                                // end of the array, since there's no history yet
 
+    // 
+    // we want to store our state in the browser, if possible
+    //
+    
+    function supportsHtml5Storage() {
+      try {
+        return 'localStorage' in window && window['localStorage'] !== null;
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    var hasLocalStorage = supportsHtml5Storage();
+    var localStorageKey = 'CouchbaseQueryWorkbenchState';
+    
+    function loadStateFromStorage() {
+      // make sure we have local storage
+      
+      //console.log("Trying to load from storage...");
+      
+      if (hasLocalStorage && _.isString(localStorage[localStorageKey])) try {
+        var savedState = JSON.parse(localStorage[localStorageKey]);
+        //console.log("Got saved state: " + JSON.stringify(savedState));
+        if (savedState.lastResult) {
+          //console.log("Got last result: " + JSON.stringify(savedState.lastResult));
+          lastResult.copyIn(savedState.lastResult);
+          currentQueryIndex = savedState.currentQueryIndex;
+          pastQueries = savedState.pastQueries;
+          mnQueryService.outputTab = savedState.outputTab;
+          mnQueryService.limit = savedState.limit;      
+        }
+        else
+          console.log("No last result");
+      } catch (err) {console.log("Error loading state: " + err);}
+    }
+    
+    
+    function saveStateToStorage() {
+      // nop if we don't have local storage
+      if (!hasLocalStorage)
+        return;
+      
+      // create a structure to hold the current state. To save state we will only
+      // save queries, and not their results (which might well exceed the 5MB
+      // we have available
+      
+      var savedState = {};
+      savedState.pastQueries = [];
+      savedState.outputTab = mnQueryService.outputTab;
+      savedState.limit = mnQueryService.limit;
+      savedState.currentQueryIndex = currentQueryIndex;
+      savedState.lastResult = savedResultTemplate.clone();
+      savedState.lastResult.query = lastResult.query;
+      _.forEach(pastQueries,function(queryRes,index) {
+        var qcopy = savedResultTemplate.clone();
+        qcopy.query = queryRes.query;
+        savedState.pastQueries.push(qcopy);
+      });
+      
+      localStorage[localStorageKey] = JSON.stringify(savedState);
+      console.log("Saving state to storage: " + JSON.stringify(savedState));
+    }
+    
     //
     // functions for adding new tokens and refreshing the token array
     //
@@ -97,64 +222,6 @@
     }
 
     //
-    // this structure holds the current query text, the current query result,
-    // and defines the object for holding the query history
-    //
-
-    function QueryResult(hide,status,elapsedTime,executionTime,resultCount,resultSize,result,data,query,requestID) {
-      this.hide = hide;
-      this.status = status;
-      this.resultCount = resultCount;
-      this.resultSize = resultSize;
-      this.result = result;
-      this.data = data;
-      this.query = query;
-      this.requestID = requestID;
-      
-      this.elapsedTime = truncateTime(elapsedTime);
-      this.executionTime = truncateTime(executionTime);
-    };
-    
-    
-    // elapsed and execution time come back with ridiculous amounts of
-    // precision, and some letters at the end indicating units.
-
-    function truncateTime(timeStr)
-    {
-        var timeEx = /([0-9.]+)([a-z]+)/i; // number + time unit string
-
-        if (timeStr && timeEx.test(timeStr)) {
-      	  var parts = timeEx.exec(timeStr);
-      	  var num = Number(parts[1]).toFixed(2); // truncate number part
-      	  if (!isNaN(num))
-      		  return(num + parts[2]);
-        }
-        
-        return(timeStr); // couldn't match, just return orig value    	
-    }
-    
-    
-    QueryResult.prototype.clone = function()
-    {
-      return new QueryResult(this.hide,this.status,this.elapsedTime,this.executionTime,this.resultCount,
-          this.resultSize,this.result,this.data,this.query,this.requestID);
-    };
-    QueryResult.prototype.copyIn = function(other)
-    {
-      this.hide = other.hide;
-      this.status = other.status;
-      this.elapsedTime = other.elapsedTime;
-      this.executionTime = other.executionTime;
-      this.resultCount = other.resultCount;
-      this.resultSize = other.resultSize;
-      this.result = other.result;
-      this.data = other.data;
-      this.query = other.query;
-      this.requestID = other.requestID;
-    };
-
-
-    //
     // we also keep a history of executed queries and their results
     // we will permit forward and backward traversal of the history
     //
@@ -162,9 +229,24 @@
     function hasPrevResult() {return currentQueryIndex > 0};
     function hasNextResult() {return currentQueryIndex < pastQueries.length-1};
     function prevResult()
-    {
+    {      
       if (currentQueryIndex > 0) // can't go earlier than the 1st
       {
+        // if we are going backward from the end of the line, from a query that 
+        // has been edited but hasn't been run yet, we need to add it to the 
+        // history
+
+        if (currentQueryIndex === (pastQueries.length-1) &&
+            lastResult.query.trim() !== pastQueries[pastQueries.length-1].query.trim()) {
+          var newResult = dummyResult.clone();
+          newResult.query = lastResult.query;
+          newResult.status = "not yet run";
+          newResult.result = '{"no_data_yet": "hit execute to run query"}';
+          newResult.data = {no_data_yet: "hit execute to run query"};
+          pastQueries.push(newResult);
+          currentQueryIndex++;
+        }
+        
         // 
         // the following gross hack is due to an angular issue where it doesn't 
         // successfully detect *some* changes in the result data, and thus doesn't 
@@ -180,7 +262,6 @@
           lastResult.copyIn(pastQueries[currentQueryIndex]);
           currentQuery = lastResult.query;        
         },50);
-        //return(currentQuery);
       }
     }
 
@@ -201,27 +282,38 @@
           lastResult.copyIn(pastQueries[currentQueryIndex]);
           currentQuery = lastResult.query;
         },50);
-        //return(currentQuery);
       }
     }
 
+    function clearHistory() {
+      lastResult.copyIn(dummyResult);
+      pastQueries.length = 0;
+      currentQueryIndex = 0;      
+    }
+    
     //
     // call the proxy which handles N1QL queries
     //
    
     function executeQuery(queryText) {
+      // whenever a query is executed, we need to put the current query with no
+      // results at the end of the query history
 
+      var newResult = new QueryResult("executing",0.0,0.0,0,'0B',
+          '{"status": "Executing Query"}',
+          {},lastResult.query);
+      lastResult.copyIn(newResult);
+      pastQueries.push(newResult);
+      currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
+      
       // don't allow multiple queries, as indicated by anything after a semicolon
 
       var stuffAfterSemi = /;\s*\S+/i;
       if (stuffAfterSemi.test(queryText)) {
-        result = '{"error": "you cannot issue more than one query at once."}';
-        data = {error: "Error, you cannot issue more than one query at once."};
-        newResult = new QueryResult(false,"error",0.0,0.0,0,'0B',
-            result,data,lastResult.query);
+        newResult.status = "Error";
+        newResult.result = '{"error": "you cannot issue more than one query at once."}';
+        newResult.data = {error: "Error, you cannot issue more than one query at once."};
         lastResult.copyIn(newResult);
-        pastQueries.push(newResult);
-        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
         return null;
       }
 
@@ -258,7 +350,7 @@
         queryData.creds = '[' + credString + ']';
 
       // send the query off via REST API
-      return mnHttp.post("/query/query/service",queryData)
+      return $http.post("/query/query/service",queryData)
       .success(function(data, status, headers, config) {
         var result;
 
@@ -285,13 +377,20 @@
           data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0B", elapsedTime: 0.0}
         }
 
-        newResult = new QueryResult(false,data.status,data.metrics.elapsedTime,
-            data.metrics.executionTime,data.metrics.resultCount,data.metrics.resultSize + 'B',
-            angular.toJson(result, true),result,lastResult.query,data.requestID);
+        newResult.status = data.status;
+        newResult.elapsedTime = data.metrics.elapsedTime;
+        newResult.executionTime = data.metrics.executionTime;
+        newResult.resultCount = data.metrics.resultCount;
+        newResult.resultSize = data.metrics.resultSize + 'B';
+        newResult.result = angular.toJson(result, true);
+        newResult.data = result;
+        newResult.requestID = data.requestID;
         lastResult.copyIn(newResult);
-        pastQueries.push(newResult);
-        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
 
+        // save the state
+        saveStateToStorage();
+        
+        // all done 
         mnQueryService.busyExecutingQuery = false;      
 
 //      var post2_ms = new Date().getTime();
@@ -322,12 +421,19 @@
         if (data.errors) {
         	data.errors.push({original_query:queryText});
         }
-        newResult = new QueryResult(false,data.status,data.metrics.elapsedTime,
-            data.metrics.executionTime,data.metrics.resultCount,data.metrics.resultSize + 'B',
-            angular.toJson(data.errors, true),data.errors,lastResult.query,data.requestID);
+        newResult.status = data.status;
+        newResult.elapsedTime = data.metrics.elapsedTime;
+        newResult.executionTime = data.metrics.executionTime;
+        newResult.resultCount = data.metrics.resultCount;
+        newResult.resultSize = data.metrics.resultSize + 'B';
+        newResult.result = angular.toJson(result, true);
+        newResult.data = result;
+        newResult.requestID = data.requestID;
+
         lastResult.copyIn(newResult);
-        pastQueries.push(newResult);
-        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
+
+        // save the state
+        saveStateToStorage();
 
         mnQueryService.busyExecutingQuery = false;      
       });
@@ -361,7 +467,7 @@
         "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes union select \"\" keyspace_id)" +
         "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
-      res1 = mnHttp.post("/query/query/service",{statement : queryText })
+      res1 = $http.post("/query/query/service",{statement : queryText })
       .success(function(data, status, headers, config) {
 
         var bucket_names = [];
@@ -384,7 +490,7 @@
         // get the passwords from the REST API (how gross!)
         //
         
-        res1 = mnHttp.get("/pools/default/buckets")
+        res1 = $http.get("/pools/default/buckets")
         .success(function(data) {
           //
           // bucket data should be an array of objects, where each object has
@@ -418,7 +524,7 @@
     //
 
     function authenticateBuckets(bucket_names, passwords, onSuccess, onError) {
-      mnHttp.post("/authenticate",{bucket : bucket_names, password: passwords})
+      $http.post("/authenticate",{bucket : bucket_names, password: passwords})
       .success(onSuccess)
       .error(onError);      
     };
@@ -435,7 +541,7 @@
       if (bucket.password)
         queryData.creds = '[{"user":"local:'+bucket.id+'","pass":"' + bucket.password +'"}]';
 
-      return mnHttp.post("/query/query/service",queryData)
+      return $http.post("/query/query/service",queryData)
       .success(function(data, status, headers, config) {
         //console.log("Done!");
         bucket.schema.length = 0;
@@ -522,7 +628,13 @@
     			markIndexedFields(fieldMap,theField,path + '`' + field_name + '`.');
     	});
     };
-
+    
+    //
+    // load everything from storage if possible
+    //
+    
+    loadStateFromStorage();
+    
     //
     // all done creating the service, now return it
     //
