@@ -282,7 +282,7 @@
       dialogScope.file = dialogScope.data_file;
       
       var promise = $uibModal.open({
-        templateUrl: '/query/ui/file_dialog/mn_query_file_dialog.html',
+        templateUrl: '/_p/ui/query/file_dialog/mn_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -317,7 +317,7 @@
       dialogScope.file = dialogScope.query_file;
 
       var promise = $uibModal.open({
-        templateUrl: '/query/ui/file_dialog/mn_query_file_dialog.html',
+        templateUrl: '/_p/ui/query/file_dialog/mn_query_file_dialog.html',
         scope: dialogScope
       }).result;
 

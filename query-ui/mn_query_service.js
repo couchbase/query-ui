@@ -1,13 +1,13 @@
 (function() {
 
   angular.module('mnQuery').factory('mnQueryService', getMnQueryService);
-  
+
   getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper'];
-  
+
   function getMnQueryService($q, $timeout, $http, mnHelper) {
 
     var mnQueryService = {};
-    
+
     //
     // remember which tab is selected for output style: JSON, table, or tree
     //
@@ -17,7 +17,7 @@
 
     mnQueryService.outputTab = 1;     // remember selected output tab
     mnQueryService.limit = {max: 100};
-    
+
     // access to our most recent query result, and functions to traverse the history
     // of different results
 
@@ -28,7 +28,7 @@
     mnQueryService.hasNextResult = hasNextResult; 
     mnQueryService.prevResult = prevResult; 
     mnQueryService.nextResult = nextResult;
-    
+
     //
     // keep track of the bucket and field names we have seen, for use in autocompletion
     //
@@ -37,12 +37,12 @@
     mnQueryService.autoCompleteArray = []; // array for use with Ace Editor  
 
     // execute queries, and keep track of when we are busy doing so
-    
+
     mnQueryService.busyExecutingQuery = false;
     mnQueryService.executeQuery = executeQuery; 
-    
+
     // update store the metadata about buckets
-    
+
     mnQueryService.buckets = [];
     mnQueryService.busyGettingBuckets = false;  
     mnQueryService.updateBuckets = updateBuckets;             // get list of buckets
@@ -62,30 +62,30 @@
       this.data = data;
       this.query = query;
       this.requestID = requestID;
-      
+
       this.elapsedTime = truncateTime(elapsedTime);
       this.executionTime = truncateTime(executionTime);
     };
-    
-    
+
+
     // elapsed and execution time come back with ridiculous amounts of
     // precision, and some letters at the end indicating units.
 
     function truncateTime(timeStr)
     {
-        var timeEx = /([0-9.]+)([a-z]+)/i; // number + time unit string
+      var timeEx = /([0-9.]+)([a-z]+)/i; // number + time unit string
 
-        if (timeStr && timeEx.test(timeStr)) {
-          var parts = timeEx.exec(timeStr);
-          var num = Number(parts[1]).toFixed(2); // truncate number part
-          if (!isNaN(num))
-              return(num + parts[2]);
-        }
-        
-        return(timeStr); // couldn't match, just return orig value      
+      if (timeStr && timeEx.test(timeStr)) {
+        var parts = timeEx.exec(timeStr);
+        var num = Number(parts[1]).toFixed(2); // truncate number part
+        if (!isNaN(num))
+          return(num + parts[2]);
+      }
+
+      return(timeStr); // couldn't match, just return orig value      
     }
-    
-    
+
+
     QueryResult.prototype.clone = function()
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
@@ -108,7 +108,7 @@
     //
     // structures for remembering queries and results
     //
-    
+
     var dummyResult = new QueryResult('-','-','-','-','-','',{},'');
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
@@ -116,15 +116,15 @@
     savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
     savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
 
- 
+
     var pastQueries = [];       // keep a history of past queries and their results 
     var currentQueryIndex = 0;  // where in the array are we? we start past the
-                                // end of the array, since there's no history yet
+    // end of the array, since there's no history yet
 
     // 
     // we want to store our state in the browser, if possible
     //
-    
+
     function supportsHtml5Storage() {
       try {
         return 'localStorage' in window && window['localStorage'] !== null;
@@ -132,15 +132,15 @@
         return false;
       }
     }
-    
+
     var hasLocalStorage = supportsHtml5Storage();
     var localStorageKey = 'CouchbaseQueryWorkbenchState';
-    
+
     function loadStateFromStorage() {
       // make sure we have local storage
-      
+
       //console.log("Trying to load from storage...");
-      
+
       if (hasLocalStorage && _.isString(localStorage[localStorageKey])) try {
         var savedState = JSON.parse(localStorage[localStorageKey]);
         //console.log("Got saved state: " + JSON.stringify(savedState));
@@ -156,17 +156,17 @@
           console.log("No last result");
       } catch (err) {console.log("Error loading state: " + err);}
     }
-    
-    
+
+
     function saveStateToStorage() {
       // nop if we don't have local storage
       if (!hasLocalStorage)
         return;
-      
+
       // create a structure to hold the current state. To save state we will only
       // save queries, and not their results (which might well exceed the 5MB
       // we have available
-      
+
       var savedState = {};
       savedState.pastQueries = [];
       savedState.outputTab = mnQueryService.outputTab;
@@ -179,15 +179,16 @@
         qcopy.query = queryRes.query;
         savedState.pastQueries.push(qcopy);
       });
-      
+
       localStorage[localStorageKey] = JSON.stringify(savedState);
-      console.log("Saving state to storage: " + JSON.stringify(savedState));
+      //
+      //console.log("Saving state to storage: " + JSON.stringify(savedState));
     }
-    
+
     //
     // functions for adding new tokens and refreshing the token array
     //
-    
+
     function addToken(token, type) {
       // see if the token needs to be quoted
       if (token.indexOf(' ') >= 0 || token.indexOf('-') >= 0)
@@ -212,20 +213,20 @@
     //
 
     function getFieldNamesFromSchema(schema,prefix) {
-    	for (var i=0; i< schema.length; i++)
-    		_.forEach(schema[i]['properties'], function(field, field_name) {
-    			addToken(prefix + field_name,"field");
-    			if (field['properties']) {
-    				getFieldNamesFromSchema([field['properties']],prefix + field_name + ".");
-    			}
-    		});
+      for (var i=0; i< schema.length; i++)
+        _.forEach(schema[i]['properties'], function(field, field_name) {
+          addToken(prefix + field_name,"field");
+          if (field['properties']) {
+            getFieldNamesFromSchema([field['properties']],prefix + field_name + ".");
+          }
+        });
     }
 
     //
     // we also keep a history of executed queries and their results
     // we will permit forward and backward traversal of the history
     //
-    
+
     function hasPrevResult() {return currentQueryIndex > 0};
     function hasNextResult() {return currentQueryIndex < pastQueries.length-1};
     function prevResult()
@@ -246,7 +247,7 @@
           pastQueries.push(newResult);
           currentQueryIndex++;
         }
-        
+
         // 
         // the following gross hack is due to an angular issue where it doesn't 
         // successfully detect *some* changes in the result data, and thus doesn't 
@@ -290,22 +291,32 @@
       pastQueries.length = 0;
       currentQueryIndex = 0;      
     }
-    
+
     //
     // call the proxy which handles N1QL queries
     //
-   
-    function executeQuery(queryText) {
-      // whenever a query is executed, we need to put the current query with no
-      // results at the end of the query history
 
-      var newResult = new QueryResult("executing",0.0,0.0,0,'0B',
-          '{"status": "Executing Query"}',
-          {},lastResult.query);
-      lastResult.copyIn(newResult);
-      pastQueries.push(newResult);
-      currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
-      
+    function executeQuery(queryText) {
+      var newResult;
+
+      // if the current query is part of the history, update the results from the history
+
+      if (currentQueryIndex < pastQueries.length &&
+          lastResult.query.trim() === pastQueries[currentQueryIndex].query.trim()) {
+        newResult = pastQueries[currentQueryIndex];
+      }
+
+      // otherwise, we have a new/edited query, so we create a new empty result
+      // at the end of the query history
+
+      else {
+        newResult = new QueryResult("executing",0.0,0.0,0,'0B',
+            '{"status": "Executing Query"}',
+            {},lastResult.query);
+        pastQueries.push(newResult);
+        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
+      }
+
       // don't allow multiple queries, as indicated by anything after a semicolon
 
       var stuffAfterSemi = /;\s*\S+/i;
@@ -349,8 +360,10 @@
       if (credString.length > 0)
         queryData.creds = '[' + credString + ']';
 
+      //console.log("Got creds: " + queryData.creds);
+
       // send the query off via REST API
-      return $http.post("/query/query/service",queryData)
+      return $http.post("/_p/query/query/service",queryData)
       .success(function(data, status, headers, config) {
         var result;
 
@@ -389,7 +402,7 @@
 
         // save the state
         saveStateToStorage();
-        
+
         // all done 
         mnQueryService.busyExecutingQuery = false;      
 
@@ -407,28 +420,43 @@
       .error(function(data, status, headers, config) {
         //console.log("Error Data: " + JSON.stringify(data));
         if (!data) {
-          lastResult.result = '{"status": "Failure contacting server."}';
-          lastResult.data = lastResult.result;
-          data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0B", elapsedTime: 0.0}          
+          newResult.result = '{"status": "Failure contacting server."}';
+          newResult.data = lastResult.result;
+          newResult.status = "failed";
+          lastResult.copyIn(newResult);
           mnQueryService.busyExecutingQuery = false;      
           return;
         }
 
-        if (!data.metrics) {
-          data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0B", elapsedTime: 0.0}
+        if (_.isString(data)) {
+          newResult.data = {status: data};
+          newResult.result = JSON.stringify(newResult.data);
+          newResult.status = "failed";
+          lastResult.copyIn(newResult);
+          mnQueryService.busyExecutingQuery = false;      
+          return;          
         }
 
         if (data.errors) {
-        	data.errors.push({original_query:queryText});
+          data.errors.push({original_query:queryText});
+          newResult.data = data.errors;
+          newResult.result = JSON.stringify(data.errors);
         }
-        newResult.status = data.status;
-        newResult.elapsedTime = data.metrics.elapsedTime;
-        newResult.executionTime = data.metrics.executionTime;
-        newResult.resultCount = data.metrics.resultCount;
-        newResult.resultSize = data.metrics.resultSize + 'B';
-        newResult.result = angular.toJson(result, true);
-        newResult.data = result;
-        newResult.requestID = data.requestID;
+
+        if (status)
+          newResult.status = status;
+        else 
+          newResult.status = "failed";
+
+        if (data.metrics) {
+          newResult.elapsedTime = data.metrics.elapsedTime;
+          newResult.executionTime = data.metrics.executionTime;
+          newResult.resultCount = data.metrics.resultCount;
+          newResult.resultSize = data.metrics.resultSize + 'B';
+        }
+
+        if (data.requestID)
+          newResult.requestID = data.requestID;
 
         lastResult.copyIn(newResult);
 
@@ -467,7 +495,7 @@
         "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes union select \"\" keyspace_id)" +
         "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
-      res1 = $http.post("/query/query/service",{statement : queryText })
+      res1 = $http.post("/_p/query/query/service",{statement : queryText })
       .success(function(data, status, headers, config) {
 
         var bucket_names = [];
@@ -489,14 +517,14 @@
         //
         // get the passwords from the REST API (how gross!)
         //
-        
+
         res1 = $http.get("/pools/default/buckets")
         .success(function(data) {
           //
           // bucket data should be an array of objects, where each object has
           // 'name' and  'saslPassword' fields (amoung much other data)
           //
-          
+
           if (_.isArray(data)) _.forEach(data, function(bucket, index) {
             if (bucket.name && _.isString(bucket.saslPassword)) 
               _.forEach(mnQueryService.buckets, function(mBucket, i) {
@@ -506,7 +534,7 @@
                 }
               });
           });
-            
+
         });
 
 
@@ -541,7 +569,7 @@
       if (bucket.password)
         queryData.creds = '[{"user":"local:'+bucket.id+'","pass":"' + bucket.password +'"}]';
 
-      return $http.post("/query/query/service",queryData)
+      return $http.post("/_p/query/query/service",queryData)
       .success(function(data, status, headers, config) {
         //console.log("Done!");
         bucket.schema.length = 0;
@@ -587,8 +615,8 @@
             })});
 
           for (var flavor=0; flavor<bucket.schema.length; flavor++) { // iterate over flavors
-        	  markIndexedFields(bucket.indexed_fields, bucket.schema[flavor], "");
-        	  bucket.schema[flavor].hasFields = Object.keys(bucket.schema[flavor].properties).length > 0;
+            markIndexedFields(bucket.indexed_fields, bucket.schema[flavor], "");
+            bucket.schema[flavor].hasFields = Object.keys(bucket.schema[flavor].properties).length > 0;
           }
 
           bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " document flavors found from a sample of "+ totalDocCount + " documents"});        
@@ -608,37 +636,37 @@
     // 
 
     function markIndexedFields(fieldMap, schema, path) {
-    	//console.log("marking schema size: "+schema.fields.length + " with path: " + path);
+      //console.log("marking schema size: "+schema.fields.length + " with path: " + path);
 
-    	_.forEach(schema['properties'], function(theField, field_name) {
-    		// in the list of indexed fields, the field names are quoted with back quotes
-    		var quoted_field_name = '`' + field_name + '`';
-    		if (path.length > 0)
-    			quoted_field_name = path + quoted_field_name;
+      _.forEach(schema['properties'], function(theField, field_name) {
+        // in the list of indexed fields, the field names are quoted with back quotes
+        var quoted_field_name = '`' + field_name + '`';
+        if (path.length > 0)
+          quoted_field_name = path + quoted_field_name;
 
-    		//console.log(" checking field: " + quoted_field_name);
+        //console.log(" checking field: " + quoted_field_name);
 
-    		// are we in the index map?
-    		if (fieldMap[quoted_field_name]) {
-    			theField.indexed = true;
-    		}
+        // are we in the index map?
+        if (fieldMap[quoted_field_name]) {
+          theField.indexed = true;
+        }
 
-    		// do we have a subtype to traverse?
-    		if (theField.properties)
-    			markIndexedFields(fieldMap,theField,path + '`' + field_name + '`.');
-    	});
+        // do we have a subtype to traverse?
+        if (theField.properties)
+          markIndexedFields(fieldMap,theField,path + '`' + field_name + '`.');
+      });
     };
-    
+
     //
     // load everything from storage if possible
     //
-    
+
     loadStateFromStorage();
-    
+
     //
     // all done creating the service, now return it
     //
-    
+
     return mnQueryService;
   }
 

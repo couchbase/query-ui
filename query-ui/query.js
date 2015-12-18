@@ -8,9 +8,9 @@
                       'ui.ace'])
     .config(function($stateProvider, mnPluggableUiRegistryProvider) {
       $stateProvider.state('app.admin.query', {
-        url: '/query',
+        url: '/_p/ui/query',
         controller: 'mnQueryController',
-        templateUrl: '/query/ui/query.html'
+        templateUrl: '/_p/ui/query/query.html'
       });
       mnPluggableUiRegistryProvider.registerConfig({
         name: 'Query',

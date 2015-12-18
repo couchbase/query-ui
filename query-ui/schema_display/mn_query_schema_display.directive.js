@@ -89,11 +89,11 @@
       //templateUrl: 'template/bucket-display.tmpl',
       template: 
     	  '<img ng-show="bucket.expanded" ng-click="collapseBucket(bucket)"' +
-          '  style="height: 0.75em" src="/query/ui/images/ArrowDown.png" /> ' +
+          '  style="height: 0.75em" src="/_p/ui/query/images/ArrowDown.png" /> ' +
           '<img ng-hide="bucket.expanded" ng-click="expandBucket(bucket)"' +
-          '  style="height: 0.75em" src="/query/ui/images/ArrowRight.png" />' +
-          '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/query/ui/images/lock.png" ng-click="expandBucket(bucket)"/>' +
-          '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/query/ui/images/lock_unlock.png" />' +
+          '  style="height: 0.75em" src="/_p/ui/query/images/ArrowRight.png" />' +
+          '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="expandBucket(bucket)"/>' +
+          '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
           '  {{bucket.id}}' +
           '  <ul ng-show="bucket.expanded">' + 
           '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' + 
