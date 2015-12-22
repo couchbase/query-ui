@@ -23,6 +23,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/query-ui
 		
 # rewrite the config file for running locally (using cluster-run)
 SET (BIN_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}")
-configure_file (pluggable-ui-query.json.in pluggable-ui-query.cluster_run.json)
+configure_file (pluggable-ui-query.json.in ${_instdir}/../cluster_run_ui_plugins/pluggable-ui-query.cluster_run.json)
 
 
