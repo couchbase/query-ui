@@ -1,53 +1,7 @@
-/* BASE RESET
-* {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  font-size: 100%;
-  font-weight:normal;
-  vertical-align: baseline;
-  background: transparent;
-}
------------------------------------------------------------------------------*/
-
-
-/* BASE TYPOGRAPHY
------------------------------------------------------------------------------*/
-a:active,
-a:hover {
-  outline: 0;
-}
-a {
-	text-decoration:none;
-}
-
-/* workbench-specific styles ---------------------------------------------- */
-
 /*
-body {
-	color: #616062;
-	font-family: Helvetica, Arial, Verdana, sans-serif;
-	font-size:14px;
-	padding:40px;
-}
-*/
-button {
-	display:inline-block;
-	padding:6px 12px;
-	background-color:#aaa;
-	cursor:pointer;
-	border-radius: 3px;
-	border: 1px outset #ccc;
-}
-
-.temp-editor-style {
-	border: 1px solid #ccc;
-	border-left: 24px solid #eee;
-	vertical-align:top;
-	padding:12px;
-	min-height:120px;
-}
+ * these css layout classes are used in the query-ui, but should eventually
+ * be moved into the master CSS.
+ */
 
 row {
 	padding: 6px 0;
@@ -84,24 +38,6 @@ row.align-left {
 	flex: 1 0 75%;
 }	
 
-p {line-height:1.4;}
-
-h1 {
-    font-size: 20px;
-    font-weight: normal;
-}
-h3 {
-	font-weight:700;line-height:0;display:inline-block;
-}
-
-button.cbui-query-historycontrols {
-	font-size:24px;
-	height: 28px;
-	padding: 2px 12px 10px 12px;
-	margin: 0 6px 0 6px;
-	line-height:0;
-}
-
 .cbui-leftrightmargin {
     margin: 20px 20px 20px 20px;
 }
@@ -121,13 +57,6 @@ a.cbui-rightmargin {
 	border-radius: 3px;
 }
 
-.temp-results-style {
-	border: 1px solid #ccc;
-	border-left: 24px solid #eee;
-	vertical-align:top;
-	padding:12px;
-}
-	
 .cbui-header-oldgray {
 	padding-right: 12px;
 	background: #e3e3e4; /* Old browsers */

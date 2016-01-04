@@ -24,7 +24,7 @@
 				ng-class="{dynamic_disabled: busyExecutingQuery()}"> <span>Save
 					Query</span></a> </row>
 			<row id="query_editor" ui-ace="qc.aceInputOptions"
-				style="height: 120px" ng-model="qc.lastResult.query">Ace</row>
+				style="height: 120px; border-right: 1px solid #e3e3e4;" ng-model="qc.lastResult.query">Ace</row>
 			<row class="query_header cbui-header-oldgray" > <a
 				ng-click="qc.query()" class="btn_1 cbui-query-executebutton"
 				ng-class="{dynamic_disabled: busyExecutingQuery()}"
@@ -85,7 +85,7 @@
 
 		<!-- Result panel -->
 		<div id="result_box" class="cbui-column75"
-			style="border-left: 1px solid black;">
+			style="border-left: 1px solid gray;">
 			<div id="result_inner">
 				<div id="result_header" class="header_2">
 
@@ -128,7 +128,7 @@
 				</div>
 
 				<div id="result_editor" ui-ace="qc.aceOutputOptions"
-					ng-if="qc.isSelected(1)" ng-model="qc.lastResult.result" style="">Ace</div>
+					ng-if="qc.isSelected(1)" ng-model="qc.lastResult.result" style="border-right: 1px solid #e3e3e4;">Ace</div>
 				<div id="result_table" style="margin: 0em; overflow: auto"
 					ng-if="qc.isSelected(2)" mn-json-table="qc.lastResult.data"></div>
 				<div id="result_tree" style="margin: 0em; overflow: auto"

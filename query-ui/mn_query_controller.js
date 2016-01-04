@@ -153,6 +153,7 @@
       _editor.$blockScrolling = Infinity;
       _editor.setOptions({enableBasicAutocompletion: true});
       _editor.setFontSize('13px');
+      _editor.renderer.setPrintMarginColumn(false);
       qc.inputEditor = _editor;
 
       var identifierCompleter = {
@@ -170,6 +171,7 @@
       //console.log("AceOutputLoaded");
       _editor.$blockScrolling = Infinity;
       _editor.setReadOnly(true);
+      _editor.renderer.setPrintMarginColumn(false);
       qc.outputEditor = _editor;
       updateEditorSizes();
     };
