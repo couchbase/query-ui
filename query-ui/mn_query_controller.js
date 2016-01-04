@@ -231,12 +231,13 @@
       var hasLimit = /limit\s+\d+\s*;\s*$/gmi;
       var startsWithSelect = /^\s*select/gmi;
 
+      // we need to strip out whitespace/newlines after ; to avoid 
+      // syntax errors
+      if (endsWithSemi.test(queryStr))
+        queryStr = queryStr.replace(endsWithSemi,"");
+      
       // add a limit to all "select" statements by wrapping
       if (startsWithSelect.test(queryStr) && !hasLimit.test(queryStr)) {
-        // strip out any ending semicolon
-        if (endsWithSemi.test(queryStr))
-          queryStr = queryStr.replace(endsWithSemi,"");
-
         // handle garbage in the limit dialog
         if (isNaN(Number(mnQueryService.limit.max)))
           mnQueryService.limit.max = 50;
