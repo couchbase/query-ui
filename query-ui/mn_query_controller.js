@@ -274,7 +274,7 @@
       // safari does'nt support saveAs
       if (isSafari) {
         var file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
-        saveAs(file,dialogScope.file.name);      
+        saveAs(file,dialogScope.data_file.name);      
         return;
       }
 
@@ -308,7 +308,7 @@
 
       // safari does'nt support saveAs
       if (isSafari) {
-        var file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
+        var file = new Blob([qc.lastResult.query],{type: "text/json", name: "data.json"});
         saveAs(file,dialogScope.query_file.name);      
         return;
       }
