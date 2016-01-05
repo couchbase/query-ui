@@ -8,8 +8,9 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 PROJECT (query-ui)
 
+# installed system now uses relative path, so no prefix
 SET (_instdir "${PROJECT_BINARY_DIR}")
-SET (BIN_PREFIX "${CMAKE_INSTALL_PREFIX}/lib")
+SET (BIN_PREFIX "")
 
 # rewrite the config file for installation
 configure_file (pluggable-ui-query.json.in pluggable-ui-query.json)
@@ -22,7 +23,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/query-ui
 		DESTINATION lib)
 		
 # rewrite the config file for running locally (using cluster-run)
-SET (BIN_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}")
+SET (BIN_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/")
 configure_file (pluggable-ui-query.json.in ${_instdir}/../cluster_run_ui_plugins/pluggable-ui-query.cluster_run.json)
 
 
