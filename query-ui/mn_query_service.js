@@ -217,7 +217,7 @@
         _.forEach(schema[i]['properties'], function(field, field_name) {
           addToken(prefix + field_name,"field");
           if (field['properties']) {
-            getFieldNamesFromSchema([field['properties']],prefix + field_name + ".");
+            getFieldNamesFromSchema([field],prefix + field_name + ".");
           }
         });
     }
