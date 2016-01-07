@@ -16,13 +16,13 @@
     mnQueryService.isSelected = function(checkTab) {return mnQueryService.outputTab === checkTab;};
 
     mnQueryService.outputTab = 1;     // remember selected output tab
-    mnQueryService.limit = {max: 100};
+    mnQueryService.limit = {max: 500};
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
 
     mnQueryService.getResult = function() {return lastResult;};
-    mnQueryService.getCurrentIndex = function() {return currentQueryIndex;};
+    mnQueryService.getCurrentIndex = getCurrentIndex;
     mnQueryService.clearHistory = clearHistory; 
     mnQueryService.hasPrevResult = hasPrevResult; 
     mnQueryService.hasNextResult = hasNextResult; 
@@ -82,7 +82,7 @@
           return(num + parts[2]);
       }
 
-      return(timeStr); // couldn't match, just return orig value      
+      return(timeStr); // couldn't match, just return orig value
     }
 
 
@@ -116,11 +116,18 @@
     savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
     savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
 
-
     var pastQueries = [];       // keep a history of past queries and their results 
     var currentQueryIndex = 0;  // where in the array are we? we start past the
     // end of the array, since there's no history yet
 
+    //
+    // where are we w.r.t. the query history?
+    //
+    
+    function getCurrentIndex() {
+      return currentQueryIndex + "/" + (pastQueries.length == 0 ? 0 : pastQueries.length -1);
+    }
+    
     // 
     // we want to store our state in the browser, if possible
     //
@@ -213,9 +220,11 @@
     //
 
     function getFieldNamesFromSchema(schema,prefix) {
+      //console.log("Got schema: " + JSON.stringify(schema, null, 4));
       for (var i=0; i< schema.length; i++)
         _.forEach(schema[i]['properties'], function(field, field_name) {
           addToken(prefix + field_name,"field");
+          // if the field has sub-properties, make a recursive call
           if (field['properties']) {
             getFieldNamesFromSchema([field],prefix + field_name + ".");
           }
@@ -226,11 +235,14 @@
     // we also keep a history of executed queries and their results
     // we will permit forward and backward traversal of the history
     //
+    
+    var tempResult = "Processing";
+    var tempData = {status: "processing"};
 
     function hasPrevResult() {return currentQueryIndex > 0};
     function hasNextResult() {return currentQueryIndex < pastQueries.length-1};
     function prevResult()
-    {      
+    {
       if (currentQueryIndex > 0) // can't go earlier than the 1st
       {
         // if we are going backward from the end of the line, from a query that 
@@ -255,8 +267,8 @@
         // after a certain delay.
         //
 
-        lastResult.result = "";
-        lastResult.data = "{}";
+        lastResult.result = tempResult;
+        lastResult.data = tempData;
 
         $timeout(function(){
           currentQueryIndex--;
@@ -275,8 +287,8 @@
         // see comment above about the delay hack.
         //
 
-        lastResult.result = "";
-        lastResult.data = "{}";
+        lastResult.result = tempResult;
+        lastResult.data = tempData;
 
         $timeout(function(){
           currentQueryIndex++;
@@ -335,7 +347,7 @@
 
       mnQueryService.busyExecutingQuery = true;
       lastResult.result = '{"status": "Executing Query"}';
-      lastResult.data = "{}";
+      lastResult.data = {status: "Executing Query"};
 
 //    var pre_post_ms = new Date().getTime();
 
@@ -359,8 +371,6 @@
 
       if (credString.length > 0)
         queryData.creds = '[' + credString + ']';
-
-      //console.log("Got creds: " + queryData.creds);
 
       // send the query off via REST API
       return $http.post("/_p/query/query/service",queryData)
