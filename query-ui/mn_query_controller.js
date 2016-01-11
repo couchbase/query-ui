@@ -230,8 +230,11 @@
 
     function query() {
       var queryStr = qc.lastResult.query;
-      var hasLimit = /limit\s+\d+\s*;\s*$/gmi;
-      var startsWithSelect = /^\s*select/gmi;
+      var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
+      var startsWithSelectExpr = /^\s*select/gmi;
+      
+      var hasLimit = hasLimitExpr.test(queryStr);
+      var startsWithSelect = startsWithSelectExpr.test(queryStr);
 
       // we need to strip out whitespace/newlines after ; to avoid 
       // syntax errors
@@ -239,7 +242,7 @@
         queryStr = queryStr.replace(endsWithSemi,"");
       
       // add a limit to all "select" statements by wrapping
-      if (startsWithSelect.test(queryStr) && !hasLimit.test(queryStr)) {
+      if (startsWithSelect && !hasLimit) {
         // handle garbage in the limit dialog
         if (isNaN(Number(mnQueryService.limit.max)))
           mnQueryService.limit.max = 50;
@@ -327,7 +330,7 @@
       // now save it
       promise.then(function (res) {
         //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
-        var file = new Blob([qc.lastResult.result],{type: "text/plain"});
+        var file = new Blob([qc.lastResult.query],{type: "text/plain"});
         saveAs(file,dialogScope.file.name);
       });
     };
