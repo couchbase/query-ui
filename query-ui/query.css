@@ -3,66 +3,108 @@
  * be moved into the master CSS.
  */
 
-.row {
-	padding: 6px 0;
-	display:flex;
-	min-height: 32px;
-	-webkit-box-align:center;
-	-webkit-align-items:center;
-	align-items:center;
-	flex-wrap:no-wrap;
-	justify-content:space-between;
+html {
+  box-sizing: border-box;
 }
-	
-.row.align-right {
-	justify-content:flex-end;
-}
-	
-.row.align-top {
-	align-items:flex-start;
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
 }
 
+.row {
+padding: 6px 8px;
+display:flex;
+min-height: 44px;
+-webkit-box-align:center;
+-webkit-align-items:center;
+align-items:center;
+flex-wrap:no-wrap;
+justify-content:space-between;
+}
+.row.rounded-top {
+ -webkit-border-radius: 4px 4px 0px 0px;
+ -moz-border-radius: 4px 4px 0px 0px;
+ border-radius: 4px 4px 0px 0px; 
+}
+.row.align-right {
+justify-content:flex-end;
+}
+.row.align-top {
+align-items:flex-start;
+}
+.row.cbui-padding0 {
+  padding: 0;
+}
+.row.cbui-margin-top8 {
+  margin: 8px 0 0 0;
+}
+.row.cbui-margin-top20 {
+  margin: 20px 0 0 0;
+}
 .row.align-left {
-	align-items:flex-start;
+align-items:flex-start;
 }
 
 .cbui-column50 {
-	flex: 1 0 50%;
-}	
+flex: 1 0 50%;
+} 
 
 .cbui-column25 {
-	flex: 1 0 25%;
-}	
+flex: 1 0 25%;
+} 
 
 .cbui-column75 {
-	flex: 1 0 75%;
-}	
-
-.cbui-leftrightmargin {
-    margin: 20px 20px 20px 20px;
-}
+flex: 1 0 75%;
+} 
 
 a.cbui-rightmargin {
-    margin: 0 24px 0 0;
-}
-
-.cbui-query-executebutton {
-	margin: 0 6px 0 6px;
+    margin: 0 12px 0 0;
 }
 
 .cbui-query-resultsnumber input {
-	width: 48px;
-	padding: 4px;
-	border: 1px solid #ccc;
-	border-radius: 3px;
+width: 68px;
+padding: 4px;
+border: 1px solid #ccc;
+border-radius: 3px;
 }
 
 .cbui-header-oldgray {
-	padding-right: 12px;
-	background: #e3e3e4; /* Old browsers */
-	background: -moz-linear-gradient(top,  #e3e3e4 0%, #cdced0 100%); /* FF3.6-15 */
-	background: -webkit-linear-gradient(top,  #e3e3e4 0%,#cdced0 100%); /* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(to bottom,  #e3e3e4 0%,#cdced0 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4', endColorstr='#cdced0',GradientType=0 ); /* IE6-9 */
+background: #e3e3e4; /* Old browsers */
+background: -moz-linear-gradient(top,  #e3e3e4 0%, #cdced0 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(top,  #e3e3e4 0%,#cdced0 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(to bottom,  #e3e3e4 0%,#cdced0 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4', endColorstr='#cdced0',GradientType=0 ); /* IE6-9 */
 }
+
+#query_ui h2 {margin-left:8px;font-size: 19px; font-weight:500; color:#333;}
+#query_ui h4 {display:inline-block; margin-right: 8px; font-size: 16px; font-weight:600; color:#444;}
+#query_ui h5 {display:inline-block; margin: 0 8px; font-size: 14px; font-weight:500; color:#444;}
+.cbui-refreshicon {height:20px; width:auto; cursor:pointer;}
+.cbui-busyicon {height:20px; width:auto; cursor:none;}
+#sidebar_body {background-color:#fff; padding: 8px; font-size:14px; font-weight:400;min-height: 128px;}
+#metadata {background-color:#fff;}
+#result_box {border-left: 1px solid #cdced0;}
+#result_header ul {display:inline-block;}
+#result_summary {background-color:#fff; padding: 8px; font-size:14px; font-weight:400; min-height: 32px;}
+#result_summary table,
+#result_summary th,
+#result_summary tr,
+#result_summary td {background-color:#fff; font-size:11px; font-weight:600;vertical-align:middle;}
+#result_summary td {width:20%; text-align:center; padding: 4px 0;}
+#result_summary table { }
+#result_editor,
+#result_table,
+#result_tree {overflow:auto;background-color:#fff; padding: 8px; font-size:14px; font-weight:400;}
+.viewslist {overflow:auto;}
+.query-results-wrapper {
+ -webkit-border-radius: 4px 4px 0px 0px;
+ -moz-border-radius: 4px 4px 0px 0px;
+ border-radius: 4px 4px 0px 0px;  
+ margin: 8px 0 0 0;
+ padding: 0;
+ align-items:flex-start;
+ border: 1px solid #cdced0;
+ border-width: 0 1px 1px 1px;
+ }
 
