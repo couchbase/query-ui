@@ -76,6 +76,7 @@
     qc.aceOutputOptions = {
         mode: 'json',
         showGutter: true,
+        useWrapMode: true,
         onLoad: qc.aceOutputLoaded,
         onChange: qc.updateEditorSizes,
         $blockScrolling: Infinity
