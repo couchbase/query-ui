@@ -61,7 +61,7 @@
 
       // mark empty objects so bunches of them don't look weird
       if (_.isEmpty(object)) {
-        result += '<div class=ajtd-key>empty object</div>';
+        result += '';
         return(result);
       }
 
