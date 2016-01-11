@@ -3,9 +3,12 @@
  * be moved into the master CSS.
  */
 
+/*
 html {
   box-sizing: border-box;
 }
+*/
+
 *,
 *:before,
 *:after {
