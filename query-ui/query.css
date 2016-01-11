@@ -3,7 +3,7 @@
  * be moved into the master CSS.
  */
 
-row {
+.row {
 	padding: 6px 0;
 	display:flex;
 	min-height: 32px;
@@ -14,15 +14,15 @@ row {
 	justify-content:space-between;
 }
 	
-row.align-right {
+.row.align-right {
 	justify-content:flex-end;
 }
 	
-row.align-top {
+.row.align-top {
 	align-items:flex-start;
 }
 
-row.align-left {
+.row.align-left {
 	align-items:flex-start;
 }
 
