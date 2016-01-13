@@ -6,7 +6,7 @@
 	<div id="query_ui" mn-spinner="queryInProgress" class="contents">
 
 <div id="query_box" class="query_box">
-      <div id="query_header" class="row cbui-header-oldgray cbui-margin-top20 rounded-top">
+      <div id="query_header" class="cbui-row cbui-header-oldgray cbui-margin-top20 cbui-rounded-top">
       <h2>Query Workbench</h2>
       <span>
        <h5>Query History</h5>
@@ -29,7 +29,7 @@
         style="min-height: 120px; border-right: 1px solid #e3e3e4;" 
         ng-model="qc.lastResult.query">Ace</div>           <!-- WHY border style? -->
         
-      <div class="row cbui-header-oldgray">
+      <div class="cbui-row cbui-header-oldgray">
         <a ng-click="qc.query()" class="btn_1"
           ng-class="{dynamic_disabled: busyExecutingQuery()}"
           title="(or hit enter after a semicolon)"><span>Execute</span></a>
@@ -42,9 +42,9 @@
     </div>
 
     <!-- Next we want the metadata and result boxes side by side -->
-    <div class="row query-results-wrapper">
+    <div class="cbui-row cbui-align-top cbui-query-results-wrapper">
       <div id="metadata" class="cbui-column25">
-        <div id="sidebar_header" class="row cbui-header-oldgray">
+        <div id="sidebar_header" class="cbui-row cbui-header-oldgray">
           <h4>Analysis</h4> 
           
           <span>
@@ -93,7 +93,7 @@
       <!-- Result panel -->
       <div id="result_box" class="cbui-column75">
         <div id="result_inner">
-          <div id="result_header" class="row cbui-header-oldgray">
+          <div id="result_header" class="cbui-row cbui-header-oldgray">
               <ul class="tabs">
               <li class="tab_left"><a ng-click="qc.selectTab(1)"
                 ng-class="{selected: qc.isSelected(1)}">JSON</a></li>
@@ -111,7 +111,7 @@
 
           <div id="result_summary" ng-hide="qc.lastResult.hide"
             class="panes">
-            <div class="views_list">
+            <div class="cbui_viewslist">
               <table>
                 <thead>
                   <tr>

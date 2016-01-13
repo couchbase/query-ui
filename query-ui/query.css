@@ -7,45 +7,45 @@
 html {
   box-sizing: border-box;
 }
-*/
 
 *,
 *:before,
 *:after {
   box-sizing: inherit;
 }
+*/
 
-.row {
+.cbui-row {
 padding: 6px 8px;
 display:flex;
-min-height: 44px;
+min-height: 32px;
 -webkit-box-align:center;
 -webkit-align-items:center;
 align-items:center;
 flex-wrap:no-wrap;
 justify-content:space-between;
 }
-.row.rounded-top {
+.cbui-row.cbui-rounded-top {
  -webkit-border-radius: 4px 4px 0px 0px;
  -moz-border-radius: 4px 4px 0px 0px;
  border-radius: 4px 4px 0px 0px; 
 }
-.row.align-right {
+.cbui-row.cbui-align-right {
 justify-content:flex-end;
 }
-.row.align-top {
+.cbui-row.cbui-align-top {
 align-items:flex-start;
 }
-.row.cbui-padding0 {
+.cbui-row.cbui-padding0 {
   padding: 0;
 }
-.row.cbui-margin-top8 {
+.cbui-row.cbui-margin-top8 {
   margin: 8px 0 0 0;
 }
-.row.cbui-margin-top20 {
+.cbui-row.cbui-margin-top20 {
   margin: 20px 0 0 0;
 }
-.row.align-left {
+.cbui-row.cbui-align-left {
 align-items:flex-start;
 }
 
@@ -86,10 +86,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4', end
 .cbui-refreshicon {height:20px; width:auto; cursor:pointer;}
 .cbui-busyicon {height:20px; width:auto; cursor:none;}
 #sidebar_body {background-color:#fff; padding: 8px; font-size:14px; font-weight:400;min-height: 128px;}
+#sidebar_header {min-height: 32px}
 #metadata {background-color:#fff;}
 #result_box {border-left: 1px solid #cdced0;}
-#result_header ul {display:inline-block;}
-#result_summary {background-color:#fff; padding: 8px; font-size:14px; font-weight:400; min-height: 32px;}
+#result_header {padding: 5px 8px}
+#result_header ul {display:inline-block; border: 1px solid #cdced0;}
+#result_summary {padding: 6px 6px; font-size:14px; font-weight:400; min-height: 20px;}
 #result_summary table,
 #result_summary th,
 #result_summary tr,
@@ -99,15 +101,14 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4', end
 #result_editor,
 #result_table,
 #result_tree {overflow:auto;background-color:#fff; padding: 8px; font-size:14px; font-weight:400;}
-.viewslist {overflow:auto;}
-.query-results-wrapper {
+.cbui-viewslist {overflow:auto;}
+.cbui-query-results-wrapper {
  -webkit-border-radius: 4px 4px 0px 0px;
  -moz-border-radius: 4px 4px 0px 0px;
  border-radius: 4px 4px 0px 0px;  
- margin: 8px 0 0 0;
+ margin: 1px 0 0 0;
  padding: 0;
  align-items:flex-start;
  border: 1px solid #cdced0;
  border-width: 0 1px 1px 1px;
  }
-
