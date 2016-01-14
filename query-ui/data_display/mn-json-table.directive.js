@@ -26,7 +26,7 @@
 			scope: { data: '=mnJsonTable' },
 			template: '<div></div>',
 			link: function (scope, element) {
-
+			  
 				scope.mnJsonTableToggleExpand = mnJsonTableToggleExpand;
 				//console.log("Got toggleExpoand: " + mnToggleExpand);
 
@@ -46,6 +46,16 @@
 
 					// set our element to use this HTML        
 					element.html(content);
+					
+					// the table sorter is supposed to pick up tables automatically, but for some
+					// reason it doesn't. Search for result tables and force them to be sortable.
+					
+				    forEach(document.getElementsByTagName('table'), function(table) {
+				      if (table.className.search(/\bsortable\b/) != -1 &&
+				        table.className.search(/\bajtd-root\b/) != -1) {
+				        sorttable.makeSortable(table);
+				      }
+				    });		
 				});
 			}
 		};
@@ -136,11 +146,11 @@
 			// Make a table whose columns are the union of all fields in all the objects. If we
 			// have a non-object, output it as a full-width cell.
 
-			result += '<table class="ajtd-object-value ajtd-table multi-type-array"><thead>';
+            result += '<table class="ajtd-object-value ajtd-table multi-type-array sortable"><thead>';
 
 			var keys = (innerKeys ? innerKeys : itemsKeysToObject);
 			_.forEach(keys, function(value,key) {
-				result += '<th class=ajtd-column-header>' + key +'</th>';     
+              result += '<th class=ajtd-column-header>' + key +'</th>';     
 			});
 				
 			result += '</thead><tbody>';
@@ -231,7 +241,7 @@
 			
 			// header columns for each field
 			
-			result += '<table class="ajtd-root ajtd-object-value ajtd-table plain-object"><thead>';
+			result += '<table class="ajtd-root ajtd-object-value ajtd-table plain-object sortable"><thead>';
 
 			////////////////////////////////////////////////////////////////////////
 			// if we are doing special case, add a blank column for the object name, then
