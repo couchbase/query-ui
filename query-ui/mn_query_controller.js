@@ -200,11 +200,12 @@
       //var width = $('#result_editor').width();
 
       //console.log(" editor_size: " + editor_size);
-      $('#metadata').height(editor_size + resultHeaderHeight + resultSummaryHeight + 5);
+      $('#metadata').height(editor_size + resultHeaderHeight + resultSummaryHeight + 50);
       $('#result_editor').height(editor_size);
-      $('#result_table').height(editor_size);
-      $('#result_tree').height(editor_size);
-
+      $('#result_table').height(editor_size+20);
+      $('#result_tree').height(editor_size+20);
+      
+      $('#result_box').height(editor_size+109);
       //$('#result_editor').width(width);
       //$('#result_table').width(width);
       //$('#result_tree').width(width);
@@ -377,11 +378,7 @@
       // now let's make sure the window is the right size
       //
       
-      //console.log("activate");
-      
-      //if (!qc.isSelected(1)) { // some tab other than the editor
       $timeout(updateEditorSizes(),100);
-      //}
     }
   }
 

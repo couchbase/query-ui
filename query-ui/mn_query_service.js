@@ -49,6 +49,7 @@
     mnQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     mnQueryService.authenticateBuckets = authenticateBuckets; // check password    
 
+    mnQueryService.loadStateFromStorage = loadStateFromStorage;
     //
     // this structure holds the current query text, the current query result,
     // and defines the object for holding the query history
@@ -667,10 +668,11 @@
       });
     };
 
-    //
-    // load everything from storage if possible
-    //
 
+    //
+    // load state from storage if possible
+    //
+    
     loadStateFromStorage();
 
     //
