@@ -52,7 +52,7 @@
 					
 				    forEach(document.getElementsByTagName('table'), function(table) {
 				      if (table.className.search(/\bsortable\b/) != -1 &&
-				        table.className.search(/\bajtd-root\b/) != -1) {
+				        table.className.search(/\bajtd-table\b/) != -1) {
 				        sorttable.makeSortable(table);
 				      }
 				    });		
