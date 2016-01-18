@@ -33,8 +33,8 @@
           }
 
           // create an empty div, if we have data, convert it to HTML
-          var content = "<div>{}</div>";
-          if (json)
+          var content = "<div></div>";
+          if (json && !_.isEmpty(json))
             content = '<div class="ajtd-root ajtd-type-array">' + makeHTMLtree(json) + "</div>";
 
           // set the html of the element to what we just generated
@@ -61,7 +61,7 @@
 
       // mark empty objects so bunches of them don't look weird
       if (_.isEmpty(object)) {
-        result += '';
+        result += '<span class=ajtd-key>empty object</span>';
         return(result);
       }
 
@@ -86,6 +86,10 @@
     // for an array, iterate over the elements, and leave out the keys (which are just numbers)
 
     else if (_.isArray(object)) {
+      // if the array is empty, say so
+      if (object.length == 0)
+          return('<div class=ajtd-key>[]</div>');
+      
       result += '<ul class="ajtd-type-array">';
       for (var i=0; i<object.length; i++) {
         var value = object[i];
