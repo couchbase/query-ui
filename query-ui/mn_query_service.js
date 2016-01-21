@@ -16,7 +16,8 @@
     mnQueryService.isSelected = function(checkTab) {return mnQueryService.outputTab === checkTab;};
 
     mnQueryService.outputTab = 1;     // remember selected output tab
-    mnQueryService.limit = {max: 500};
+    mnQueryService.defaultLimit = 500;
+    mnQueryService.limit = {max: mnQueryService.defaultLimit};
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -50,6 +51,17 @@
     mnQueryService.authenticateBuckets = authenticateBuckets; // check password    
 
     mnQueryService.loadStateFromStorage = loadStateFromStorage;
+    
+    // for the front-end, distinguish error status and good statuses
+    
+    mnQueryService.status_success = status_success;
+    mnQueryService.status_fail = status_fail;
+    
+    function status_success() {return(lastResult.status == 'success');}
+    function status_fail() 
+    {return(lastResult.status == '400' || lastResult.status == 'errors' || 
+        lastResult.status == '500');}
+        
     //
     // this structure holds the current query text, the current query result,
     // and defines the object for holding the query history
@@ -95,8 +107,8 @@
     QueryResult.prototype.copyIn = function(other)
     {
       this.status = other.status;
-      this.elapsedTime = other.elapsedTime;
-      this.executionTime = other.executionTime;
+      this.elapsedTime = truncateTime(other.elapsedTime);
+      this.executionTime = truncateTime(other.executionTime);
       this.resultCount = other.resultCount;
       this.resultSize = other.resultSize;
       this.result = other.result;
@@ -334,7 +346,7 @@
 
       var stuffAfterSemi = /;\s*\S+/i;
       if (stuffAfterSemi.test(queryText)) {
-        newResult.status = "Error";
+        newResult.status = "errors";
         newResult.result = '{"error": "you cannot issue more than one query at once."}';
         newResult.data = {error: "Error, you cannot issue more than one query at once."};
         lastResult.copyIn(newResult);
@@ -433,7 +445,7 @@
         if (!data) {
           newResult.result = '{"status": "Failure contacting server."}';
           newResult.data = lastResult.result;
-          newResult.status = "failed";
+          newResult.status = "errors";
           lastResult.copyIn(newResult);
           mnQueryService.busyExecutingQuery = false;      
           return;
@@ -442,7 +454,7 @@
         if (_.isString(data)) {
           newResult.data = {status: data};
           newResult.result = JSON.stringify(newResult.data);
-          newResult.status = "failed";
+          newResult.status = "errors";
           lastResult.copyIn(newResult);
           mnQueryService.busyExecutingQuery = false;      
           return;          
@@ -457,7 +469,7 @@
         if (status)
           newResult.status = status;
         else 
-          newResult.status = "failed";
+          newResult.status = "errors";
 
         if (data.metrics) {
           newResult.elapsedTime = data.metrics.elapsedTime;

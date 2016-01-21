@@ -1,62 +1,69 @@
 
 <div id="query_pane" style="background-color: #fff"
 	ng-controller="mnQueryController as qc"
-	class="container ui-layout-center">
+	class="container ui-layout-center shadow_box">
 
-	<div id="query_ui" mn-spinner="queryInProgress" class="contents">
+  <div id="query_ui" mn-spinner="queryInProgress" class="contents">
 
-<div id="query_box" class="query_box">
-      <div id="query_header" class="cbui-row cbui-header-oldgray cbui-margin-top20 cbui-rounded-top">
-      <h2>Query Workbench</h2>
-      <span>
-       <h5>Query History</h5>
-        <a title="View previous queries/results"
-          ng-click="qc.prev()" class="btn_1"
-          ng-class="{dynamic_disabled: !qc.hasPrev()}"><span>&larr;</span></a>
-        <h5>{{qc.getCurrentIndex()}}</h5> <a
-          title="View subsequent queries/results" ng-click="qc.next()"
-          class="btn_1 cbui-rightmargin"
-          ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span></a>
-
-        <a ng-click="qc.clearHistory()" class="btn_1 cbui-rightmargin"><span>Clear
-            History</span></a> <a ng-click="qc.save_query()" class="btn_1"
-          ng-class="{dynamic_disabled: busyExecutingQuery()}"> <span>Save
-            Query</span></a>
-         </span>
+    <div id="query_box" class="query_box">
+      <div id="query_header"
+        class="cbui-row cbui-header-oldgray cbui-rounded-top">
+        <h2></h2>
+        <span class="cbui-column25">&nbsp</span> 
+        <span class="cbui-column cbui-centered">
+          <a title="View previous queries/results" ng-click="qc.prev()"
+            class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">
+            <span>&larr;</span>
+          </a>
+          <h5>{{qc.getCurrentIndex()}}</h5> 
+          <a title="View subsequent queries/results" ng-click="qc.next()"
+            class="btn_1 cbui-rightmargin"
+            ng-class="{dynamic_disabled: !qc.hasNext()}">
+            <span>&rarr;</span>
+          </a>
+          <a ng-click="qc.clearHistory()" class="btn_1 cbui-rightmargin">
+            <span>Clear History</span>
+          </a> 
+        </span>
+        <span class="cbui-column25 cbui-right">
+          <a ng-click="qc.save_query()" class="btn_1"
+          ng-class="{dynamic_disabled: busyExecutingQuery()}"> 
+          <span>Save Query</span></a>
+        </span> 
       </div>
-      
+
       <div class=" " id="query_editor" ui-ace="qc.aceInputOptions"
-        style="min-height: 120px; border-right: 1px solid #e3e3e4;" 
-        ng-model="qc.lastResult.query">Ace</div>           <!-- WHY border style? -->
-        
+        style="min-height: 120px; border-right: 1px solid #e3e3e4;"
+        ng-model="qc.lastResult.query">Ace</div>
+      <!-- WHY border style? -->
+
       <div class="cbui-row cbui-header-oldgray">
         <a ng-click="qc.query()" class="btn_1"
           ng-class="{dynamic_disabled: busyExecutingQuery()}"
           title="(or hit enter after a semicolon)"><span>Execute</span></a>
-        <span class="cbui-query-resultsnumber"><h5>Result limit:</h5><input
-          type="number" step="50" placeholder="50" ng-model="qc.limit.max"
-          ng-pattern="/^[0-9]+$/" required />
-        </span>
+        <span class="cbui-query-resultsnumber"><h5>Result
+            limit:</h5>
+          <input type="number" step="50" placeholder="50"
+          ng-model="qc.limit.max" ng-pattern="/^[0-9]+$/" required /> </span>
       </div>
-      
     </div>
 
     <!-- Next we want the metadata and result boxes side by side -->
     <div class="cbui-row cbui-align-top cbui-query-results-wrapper">
       <div id="metadata" class="cbui-column25">
         <div id="sidebar_header" class="cbui-row cbui-header-oldgray">
-          <h4>Analysis</h4> 
-          
-          <span>
-          <img ng-hide="qc.busyGettingIndexedBuckets"
-              ng-click="qc.updateBuckets()" class="cbui-refreshicon"
-              src="/_p/ui/query/images/spinner/spinner_lightbox_static.gif" />
-            <img ng-show="qc.busyGettingIndexedBuckets" class="cbui-busyicon"
-              src="/_p/ui/query/images/spinner/spinner_lightbox.gif" />
+          <h4>Analysis</h4>
+
+          <span> <img ng-hide="qc.busyGettingIndexedBuckets"
+            ng-click="qc.updateBuckets()" class="cbui-refreshicon"
+            src="/_p/ui/query/images/spinner/spinner_lightbox_static.gif" />
+            <img ng-show="qc.busyGettingIndexedBuckets"
+            class="cbui-busyicon"
+            src="/_p/ui/query/images/spinner/spinner_lightbox.gif" />
           </span>
-          
+
         </div>
-        
+
         <div id="sidebar_body">
           <div title="Buckets with a primary index support all queries.">
             Fully Queryable Buckets
@@ -68,7 +75,8 @@
             </ul>
           </div>
 
-          <div title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">
+          <div
+            title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">
             Queryable on Indexed Fields
             <ul style="margin-left: 0.5em">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
@@ -94,7 +102,7 @@
       <div id="result_box" class="cbui-column75">
         <div id="result_inner">
           <div id="result_header" class="cbui-row cbui-header-oldgray">
-              <ul class="tabs">
+            <ul class="tabs">
               <li class="tab_left"><a ng-click="qc.selectTab(1)"
                 ng-class="{selected: qc.isSelected(1)}">JSON</a></li>
               <li class="tab_middle"><a ng-click="qc.selectTab(2)"
@@ -102,29 +110,24 @@
               <li class="tab_right"><a ng-click="qc.selectTab(3)"
                 ng-class="{selected: qc.isSelected(3)}">Tree</a></li>
             </ul>
-           <h4>Results</h4>
-            <a
-              style="overflow: hidden; line-height: 34px;"
+            <h4>Results</h4>
+            <a style="overflow: hidden; line-height: 34px;"
               ng-click="qc.save()" class="btn_1 dynamic_enabled"><span>Save</span></a>
           </div>
 
 
           <div id="result_summary" ng-hide="qc.lastResult.hide"
             class="panes">
-            <div class="cbui_viewslist">
-              <table>
+            <div >
+              <table class="cbui-viewslist">
                 <thead>
                   <tr>
-                    <td>Status:
-                      {{qc.lastResult.status}}</td>
-                    <td>Elapsed:
-                      {{qc.lastResult.elapsedTime}}</td>
-                    <td>Execution:
-                      {{qc.lastResult.executionTime}}</td>
-                    <td>Result Count:
-                      {{qc.lastResult.resultCount}}</td>
-                    <td>Result Size:
-                      {{qc.lastResult.resultSize}}</td>
+                    <td ng-class="{cbui_color_success: qc.status_success(), cbui_color_fail: qc.status_fail()}">
+                    Status: {{qc.lastResult.status}}</td>
+                    <td>Elapsed: {{qc.lastResult.elapsedTime}}</td>
+                    <td>Execution: {{qc.lastResult.executionTime}}</td>
+                    <td>Result Count: {{qc.lastResult.resultCount}}</td>
+                    <td>Result Size: {{qc.lastResult.resultSize}}</td>
                   </tr>
                 </thead>
               </table>
@@ -134,14 +137,16 @@
           <div id="result_editor" ui-ace="qc.aceOutputOptions"
             ng-if="qc.isSelected(1)" ng-model="qc.lastResult.result"
             style="border-right: 1px solid #e3e3e4;">Ace</div>
-          <div id="result_table"
-            ng-if="qc.isSelected(2)" mn-json-table="qc.lastResult.data"></div><!-- style="margin: 0em; overflow: auto" -->
-          <div id="result_tree"
-            ng-if="qc.isSelected(3)" mn-json-tree="qc.lastResult.data"></div> <!-- style="margin: 0em; overflow: auto" -->
+          <div id="result_table" ng-if="qc.isSelected(2)"
+            mn-json-table="qc.lastResult.data"></div>
+          <!-- style="margin: 0em; overflow: auto" -->
+          <div id="result_tree" ng-if="qc.isSelected(3)"
+            mn-json-tree="qc.lastResult.data"></div>
+          <!-- style="margin: 0em; overflow: auto" -->
 
         </div>
 
       </div>
     </div>
 
-	</div>
+  </div>

@@ -44,6 +44,9 @@
     qc.selectTab = selectTab;
     qc.isSelected = mnQueryService.isSelected;
 
+    qc.status_success = mnQueryService.status_success;
+    qc.status_fail = mnQueryService.status_fail;
+
     //
     // options for the two editors, query and result
     //
@@ -246,8 +249,9 @@
       // add a limit to all "select" statements by wrapping
       if (startsWithSelect && !hasLimit) {
         // handle garbage in the limit dialog
-        if (isNaN(Number(mnQueryService.limit.max)))
-          mnQueryService.limit.max = 50;
+        if (isNaN(Number(mnQueryService.limit.max)) || 
+            mnQueryService.limit.max < 1)
+          mnQueryService.limit.max = mnQueryService.defaultLimit;
 
         // wrap the query in a new query with a limit 
         queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + mnQueryService.limit.max + ";";

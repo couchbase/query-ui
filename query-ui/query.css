@@ -57,12 +57,32 @@ flex: 1 0 50%;
 flex: 1 0 25%;
 } 
 
-.cbui-column75 {
-flex: 1 0 75%;
+.cbui-column33 {
+flex: 1 0 33%;
 } 
+
+.cbui-column75 {
+flex: 1 0 74%;
+} 
+
+.cbui-centered {
+  text-align: center;
+}
+
+.cbui-right {
+  text-align: right;
+}
 
 a.cbui-rightmargin {
     margin: 0 12px 0 0;
+}
+
+.cbui_color_success {
+  background-color: #a5ff9f
+}
+
+.cbui_color_fail {
+  background-color: #fc7d83
 }
 
 .cbui-query-resultsnumber input {
@@ -95,13 +115,13 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4', end
 #result_summary table,
 #result_summary th,
 #result_summary tr,
-#result_summary td {background-color:#fff; font-size:11px; font-weight:600;vertical-align:middle;}
+#result_summary td {font-size:11px; font-weight:600;vertical-align:middle;}
 #result_summary td {width:20%; text-align:center; padding: 4px 0;}
 #result_summary table { }
 #result_editor {overflow:auto;background-color:#fff; padding: 8px; margin: 1px; font-size:14px; font-weight:400;}
 #result_table,
 #result_tree  {height:500px; padding: 0px; padding-right: 4px; margin-right: 4px; margin-top: 0px; overflow:auto;background-color:#fff; }
-.cbui-viewslist {overflow:auto;}
+.cbui-viewslist {overflow:auto; width: 100%}
 .cbui-query-results-wrapper {
  -webkit-border-radius: 4px 4px 0px 0px;
  -moz-border-radius: 4px 4px 0px 0px;
