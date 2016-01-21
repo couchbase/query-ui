@@ -39,19 +39,17 @@
 
     // execute queries, and keep track of when we are busy doing so
 
-    mnQueryService.busyExecutingQuery = false;
+    mnQueryService.executingQuery = {busy: false};
     mnQueryService.executeQuery = executeQuery; 
 
     // update store the metadata about buckets
 
     mnQueryService.buckets = [];
-    mnQueryService.busyGettingBuckets = false;  
+    mnQueryService.gettingBuckets = {busy: false};  
     mnQueryService.updateBuckets = updateBuckets;             // get list of buckets
     mnQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     mnQueryService.authenticateBuckets = authenticateBuckets; // check password    
 
-    mnQueryService.loadStateFromStorage = loadStateFromStorage;
-    
     // for the front-end, distinguish error status and good statuses
     
     mnQueryService.status_success = status_success;
@@ -138,7 +136,7 @@
     //
     
     function getCurrentIndex() {
-      return currentQueryIndex + "/" + (pastQueries.length == 0 ? 0 : pastQueries.length -1);
+      return (currentQueryIndex+1) + "/" + (pastQueries.length == 0 ? 1 : pastQueries.length);
     }
     
     // 
@@ -154,7 +152,7 @@
     }
 
     var hasLocalStorage = supportsHtml5Storage();
-    var localStorageKey = 'CouchbaseQueryWorkbenchState';
+    var localStorageKey = 'CouchbaseQueryWorkbenchState_' + window.location.host;
 
     function loadStateFromStorage() {
       // make sure we have local storage
@@ -355,10 +353,10 @@
 
 
       // don't allow multiple queries at once
-      if (mnQueryService.busyExecutingQuery)
+      if (mnQueryService.executingQuery.busy)
         return;
 
-      mnQueryService.busyExecutingQuery = true;
+      mnQueryService.executingQuery.busy = true;
       lastResult.result = '{"status": "Executing Query"}';
       lastResult.data = {status: "Executing Query"};
 
@@ -427,7 +425,7 @@
         saveStateToStorage();
 
         // all done 
-        mnQueryService.busyExecutingQuery = false;      
+        mnQueryService.executingQuery.busy = false;      
 
 //      var post2_ms = new Date().getTime();
 
@@ -447,7 +445,7 @@
           newResult.data = lastResult.result;
           newResult.status = "errors";
           lastResult.copyIn(newResult);
-          mnQueryService.busyExecutingQuery = false;      
+          mnQueryService.executingQuery.busy = false;      
           return;
         }
 
@@ -456,11 +454,16 @@
           newResult.result = JSON.stringify(newResult.data);
           newResult.status = "errors";
           lastResult.copyIn(newResult);
-          mnQueryService.busyExecutingQuery = false;      
+          mnQueryService.executingQuery.busy = false;      
           return;          
         }
 
         if (data.errors) {
+          if (!_.isArray(data.errors)) { 
+            var temp = data.errors;
+            data.errors = [];
+            data.errors.push(temp);
+          }
           data.errors.push({original_query:queryText});
           newResult.data = data.errors;
           newResult.result = JSON.stringify(data.errors);
@@ -486,7 +489,7 @@
         // save the state
         saveStateToStorage();
 
-        mnQueryService.busyExecutingQuery = false;      
+        mnQueryService.executingQuery.busy = false;      
       });
     }
 
@@ -495,10 +498,10 @@
     //
 
     function updateBuckets() {
-      if (mnQueryService.busyGettingBuckets)
+      if (mnQueryService.gettingBuckets.busy)
         return;
 
-      mnQueryService.busyGettingBuckets = true;
+      mnQueryService.gettingBuckets.busy = true;
       mnQueryService.buckets.length = 0;
 
       // use a query to get buckets with a primary index
@@ -561,11 +564,11 @@
         });
 
 
-        mnQueryService.busyGettingBuckets = false;
+        mnQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
         mnQueryService.buckets.push({id: data.errors, schema: []});
-        mnQueryService.busyGettingBuckets = false;
+        mnQueryService.gettingBuckets.busy = false;
       });
 
     };
@@ -587,7 +590,12 @@
 
     function getSchemaForBucket(bucket) {
 
-      var queryText = "describe `" + bucket.id + "`;";
+      if (mnQueryService.gettingBuckets.busy)
+        return;
+
+      mnQueryService.gettingBuckets.busy = true;
+
+       var queryText = "describe `" + bucket.id + "`;";
       var queryData = {statement: queryText};
       if (bucket.password)
         queryData.creds = '[{"user":"local:'+bucket.id+'","pass":"' + bucket.password +'"}]';
@@ -642,12 +650,15 @@
             bucket.schema[flavor].hasFields = Object.keys(bucket.schema[flavor].properties).length > 0;
           }
 
-          bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " document flavors found from a sample of "+ totalDocCount + " documents"});        
-        }
+          bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " document flavors found from a sample of "+ totalDocCount + " documents",
+            hasFields: true});        
+       }
 
+        mnQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
         console.log("Query Error: " + JSON.stringify(data.errors));
+        mnQueryService.gettingBuckets.busy = false;
       });
 
     };

@@ -7,8 +7,6 @@
 
   function queryController ($rootScope, $uibModal, $timeout, mnQueryService, mnPromiseHelper) {
 
-    var fakePromise = {then: function() {}};
-
     var qc = this;
 
     //
@@ -21,12 +19,12 @@
     // alot of state is provided by the mnQueryService
     //
 
-    qc.buckets = mnQueryService.buckets;                      // buckets on cluster
-    qc.busyGettingBuckets = mnQueryService.busyGettingBuckets;// busy retrieving?
-    qc.updateBuckets = mnQueryService.updateBuckets;          // function to update
+    qc.buckets = mnQueryService.buckets;                // buckets on cluster
+    qc.gettingBuckets = mnQueryService.gettingBuckets;  // busy retrieving?    
+    qc.updateBuckets = mnQueryService.updateBuckets;    // function to update
     qc.lastResult = mnQueryService.getResult(); // holds the current query and result 
     qc.limit = mnQueryService.limit;            // automatic result limiter
-    qc.busyExecutingQuery = mnQueryService.busyExecutingQuery;
+    qc.executingQuery = mnQueryService.executingQuery;
 
     // some functions for handling query history, going backward and forward
 

@@ -26,8 +26,7 @@
           </a> 
         </span>
         <span class="cbui-column25 cbui-right">
-          <a ng-click="qc.save_query()" class="btn_1"
-          ng-class="{dynamic_disabled: busyExecutingQuery()}"> 
+          <a ng-click="qc.save_query()" class="btn_1"> 
           <span>Save Query</span></a>
         </span> 
       </div>
@@ -39,7 +38,7 @@
 
       <div class="cbui-row cbui-header-oldgray">
         <a ng-click="qc.query()" class="btn_1"
-          ng-class="{dynamic_disabled: busyExecutingQuery()}"
+          ng-class="{dynamic_disabled: qc.executingQuery.busy}"
           title="(or hit enter after a semicolon)"><span>Execute</span></a>
         <span class="cbui-query-resultsnumber"><h5>Result
             limit:</h5>
@@ -54,10 +53,10 @@
         <div id="sidebar_header" class="cbui-row cbui-header-oldgray">
           <h4>Analysis</h4>
 
-          <span> <img ng-hide="qc.busyGettingIndexedBuckets"
+          <span> <img ng-hide="qc.gettingBuckets.busy"
             ng-click="qc.updateBuckets()" class="cbui-refreshicon"
             src="/_p/ui/query/images/spinner/spinner_lightbox_static.gif" />
-            <img ng-show="qc.busyGettingIndexedBuckets"
+            <img ng-show="qc.gettingBuckets.busy"
             class="cbui-busyicon"
             src="/_p/ui/query/images/spinner/spinner_lightbox.gif" />
           </span>
