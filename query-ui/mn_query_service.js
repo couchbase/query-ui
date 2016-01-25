@@ -359,7 +359,7 @@
       mnQueryService.executingQuery.busy = true;
       lastResult.result = '{"status": "Executing Query"}';
       lastResult.data = {status: "Executing Query"};
-
+      lastResult.status = "executing";
 //    var pre_post_ms = new Date().getTime();
 
       //
