@@ -35,7 +35,7 @@
           // create an empty div, if we have data, convert it to HTML
           var content = "<div></div>";
           if (json && !_.isEmpty(json))
-            content = '<div class="ajtd-root ajtd-type-array">' + makeHTMLtree(json) + "</div>";
+            content = '<div class="ajtd-root ajtd-type-array">' + makeHTMLtree(json,"") + "</div>";
 
           // set the html of the element to what we just generated
           element.html(content);
@@ -53,7 +53,7 @@
   //to render a list with tens of thousands of elements
 
 
-  var makeHTMLtree = function(object) {
+  var makeHTMLtree = function(object,prefix) {
     var result = '';
 
     // for an object, create an unordered list and iterate over the fields
@@ -72,12 +72,14 @@
         if (key === '$$hashKey') return;
         // for arrays and objects, we need a recursive call
         if (_.isArray(value) || _.isPlainObject(value))
-          result += '<li><div><div class=ajtd-key>' + key + '</div><div class=ajtd-object-value>' +
-          makeHTMLtree(value) + '</div></div></li>';
+          result += '<li title="' + prefix + key + '"><div><div class=ajtd-key>' 
+            + key + '</div><div class=ajtd-object-value>' +
+          makeHTMLtree(value,prefix + key + ".") + '</div></div></li>';
 
         // otherwise, for primitives, output key/value pair
         else
-          result += '<li><div><span class=ajtd-key>' + key + '</span><span class=ajtd-value>' +
+          result += '<li title="' + prefix + key + '"><div><span class=ajtd-key>' + 
+          key + '</span><span class=ajtd-value>' +
           value + '</span></div></li>';
       });
       result += "</ul>";
@@ -93,15 +95,19 @@
       result += '<ul class="ajtd-type-array">';
       for (var i=0; i<object.length; i++) {
         var value = object[i];
+        result += '<li  title="' + prefix + "[" + i + "]" + '"><div class=ajtd-value>';
+        
         // for arrays and objects, we need a recursive call
         if (_.isArray(value) || _.isPlainObject(value))
-          result += '<li><div class=ajtd-object-value>' + makeHTMLtree(value) + '</div></li>';
+          result += makeHTMLtree(value,prefix + "[" + i + "].");
 
         // otherwise, for primitives, output key/value pair
         else if (!_.isUndefined(value))
-          result += '<li><div class=ajtd-value>' + value + '</div></li>';
+          result += value;
         else
-          result += '<li><div class=ajtd-value>&nbsp</div></li>';
+          result += '&nbsp';
+        
+        result += '</div></li>';
       }
       result += "</ul>";
     }
@@ -110,7 +116,7 @@
     // it's also possible we were passed a primitive value, in which case just put it in a div
 
     else
-      result += '<div class=ajtd-value>' + object + '</div>'
+      result += '<div class=ajtd-value title="' + prefix + '">' + object + '</div>'
 
       return(result);
   };
