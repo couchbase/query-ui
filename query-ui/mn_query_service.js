@@ -51,15 +51,15 @@
     mnQueryService.authenticateBuckets = authenticateBuckets; // check password    
 
     // for the front-end, distinguish error status and good statuses
-    
+
     mnQueryService.status_success = status_success;
     mnQueryService.status_fail = status_fail;
-    
+
     function status_success() {return(lastResult.status == 'success');}
     function status_fail() 
     {return(lastResult.status == '400' || lastResult.status == 'errors' || 
         lastResult.status == '500');}
-        
+
     //
     // this structure holds the current query text, the current query result,
     // and defines the object for holding the query history
@@ -134,11 +134,11 @@
     //
     // where are we w.r.t. the query history?
     //
-    
+
     function getCurrentIndex() {
       return (currentQueryIndex+1) + "/" + (pastQueries.length == 0 ? 1 : pastQueries.length);
     }
-    
+
     // 
     // we want to store our state in the browser, if possible
     //
@@ -246,7 +246,7 @@
     // we also keep a history of executed queries and their results
     // we will permit forward and backward traversal of the history
     //
-    
+
     var tempResult = "Processing";
     var tempData = {status: "processing"};
 
@@ -595,7 +595,7 @@
 
       mnQueryService.gettingBuckets.busy = true;
 
-       var queryText = "describe `" + bucket.id + "`;";
+      var queryText = "infer `" + bucket.id + "`;";
       var queryData = {statement: queryText};
       if (bucket.password)
         queryData.creds = '[{"user":"local:'+bucket.id+'","pass":"' + bucket.password +'"}]';
@@ -605,12 +605,13 @@
         //console.log("Done!");
         bucket.schema.length = 0;
         //console.log("Schema status: " + status);
-        //console.log("Schema results: " + JSON.stringify(data));
-        if (_.isString(data.results))
+        //console.log("Schema results: " + JSON.stringify(data.results));
+        if (data.errors && data.errors[0] && data.errors[0].msg)
+          bucket.schema_error = data.errors[0].msg;
+        else if (_.isString(data.results))
           bucket.schema_error = data.results;
-        else if (data.results && data.results.error)
-          bucket.schema_error = data.results.error;
         else {
+          //console.log("Got schema: " + JSON.stringify(data.results));
           bucket.schema = data.results[0];
 
           var totalDocCount = 0;
@@ -650,9 +651,10 @@
             bucket.schema[flavor].hasFields = Object.keys(bucket.schema[flavor].properties).length > 0;
           }
 
-          bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " document flavors found from a sample of "+ totalDocCount + " documents",
+          if (bucket.schema.length)
+          bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
             hasFields: true});        
-       }
+        }
 
         mnQueryService.gettingBuckets.busy = false;
       })
@@ -695,7 +697,7 @@
     //
     // load state from storage if possible
     //
-    
+
     loadStateFromStorage();
 
     //

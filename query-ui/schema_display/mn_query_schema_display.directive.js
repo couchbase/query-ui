@@ -55,11 +55,25 @@
 
       function recursionPostCompile(scope, element) {
         // correctly output sample values of type array 
-        scope.showSample = function(value) {
-          if (_.isArray(value))
-            return(JSON.stringify(value));
+        scope.showSamples = function(field) {
+          if (_.isArray(field.samples)) {
+            var result = "e.g., ";
+            
+            for (var i =0;i < 3 && i < field.samples.length; i++) {
+              var value = field.samples[i];
+              if (result.length > 6)
+                result += ", ";
+              
+              if (_.isArray(value))
+                result += JSON.stringify(value);
+              else
+                result += value;
+            }
+            
+            return(result);
+          }
           else
-            return(value);
+            return("");
         };
 
         // Compile the contents
@@ -196,10 +210,12 @@
       template: 
         '<ul>' +
         '  <li style="white-space: nowrap" ng-repeat="(name,  field) in schema.properties">' +
-        '    <div class="indexed" ng-show="field.type!=\'object\' && field.indexed"> {{name}}' +
-        '      {{" ("+ field.type + ", indexed), e.g.: " + showSample(field.samples[0])}}</div>' +
-        '    <div ng-show="field.type!=\'object\' && !field.indexed"> {{name}}' +
-        '      {{" ("+ field.type + "), e.g.: " + showSample(field.samples[0])}}</div>' +
+        '    <div class="indexed" ng-show="field.type!=\'object\' && field.indexed"' +
+        '     ng-attr-title="{{showSamples(field)}}"> {{name}}' +
+        '      {{" ("+ field.type + ", indexed)"}}</div>' +
+        '    <div ng-show="field.type!=\'object\' && !field.indexed"' +
+        '      ng-attr-title="{{showSamples(field)}}"> {{name}}' +
+        '      {{" ("+ field.type + ")"}}</div>' +
         '    <div ng-show="field.type==\'object\'"> {{name}}' +
         '      {{" ("+ field.type + "), child type: "}} ' + 
         '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +

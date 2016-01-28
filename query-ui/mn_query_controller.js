@@ -201,7 +201,7 @@
       //var width = $('#result_editor').width();
 
       //console.log(" editor_size: " + editor_size);
-      $('#metadata').height(editor_size + resultHeaderHeight + resultSummaryHeight + 50);
+      $('#sidebar_body').height(editor_size + resultSummaryHeight + 25);
       $('#result_editor').height(editor_size);
       $('#result_table').height(editor_size+20);
       $('#result_tree').height(editor_size+20);
