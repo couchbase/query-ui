@@ -32,7 +32,8 @@
         plugIn: 'adminTab'
       });
     })
-    .run(function(jQuery, $timeout) {
+    .run(function(jQuery, $timeout, $http) {
+      // hack - ensure the menu bar has enough space
       function setTopNavWidth() {
         var current = jQuery("#headerNav .contents").width();
         if (current) {
@@ -42,10 +43,49 @@
           $timeout(setTopNavWidth, 100);
         }
       }
+
+      // initialization
+      console.log("Loading mnQuery panel.");
       setTopNavWidth();
     })
-    .controller('mnQueryController', function($scope) {
-      $scope.statement = 'Goodbye'
+    
+    // we can only work if we have a query node. This service checks for 
+    // a query node a reports back whether it is present.
+    
+    .factory('validateQueryService', function($http,mnServersService) {
+      var _valid = false;
+      var _inProgress = true;
+      var _validNodes = [];
+      var service = {
+          inProgress: function() {return _inProgress;},
+          valid: function()      {return _valid;},
+          otherNodes: function() {return _validNodes;}
+      }
+      
+      // we can only run on nodes that support our API 
+      var queryData = {statement: "select \"test\";"};
+      $http.post("/_p/query/query/service",queryData)
+      .success(function(data, status, headers, config) {
+        _valid = true; _inProgress = false;
+        
+      })
+      .error(function(data, status, headers, config) {
+        _valid = false; _inProgress = false;
+        
+        // since we failed, let's go through the list of nodes
+        // and see which ones have a query service
+
+        mnServersService.getNodes().then(function (resp) {
+          var nodes = resp.allNodes;
+          for (var i = 0; i < nodes.length; i++)
+            if (_.contains(nodes[i].services,"n1ql"))
+              _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/_p/ui/query/_p/ui/query/workbench");
+        });
+      });
+
+      return service;
     });
+  
+  
   angular.module('mnAdmin').requires.push('mnQuery');
 }());

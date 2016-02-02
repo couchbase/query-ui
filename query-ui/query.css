@@ -104,6 +104,12 @@ background: linear-gradient(to bottom,  #e3e3e4 0%,#cdced0 100%); /* W3C, IE10+,
 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4', endColorstr='#cdced0',GradientType=0 ); /* IE6-9 */
 }
 
+.cbui-nodelist {
+  font-size:20px; 
+  font-weight:normal;
+  padding:0 0 15px 9px;
+}
+
 #query_ui h2 {margin-left:8px;font-size: 19px; font-weight:500; color:#333;}
 #query_ui h4 {display:inline-block; margin-right: 8px; font-size: 16px; font-weight:600; color:#444;}
 #query_ui h5 {display:inline-block; margin: 0 8px; font-size: 14px; font-weight:500; color:#444;}

@@ -567,7 +567,13 @@
         mnQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
-        mnQueryService.buckets.push({id: data.errors, schema: []});
+        if (data && data.errors)
+          mnQueryService.buckets.push({id: data.errors, schema: []});
+        else if (status)
+          mnQueryService.buckets.push({id: status, schema: []});
+        else
+          mnQueryService.buckets.push({id: "Error retrieving schema.", schema: []});
+
         mnQueryService.gettingBuckets.busy = false;
       });
 

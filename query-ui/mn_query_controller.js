@@ -3,9 +3,9 @@
 
   angular.module('mnQuery').controller('mnQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'mnQueryService', 'mnPromiseHelper'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'mnQueryService', 'mnPromiseHelper', 'validateQueryService'];
 
-  function queryController ($rootScope, $uibModal, $timeout, mnQueryService, mnPromiseHelper) {
+  function queryController ($rootScope, $uibModal, $timeout, mnQueryService, mnPromiseHelper, validateQueryService) {
 
     var qc = this;
 
@@ -83,6 +83,12 @@
         $blockScrolling: Infinity
     };
 
+    //
+    // Do we have a REST API to work with?
+    //
+    
+    qc.validated = validateQueryService;
+    
     //
     // call the activate method for initialization
     //
@@ -210,7 +216,7 @@
       //$('#result_editor').width(width);
       //$('#result_table').width(width);
       //$('#result_tree').width(width);
-
+      
     }
 
     $(window).resize(function() {

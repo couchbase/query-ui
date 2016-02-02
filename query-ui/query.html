@@ -1,7 +1,7 @@
 
 <div id="query_pane" style="background-color: #fff"
 	ng-controller="mnQueryController as qc"
-	class="container ui-layout-center shadow_box">
+	ng-if="qc.validated.valid()" class="container ui-layout-center shadow_box">
 
   <div id="query_ui" mn-spinner="queryInProgress" class="contents">
 
