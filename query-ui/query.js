@@ -15,12 +15,12 @@
         templateUrl: '/_p/ui/query/query_toplevel.html'
       })
       .state('app.admin.query.monitoring', {
-        url: '/_p/ui/query/monitoring',
+        url: '/monitoring',
         controller: 'mnQueryController',
         templateUrl: '/_p/ui/query/query_monitoring.html'
       })
       .state('app.admin.query.workbench', {
-        url: '/_p/ui/query/workbench',
+        url: '/workbench',
         controller: 'mnQueryController',
         templateUrl: '/_p/ui/query/query.html'
       })
@@ -45,8 +45,7 @@
       }
 
       // initialization
-      console.log("Loading mnQuery panel.");
-      setTopNavWidth();
+       setTopNavWidth();
     })
     
     // we can only work if we have a query node. This service checks for 
@@ -79,7 +78,7 @@
           var nodes = resp.allNodes;
           for (var i = 0; i < nodes.length; i++)
             if (_.contains(nodes[i].services,"n1ql"))
-              _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/_p/ui/query/_p/ui/query/workbench");
+              _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/_p/ui/query/workbench");
         });
       });
 

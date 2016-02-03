@@ -238,17 +238,17 @@
     //
 
     function query() {
+      // remove trailing whitespace to keep query from growing, and avoid
+      // syntax errors (query parser doesn't like \n after ;
+      if (endsWithSemi.test(qc.lastResult.query))
+        qc.lastResult.query = qc.lastResult.query.replace(endsWithSemi,";");
+
       var queryStr = qc.lastResult.query;
       var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
       var startsWithSelectExpr = /^\s*select/gmi;
       
       var hasLimit = hasLimitExpr.test(queryStr);
       var startsWithSelect = startsWithSelectExpr.test(queryStr);
-
-      // we need to strip out whitespace/newlines after ; to avoid 
-      // syntax errors
-      if (endsWithSemi.test(queryStr))
-        queryStr = queryStr.replace(endsWithSemi,"");
       
       // add a limit to all "select" statements by wrapping
       if (startsWithSelect && !hasLimit) {
@@ -257,6 +257,10 @@
             mnQueryService.limit.max < 1)
           mnQueryService.limit.max = mnQueryService.defaultLimit;
 
+        // remove ; 
+        if (endsWithSemi.test(queryStr))
+          queryStr = queryStr.replace(endsWithSemi,"");
+
         // wrap the query in a new query with a limit 
         queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + mnQueryService.limit.max + ";";
       }
@@ -264,7 +268,7 @@
       //console.log("Running query: " + queryStr);
       // run the query and show a spinner
 
-      var promise = mnQueryService.executeQuery(queryStr);
+      var promise = mnQueryService.executeQuery(queryStr,qc.lastResult.query);
 
       if (promise) {
         // for long queries, show a spinner

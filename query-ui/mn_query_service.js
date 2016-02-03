@@ -57,8 +57,10 @@
 
     function status_success() {return(lastResult.status == 'success');}
     function status_fail() 
-    {return(lastResult.status == '400' || lastResult.status == 'errors' || 
-        lastResult.status == '500');}
+    {return(lastResult.status == '400' || 
+        lastResult.status == 'errors' || 
+        lastResult.status == '500' ||
+        lastResult.status == '404');}
 
     //
     // this structure holds the current query text, the current query result,
@@ -319,7 +321,7 @@
     // call the proxy which handles N1QL queries
     //
 
-    function executeQuery(queryText) {
+    function executeQuery(queryText, userQuery) {
       var newResult;
 
       // if the current query is part of the history, update the results from the history
@@ -343,7 +345,8 @@
       // don't allow multiple queries, as indicated by anything after a semicolon
 
       var stuffAfterSemi = /;\s*\S+/i;
-      if (stuffAfterSemi.test(queryText)) {
+      var stuffAfterMatches = stuffAfterSemi.exec(queryText);
+      if (stuffAfterMatches && stuffAfterMatches.length > 1) {
         newResult.status = "errors";
         newResult.result = '{"error": "you cannot issue more than one query at once."}';
         newResult.data = {error: "Error, you cannot issue more than one query at once."};
@@ -451,7 +454,7 @@
 
         if (_.isString(data)) {
           newResult.data = {status: data};
-          newResult.result = JSON.stringify(newResult.data);
+          newResult.result = JSON.stringify(newResult.data,null,'  ');
           newResult.status = "errors";
           lastResult.copyIn(newResult);
           mnQueryService.executingQuery.busy = false;      
@@ -464,9 +467,11 @@
             data.errors = [];
             data.errors.push(temp);
           }
-          data.errors.push({original_query:queryText});
+          if (userQuery)
+            data.errors.push({query_from_user:userQuery});
+          data.errors.push({query_with_limit:queryText});
           newResult.data = data.errors;
-          newResult.result = JSON.stringify(data.errors);
+          newResult.result = JSON.stringify(data.errors,null,'  ');
         }
 
         if (status)
@@ -665,7 +670,10 @@
         mnQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
-        console.log("Query Error: " + JSON.stringify(data.errors));
+        if (data.errors)
+          console.log("Query Error: " + JSON.stringify(data.errors,null,'  '));
+        else
+          console.log("Query Error: " + status);
         mnQueryService.gettingBuckets.busy = false;
       });
 
