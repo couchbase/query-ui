@@ -29,7 +29,8 @@
       mnPluggableUiRegistryProvider.registerConfig({
         name: 'Query',
         state: 'app.admin.query.workbench',
-        plugIn: 'adminTab'
+        plugIn: 'adminTab',
+        after: 'buckets'
       });
     })
     .run(function(jQuery, $timeout, $http) {
