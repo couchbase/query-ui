@@ -363,7 +363,7 @@
       lastResult.result = '{"status": "Executing Query"}';
       lastResult.data = {status: "Executing Query"};
       lastResult.status = "executing";
-//    var pre_post_ms = new Date().getTime();
+      var pre_post_ms = new Date().getTime(); // when did we start?
 
       //
       // create a data structure for holding the query, and the credentials for any SASL
@@ -443,6 +443,18 @@
       })
       .error(function(data, status, headers, config) {
         //console.log("Error Data: " + JSON.stringify(data));
+        //console.log("Error Status: " + JSON.stringify(status));
+        //console.log("Error Headers: " + JSON.stringify(headers));
+        //console.log("Error Config: " + JSON.stringify(config));
+
+        // if we don't get query metrics, estimate elapsed time
+        if (!data || !data.metrics) {
+          var post_ms = new Date().getTime();
+          newResult.elapsedTime = (post_ms - pre_post_ms) + "ms";
+          newResult.executionTime = newResult.elapsedTime;
+        }
+        
+        // no result at all? failure
         if (!data) {
           newResult.result = '{"status": "Failure contacting server."}';
           newResult.data = lastResult.result;
@@ -452,6 +464,7 @@
           return;
         }
 
+        // result is a string? it must be an error message
         if (_.isString(data)) {
           newResult.data = {status: data};
           newResult.result = JSON.stringify(newResult.data,null,'  ');
@@ -526,7 +539,7 @@
         "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes union select \"\" keyspace_id)" +
         "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
-      res1 = $http.post("/_p/query/query/service",{statement : queryText })
+      res1 = $http.post("/_p/query/query/service",{statement : queryText})
       .success(function(data, status, headers, config) {
 
         var bucket_names = [];

@@ -34,19 +34,6 @@
       });
     })
     .run(function(jQuery, $timeout, $http) {
-      // hack - ensure the menu bar has enough space
-      function setTopNavWidth() {
-        var current = jQuery("#headerNav .contents").width();
-        if (current) {
-          jQuery("#headerNav .contents").width(1040);
-        }
-        else {
-          $timeout(setTopNavWidth, 100);
-        }
-      }
-
-      // initialization
-       setTopNavWidth();
     })
     
     // we can only work if we have a query node. This service checks for 
