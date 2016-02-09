@@ -24,10 +24,10 @@
 
     mnQueryService.getResult = function() {return lastResult;};
     mnQueryService.getCurrentIndex = getCurrentIndex;
-    mnQueryService.clearHistory = clearHistory; 
-    mnQueryService.hasPrevResult = hasPrevResult; 
-    mnQueryService.hasNextResult = hasNextResult; 
-    mnQueryService.prevResult = prevResult; 
+    mnQueryService.clearHistory = clearHistory;
+    mnQueryService.hasPrevResult = hasPrevResult;
+    mnQueryService.hasNextResult = hasNextResult;
+    mnQueryService.prevResult = prevResult;
     mnQueryService.nextResult = nextResult;
 
     //
@@ -35,20 +35,20 @@
     //
 
     mnQueryService.autoCompleteTokens = {}; // keep a map, name and kind
-    mnQueryService.autoCompleteArray = []; // array for use with Ace Editor  
+    mnQueryService.autoCompleteArray = []; // array for use with Ace Editor
 
     // execute queries, and keep track of when we are busy doing so
 
     mnQueryService.executingQuery = {busy: false};
-    mnQueryService.executeQuery = executeQuery; 
+    mnQueryService.executeQuery = executeQuery;
 
     // update store the metadata about buckets
 
     mnQueryService.buckets = [];
-    mnQueryService.gettingBuckets = {busy: false};  
+    mnQueryService.gettingBuckets = {busy: false};
     mnQueryService.updateBuckets = updateBuckets;             // get list of buckets
     mnQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
-    mnQueryService.authenticateBuckets = authenticateBuckets; // check password    
+    mnQueryService.authenticateBuckets = authenticateBuckets; // check password
 
     // for the front-end, distinguish error status and good statuses
 
@@ -56,9 +56,9 @@
     mnQueryService.status_fail = status_fail;
 
     function status_success() {return(lastResult.status == 'success');}
-    function status_fail() 
-    {return(lastResult.status == '400' || 
-        lastResult.status == 'errors' || 
+    function status_fail()
+    {return(lastResult.status == '400' ||
+        lastResult.status == 'errors' ||
         lastResult.status == '500' ||
         lastResult.status == '404');}
 
@@ -129,7 +129,7 @@
     savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
     savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
 
-    var pastQueries = [];       // keep a history of past queries and their results 
+    var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
     // end of the array, since there's no history yet
 
@@ -141,7 +141,7 @@
       return (currentQueryIndex+1) + "/" + (pastQueries.length == 0 ? 1 : pastQueries.length);
     }
 
-    // 
+    //
     // we want to store our state in the browser, if possible
     //
 
@@ -170,7 +170,7 @@
           currentQueryIndex = savedState.currentQueryIndex;
           pastQueries = savedState.pastQueries;
           mnQueryService.outputTab = savedState.outputTab;
-          mnQueryService.limit = savedState.limit;      
+          mnQueryService.limit = savedState.limit;
         }
         else
           console.log("No last result");
@@ -258,8 +258,8 @@
     {
       if (currentQueryIndex > 0) // can't go earlier than the 1st
       {
-        // if we are going backward from the end of the line, from a query that 
-        // has been edited but hasn't been run yet, we need to add it to the 
+        // if we are going backward from the end of the line, from a query that
+        // has been edited but hasn't been run yet, we need to add it to the
         // history
 
         if (currentQueryIndex === (pastQueries.length-1) &&
@@ -273,10 +273,10 @@
           currentQueryIndex++;
         }
 
-        // 
-        // the following gross hack is due to an angular issue where it doesn't 
-        // successfully detect *some* changes in the result data, and thus doesn't 
-        // update the table. So we set the result to blank, then back to a value 
+        //
+        // the following gross hack is due to an angular issue where it doesn't
+        // successfully detect *some* changes in the result data, and thus doesn't
+        // update the table. So we set the result to blank, then back to a value
         // after a certain delay.
         //
 
@@ -286,7 +286,7 @@
         $timeout(function(){
           currentQueryIndex--;
           lastResult.copyIn(pastQueries[currentQueryIndex]);
-          currentQuery = lastResult.query;        
+          currentQuery = lastResult.query;
         },50);
       }
     }
@@ -296,7 +296,7 @@
       if (currentQueryIndex < pastQueries.length -1) // can we go forward?
       {
 
-        // 
+        //
         // see comment above about the delay hack.
         //
 
@@ -314,7 +314,7 @@
     function clearHistory() {
       lastResult.copyIn(dummyResult);
       pastQueries.length = 0;
-      currentQueryIndex = 0;      
+      currentQueryIndex = 0;
     }
 
     //
@@ -372,14 +372,14 @@
 
       var queryData = {statement: queryText};
       var credString = "";
-      for (var i = 0; i < mnQueryService.buckets.length; i++) { 
+      for (var i = 0; i < mnQueryService.buckets.length; i++) {
         if (credString.length > 0)
           credString += ",";
 
-        var pw = mnQueryService.buckets[i].password ? 
+        var pw = mnQueryService.buckets[i].password ?
             mnQueryService.buckets[i].password : "";
 
-            credString += '{"user":"local:'+mnQueryService.buckets[i].id+'","pass":"' + 
+            credString += '{"user":"local:'+mnQueryService.buckets[i].id+'","pass":"' +
             pw +'"}';
       }
 
@@ -387,7 +387,12 @@
         queryData.creds = '[' + credString + ']';
 
       // send the query off via REST API
-      return $http.post("/_p/query/query/service",queryData)
+      var timeout = 300; // query timeout in seconds
+      var request = {url: "/_p/query/query/service",
+                     method: "POST",
+                     headers: {'ns-server-proxy-timeout':timeout*1000},
+                     data: queryData};
+      return $http(request)
       .success(function(data, status, headers, config) {
         var result;
 
@@ -400,7 +405,7 @@
           var failed = "Authorization Failed";
           // hack - detect authorization failed, make a suggestion
           for (var i=0; i < data.errors.length; i++)
-            if (data.errors[i].msg && 
+            if (data.errors[i].msg &&
                 data.errors[i].msg.length >= failed.length &&
                 data.errors[i].msg.substring(0,failed.length) == failed)
               data.errors[i].suggestion = "Try authorizing the necessary bucket(s) in the metadata panel to the left.";
@@ -427,16 +432,16 @@
         // save the state
         saveStateToStorage();
 
-        // all done 
-        mnQueryService.executingQuery.busy = false;      
+        // all done
+        mnQueryService.executingQuery.busy = false;
 
 //      var post2_ms = new Date().getTime();
 
 //      $timeout(function(){
 //      var post3_ms = new Date().getTime();
 //      var diff1 = post_post_ms - pre_post_ms;
-//      var diff2 = post2_ms - post_post_ms; 
-//      var diff3 = post3_ms - post2_ms; 
+//      var diff2 = post2_ms - post_post_ms;
+//      var diff3 = post3_ms - post2_ms;
 //      console.log("Query execution time: " + diff1 + ", processing: " + diff2 + ", rendering: " + diff3);
 //      },10);
 
@@ -453,43 +458,45 @@
           newResult.elapsedTime = (post_ms - pre_post_ms) + "ms";
           newResult.executionTime = newResult.elapsedTime;
         }
-        
+
         // no result at all? failure
         if (!data) {
           newResult.result = '{"status": "Failure contacting server."}';
           newResult.data = lastResult.result;
           newResult.status = "errors";
           lastResult.copyIn(newResult);
-          mnQueryService.executingQuery.busy = false;      
+          mnQueryService.executingQuery.busy = false;
           return;
         }
 
         // result is a string? it must be an error message
         if (_.isString(data)) {
           newResult.data = {status: data};
+          if (status && status == 504) {
+            newResult.data.status_detail = "The query workbench only supports queries running for " + timeout +
+            " seconds. Use cbq from the command-line for longer running queries.";
+          }
+
           newResult.result = JSON.stringify(newResult.data,null,'  ');
           newResult.status = "errors";
           lastResult.copyIn(newResult);
-          mnQueryService.executingQuery.busy = false;      
-          return;          
+          mnQueryService.executingQuery.busy = false;
+          return;
         }
 
         if (data.errors) {
-          if (!_.isArray(data.errors)) { 
-            var temp = data.errors;
-            data.errors = [];
-            data.errors.push(temp);
+          if (_.isArray(data.errors) && data.errors.length >= 1) {
+            if (userQuery)
+              data.errors[0].query_from_user = userQuery;
+            data.errors[0].query_with_limit = queryText;
           }
-          if (userQuery)
-            data.errors.push({query_from_user:userQuery});
-          data.errors.push({query_with_limit:queryText});
           newResult.data = data.errors;
           newResult.result = JSON.stringify(data.errors,null,'  ');
         }
 
         if (status)
           newResult.status = status;
-        else 
+        else
           newResult.status = "errors";
 
         if (data.metrics) {
@@ -507,7 +514,7 @@
         // save the state
         saveStateToStorage();
 
-        mnQueryService.executingQuery.busy = false;      
+        mnQueryService.executingQuery.busy = false;
       });
     }
 
@@ -528,12 +535,12 @@
       "from system:indexes group by indexes.keyspace_id having array_agg(is_primary) " +
       "order by indexes.keyspace_id;";
 
-      var queryText = 
+      var queryText =
         "select max(keyspace_id) id, max(has_primary) has_prim, max(has_second) has_sec, max(secondary_indexes) sec_ind from (" +
-        " select indexes.keyspace_id, true has_primary" + 
+        " select indexes.keyspace_id, true has_primary" +
         "  from system:indexes where is_primary = true" +
         "  union" +
-        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes, indexes.condition" + 
+        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes, indexes.condition" +
         "  from system:indexes where is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
         "  union" +
         "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes union select \"\" keyspace_id)" +
@@ -556,7 +563,7 @@
           mnQueryService.buckets.push(bucket);
           addToken(bucket.id,"bucket");
         }
-        refreshAutoCompleteArray();      
+        refreshAutoCompleteArray();
 
         //
         // get the passwords from the REST API (how gross!)
@@ -570,7 +577,7 @@
           //
 
           if (_.isArray(data)) _.forEach(data, function(bucket, index) {
-            if (bucket.name && _.isString(bucket.saslPassword)) 
+            if (bucket.name && _.isString(bucket.saslPassword))
               _.forEach(mnQueryService.buckets, function(mBucket, i) {
                 if (mBucket.id === bucket.name) {
                   mBucket.password = bucket.saslPassword;
@@ -598,13 +605,13 @@
     };
 
     //
-    //  
+    //
     //
 
     function authenticateBuckets(bucket_names, passwords, onSuccess, onError) {
       $http.post("/authenticate",{bucket : bucket_names, password: passwords})
       .success(onSuccess)
-      .error(onError);      
+      .error(onError);
     };
 
 
@@ -642,8 +649,8 @@
           for (var i=0; i<bucket.schema.length; i++)
             totalDocCount += bucket.schema[i]['#docs'];
 
-          getFieldNamesFromSchema(bucket.schema,"");        
-          refreshAutoCompleteArray();      
+          getFieldNamesFromSchema(bucket.schema,"");
+          refreshAutoCompleteArray();
 
           //console.log("for bucket: " + bucket.name + " got doc count: " + totalDocCount)
           bucket.totalDocCount = totalDocCount;
@@ -652,7 +659,7 @@
             bucket.schema[i]['%docs'] = (bucket.schema[i]['#docs']/totalDocCount*100);
 
           // we have an array of columns that are indexed. Let's mark the individual
-          // fields, now that we have a schema. 
+          // fields, now that we have a schema.
           bucket.indexed_fields = {};
 
           // each element of the sec_ind array is an array of field names, turn into a map
@@ -660,7 +667,7 @@
             _.forEach(elem,function(field) {
               // for now we can't handle objects inside arrays, so we'll just flag the
               // array field as having an index. Also, we need to remove any parens.
-              var bracket = field.indexOf('['); 
+              var bracket = field.indexOf('[');
               if (bracket >= 0)
                 field = field.substring(0,bracket);
 
@@ -677,7 +684,7 @@
 
           if (bucket.schema.length)
           bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
-            hasFields: true});        
+            hasFields: true});
         }
 
         mnQueryService.gettingBuckets.busy = false;
@@ -696,7 +703,7 @@
     // When we get the schema, we need to mark the indexed fields. We start at the top
     // level, but recursively traverse any subtypes, keeping track of the path that we
     // followed to get to the subtype.
-    // 
+    //
 
     function markIndexedFields(fieldMap, schema, path) {
       //console.log("marking schema size: "+schema.fields.length + " with path: " + path);
