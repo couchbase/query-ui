@@ -4,21 +4,21 @@
     <h1>The query interface is only available on Couchbase nodes
       running the query service.</h1>
     <div ng-if="qc.validated.otherNodes().length">
-      <h1>Query services were found at the following nodes:</h1> 
+      <h1>Query services were found at the following nodes:</h1>
       <ul>
         <li class="cbui-nodelist" ng-repeat="url in qc.validated.otherNodes()"><a
           href="{{url}}">{{url}}</a></li>
       </ul>
     </div>
   </div>
-  <ul ng-if="qc.validated.valid()" class="second-level-nav">
+  <!-- ul ng-if="qc.validated.valid()" class="second-level-nav">
     <li><a ui-sref="app.admin.query.workbench"
       ui-sref-active="selected">Workbench</a></li>
-    <!-- li>
+    <li>
       <a
         ui-sref="app.admin.query.monitoring"
         ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">Monitoring</a>
-    </li -->
-  </ul>
+    </li>
+  </ul -->
   <div ui-view=""></div>
 </div>
