@@ -10,8 +10,8 @@
   'use strict';
 
   /*
-   * The following routine, from StackOverflow may Mark Lagendijk, allows us to have 
-   * fully recursive directives (otherwise the browsers goes into an infinite loop). 
+   * The following routine, from StackOverflow may Mark Lagendijk, allows us to have
+   * fully recursive directives (otherwise the browsers goes into an infinite loop).
    * This permits us to display schemas inside schemas inside schemas...
    * http://stackoverflow.com/questions/14430655/recursion-in-angular-directives
    */
@@ -54,22 +54,22 @@
        */
 
       function recursionPostCompile(scope, element) {
-        // correctly output sample values of type array 
+        // correctly output sample values of type array
         scope.showSamples = function(field) {
           if (_.isArray(field.samples)) {
             var result = "e.g., ";
-            
+
             for (var i =0;i < 3 && i < field.samples.length; i++) {
               var value = field.samples[i];
               if (result.length > 6)
                 result += ", ";
-              
+
               if (_.isArray(value))
                 result += JSON.stringify(value);
               else
                 result += value;
             }
-            
+
             return(result);
           }
           else
@@ -95,8 +95,8 @@
 
 
 
-  //the bucketDisplay directive iterates over a bucket's schema "flavors", and 
-  //calls the schemaDisplay directive for each flavor. 
+  //the bucketDisplay directive iterates over a bucket's schema "flavors", and
+  //calls the schemaDisplay directive for each flavor.
 
   angular.module('mnQuery').
   directive('bucketDisplay', ['mnQueryService',/*'$modal',*/getBucketDisplay]);
@@ -109,30 +109,31 @@
       restrict: 'A',
       scope: { bucket: '=bucketDisplay' },
       //templateUrl: 'template/bucket-display.tmpl',
-      template: 
-        '<img ng-show="bucket.expanded" ng-click="collapseBucket(bucket)"' +
+      template:
+        '<div ng-click="changeExpandBucket(bucket)" class="bucket">' +
+        ' <img ng-show="bucket.expanded"' +
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowDown.png" /> ' +
-        '<img ng-hide="bucket.expanded" ng-click="expandBucket(bucket)"' +
+        '<img ng-hide="bucket.expanded"' +
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowRight.png" />' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="expandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
-        '  {{bucket.id}}' +
-        '  <ul ng-show="bucket.expanded">' + 
-        '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' + 
+        '  {{bucket.id}}</div>' +
+        '  <ul class="bucket" ng-show="bucket.expanded">' +
+        '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         '    <li class="schema" ng-repeat="flavor in bucket.schema">' +
 
 
         '      <div ng-show="flavor.Summary">{{flavor.Summary}}</div>' + //  if a summary line, show it
 
         '      <div ng-hide="flavor.Summary"><span ng-show="flavor[\'%docs\']">Flavor {{$index + " ("}}' +
-        '        {{flavor[\'%docs\'] | number:1}}{{"%)"}}</span>' + 
+        '        {{flavor[\'%docs\'] | number:1}}{{"%)"}}</span>' +
         '        <span ng-show="flavor.Flavor">{{", in-common: " + flavor.Flavor}}</span></div>' +
-        '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +       
+        '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
 
         '      <schema-display ng-hide="flavor.Summary" schema="flavor" path=""></schema-display>' +
 
 
-        '  </ul>'  
+        '  </ul>'
         ,
         link: function (scope) {
           scope.$watch('bucket', function (schema) {
@@ -142,53 +143,60 @@
              * This function is used to expand bucket descriptions (asking for SASL passwords
              * if necessary)
              */
-            scope.expandBucket = function(bucket) {
-              scope.bucket = bucket;
-              bucket.tempPassword = "";
-              //console.log("Password required: " + scope.bucket.passwordNeeded);
-              //console.log("bucket: " + scope.bucket.id);
-              if (bucket.passwordNeeded && !bucket.validated) {      
+            scope.changeExpandBucket = function(bucket) {
 
-                var promise = $modal.open({
-                  templateUrl: 'query/password_dialog/mn_query_password_dialog.html',
-                  scope: scope              
-                }).result;
+              if (!bucket.expanded) { //bucket is collapsed, expand it
+                scope.bucket = bucket;
+                bucket.tempPassword = "";
+                //console.log("Password required: " + scope.bucket.passwordNeeded);
+                //console.log("bucket: " + scope.bucket.id);
+                if (bucket.passwordNeeded && !bucket.validated) {
 
-                promise.then(function (res) {
-                  mnQueryService.authenticateBuckets([bucket.id],[bucket.tempPassword],
-                      function(data,status,headers,config) {
-                    if (data.success[0]) {
-                      bucket.validated = true;
-                      bucket.password = bucket.tempPassword;
-                      mnQueryService.getSchemaForBucket(bucket);
-                      bucket.expanded = true;
-                      //console.log("Bucket validated");
-                    } 
-                    else {
-                      //console.log("Bucket not validated");
-                      $modal.open({
-                        templateUrl: 'query/password_dialog/mn_query_error_dialog.html',
-                        scope: scope              
-                      });
-                    }
-                  },
-                  function(data,status,headers,config) {
-                    console.log(data.errors);
-                  })
-                });
+                  var promise = $modal.open({
+                    templateUrl: 'query/password_dialog/mn_query_password_dialog.html',
+                    scope: scope
+                  }).result;
 
-                return;
+                  promise.then(function (res) {
+                    mnQueryService.authenticateBuckets([bucket.id],[bucket.tempPassword],
+                        function(data,status,headers,config) {
+                      if (data.success[0]) {
+                        bucket.validated = true;
+                        bucket.password = bucket.tempPassword;
+                        mnQueryService.getSchemaForBucket(bucket);
+                        bucket.expanded = true;
+                        //console.log("Bucket validated");
+                      }
+                      else {
+                        //console.log("Bucket not validated");
+                        $modal.open({
+                          templateUrl: 'query/password_dialog/mn_query_error_dialog.html',
+                          scope: scope
+                        });
+                      }
+                    },
+                    function(data,status,headers,config) {
+                      console.log(data.errors);
+                    })
+                  });
+
+                  return;
+                }
+
+                if (bucket.schema.length == 0)
+                  mnQueryService.getSchemaForBucket(bucket);
+
+                bucket.expanded = true;
               }
 
-              if (bucket.schema.length == 0)
-                mnQueryService.getSchemaForBucket(bucket);
-
-              bucket.expanded = true;
+              else { // bucket is expanded, collapse it
+                bucket.expanded = false;
+              }
             };
 
-            scope.collapseBucket = //mnQueryService.collapseBucket; 
+            scope.collapseBucket = //mnQueryService.collapseBucket;
               function(bucket) {
-              bucket.expanded = false;    
+              bucket.expanded = false;
             };
           });
         },
@@ -207,8 +215,8 @@
     return {
       restrict: 'E',
       scope: { schema: '=schema', path:"=path"},
-      template: 
-        '<ul>' +
+      template:
+        '<ul class="schema">' +
         '  <li style="white-space: nowrap" ng-repeat="(name,  field) in schema.properties">' +
         '    <div class="indexed" ng-show="field.type!=\'object\' && field.indexed"' +
         '     ng-attr-title="{{showSamples(field)}}"> {{name}}' +
@@ -217,7 +225,7 @@
         '      ng-attr-title="{{showSamples(field)}}"> {{name}}' +
         '      {{" ("+ field.type + ")"}}</div>' +
         '    <div ng-show="field.type==\'object\'"> {{name}}' +
-        '      {{" ("+ field.type + "), child type: "}} ' + 
+        '      {{" ("+ field.type + "), child type: "}} ' +
         '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +
         '   </li>' +
         '</ul>',

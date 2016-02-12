@@ -19,7 +19,8 @@
           <a title="View subsequent queries/results" ng-click="qc.next()"
             class="btn_1 cbui-rightmargin"
             ng-class="{dynamic_disabled: !qc.hasNext()}">
-            <span>&rarr;</span>
+            <span ng-if="qc.canCreateBlankQuery()">&rarr;*</span>
+            <span ng-if="!qc.canCreateBlankQuery()">&rarr;</span>
           </a>
           <a ng-click="qc.clearHistory()" class="btn_1 cbui-rightmargin">
             <span>Clear History</span>
@@ -51,7 +52,7 @@
     <div class="cbui-row cbui-align-top cbui-query-results-wrapper">
       <div id="metadata" class="cbui-column25">
         <div id="sidebar_header" class="cbui-row cbui-header-oldgray">
-          <h4>Analysis</h4>
+          <h4>Bucket Analysis</h4>
 
           <span> <img ng-hide="qc.gettingBuckets.busy"
             ng-click="qc.updateBuckets()" class="cbui-refreshicon"
@@ -66,7 +67,7 @@
         <div id="sidebar_body" class="cbui-overflow">
           <div title="Buckets with a primary index support all queries.">
             Fully Queryable Buckets
-            <ul style="margin-left: 0.5em">
+            <ul class="bucket">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
                 ng-show="bucket.has_prim">
                 <div bucket-display="bucket"></div>
@@ -77,7 +78,7 @@
           <div
             title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">
             Queryable on Indexed Fields
-            <ul style="margin-left: 0.5em">
+            <ul class="bucket">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
                 ng-show="!bucket.has_prim && bucket.has_sec">
                 <div bucket-display="bucket"></div>
@@ -87,7 +88,7 @@
 
           <div title="Buckets with no index cannot be queried.">
             Non-Indexed Buckets
-            <ul style="margin-left: 0.5em">
+            <ul class="bucket">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
                 ng-show="!bucket.has_prim && !bucket.has_sec">
                 <div bucket-display="bucket"></div>

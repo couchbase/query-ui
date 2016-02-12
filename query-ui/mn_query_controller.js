@@ -20,19 +20,21 @@
     //
 
     qc.buckets = mnQueryService.buckets;                // buckets on cluster
-    qc.gettingBuckets = mnQueryService.gettingBuckets;  // busy retrieving?    
+    qc.gettingBuckets = mnQueryService.gettingBuckets;  // busy retrieving?
     qc.updateBuckets = mnQueryService.updateBuckets;    // function to update
-    qc.lastResult = mnQueryService.getResult(); // holds the current query and result 
+    qc.lastResult = mnQueryService.getResult(); // holds the current query and result
     qc.limit = mnQueryService.limit;            // automatic result limiter
     qc.executingQuery = mnQueryService.executingQuery;
 
     // some functions for handling query history, going backward and forward
 
-    qc.prev = mnQueryService.prevResult;
-    qc.next = mnQueryService.nextResult;            
+    qc.prev = prevResult;
+    qc.next = nextResult;
 
     qc.hasNext = mnQueryService.hasNextResult;
     qc.hasPrev = mnQueryService.hasPrevResult;
+
+    qc.canCreateBlankQuery = mnQueryService.canCreateBlankQuery;
 
     qc.getCurrentIndex = mnQueryService.getCurrentIndex;
     qc.clearHistory= mnQueryService.clearHistory;
@@ -52,6 +54,7 @@
     qc.aceInputLoaded = aceInputLoaded;
     qc.aceInputChanged = aceInputChanged;
     qc.aceOutputLoaded = aceOutputLoaded;
+    qc.aceOutputChanged = aceOutputChanged;
     qc.updateEditorSizes = updateEditorSizes;
 
     //
@@ -61,7 +64,7 @@
     qc.query = query;
     qc.save = save;
     qc.save_query = save_query;
-    
+
     //
     // options for the two Ace editors, the input and the output
     //
@@ -79,23 +82,23 @@
         showGutter: true,
         useWrapMode: true,
         onLoad: qc.aceOutputLoaded,
-        onChange: qc.updateEditorSizes,
+        onChange: qc.aceOutputChanged,
         $blockScrolling: Infinity
     };
 
     //
     // Do we have a REST API to work with?
     //
-    
+
     qc.validated = validateQueryService;
-    
+
     //
     // call the activate method for initialization
     //
 
     activate();
 
-    // 
+    //
     // change the tab selection
     //
 
@@ -104,6 +107,21 @@
       // select focus after a delay to try and force update of the editor
       $timeout(swapEditorFocus,10);
     };
+
+    //
+    // we need to define a wrapper around mn_query_server.nextResult, because if the
+    // user creates a new blank query, we need to refocus on it.
+    //
+
+    function nextResult() {
+      mnQueryService.nextResult();
+      $timeout(swapEditorFocus,10);
+    }
+
+    function prevResult() {
+      mnQueryService.prevResult();
+      $timeout(swapEditorFocus,10);
+    }
 
     //
     // the text editor doesn't update visually if changed when off screen. Force
@@ -118,7 +136,7 @@
       updateEditorSizes();
     }
 
-    // 
+    //
     // manage the ACE code editors for query input and JSON output
     //
 
@@ -126,14 +144,14 @@
 
     function aceInputChanged(e) {
       // show a placeholder when nothing has been typed
-      var curSession = qc.inputEditor.getSession(); 
+      var curSession = qc.inputEditor.getSession();
       var noText = curSession.getValue().length == 0;
       var emptyMessageNode = qc.inputEditor.renderer.emptyMessageNode;
 
       //console.log("Notext: " +noText + ", emptyMessageNode: " + emptyMessageNode);
       if (noText && !emptyMessageNode) {
         emptyMessageNode = qc.inputEditor.renderer.emptyMessageNode = document.createElement("div");
-        emptyMessageNode.textContent = "Enter a query here...";
+        emptyMessageNode.innerText = "Enter a query here.\n Your indexes will determine which fields can be included in queries.";
         emptyMessageNode.className = "ace_invisible ace_emptyMessage";
         emptyMessageNode.style.padding = "0 5px";
         qc.inputEditor.renderer.scroller.appendChild(emptyMessageNode);
@@ -146,7 +164,7 @@
       qc.inputEditor.$blockScrolling = Infinity;
 
       // if they hit enter and the query ends with a semicolon, run the query
-      if (e[0].action === 'insert' && // they typed something 
+      if (e[0].action === 'insert' && // they typed something
           e[0].end.column === 0 &&    // and ended up on a new line
           e[0].start.row+1 == e[0].end.row && // and added one line
           e[0].start.column > 0 && // and the previous line wasn't blank
@@ -167,7 +185,7 @@
       var identifierCompleter = {
           getCompletions: function(editor, session, pos, prefix, callback) {
             callback(null,mnQueryService.autoCompleteArray);
-          }  
+          }
       };
       langTools.addCompleter(identifierCompleter);
 
@@ -183,6 +201,32 @@
       qc.outputEditor = _editor;
       updateEditorSizes();
     };
+
+    function aceOutputChanged(e) {
+      updateEditorSizes();
+
+      // show a placeholder when nothing has been typed
+      var curSession = qc.outputEditor.getSession();
+      var noText = curSession.getValue().length == 0;
+      var emptyMessageNode = qc.outputEditor.renderer.emptyMessageNode;
+
+      //console.log("Notext: " +noText + ", emptyMessageNode: " + emptyMessageNode);
+      if (noText && !emptyMessageNode) {
+        emptyMessageNode = qc.outputEditor.renderer.emptyMessageNode = document.createElement("div");
+        emptyMessageNode.innerText =
+          'See JSON, Table, and Tree formatted query results here.\n'+
+          'Hover over field names (in the tree layout) to see their full path.';
+        emptyMessageNode.className = "ace_invisible ace_emptyMessage";
+        emptyMessageNode.style.padding = "0 5px";
+        qc.outputEditor.renderer.scroller.appendChild(emptyMessageNode);
+      }
+      else if (!noText && emptyMessageNode) {
+        qc.outputEditor.renderer.scroller.removeChild(emptyMessageNode);
+        qc.outputEditor.renderer.emptyMessageNode = null;
+      }
+
+    };
+
 
     //
     // called when the JSON output changes. We need to make sure the editor is the correct size,
@@ -211,12 +255,12 @@
       $('#result_editor').height(editor_size);
       $('#result_table').height(editor_size+20);
       $('#result_tree').height(editor_size+20);
-      
+
       $('#result_box').height(editor_size+109);
       //$('#result_editor').width(width);
       //$('#result_table').width(width);
       //$('#result_tree').width(width);
-      
+
     }
 
     $(window).resize(function() {
@@ -226,12 +270,12 @@
     //
     // make the focus go to the input field, so that backspace doesn't trigger
     // the browser back button
-    // 
+    //
 
     function focusOnInput()  {
       if (qc.inputEditor && qc.inputEditor.focus)
-        qc.inputEditor.focus();    
-    }  
+        qc.inputEditor.focus();
+    }
 
     //
     // functions for running queries and saving results to a file
@@ -246,22 +290,22 @@
       var queryStr = qc.lastResult.query;
       var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
       var startsWithSelectExpr = /^\s*select/gmi;
-      
+
       var hasLimit = hasLimitExpr.test(queryStr);
       var startsWithSelect = startsWithSelectExpr.test(queryStr);
-      
+
       // add a limit to all "select" statements by wrapping
       if (startsWithSelect && !hasLimit) {
         // handle garbage in the limit dialog
-        if (isNaN(Number(mnQueryService.limit.max)) || 
+        if (isNaN(Number(mnQueryService.limit.max)) ||
             mnQueryService.limit.max < 1)
           mnQueryService.limit.max = mnQueryService.defaultLimit;
 
-        // remove ; 
+        // remove ;
         if (endsWithSemi.test(queryStr))
           queryStr = queryStr.replace(endsWithSemi,"");
 
-        // wrap the query in a new query with a limit 
+        // wrap the query in a new query with a limit
         queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + mnQueryService.limit.max + ";";
       }
 
@@ -293,14 +337,14 @@
       // safari does'nt support saveAs
       if (isSafari) {
         var file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
-        saveAs(file,dialogScope.data_file.name);      
+        saveAs(file,dialogScope.data_file.name);
         return;
       }
 
       // but for those that do, get a name for the file
       dialogScope.file_type = 'json ';
       dialogScope.file = dialogScope.data_file;
-      
+
       var promise = $uibModal.open({
         templateUrl: '/_p/ui/query/file_dialog/mn_query_file_dialog.html',
         scope: dialogScope
@@ -328,7 +372,7 @@
       // safari does'nt support saveAs
       if (isSafari) {
         var file = new Blob([qc.lastResult.query],{type: "text/json", name: "data.json"});
-        saveAs(file,dialogScope.query_file.name);      
+        saveAs(file,dialogScope.query_file.name);
         return;
       }
 
@@ -360,16 +404,16 @@
         var doPrevent = false;
         if (event.keyCode === 8) {
           var d = event.srcElement || event.target;
-          if ((d.tagName.toUpperCase() === 'INPUT' && 
+          if ((d.tagName.toUpperCase() === 'INPUT' &&
               (
                   d.type.toUpperCase() === 'TEXT' ||
-                  d.type.toUpperCase() === 'PASSWORD' || 
-                  d.type.toUpperCase() === 'FILE' || 
-                  d.type.toUpperCase() === 'SEARCH' || 
-                  d.type.toUpperCase() === 'EMAIL' || 
-                  d.type.toUpperCase() === 'NUMBER' || 
+                  d.type.toUpperCase() === 'PASSWORD' ||
+                  d.type.toUpperCase() === 'FILE' ||
+                  d.type.toUpperCase() === 'SEARCH' ||
+                  d.type.toUpperCase() === 'EMAIL' ||
+                  d.type.toUpperCase() === 'NUMBER' ||
                   d.type.toUpperCase() === 'DATE' )
-          ) || 
+          ) ||
           d.tagName.toUpperCase() === 'TEXTAREA') {
             doPrevent = d.readOnly || d.disabled;
           }
@@ -385,11 +429,11 @@
 
       // get the list of buckets
       qc.updateBuckets();
-      
+
       //
       // now let's make sure the window is the right size
       //
-      
+
       $timeout(updateEditorSizes(),100);
     }
   }

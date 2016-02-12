@@ -30,6 +30,8 @@
     mnQueryService.prevResult = prevResult;
     mnQueryService.nextResult = nextResult;
 
+    mnQueryService.canCreateBlankQuery = canCreateBlankQuery;
+
     //
     // keep track of the bucket and field names we have seen, for use in autocompletion
     //
@@ -128,6 +130,11 @@
     savedResultTemplate.status = "cached query";
     savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
     savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
+
+    var newQueryTemplate = dummyResult.clone();
+    newQueryTemplate.status = "not yet run";
+    newQueryTemplate.result = '{"no_data_yet": "hit execute to run query"}';
+    newQueryTemplate.data = {no_data_yet: "hit execute to run query"};
 
     var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
@@ -252,8 +259,25 @@
     var tempResult = "Processing";
     var tempData = {status: "processing"};
 
-    function hasPrevResult() {return currentQueryIndex > 0};
-    function hasNextResult() {return currentQueryIndex < pastQueries.length-1};
+    //
+    // we can create a blank query at the end of history if we're at the last slot, and
+    // the query there has already been run
+    //
+
+    function canCreateBlankQuery() {
+      return (currentQueryIndex == pastQueries.length -1 &&
+          lastResult.query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
+          lastResult.status != newQueryTemplate.status);
+    }
+    function hasPrevResult() {return currentQueryIndex > 0;}
+
+    // we can go forward if we're back in the history, or if we are at the end and
+    // want to create a blank history element
+    function hasNextResult() {
+      return (currentQueryIndex < pastQueries.length-1) ||
+              canCreateBlankQuery();
+     }
+
     function prevResult()
     {
       if (currentQueryIndex > 0) // can't go earlier than the 1st
@@ -264,11 +288,8 @@
 
         if (currentQueryIndex === (pastQueries.length-1) &&
             lastResult.query.trim() !== pastQueries[pastQueries.length-1].query.trim()) {
-          var newResult = dummyResult.clone();
+          var newResult = newQueryTemplate.clone();
           newResult.query = lastResult.query;
-          newResult.status = "not yet run";
-          newResult.result = '{"no_data_yet": "hit execute to run query"}';
-          newResult.data = {no_data_yet: "hit execute to run query"};
           pastQueries.push(newResult);
           currentQueryIndex++;
         }
@@ -308,6 +329,15 @@
           lastResult.copyIn(pastQueries[currentQueryIndex]);
           currentQuery = lastResult.query;
         },50);
+      }
+
+      // if the end query has been run, and is unedited, create a blank query
+      else if (canCreateBlankQuery()) {
+        var newResult = newQueryTemplate.clone();
+        newResult.query = "";
+        pastQueries.push(newResult);
+        currentQueryIndex++;
+        lastResult.copyIn(pastQueries[currentQueryIndex]);
       }
     }
 

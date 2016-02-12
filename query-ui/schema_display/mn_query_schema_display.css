@@ -4,6 +4,8 @@
   font-weight: normal;
   color: #5286BC;
   white-space: nowrap;
+  margin-left: 0px;
+  cursor: pointer;
 }
 
 .schema {
@@ -11,13 +13,8 @@
   font-style: italic;
   font-size: small;
   white-space: nowrap;
-}
-
-.schema {
-  color: #839B00;
-  font-style: italic;
-  font-size: small;
-  white-space: nowrap;
+  margin-left: 1em;
+  cursor: default;
 }
 
 .schema .indexed {
