@@ -1,14 +1,14 @@
 /**
- * Angular directive to convert JSON into HTML tree. Inspired by Brian Park's 
+ * Angular directive to convert JSON into HTML tree. Inspired by Brian Park's
  * MIT Licensed "angular-json-human.js" which turns JSON to HTML tables.
- * 
+ *
  *  Extended for trees by Eben Haber at Couchbase.
- *  
+ *
  *  This class takes a JS object or JSON string, and displays it as an HTML
- *  list, which object members indented. This is similar to pretty-printing 
+ *  list, which object members indented. This is similar to pretty-printing
  *  JSON, but is more compact (no braces or commas), and permits using colors
  *  to highlight field names vs. values, and one line from the next.
- *  
+ *
  *  For usage, see the header to mn-json-table.
  */
 /* global _, angular */
@@ -46,10 +46,10 @@
 
 
 
-  //recursion in Angular is really inefficient, so we will use a javascript 
-  //routine to convert the object to an HTML representation. It's not true to 
-  //the spririt of Angular, but it was taking 10 seconds or more to render 
-  //a tree of 1000 documents. Even so, browser still can take a few seconds 
+  //recursion in Angular is really inefficient, so we will use a javascript
+  //routine to convert the object to an HTML representation. It's not true to
+  //the spririt of Angular, but it was taking 10 seconds or more to render
+  //a tree of 1000 documents. Even so, browser still can take a few seconds
   //to render a list with tens of thousands of elements
 
 
@@ -72,15 +72,15 @@
         if (key === '$$hashKey') return;
         // for arrays and objects, we need a recursive call
         if (_.isArray(value) || _.isPlainObject(value))
-          result += '<li title="' + prefix + key + '"><div><div class=ajtd-key>' 
+          result += '<li title="' + prefix + key + '"><div><div class=ajtd-key>'
             + key + '</div><div class=ajtd-object-value>' +
           makeHTMLtree(value,prefix + key + ".") + '</div></div></li>';
 
         // otherwise, for primitives, output key/value pair
         else
-          result += '<li title="' + prefix + key + '"><div><span class=ajtd-key>' + 
-          key + '</span><span class=ajtd-value>' +
-          value + '</span></div></li>';
+          result += '<li title="' + prefix + key + '"><table><tr><td class=ajtd-key>' +
+          key + '</td><td class=ajtd-value>' +
+          value + '</td></tr></table></li>';
       });
       result += "</ul>";
     }
@@ -91,12 +91,12 @@
       // if the array is empty, say so
       if (object.length == 0)
           return('<div class=ajtd-key>[]</div>');
-      
+
       result += '<ul class="ajtd-type-array">';
       for (var i=0; i<object.length; i++) {
         var value = object[i];
         result += '<li  title="' + prefix + "[" + i + "]" + '"><div class=ajtd-value>';
-        
+
         // for arrays and objects, we need a recursive call
         if (_.isArray(value) || _.isPlainObject(value))
           result += makeHTMLtree(value,prefix + "[" + i + "].");
@@ -106,7 +106,7 @@
           result += value;
         else
           result += '&nbsp';
-        
+
         result += '</div></li>';
       }
       result += "</ul>";

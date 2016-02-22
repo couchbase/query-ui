@@ -136,6 +136,11 @@
     newQueryTemplate.result = '{"no_data_yet": "hit execute to run query"}';
     newQueryTemplate.data = {no_data_yet: "hit execute to run query"};
 
+    var executingQueryTemplate = dummyResult.clone();
+    executingQueryTemplate.status = "executing";
+    executingQueryTemplate.result = '{"status": "Executing Query"}';
+    executingQueryTemplate.data = {status: "Executing Query"};
+
     var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
     // end of the array, since there's no history yet
@@ -275,8 +280,8 @@
     // want to create a blank history element
     function hasNextResult() {
       return (currentQueryIndex < pastQueries.length-1) ||
-              canCreateBlankQuery();
-     }
+      canCreateBlankQuery();
+    }
 
     function prevResult()
     {
@@ -354,20 +359,23 @@
     function executeQuery(queryText, userQuery) {
       var newResult;
 
-      // if the current query is part of the history, update the results from the history
+      // if the current query is part of the history,
+      // or currentQuery is "not yet run",
+      // update the results from the history
 
-      if (currentQueryIndex < pastQueries.length &&
-          lastResult.query.trim() === pastQueries[currentQueryIndex].query.trim()) {
+      if ((currentQueryIndex < pastQueries.length &&
+          lastResult.query.trim() === pastQueries[currentQueryIndex].query.trim()) ||
+          (lastResult.status == newQueryTemplate.status)){
         newResult = pastQueries[currentQueryIndex];
+        newResult.query = lastResult.query.trim();
       }
 
       // otherwise, we have a new/edited query, so we create a new empty result
       // at the end of the query history
 
       else {
-        newResult = new QueryResult("executing",0.0,0.0,0,'0B',
-            '{"status": "Executing Query"}',
-            {},lastResult.query);
+        newResult = executingQueryTemplate.clone();
+        newResult.query = lastResult.query.trim();
         pastQueries.push(newResult);
         currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
       }
@@ -376,7 +384,7 @@
 
       var stuffAfterSemi = /;\s*\S+/i;
       var stuffAfterMatches = stuffAfterSemi.exec(queryText);
-      if (stuffAfterMatches && stuffAfterMatches.length > 1) {
+      if (_.isArray(stuffAfterMatches) && stuffAfterMatches.length > 0 && stuffAfterMatches[0].length > 1) {
         newResult.status = "errors";
         newResult.result = '{"error": "you cannot issue more than one query at once."}';
         newResult.data = {error: "Error, you cannot issue more than one query at once."};
@@ -385,7 +393,7 @@
       }
 
 
-      // don't allow multiple queries at once
+      // don't run new queries if existing queries are already running
       if (mnQueryService.executingQuery.busy)
         return;
 
@@ -419,10 +427,17 @@
       // send the query off via REST API
       var timeout = 300; // query timeout in seconds
       var request = {url: "/_p/query/query/service",
-                     method: "POST",
-                     headers: {'ns-server-proxy-timeout':timeout*1000},
-                     data: queryData};
+          method: "POST",
+          headers: {'ns-server-proxy-timeout':timeout*1000},
+          data: queryData};
+
+      //
+      // Issue the request
+      //
+
       return $http(request)
+
+      // SUCCESS!
       .success(function(data, status, headers, config) {
         var result;
 
@@ -713,8 +728,8 @@
           }
 
           if (bucket.schema.length)
-          bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
-            hasFields: true});
+            bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
+              hasFields: true});
         }
 
         mnQueryService.gettingBuckets.busy = false;

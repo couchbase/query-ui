@@ -151,7 +151,7 @@
       //console.log("Notext: " +noText + ", emptyMessageNode: " + emptyMessageNode);
       if (noText && !emptyMessageNode) {
         emptyMessageNode = qc.inputEditor.renderer.emptyMessageNode = document.createElement("div");
-        emptyMessageNode.innerText = "Enter a query here.\n Your indexes will determine which fields can be included in queries.";
+        emptyMessageNode.innerText = "Enter a query here.";
         emptyMessageNode.className = "ace_invisible ace_emptyMessage";
         emptyMessageNode.style.padding = "0 5px";
         qc.inputEditor.renderer.scroller.appendChild(emptyMessageNode);

@@ -9,27 +9,25 @@
       <div id="query_header"
         class="cbui-row cbui-header-oldgray cbui-rounded-top">
         <h2></h2>
-        <span class="cbui-column25">&nbsp</span> 
+        <span class="cbui-column25">&nbsp</span>
         <span class="cbui-column cbui-centered">
           <a title="View previous queries/results" ng-click="qc.prev()"
             class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">
             <span>&larr;</span>
           </a>
-          <h5>{{qc.getCurrentIndex()}}</h5> 
+          <h5>{{qc.getCurrentIndex()}}</h5>
           <a title="View subsequent queries/results" ng-click="qc.next()"
             class="btn_1 cbui-rightmargin"
-            ng-class="{dynamic_disabled: !qc.hasNext()}">
-            <span ng-if="qc.canCreateBlankQuery()">&rarr;*</span>
-            <span ng-if="!qc.canCreateBlankQuery()">&rarr;</span>
+            ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span>
           </a>
           <a ng-click="qc.clearHistory()" class="btn_1 cbui-rightmargin">
             <span>Clear History</span>
-          </a> 
+          </a>
         </span>
         <span class="cbui-column25 cbui-right">
-          <a ng-click="qc.save_query()" class="btn_1"> 
+          <a ng-click="qc.save_query()" class="btn_1">
           <span>Save Query</span></a>
-        </span> 
+        </span>
       </div>
 
       <div class=" " id="query_editor" ui-ace="qc.aceInputOptions"
