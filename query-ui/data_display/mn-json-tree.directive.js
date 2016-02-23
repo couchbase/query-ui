@@ -35,7 +35,8 @@
           // create an empty div, if we have data, convert it to HTML
           var content = "<div></div>";
           if (json && !_.isEmpty(json))
-            content = '<div class="ajtd-root ajtd-type-array">' + makeHTMLtree(json,"") + "</div>";
+            content = '<div class="ajtd-root ajtd-type-array">' +
+              makeHTMLtree(json,"") + "</div>";
 
           // set the html of the element to what we just generated
           element.html(content);
@@ -43,7 +44,6 @@
       }
     };
   });
-
 
 
   //recursion in Angular is really inefficient, so we will use a javascript

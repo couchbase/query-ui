@@ -1,19 +1,19 @@
 /**
- * Angular directive to convert JSON into HTML tree. Inspired by Brian Park's 
+ * Angular directive to convert JSON into HTML tree. Inspired by Brian Park's
  * MIT Licensed "angular-json-human.js" which turns JSON to HTML tables.
- * 
+ *
  *  Extended for trees by Eben Haber at Couchbase.
- *  
+ *
  *  This class takes a JS object or JSON string, and displays it as an HTML
  *  table. Generally, it expects an array of something. If it's an array of objects,
- *  then each row corresponds to one object, and the columns are the union of all 
+ *  then each row corresponds to one object, and the columns are the union of all
  *  fields of the objects. If an object doesn't have a field, that cell is blank.
- *  
- *  
- *  , which object members indented. This is similar to pretty-printing 
+ *
+ *
+ *  , which object members indented. This is similar to pretty-printing
  *  JSON, but is more compact (no braces or commas), and permits using colors
  *  to highlight field names vs. values, and one line from the next.
- *  
+ *
  *  For usage, see the header to mn-json-table.
  */
 /* global _, angular */
@@ -26,7 +26,7 @@
 			scope: { data: '=mnJsonTable' },
 			template: '<div></div>',
 			link: function (scope, element) {
-			  
+
 				scope.mnJsonTableToggleExpand = mnJsonTableToggleExpand;
 				//console.log("Got toggleExpoand: " + mnToggleExpand);
 
@@ -41,21 +41,23 @@
 
 					// start with an empty div, if we have data convert it to HTML
 					var content = "<div>{}</div>";
-					if (json)
-						content = '<div class="ajtd-root ajtd-type-array">' + makeHTMLtable(json) + "</div>";
+					if (json) {
+						content = '<div class="ajtd-root ajtd-type-array">' +
+						  makeHTMLtable(json,"") + "</div>";
+					}
 
-					// set our element to use this HTML        
+					// set our element to use this HTML
 					element.html(content);
-					
+
 					// the table sorter is supposed to pick up tables automatically, but for some
 					// reason it doesn't. Search for result tables and force them to be sortable.
-					
+
 				    forEach(document.getElementsByTagName('table'), function(table) {
 				      if (table.className.search(/\bsortable\b/) != -1 &&
 				        table.className.search(/\bajtd-table\b/) != -1) {
 				        sorttable.makeSortable(table);
 				      }
-				    });		
+				    });
 				});
 			}
 		};
@@ -63,18 +65,18 @@
 
 
 
-	//recursion in Angular is really inefficient, so we will use a javascript 
-	//routine to convert the object to an HTML representation. It's not true to 
-	//the spririt of Angular, but it was taking 10 seconds or more to render 
+	//recursion in Angular is really inefficient, so we will use a javascript
+	//routine to convert the object to an HTML representation. It's not true to
+	//the spririt of Angular, but it was taking 10 seconds or more to render
 	//a table with tens of thousands of cells
 
 
-	var makeHTMLtable = function(object) {
+	var makeHTMLtable = function(object,prefix) {
 		var result = '';
 
-		// we expect an array of objects, which we turn into an HTML table. the first step is 
+		// we expect an array of objects, which we turn into an HTML table. the first step is
 		// to create the set of columns, by looking at the fields of every object. If the array
-		// only has primitives, then we'll output a single column table listing them.  
+		// only has primitives, then we'll output a single column table listing them.
 		// If the array is heterogenous, then some rows will be objects, and some rows will
 		// be arrays/primitives
 
@@ -109,14 +111,15 @@
 				result += '<table class="ajtd-root ajtd-object-value ajtd-value single-type-array"><tbody>';
 
 				_.forEach(object, function (item,index) {
-					result += '<td>' + makeHTMLtable(item) + '</td>'
+					result += '<td title="' + prefix + "[" + index  + ']">' +
+					  makeHTMLtable(item, prefix + '[' + index + ']') + '</td>'
 				});
-				result += '</tbody></table>';    
+				result += '</tbody></table>';
 
 				return(result);
 			}
 
-			// 
+			//
 			// another special case: whenever the user does "select * from <bucket>", they
 			// get an array of objects with only one field, whose key is the bucket name and
 			// whose value is an abject. In that case we get a really ugly table, with a subtable
@@ -127,7 +130,7 @@
 			var innerKeys;
 			var fields = Object.keys(itemsKeysToObject);
 			if (fields.length == 1) {
-				var onlyField = fields[0]; 
+				var onlyField = fields[0];
 
 				// loop through the array
 				_.forEach(object, function (item, index) {
@@ -139,10 +142,10 @@
 							innerKeys[key] = true;
 						});
 					}
-				});    	  
+				});
 			}
 
-			// otherwise, we have an array of objects and/or primitives & arrays. 
+			// otherwise, we have an array of objects and/or primitives & arrays.
 			// Make a table whose columns are the union of all fields in all the objects. If we
 			// have a non-object, output it as a full-width cell.
 
@@ -150,14 +153,14 @@
 
 			var keys = (innerKeys ? innerKeys : itemsKeysToObject);
 			_.forEach(keys, function(value,key) {
-              result += '<th class=ajtd-column-header>' + key +'</th>';     
+              result += '<th class=ajtd-column-header>' + key +'</th>';
 			});
-				
+
 			result += '</thead><tbody>';
-			
+
 			// for each object in the array, output all the possible column values
 			_.forEach(object, function (item, index) {
-				result += '<tr>'; // new row for each object 
+				result += '<tr>'; // new row for each object
 				if (_.isPlainObject(item)) {
 					// if we are using innerKeys, get to the inner object
 					if (innerKeys)
@@ -165,16 +168,18 @@
 
 					// if it's an empty object, just say so
 					if (_.keys(item).length == 0)
-						result += '<td><div class=ajtd-key>empty object</div></td>';
+						result += '<td title="' + prefix + "[" + index  +
+                        ']"><div class=ajtd-key>empty object</div></td>';
 
 					else _.forEach(keys, function(b,key) {
 						var value = item ? item[key] : null;
-						result += '<td class="ajtd-cell">'; // start the cell
-						
+						result += '<td title="' + prefix + "[" + index  +
+                        '].' + key + '" class="ajtd-cell">'; // start the cell
+
 
 						// for objects and arrays, make a recursive call
 						if (_.isArray(value) || _.isPlainObject(value))
-							result += makeHTMLtable(value);
+							result += makeHTMLtable(value,prefix + '[' + index + '].'+ key + ".");
 
 						// for long strings, output an expandable cell
 						else if (_.isString(value) && value.length > 128)
@@ -185,7 +190,7 @@
 							result += '<div class=ajtd-value>' + value + ' </div>';
 
 						// except undefined values, in which case output a nbsp
-						else 
+						else
 							result += '&nbsp';
 
 						result += '</td>'; // end the cell
@@ -195,15 +200,15 @@
 
 				// array or primitive mixed in with objects, give it its own row
 				else if (_.isArray(item))
-					result += makeHTMLtable(item);
+					result += makeHTMLtable(item,prefix + "[" + index + "].");
 				else
 					result += item;
 
 				result += '</tr>';
-			}); 
+			});
 
 			// done with array, close the table
-			result += '</tbody></table>';    
+			result += '</tbody></table>';
 		}
 
 		//
@@ -214,17 +219,17 @@
 		// as different.
 		//
 		// we have one special case, which occurs with "property" objects in schemas. Each
-		// field of these objects has the same schema, so we really should show objects like 
+		// field of these objects has the same schema, so we really should show objects like
 		// that as a single table with all the properties, instead of multiple individual tables.
 		//
-		
+
 		else if (_.isPlainObject(object)) {
 			// check for special case: every field is a sub-object with the same schema
 			var specialCase = true;
 			var memberKeys;
 			_.forEach(object, function(value,key) { // iterate over the object's fields
 				var currentKeys = _.keys(value);
-				if (!_.isPlainObject(value)) {        // they all must be objects, not arrays or primitives 
+				if (!_.isPlainObject(value)) {        // they all must be objects, not arrays or primitives
 					specialCase = false;
 					return false;
 				}
@@ -238,9 +243,9 @@
 				else if (currentKeys.length  > memberKeys.length)
 					memberKeys = currentKeys;
 			});
-			
+
 			// header columns for each field
-			
+
 			result += '<table class="ajtd-root ajtd-object-value ajtd-table plain-object sortable"><thead>';
 
 			////////////////////////////////////////////////////////////////////////
@@ -254,25 +259,27 @@
 
 				// start the table body
 				result += '</thead><tbody>';
-			
+
 				// for each object member, output the name of the object, then its members
 				_.forEach(object, function(value,key) {
-					result += '<tr><td class="ajtd-cell"><div>' + key + '</div></td>';
+					result += '<tr><td title="' + prefix + key +
+                    '" class="ajtd-cell"><div>' + key + '</div></td>';
 
 					_.forEach(memberKeys, function(innerKey,index) {
-						result += '<td class="ajtd-cell"><div>';
-						
+						result += '<td title="' + prefix + key + '.' + innerKey +
+                        '" class="ajtd-cell"><div>';
+
 						if (_.isArray(value[innerKey]) || _.isPlainObject(value[innerKey]))
-							result +=  makeHTMLtable(value[innerKey]) ;
+							result +=  makeHTMLtable(value[innerKey],prefix + key + "." + innerKey + ".") ;
 						else if (!_.isUndefined(value[innerKey]))
 							result += value[innerKey];
-						
+
 						result += '</div></td>';
 					});
 					result += '</tr>';
 				});
 			}
-			
+
 			// regular case, horizontal table with headers are names of keys
 			else {
 				_.forEach(object, function(value,key) {
@@ -284,15 +291,18 @@
 				_.forEach(object, function(value,key) {
 					// for arrays and objects, we need a recursive call
 					if (_.isArray(value) || _.isPlainObject(value))
-						result += '<td class="ajtd-cell"><div>' + makeHTMLtable(value) + '</div></td>';
+						result += '<td title="' + prefix + key  +
+                        '" class="ajtd-cell"><div>' +
+						  makeHTMLtable(value,prefix + key + ".") + '</div></td>';
 
 					// otherwise, for primitives, output key/value pair
 					else
-						result += '<td class="ajtd-cell"><div>' + value + '</span></div></td>';
+						result += '<td title="' + prefix + key  +
+                        '" class="ajtd-cell"><div>' + value + '</span></div></td>';
 				});
 			}
 			// finish the table
-			result += '</tr></tbody></table>';    
+			result += '</tr></tbody></table>';
 
 		}
 
@@ -303,20 +313,20 @@
 
 			return(result);
 	};
-	
+
 	//
 	// convenience function used to see if two sorted arrays of key names are close enough. We expect no more than
 	// one key different between them.
 	//
-	
+
 	function twoArraysSimilar(array1,array2) {
 		if (!_.isArray(array1) || !_.isArray(array2)) // sanity check - make sure we have arrays
 			return(false);
-		var index1 = 0; 
+		var index1 = 0;
 		var	index2 = 0;
 		var sameCount = 0;
 		var diffCount = 0;
-		
+
 		// use two pointers to loop though the arrays, comparing elements
 		while (index1 < array1.length && index2 < array2.length) {
 			//console.log("Comparing: " + array1[index1] + " to " + array2[index2]);
@@ -330,7 +340,7 @@
 				diffCount++; index2++;
 			}
 		}
-		
+
 		// count any surplus elements in one or other arrays
 		while (index1 < array1.length) {
 			diffCount++; index1++;
@@ -338,16 +348,16 @@
 		while (index2 < array2.length) {
 			diffCount++; index2++;
 		}
-				
+
 		// if no more than two different fields, return true
 		return (diffCount <= 4);
 	}
-	 
+
 
 })();
 
 
-//toggle expansion of long strings. This is in the global scope since otherwise it won't be visible to 
+//toggle expansion of long strings. This is in the global scope since otherwise it won't be visible to
 // the HTML generated above
 
 
