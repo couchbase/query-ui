@@ -163,12 +163,15 @@
 
       qc.inputEditor.$blockScrolling = Infinity;
 
+      //console.log("last char: " + curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1]);
+
+
       // if they hit enter and the query ends with a semicolon, run the query
       if (e[0].action === 'insert' && // they typed something
           e[0].end.column === 0 &&    // and ended up on a new line
           e[0].start.row+1 == e[0].end.row && // and added one line
           e[0].start.column > 0 && // and the previous line wasn't blank
-          curSession.getLine(e[0].start.row)[e[0].start.column-1] === ';' &&
+          curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
           endsWithSemi.test(qc.lastResult.query))
         qc.query();
     };
@@ -285,7 +288,7 @@
       // remove trailing whitespace to keep query from growing, and avoid
       // syntax errors (query parser doesn't like \n after ;
       if (endsWithSemi.test(qc.lastResult.query))
-        qc.lastResult.query = qc.lastResult.query.replace(endsWithSemi,";");
+        qc.lastResult.query = qc.lastResult.query.trim();
 
       var queryStr = qc.lastResult.query;
       var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
