@@ -124,7 +124,7 @@
     // structures for remembering queries and results
     //
 
-    var dummyResult = new QueryResult('-','-','-','-','-','',{},'');
+    var dummyResult = new QueryResult('-','-','-','0','0','',{},'');
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
     savedResultTemplate.status = "cached query";
@@ -441,7 +441,7 @@
       .success(function(data, status, headers, config) {
         var result;
 
-//      var post_post_ms = new Date().getTime();
+        //      var post_post_ms = new Date().getTime();
 
         // make sure we show errors if the query did not succeed
         if (data.status == "success")
@@ -461,14 +461,14 @@
         // if we got no metrics, create a dummy version
 
         if (!data.metrics) {
-          data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0B", elapsedTime: 0.0}
+          data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
         }
 
         newResult.status = data.status;
         newResult.elapsedTime = data.metrics.elapsedTime;
         newResult.executionTime = data.metrics.executionTime;
         newResult.resultCount = data.metrics.resultCount;
-        newResult.resultSize = data.metrics.resultSize + 'B';
+        newResult.resultSize = data.metrics.resultSize;
         newResult.result = angular.toJson(result, true);
         newResult.data = result;
         newResult.requestID = data.requestID;
@@ -548,7 +548,7 @@
           newResult.elapsedTime = data.metrics.elapsedTime;
           newResult.executionTime = data.metrics.executionTime;
           newResult.resultCount = data.metrics.resultCount;
-          newResult.resultSize = data.metrics.resultSize + 'B';
+          newResult.resultSize = data.metrics.resultSize;
         }
 
         if (data.requestID)

@@ -93,6 +93,16 @@
     qc.validated = validateQueryService;
 
     //
+    // error message when result is too large to display
+    //
+
+    qc.maxTableSize = 750000;
+    qc.maxTreeSize = 750000;
+    qc.maxAceSize = 10485760;
+    qc.maxSizeMsg = {error: "Result size too large to display. Try using a lower limit."};
+    qc.maxSizeMsgStr = "{\"error\": \"Result size too large to display. Try using a lower limit.\"}";
+
+    //
     // call the activate method for initialization
     //
 
