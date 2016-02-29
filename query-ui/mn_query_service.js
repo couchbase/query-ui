@@ -441,6 +441,11 @@
 
       // SUCCESS!
       .success(function(data, status, headers, config) {
+//        console.log("Success Data: " + JSON.stringify(data));
+//        console.log("Success Status: " + JSON.stringify(status));
+//        console.log("Success Headers: " + JSON.stringify(headers));
+//        console.log("Success Config: " + JSON.stringify(config));
+
         var result;
 
         //      var post_post_ms = new Date().getTime();
@@ -494,10 +499,10 @@
 
       })
       .error(function(data, status, headers, config) {
-        //console.log("Error Data: " + JSON.stringify(data));
-        //console.log("Error Status: " + JSON.stringify(status));
-        //console.log("Error Headers: " + JSON.stringify(headers));
-        //console.log("Error Config: " + JSON.stringify(config));
+//        console.log("Error Data: " + JSON.stringify(data));
+//        console.log("Error Status: " + JSON.stringify(status));
+//        console.log("Error Headers: " + JSON.stringify(headers));
+//        console.log("Error Config: " + JSON.stringify(config));
 
         // if we don't get query metrics, estimate elapsed time
         if (!data || !data.metrics) {
@@ -578,19 +583,19 @@
 
       // use a query to get buckets with a primary index
       //var queryText = "select distinct indexes.keyspace_id from system:indexes where is_primary = true order by indexes.keyspace_id ;";
-      var queryText2 = "select indexes.keyspace_id, array_agg(index_key) primary_indexes " +
-      "from system:indexes group by indexes.keyspace_id having array_agg(is_primary) " +
-      "order by indexes.keyspace_id;";
+      //var queryText2 = "select indexes.keyspace_id, array_agg(index_key) primary_indexes " +
+      //"from system:indexes where state = 'online' group by indexes.keyspace_id having array_agg(is_primary) " +
+      //"order by indexes.keyspace_id;";
 
       var queryText =
         "select max(keyspace_id) id, max(has_primary) has_prim, max(has_second) has_sec, max(secondary_indexes) sec_ind from (" +
         " select indexes.keyspace_id, true has_primary" +
-        "  from system:indexes where is_primary = true" +
+        "  from system:indexes where is_primary = true and state = 'online'" +
         "  union" +
         "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes, indexes.condition" +
-        "  from system:indexes where is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
+        "  from system:indexes where state = 'online' and is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
         "  union" +
-        "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes union select \"\" keyspace_id)" +
+        "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
         "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
       res1 = $http.post("/_p/query/query/service",{statement : queryText})
