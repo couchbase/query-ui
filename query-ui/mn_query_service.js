@@ -431,6 +431,8 @@
           headers: {'ns-server-proxy-timeout':timeout*1000},
           data: queryData};
 
+      //console.log("submitting query: " + JSON.stringify(request));
+
       //
       // Issue the request
       //

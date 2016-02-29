@@ -303,12 +303,15 @@
       var queryStr = qc.lastResult.query;
       var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
       var startsWithSelectExpr = /^\s*select/gmi;
+      var hasElement = /^\s*select\s*(distinct)?\s*(raw|element|value)\s*/gmi;
+
+      //console.log("HasElement: " + hasElement.test(queryStr));
 
       var hasLimit = hasLimitExpr.test(queryStr);
       var startsWithSelect = startsWithSelectExpr.test(queryStr);
 
       // add a limit to all "select" statements by wrapping
-      if (startsWithSelect && !hasLimit) {
+      if (startsWithSelect && !hasLimit && !hasElement.test(queryStr)) {
         // handle garbage in the limit dialog
         if (isNaN(Number(mnQueryService.limit.max)) ||
             mnQueryService.limit.max < 1)
