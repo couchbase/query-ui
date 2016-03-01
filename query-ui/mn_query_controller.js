@@ -295,6 +295,9 @@
     //
 
     function query() {
+      // don't let the user edit the query while it's running
+      qc.inputEditor.setReadOnly(true);
+
       // remove trailing whitespace to keep query from growing, and avoid
       // syntax errors (query parser doesn't like \n after ;
       if (endsWithSemi.test(qc.lastResult.query))
@@ -334,10 +337,20 @@
         // for long queries, show a spinner
         //mnPromiseHelper.promiseHelper(this,promise/*, dialog*/).showSpinner("queryInProgress");
         // also have the input grab focus at the end
-        promise.success(focusOnInput)
-        .error(focusOnInput);
+        promise.success(doneWithQuery)
+        .error(doneWithQuery);
       }
     };
+
+    //
+    // when a query finishes, we need to re-enable the query field, and try and put
+    // the focus there
+    //
+
+    function doneWithQuery() {
+      qc.inputEditor.setReadOnly(false);
+      focusOnInput();
+    }
 
     //
     // save the results to a file. Here we need to use a scope to to send the file name
