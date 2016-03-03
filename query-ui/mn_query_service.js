@@ -248,10 +248,26 @@
       //console.log("Got schema: " + JSON.stringify(schema, null, 4));
       for (var i=0; i< schema.length; i++)
         _.forEach(schema[i]['properties'], function(field, field_name) {
+          //console.log("Adding field: " + prefix + field_name);
+          //console.log("  field[properties]: " + field['properties']);
+          //console.log("  field[items]: " + field['items']);
+          //if (field['items'])
+           // console.log("    field[items].subtype: " + field['items'].subtype);
+
           addToken(prefix + field_name,"field");
           // if the field has sub-properties, make a recursive call
           if (field['properties']) {
             getFieldNamesFromSchema([field],prefix + field_name + ".");
+          }
+
+          // if the field has 'items', it is an array, make recursive call with array type
+          if (field['items'] && field['items'].subtype) {
+            getFieldNamesFromSchema([field['items'].subtype],prefix + field_name + "[0].");
+          }
+
+          else if (_.isArray(field['items'])) for (var i=0;i<field['items'].length;i++)
+            if (field['items'][i].subtype) {
+            getFieldNamesFromSchema([field['items'][i].subtype],prefix + field_name + "[0].");
           }
         });
     }

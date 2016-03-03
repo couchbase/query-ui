@@ -195,9 +195,27 @@
       _editor.renderer.setPrintMarginColumn(false);
       qc.inputEditor = _editor;
 
+      // this function is used for autocompletion of dynamically known names such
+      // as bucket names, field names, and so on. We only want to return items that
+      // either start with the prefix, or items where the prefix follows a '.'
+      // (meaning that the prefix is a field name from a path
+
       var identifierCompleter = {
           getCompletions: function(editor, session, pos, prefix, callback) {
-            callback(null,mnQueryService.autoCompleteArray);
+            var results = [];
+            var modPrefix = '.' + prefix;
+            var modPrefix2 = '`' + prefix;
+            //console.log("Looking for: *" + prefix + "*");
+            for (var i=0; i<mnQueryService.autoCompleteArray.length; i++) {
+              //console.log("  *" + mnQueryService.autoCompleteArray[i].caption + "*");
+              if (_.startsWith(mnQueryService.autoCompleteArray[i].caption,prefix) ||
+                  mnQueryService.autoCompleteArray[i].caption.indexOf(modPrefix) >= 0 ||
+                  mnQueryService.autoCompleteArray[i].caption.indexOf(modPrefix2) >= 0) {
+                //console.log("    Got it!");
+                results.push(mnQueryService.autoCompleteArray[i]);
+              }
+            }
+            callback(null,results);
           }
       };
       langTools.addCompleter(identifierCompleter);
