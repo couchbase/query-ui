@@ -363,6 +363,10 @@
     }
 
     function clearHistory() {
+      // don't clear the history if existing queries are already running
+      if (mnQueryService.executingQuery.busy)
+        return;
+
       lastResult.copyIn(dummyResult);
       pastQueries.length = 0;
       currentQueryIndex = 0;

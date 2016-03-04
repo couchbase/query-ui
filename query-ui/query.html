@@ -20,7 +20,10 @@
             class="btn_1 cbui-rightmargin"
             ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span>
           </a>
-          <a ng-click="qc.clearHistory()" class="btn_1 cbui-rightmargin">
+          <a ng-click="qc.clearHistory()"
+          ng-class="{dynamic_disabled: qc.executingQuery.busy}"
+           ng-disabled="qc.executingQuery.busy"
+          class="btn_1 cbui-rightmargin">
             <span>Clear History</span>
           </a>
         </span>

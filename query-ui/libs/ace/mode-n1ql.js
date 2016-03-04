@@ -7,7 +7,7 @@
   var keywords_array = keywords.split('|');
 
   var builtinConstants = (
-      "true|false"
+      "true|false|indexes|keyspaces"
   );
   var builtinConstants_array = builtinConstants.split('|');
 
@@ -147,7 +147,7 @@
 
         for (var i=0; i<builtinConstants_array.length; i++)
           if (_.startsWith(builtinConstants_array[i],prefix))
-            results.push({value: builtinConstants_array[i], meta: 'constant', score: 1});
+            results.push({value: builtinConstants_array[i], meta: 'built-in', score: 1});
 
         for (var i=0; i<builtinFunctions_array.length; i++)
           if (_.startsWith(builtinFunctions_array[i],prefix))
