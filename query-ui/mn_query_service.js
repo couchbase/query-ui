@@ -545,8 +545,11 @@
         if (_.isString(data)) {
           newResult.data = {status: data};
           if (status && status == 504) {
-            newResult.data.status_detail = "The query workbench only supports queries running for " + timeout +
-            " seconds. Use cbq from the command-line for longer running queries.";
+            newResult.data.status_detail =
+              "The query workbench only supports queries running for " + timeout +
+              " seconds. Use cbq from the command-line for longer running queries. " +
+              "Certain DML queries, such as index creation, will continue in the " +
+              "background despite the user interface timeout.";
           }
 
           newResult.result = JSON.stringify(newResult.data,null,'  ');
