@@ -294,9 +294,7 @@
 
     }
 
-    $(window).resize(function() {
-      updateEditorSizes();
-    });
+    $(window).resize(updateEditorSizes);
 
     //
     // make the focus go to the input field, so that backspace doesn't trigger
@@ -367,6 +365,7 @@
 
     function doneWithQuery() {
       qc.inputEditor.setReadOnly(false);
+      updateEditorSizes();
       focusOnInput();
     }
 

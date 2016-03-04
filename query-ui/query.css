@@ -253,7 +253,7 @@ a.cbui-rightmargin {
 }
 
 #result_table, #result_tree {
-  height: 500px;
+  height: 200px;
   padding: 0px;
   padding-right: 4px;
   margin-right: 4px;
