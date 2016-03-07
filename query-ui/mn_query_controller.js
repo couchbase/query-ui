@@ -99,8 +99,9 @@
     qc.maxTableSize = 750000;
     qc.maxTreeSize = 750000;
     qc.maxAceSize = 10485760;
-    qc.maxSizeMsg = {error: "Result size too large to display. Try using a lower limit."};
-    qc.maxSizeMsgStr = "{\"error\": \"Result size too large to display. Try using a lower limit.\"}";
+    qc.maxSizeMsgTable = {error: "The table view is slow with results sized > " + qc.maxTableSize + " bytes. Try using the JSON view or specifying a lower limit in your query."};
+    qc.maxSizeMsgTree = {error: "The tree view is slow with results sized > " + qc.maxTreeSize + " bytes. Try using the JSON view or specifying a lower limit in your query."};
+    qc.maxSizeMsgJSON = "{\"error\": \"The JSON view is slow with results sized > " + qc.maxAceSize + " bytes. Try specifying a lower limit in your query.\"}";
 
     //
     // call the activate method for initialization

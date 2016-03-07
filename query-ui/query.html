@@ -140,15 +140,15 @@
           <div id="result_editor" ui-ace="qc.aceOutputOptions" ng-if="qc.isSelected(1) && (qc.lastResult.resultSize < qc.maxAceSize)" 
             ng-model="qc.lastResult.result" style="border-right: 1px solid #e3e3e4;"></div>
           <div id="result_editor" ui-ace="qc.aceOutputOptions" ng-if="qc.isSelected(1) && (qc.lastResult.resultSize >= qc.maxAceSize)" 
-            ng-model="qc.maxSizeMsgStr" style="border-right: 1px solid #e3e3e4;"></div>
+            ng-model="qc.maxSizeMsgJSON" style="border-right: 1px solid #e3e3e4;"></div>
           <div id="result_table" ng-if="qc.isSelected(2) && (qc.lastResult.resultSize < qc.maxTableSize)"
             mn-json-table="qc.lastResult.data"></div>
           <div id="result_table" ng-if="qc.isSelected(2) && (qc.lastResult.resultSize >= qc.maxTableSize)"
-            mn-json-table="qc.maxSizeMsg"></div>
+            mn-json-table="qc.maxSizeMsgTable"></div>
           <div id="result_tree" ng-if="qc.isSelected(3) && (qc.lastResult.resultSize < qc.maxTreeSize)"
             mn-json-tree="qc.lastResult.data"></div>
           <div id="result_tree" ng-if="qc.isSelected(3) && (qc.lastResult.resultSize >= qc.maxTreeSize)"
-            mn-json-tree="qc.maxSizeMsg"></div>
+            mn-json-tree="qc.maxSizeMsgTree"></div>
         </div>
 
       </div>

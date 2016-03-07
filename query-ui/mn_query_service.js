@@ -288,7 +288,8 @@
     function canCreateBlankQuery() {
       return (currentQueryIndex == pastQueries.length -1 &&
           lastResult.query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
-          lastResult.status != newQueryTemplate.status);
+          lastResult.status != newQueryTemplate.status &&
+          !mnQueryService.executingQuery.busy);
     }
     function hasPrevResult() {return currentQueryIndex > 0;}
 
@@ -322,11 +323,11 @@
         // after a certain delay.
         //
 
-        lastResult.result = tempResult;
+        lastResult.result = tempResult; // blank values
         lastResult.data = tempData;
+        currentQueryIndex--;
 
         $timeout(function(){
-          currentQueryIndex--;
           lastResult.copyIn(pastQueries[currentQueryIndex]);
           currentQuery = lastResult.query;
         },50);
@@ -342,11 +343,11 @@
         // see comment above about the delay hack.
         //
 
-        lastResult.result = tempResult;
+        lastResult.result = tempResult; // blank values
         lastResult.data = tempData;
+        currentQueryIndex++;
 
         $timeout(function(){
-          currentQueryIndex++;
           lastResult.copyIn(pastQueries[currentQueryIndex]);
           currentQuery = lastResult.query;
         },50);
