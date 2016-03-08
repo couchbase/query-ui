@@ -1,53 +1,51 @@
 
 <div id="query_pane" style="background-color: #fff"
-	ng-controller="mnQueryController as qc"
-	ng-if="qc.validated.valid()" class="container ui-layout-center shadow_box">
+  ng-controller="mnQueryController as qc" ng-if="qc.validated.valid()"
+  class="container ui-layout-center shadow_box">
 
   <div id="query_ui" mn-spinner="queryInProgress" class="contents">
-
     <div id="query_box" class="query_box">
       <div id="query_header"
         class="cbui-row cbui-header-oldgray cbui-rounded-top">
-        <h2></h2>
-        <span class="cbui-column25">&nbsp</span>
-        <span class="cbui-column cbui-centered">
-          <a title="View previous queries/results" ng-click="qc.prev()"
-            class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">
-            <span>&larr;</span>
-          </a>
-          <h5>{{qc.getCurrentIndex()}}</h5>
-          <a title="View subsequent queries/results" ng-click="qc.next()"
-            class="btn_1 cbui-rightmargin"
-            ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span>
-          </a>
-          <a ng-click="qc.clearHistory()"
+        <span class="cbui-column25"> <a ng-click="qc.query()"
+          class="btn_1"
           ng-class="{dynamic_disabled: qc.executingQuery.busy}"
-           ng-disabled="qc.executingQuery.busy"
-          class="btn_1 cbui-rightmargin">
-            <span>Clear History</span>
-          </a>
-        </span>
-        <span class="cbui-column25 cbui-right">
-          <a ng-click="qc.save_query()" class="btn_1">
-          <span>Save Query</span></a>
+          title="(or hit enter after a semicolon)"><span>Execute</span></a>
+        </span> <span class="cbui-column cbui-centered"> <a
+          title="View previous queries/results" ng-click="qc.prev()"
+          class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">
+            <span>&larr;</span>
+        </a>
+          <h5>{{qc.getCurrentIndex()}}</h5> <a
+          title="View subsequent queries/results" ng-click="qc.next()"
+          class="btn_1 cbui-rightmargin"
+          ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span>
+        </a> <a ng-click="qc.clearHistory()"
+          ng-class="{dynamic_disabled: qc.executingQuery.busy}"
+          ng-disabled="qc.executingQuery.busy"
+          class="btn_1 cbui-rightmargin"> <span>Clear History</span>
+        </a>
+        </span> <span class="cbui-column25 cbui-right"> <a
+          ng-click="qc.save_query()" class="btn_1"> <span>Save
+              Query</span></a>
         </span>
       </div>
 
-      <div class=" " id="query_editor" ui-ace="qc.aceInputOptions"
+      <div class="" id="query_editor" ui-ace="qc.aceInputOptions"
         ng-class="{dynamic_disabled: qc.executingQuery.busy}"
-        style="min-height: 120px; border-right: 1px solid #e3e3e4;"
         ng-model="qc.lastResult.query">Ace</div>
-      <!-- WHY border style? -->
 
-      <div class="cbui-row cbui-header-oldgray">
+    {{qc.renderPage()}}
+
+      <!--  div class="cbui-row cbui-header-oldgray">
         <a ng-click="qc.query()" class="btn_1"
           ng-class="{dynamic_disabled: qc.executingQuery.busy}"
           title="(or hit enter after a semicolon)"><span>Execute</span></a>
         <span class="cbui-query-resultsnumber"><h5>Result
-            limit:</h5>
-          <input type="number" step="50" placeholder="50" min="0"
-          ng-model="qc.limit.max" ng-pattern="/^[0-9]+$/" required /> </span>
-      </div>
+            limit:</h5> <input type="number" step="50" placeholder="50"
+          min="0" ng-model="qc.limit.max" ng-pattern="/^[0-9]+$/"
+          required /> </span>
+      </div -->
     </div>
 
     <!-- Next we want the metadata and result boxes side by side -->
@@ -59,8 +57,7 @@
           <span> <img ng-hide="qc.gettingBuckets.busy"
             ng-click="qc.updateBuckets()" class="cbui-refreshicon"
             src="/_p/ui/query/images/spinner/spinner_lightbox_static.gif" />
-            <img ng-show="qc.gettingBuckets.busy"
-            class="cbui-busyicon"
+            <img ng-show="qc.gettingBuckets.busy" class="cbui-busyicon"
             src="/_p/ui/query/images/spinner/spinner_lightbox.gif" />
           </span>
 
@@ -114,18 +111,20 @@
             </ul>
             <h4>Results</h4>
             <a style="overflow: hidden; line-height: 34px;"
-              ng-click="qc.save()" class="btn_1 dynamic_enabled"><span>Save JSON</span></a>
+              ng-click="qc.save()" class="btn_1 dynamic_enabled"><span>Save
+                JSON</span></a>
           </div>
 
 
           <div id="result_summary" ng-hide="qc.lastResult.hide"
             class="panes">
-            <div >
+            <div>
               <table class="cbui-viewslist">
                 <thead>
                   <tr>
-                    <td ng-class="{cbui_color_success: qc.status_success(), cbui_color_fail: qc.status_fail()}">
-                    Status: {{qc.lastResult.status}}</td>
+                    <td
+                      ng-class="{cbui_color_success: qc.status_success(), cbui_color_fail: qc.status_fail()}">
+                      Status: {{qc.lastResult.status}}</td>
                     <td>Elapsed: {{qc.lastResult.elapsedTime}}</td>
                     <td>Execution: {{qc.lastResult.executionTime}}</td>
                     <td>Result Count: {{qc.lastResult.resultCount}}</td>
@@ -136,19 +135,20 @@
             </div>
           </div>
 
-          <!-- div>last result: {{qc.lastResult.resultSize}}, table size: {{qc.maxTableSize}}, lt: {{qc.lastResult.resultSize < qc.maxTableSize}}</div -->  
-          <div id="result_editor" ui-ace="qc.aceOutputOptions" ng-if="qc.isSelected(1) && (qc.lastResult.resultSize < qc.maxAceSize)" 
-            ng-model="qc.lastResult.result" style="border-right: 1px solid #e3e3e4;"></div>
-          <div id="result_editor" ui-ace="qc.aceOutputOptions" ng-if="qc.isSelected(1) && (qc.lastResult.resultSize >= qc.maxAceSize)" 
-            ng-model="qc.maxSizeMsgJSON" style="border-right: 1px solid #e3e3e4;"></div>
-          <div id="result_table" ng-if="qc.isSelected(2) && (qc.lastResult.resultSize < qc.maxTableSize)"
+          <!-- div>last result: {{qc.lastResult.resultSize}}, table size: {{qc.maxTableSize}}, lt: {{qc.lastResult.resultSize < qc.maxTableSize}}</div -->
+          <div id="show_anyway" ng-if="!qc.showBigDatasets && qc.dataTooBig()">
+          {{qc.getBigDataMessage()}} 
+          <a ng-click="qc.setShowBigData(true)">Show anyway.</a></div>
+          <div id="result_editor" ui-ace="qc.aceOutputOptions"
+            ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
+            ng-model="qc.lastResult.result"
+            style="border-right: 1px solid #e3e3e4;"></div>
+          <div id="result_table"
+            ng-if="qc.isSelected(2) && (!qc.dataTooBig() || qc.showBigDatasets)"
             mn-json-table="qc.lastResult.data"></div>
-          <div id="result_table" ng-if="qc.isSelected(2) && (qc.lastResult.resultSize >= qc.maxTableSize)"
-            mn-json-table="qc.maxSizeMsgTable"></div>
-          <div id="result_tree" ng-if="qc.isSelected(3) && (qc.lastResult.resultSize < qc.maxTreeSize)"
+          <div id="result_tree"
+            ng-if="qc.isSelected(3) && (!qc.dataTooBig() || qc.showBigDatasets)"
             mn-json-tree="qc.lastResult.data"></div>
-          <div id="result_tree" ng-if="qc.isSelected(3) && (qc.lastResult.resultSize >= qc.maxTreeSize)"
-            mn-json-tree="qc.maxSizeMsgTree"></div>
         </div>
 
       </div>

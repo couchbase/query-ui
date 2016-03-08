@@ -23,7 +23,7 @@
     qc.gettingBuckets = mnQueryService.gettingBuckets;  // busy retrieving?
     qc.updateBuckets = mnQueryService.updateBuckets;    // function to update
     qc.lastResult = mnQueryService.getResult(); // holds the current query and result
-    qc.limit = mnQueryService.limit;            // automatic result limiter
+    //qc.limit = mnQueryService.limit;            // automatic result limiter
     qc.executingQuery = mnQueryService.executingQuery;
 
     // some functions for handling query history, going backward and forward
@@ -103,17 +103,78 @@
     qc.maxSizeMsgTree = {error: "The tree view is slow with results sized > " + qc.maxTreeSize + " bytes. Try using the JSON view or specifying a lower limit in your query."};
     qc.maxSizeMsgJSON = "{\"error\": \"The JSON view is slow with results sized > " + qc.maxAceSize + " bytes. Try specifying a lower limit in your query.\"}";
 
+    qc.showBigDatasets = false;     // allow the user to override the limit on showing big datasets
+
+    qc.dataTooBig = dataTooBig;
+    qc.setShowBigData = setShowBigData;
+    qc.getBigDataMessage = getBigDataMessage;
+
+    qc.renderPage = function() {updateEditorSizes();};
     //
     // call the activate method for initialization
     //
 
     activate();
 
+
+    //
+    // Is the data too big to display for the selected results pane?
+    //
+
+    function dataTooBig() {
+      switch (mnQueryService.outputTab) {
+      case 1: return(qc.lastResult.resultSize / qc.maxAceSize) > 1.1;
+      case 2: return(qc.lastResult.resultSize / qc.maxTableSize) > 1.1;
+      case 3: return(qc.lastResult.resultSize / qc.maxTreeSize) > 1.1;
+      }
+
+    }
+
+    //
+    // get a string to describe why the dataset is large
+    //
+
+    function getBigDataMessage() {
+      var fraction;
+      switch (mnQueryService.outputTab) {
+      case 1: fraction = qc.lastResult.resultSize / qc.maxAceSize; break;
+      case 2: fraction = qc.lastResult.resultSize / qc.maxTableSize; break;
+      case 3: fraction = qc.lastResult.resultSize / qc.maxTreeSize; break;
+      }
+      var timeEstimate = Math.round(fraction * 2.5);
+      var timeUnits = "seconds";
+      if (timeEstimate > 60) {
+        timeEstimate = Math.round(timeEstimate/60);
+        timeUnits = "minutes";
+      }
+      var message = "The current dataset, " + qc.lastResult.resultSize + " " +
+        "bytes, is too large to display quickly. Using a lower limit or a more " +
+        "specific where clause in your query can reduce result size. Rendering " +
+        "might freeze your browser for " + timeEstimate + " to " + timeEstimate*4 +
+        " " + timeUnits + " or more. ";
+
+      if (mnQueryService.outputTab != 1) {
+        message += "The JSON view is about 10x faster. ";
+      }
+
+      return(message);
+    }
+
+    function setShowBigData(show)
+    {
+      qc.showBigDatasets = show;
+      $timeout(swapEditorFocus,10);
+    }
+
     //
     // change the tab selection
     //
 
     function selectTab(tabNum) {
+      if (qc.isSelected(tabNum))
+        return; // avoid noop
+
+      qc.showBigDatasets = false;
       mnQueryService.selectTab(tabNum);
       // select focus after a delay to try and force update of the editor
       $timeout(swapEditorFocus,10);
@@ -125,11 +186,13 @@
     //
 
     function nextResult() {
+      qc.showBigDatasets = false;
       mnQueryService.nextResult();
       $timeout(swapEditorFocus,10);
     }
 
     function prevResult() {
+      qc.showBigDatasets = false;
       mnQueryService.prevResult();
       $timeout(swapEditorFocus,10);
     }
@@ -280,8 +343,6 @@
       var otherStuff = pageHeaderHeight + pageFooterHeight + headerNavHeight + queryBoxHeight;
       var editor_size = windowHeight - otherStuff - margins;
 
-      //var width = $('#result_editor').width();
-
       //console.log(" editor_size: " + editor_size);
       $('#sidebar_body').height(editor_size + resultSummaryHeight + 25);
       $('#result_editor').height(editor_size);
@@ -289,10 +350,6 @@
       $('#result_tree').height(editor_size+20);
 
       $('#result_box').height(editor_size+109);
-      //$('#result_editor').width(width);
-      //$('#result_table').width(width);
-      //$('#result_tree').width(width);
-
     }
 
     $(window).resize(updateEditorSizes);
@@ -321,29 +378,29 @@
         qc.lastResult.query = qc.lastResult.query.trim();
 
       var queryStr = qc.lastResult.query;
-      var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
-      var startsWithSelectExpr = /^\s*select/gmi;
-      var hasElement = /^\s*select\s*(distinct)?\s*(raw|element|value)\s*/gmi;
+      //var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
+      //var startsWithSelectExpr = /^\s*select/gmi;
+      //var hasElement = /^\s*select\s*(distinct)?\s*(raw|element|value)\s*/gmi;
 
       //console.log("HasElement: " + hasElement.test(queryStr));
 
-      var hasLimit = hasLimitExpr.test(queryStr);
-      var startsWithSelect = startsWithSelectExpr.test(queryStr);
+      //var hasLimit = hasLimitExpr.test(queryStr);
+      //var startsWithSelect = startsWithSelectExpr.test(queryStr);
 
       // add a limit to all "select" statements by wrapping
-      if (startsWithSelect && !hasLimit && !hasElement.test(queryStr)) {
-        // handle garbage in the limit dialog
-        if (isNaN(Number(mnQueryService.limit.max)) ||
-            mnQueryService.limit.max < 1)
-          mnQueryService.limit.max = mnQueryService.defaultLimit;
-
-        // remove ;
-        if (endsWithSemi.test(queryStr))
-          queryStr = queryStr.replace(endsWithSemi,"");
-
-        // wrap the query in a new query with a limit
-        queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + mnQueryService.limit.max + ";";
-      }
+//      if (startsWithSelect && !hasLimit && !hasElement.test(queryStr)) {
+//        // handle garbage in the limit dialog
+//        if (isNaN(Number(mnQueryService.limit.max)) ||
+//            mnQueryService.limit.max < 1)
+//          mnQueryService.limit.max = mnQueryService.defaultLimit;
+//
+//        // remove ;
+//        if (endsWithSemi.test(queryStr))
+//          queryStr = queryStr.replace(endsWithSemi,"");
+//
+//        // wrap the query in a new query with a limit
+//        queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + mnQueryService.limit.max + ";";
+//      }
 
       //console.log("Running query: " + queryStr);
       // run the query and show a spinner

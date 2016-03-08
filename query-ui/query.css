@@ -243,6 +243,17 @@ a.cbui-rightmargin {
   
 }
 
+#query_editor {
+  overflow: auto;
+  background-color: #fff;
+  padding: 8px;
+  margin: 1px;
+  font-size: 14px;
+  font-weight: 400;
+  min-height: 170px; 
+  border-right: 1px solid #e3e3e4;
+}
+
 #result_editor {
   overflow: auto;
   background-color: #fff;

@@ -564,7 +564,7 @@
           if (_.isArray(data.errors) && data.errors.length >= 1) {
             if (userQuery)
               data.errors[0].query_from_user = userQuery;
-            data.errors[0].query_with_limit = queryText;
+            //data.errors[0].query_with_limit = queryText;
           }
           newResult.data = data.errors;
           newResult.result = JSON.stringify(data.errors,null,'  ');
