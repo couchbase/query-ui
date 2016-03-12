@@ -8,9 +8,8 @@
       <div id="query_header"
         class="cbui-row cbui-header-oldgray cbui-rounded-top">
         <span class="cbui-column25"> <a ng-click="qc.query()"
-          class="btn_1"
-          ng-class="{dynamic_disabled: qc.executingQuery.busy}"
-          title="(or hit enter after a semicolon)"><span>Execute</span></a>
+          class="btn_1"><span title="(or hit enter after a semicolon)" ng-if="!qc.executingQuery.busy">Execute</span>
+          <span title="Stop the running query" ng-if="qc.executingQuery.busy">Cancel</span></a>
         </span> <span class="cbui-column cbui-centered"> <a
           title="View previous queries/results" ng-click="qc.prev()"
           class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">

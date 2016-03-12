@@ -369,6 +369,12 @@
     //
 
     function query() {
+      // if a query is already running, we should cancel it
+      if (qc.executingQuery.busy) {
+        mnQueryService.cancelQuery();
+        return;
+      }
+
       // don't let the user edit the query while it's running
       qc.inputEditor.setReadOnly(true);
 
@@ -414,6 +420,8 @@
         promise.success(doneWithQuery)
         .error(doneWithQuery);
       }
+      else
+        doneWithQuery();
     };
 
     //

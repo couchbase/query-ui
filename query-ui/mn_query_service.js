@@ -2,9 +2,9 @@
 
   angular.module('mnQuery').factory('mnQueryService', getMnQueryService);
 
-  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper'];
+  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper', 'mnPendingQueryKeeper'];
 
-  function getMnQueryService($q, $timeout, $http, mnHelper) {
+  function getMnQueryService($q, $timeout, $http, mnHelper, mnPendingQueryKeeper) {
 
     var mnQueryService = {};
 
@@ -42,7 +42,9 @@
     // execute queries, and keep track of when we are busy doing so
 
     mnQueryService.executingQuery = {busy: false};
+    mnQueryService.currentQueryRequest = null;
     mnQueryService.executeQuery = executeQuery;
+    mnQueryService.cancelQuery = cancelQuery;
 
     // update store the metadata about buckets
 
@@ -374,6 +376,18 @@
     }
 
     //
+    // cancelQuery - if a query is running, cancel it
+    //
+
+    function cancelQuery() {
+      if (mnQueryService.currentQueryRequest != null) {
+        var queryInFly = mnPendingQueryKeeper.getQueryInFly(mnQueryService.currentQueryRequest);
+        console.log("Got queryInFly: " + queryInFly);
+        queryInFly && queryInFly.canceler("test");
+      }
+    }
+
+    //
     // call the proxy which handles N1QL queries
     //
 
@@ -447,7 +461,7 @@
 
       // send the query off via REST API
       var timeout = 300; // query timeout in seconds
-      var request = {url: "/_p/query/query/service",
+      mnQueryService.currentQueryRequest = {url: "/_p/query/query/service",
           method: "POST",
           headers: {'ns-server-proxy-timeout':timeout*1000},
           data: queryData};
@@ -458,7 +472,7 @@
       // Issue the request
       //
 
-      return $http(request)
+      var promise = $http(mnQueryService.currentQueryRequest)
 
       // SUCCESS!
       .success(function(data, status, headers, config) {
@@ -507,6 +521,7 @@
 
         // all done
         mnQueryService.executingQuery.busy = false;
+        mnQueryService.currentQueryRequest = null;
 
 //      var post2_ms = new Date().getTime();
 
@@ -533,12 +548,28 @@
         }
 
         // no result at all? failure
-        if (!data) {
+        if (data === undefined) {
           newResult.result = '{"status": "Failure contacting server."}';
-          newResult.data = lastResult.result;
+          newResult.data = {status: "Failure contacting server."};
           newResult.status = "errors";
+          newResult.resultCount = 0;
+          newResult.resultSize = 0;
           lastResult.copyIn(newResult);
           mnQueryService.executingQuery.busy = false;
+          mnQueryService.currentQueryRequest = null;
+          return;
+        }
+
+        // data is null? query interrupted
+        if (data === null) {
+          newResult.result = '{"status": "Query interrupted."}';
+          newResult.data = {status: "Query interrupted."};
+          newResult.status = "errors";
+          newResult.resultCount = 0;
+          newResult.resultSize = 0;
+          lastResult.copyIn(newResult);
+          mnQueryService.executingQuery.busy = false;
+          mnQueryService.currentQueryRequest = null;
           return;
         }
 
@@ -557,6 +588,7 @@
           newResult.status = "errors";
           lastResult.copyIn(newResult);
           mnQueryService.executingQuery.busy = false;
+          mnQueryService.currentQueryRequest = null;
           return;
         }
 
@@ -591,7 +623,11 @@
         saveStateToStorage();
 
         mnQueryService.executingQuery.busy = false;
+        mnQueryService.currentQueryRequest = null;
       });
+
+      return(promise);
+
     }
 
     //
