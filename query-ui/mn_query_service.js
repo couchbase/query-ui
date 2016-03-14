@@ -419,10 +419,21 @@
       }
 
       // don't allow multiple queries, as indicated by anything after a semicolon
+      // we test for semicolons in either single or double quotes, or semicolons outside
+      // of quotes followed by non-whitespace. That final one is group 1. If we get any
+      // matches for group 1, it looks like more than one query.
 
-      var stuffAfterSemi = /;\s*\S+/i;
-      var stuffAfterMatches = stuffAfterSemi.exec(queryText);
-      if (_.isArray(stuffAfterMatches) && stuffAfterMatches.length > 0 && stuffAfterMatches[0].length > 1) {
+      var matchNonQuotedSemicolons = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|(;\s*\S+)/ig;
+      var semicolonCount = 0;
+
+      var matchArray = matchNonQuotedSemicolons.exec(queryText);
+      while (matchArray != null) {
+        if (matchArray[1]) // group 1, a non-quoted semicolon with non-whitespace following
+          semicolonCount++;
+        matchArray = matchNonQuotedSemicolons.exec(queryText);
+      }
+
+      if (semicolonCount > 0) {
         newResult.status = "errors";
         newResult.result = '{"error": "you cannot issue more than one query at once."}';
         newResult.data = {error: "Error, you cannot issue more than one query at once."};
