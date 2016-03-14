@@ -142,6 +142,9 @@
     executingQueryTemplate.status = "executing";
     executingQueryTemplate.result = '{"status": "Executing Query"}';
     executingQueryTemplate.data = {status: "Executing Query"};
+    executingQueryTemplate.resultSize = 0;
+    executingQueryTemplate.resultCount = 0;
+
 
     var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
@@ -433,9 +436,12 @@
         return;
 
       mnQueryService.executingQuery.busy = true;
-      lastResult.result = '{"status": "Executing Query"}';
-      lastResult.data = {status: "Executing Query"};
-      lastResult.status = "executing";
+      lastResult.result = executingQueryTemplate.result;
+      lastResult.data = executingQueryTemplate.data;
+      lastResult.status = executingQueryTemplate.status;
+      lastResult.resultSize = executingQueryTemplate.resultSize;
+      lastResult.resultCount = executingQueryTemplate.resultCount;
+
       var pre_post_ms = new Date().getTime(); // when did we start?
 
       //
