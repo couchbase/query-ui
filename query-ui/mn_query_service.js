@@ -669,7 +669,7 @@
         " select indexes.keyspace_id, true has_primary" +
         "  from system:indexes where is_primary = true and state = 'online'" +
         "  union" +
-        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes, indexes.condition" +
+        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes" +
         "  from system:indexes where state = 'online' and is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
         "  union" +
         "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
