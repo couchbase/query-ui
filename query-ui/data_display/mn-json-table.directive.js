@@ -93,7 +93,7 @@
 			_.forEach(object, function (item, index) {
 				if (_.isPlainObject(item)) {
 					arrayObjCount++;
-					_.forEach(item, function (value, key) {
+					_.forIn(item, function (value, key) {
 						itemsKeysToObject[key] = true;
 					});
 				}
@@ -136,7 +136,7 @@
 				_.forEach(object, function (item, index) {
 					// if the item is an object
 					if (_.isPlainObject(item[onlyField])) {
-						_.forEach(item[onlyField], function (value, key) {
+						_.forIn(item[onlyField], function (value, key) {
 							if (!innerKeys)
 								innerKeys = {};
 							innerKeys[key] = true;
@@ -152,7 +152,7 @@
             result += '<table class="ajtd-object-value ajtd-table multi-type-array sortable"><thead>';
 
 			var keys = (innerKeys ? innerKeys : itemsKeysToObject);
-			_.forEach(keys, function(value,key) {
+			_.forIn(keys, function(value,key) {
               result += '<th class=ajtd-column-header>' + key +'</th>';
 			});
 
@@ -171,7 +171,7 @@
 						result += '<td title="' + prefix + "[" + index  +
                         ']"><div class=ajtd-key>empty object</div></td>';
 
-					else _.forEach(keys, function(b,key) {
+					else _.forIn(keys, function(b,key) {
 						var value = item ? item[key] : null;
 						result += '<td title="' + prefix + "[" + index  +
                         '].' + key + '" class="ajtd-cell">'; // start the cell
@@ -227,7 +227,7 @@
 			// check for special case: every field is a sub-object with the same schema
 			var specialCase = true;
 			var memberKeys;
-			_.forEach(object, function(value,key) { // iterate over the object's fields
+			_.forIn(object, function(value,key) { // iterate over the object's fields
 				var currentKeys = _.keys(value);
 				if (!_.isPlainObject(value)) {        // they all must be objects, not arrays or primitives
 					specialCase = false;
@@ -261,7 +261,7 @@
 				result += '</thead><tbody>';
 
 				// for each object member, output the name of the object, then its members
-				_.forEach(object, function(value,key) {
+				_.forIn(object, function(value,key) {
 					result += '<tr><td title="' + prefix + key +
                     '" class="ajtd-cell"><div>' + key + '</div></td>';
 
@@ -282,13 +282,13 @@
 
 			// regular case, horizontal table with headers are names of keys
 			else {
-				_.forEach(object, function(value,key) {
+				_.forIn(object, function(value,key) {
 					result += '<th class=ajtd-column-header>' + key +'</th>';
 				});
 				result += '</thead><tbody><tr>';
 
 				// now output values for each field
-				_.forEach(object, function(value,key) {
+				_.forIn(object, function(value,key) {
 					// for arrays and objects, we need a recursive call
 					if (_.isArray(value) || _.isPlainObject(value))
 						result += '<td title="' + prefix + key  +

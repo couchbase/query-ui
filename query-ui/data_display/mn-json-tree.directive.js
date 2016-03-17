@@ -67,7 +67,7 @@
 
       // otherwise iterate over the members
       result += '<ul class="ajtd-type-object">';
-      _.forEach(object,function(value,key) {
+      _.forIn(object,function(value,key) {
         // skip the $$hashKey added by angular
         if (key === '$$hashKey') return;
         // for arrays and objects, we need a recursive call
@@ -75,7 +75,6 @@
           result += '<li title="' + prefix + key + '"><div><div class=ajtd-key>'
             + key + '</div><div class=ajtd-object-value>' +
           makeHTMLtree(value,prefix + key + ".") + '</div></div></li>';
-
         // otherwise, for primitives, output key/value pair
         else
           result += '<li title="' + prefix + key + '"><table><tr><td class=ajtd-key>' +
