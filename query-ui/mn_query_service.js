@@ -385,7 +385,7 @@
     function cancelQuery() {
       if (mnQueryService.currentQueryRequest != null) {
         var queryInFly = mnPendingQueryKeeper.getQueryInFly(mnQueryService.currentQueryRequest);
-        console.log("Got queryInFly: " + queryInFly);
+        //console.log("Got queryInFly: " + queryInFly);
         queryInFly && queryInFly.canceler("test");
       }
     }
@@ -438,6 +438,7 @@
         newResult.result = '{"error": "you cannot issue more than one query at once."}';
         newResult.data = {error: "Error, you cannot issue more than one query at once."};
         lastResult.copyIn(newResult);
+        saveToStorage(); // save current history
         return null;
       }
 
@@ -542,12 +543,7 @@
         newResult.requestID = data.requestID;
         lastResult.copyIn(newResult);
 
-        // save the state
-        saveStateToStorage();
-
-        // all done
-        mnQueryService.executingQuery.busy = false;
-        mnQueryService.currentQueryRequest = null;
+        finishQuery();
 
 //      var post2_ms = new Date().getTime();
 
@@ -561,10 +557,10 @@
 
       })
       .error(function(data, status, headers, config) {
-//        console.log("Error Data: " + JSON.stringify(data));
-//        console.log("Error Status: " + JSON.stringify(status));
-//        console.log("Error Headers: " + JSON.stringify(headers));
-//        console.log("Error Config: " + JSON.stringify(config));
+        console.log("Error Data: " + JSON.stringify(data));
+        console.log("Error Status: " + JSON.stringify(status));
+        console.log("Error Headers: " + JSON.stringify(headers));
+        console.log("Error Config: " + JSON.stringify(config));
 
         // if we don't get query metrics, estimate elapsed time
         if (!data || !data.metrics) {
@@ -581,8 +577,7 @@
           newResult.resultCount = 0;
           newResult.resultSize = 0;
           lastResult.copyIn(newResult);
-          mnQueryService.executingQuery.busy = false;
-          mnQueryService.currentQueryRequest = null;
+          finishQuery();
           return;
         }
 
@@ -594,8 +589,7 @@
           newResult.resultCount = 0;
           newResult.resultSize = 0;
           lastResult.copyIn(newResult);
-          mnQueryService.executingQuery.busy = false;
-          mnQueryService.currentQueryRequest = null;
+          finishQuery();
           return;
         }
 
@@ -613,8 +607,7 @@
           newResult.result = JSON.stringify(newResult.data,null,'  ');
           newResult.status = "errors";
           lastResult.copyIn(newResult);
-          mnQueryService.executingQuery.busy = false;
-          mnQueryService.currentQueryRequest = null;
+          finishQuery();
           return;
         }
 
@@ -645,14 +638,22 @@
 
         lastResult.copyIn(newResult);
 
-        // save the state
-        saveStateToStorage();
-
-        mnQueryService.executingQuery.busy = false;
-        mnQueryService.currentQueryRequest = null;
+        finishQuery();
       });
 
       return(promise);
+
+    }
+
+    //
+    // whenever a query finishes, we need to set the state to indicate teh query
+    // is not longer running.
+    //
+
+    function finishQuery() {
+      saveStateToStorage();                       // save the state
+      mnQueryService.currentQueryRequest = null;  // no query running
+      mnQueryService.executingQuery.busy = false; // enable the UI
 
     }
 
