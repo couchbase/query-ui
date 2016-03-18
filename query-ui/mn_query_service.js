@@ -2,9 +2,9 @@
 
   angular.module('mnQuery').factory('mnQueryService', getMnQueryService);
 
-  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper', 'mnPendingQueryKeeper'];
+  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper', 'mnPendingQueryKeeper', '$httpParamSerializer'];
 
-  function getMnQueryService($q, $timeout, $http, mnHelper, mnPendingQueryKeeper) {
+  function getMnQueryService($q, $timeout, $http, mnHelper, mnPendingQueryKeeper, $httpParamSerializer) {
 
     var mnQueryService = {};
 
@@ -477,13 +477,22 @@
         queryData.creds = '[' + credString + ']';
 
       // send the query off via REST API
+      //
+      // Because Angular automatically urlencodes JSON parameters, but has a special
+      // algorithm that doesn't encode semicolons, any semicolons inside the query
+      // will get mis-parsed by the server as the end of the parameter (see MB-18621
+      // for an example). To bypass this, we will url-encode ahead of time, and then
+      // make sure the semicolons get urlencoded as well.
+      //
       var timeout = 300; // query timeout in seconds
+      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
       mnQueryService.currentQueryRequest = {url: "/_p/query/query/service",
           method: "POST",
-          headers: {'ns-server-proxy-timeout':timeout*1000},
-          data: queryData};
+          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+          data: encodedQuery
+          };
 
-      //console.log("submitting query: " + JSON.stringify(request));
+      //console.log("submitting query: " + JSON.stringify(mnQueryService.currentQueryRequest));
 
       //
       // Issue the request
