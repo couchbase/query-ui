@@ -15,6 +15,9 @@
           href="{{url}}">{{url}}</a></li>
       </ul>
     </div>
+    <div ng-if="qc.validated.otherNodes().length == 0">
+      <h1>No query nodes were found on this cluster, so querying is not possible.</h1>
+    </div>
   </div>
   <!-- ul ng-if="qc.validated.valid()" class="second-level-nav">
     <li><a ui-sref="app.admin.query.workbench"
