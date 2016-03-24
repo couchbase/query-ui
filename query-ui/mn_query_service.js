@@ -496,24 +496,39 @@
             pw +'"}';
       }
 
+      // add the credentials for bucket passwords
       if (credString.length > 0)
         queryData.creds = '[' + credString + ']';
 
       // send the query off via REST API
       //
+      //
+      var timeout = 300; // query timeout in seconds
+
       // Because Angular automatically urlencodes JSON parameters, but has a special
       // algorithm that doesn't encode semicolons, any semicolons inside the query
       // will get mis-parsed by the server as the end of the parameter (see MB-18621
       // for an example). To bypass this, we will url-encode ahead of time, and then
       // make sure the semicolons get urlencoded as well.
-      //
-      var timeout = 300; // query timeout in seconds
+
       var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
       mnQueryService.currentQueryRequest = {url: "/_p/query/query/service",
           method: "POST",
           headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
           data: encodedQuery
           };
+
+      // An alternate way to get around Angular's encoding is "isNotForm: true". But
+      // that triggers bug MB-16964, where the server currently fails to parse creds
+      // when they are JSON encoded.
+
+//    mnQueryService.currentQueryRequest = {
+//    url: "/_p/query/query/service",
+//    method: "POST",
+//    headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+//    data: queryData,
+//    mnHttp: {isNotForm: true}
+//};
 
       //console.log("submitting query: " + JSON.stringify(mnQueryService.currentQueryRequest));
 
@@ -535,8 +550,17 @@
         //      var post_post_ms = new Date().getTime();
 
         // make sure we show errors if the query did not succeed
-        if (data.status == "success")
-          result = data.results;
+        if (data.status == "success") {
+          // if the results are empty, show some of the surrounding data
+          if (_.isArray(data.results) && data.results.length == 0) {
+            result = {};
+            result.results = data.results;
+            result.metrics = data.metrics;
+          }
+          // otherwise, use the results
+          else
+            result = data.results;
+        }
         else {
           var failed = "Authorization Failed";
           // hack - detect authorization failed, make a suggestion
@@ -676,7 +700,6 @@
       saveStateToStorage();                       // save the state
       mnQueryService.currentQueryRequest = null;  // no query running
       mnQueryService.executingQuery.busy = false; // enable the UI
-
     }
 
     //
