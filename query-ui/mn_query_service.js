@@ -460,7 +460,7 @@
         newResult.result = '{"error": "you cannot issue more than one query at once."}';
         newResult.data = {error: "Error, you cannot issue more than one query at once."};
         lastResult.copyIn(newResult);
-        saveToStorage(); // save current history
+        saveStateToStorage(); // save current history
         return null;
       }
 
