@@ -99,6 +99,14 @@ html {
   min-width: 0;
 }
 
+.cbui-column66 {
+  -webkit-flex: 1 0 66%;
+  -webkit-box-flex: 1;
+      -ms-flex: 1 0 66%;
+          flex: 1 0 66%;
+  min-width: 0;
+}
+
 .cbui-column75 {
   -webkit-flex: 1 0 74%;
   -webkit-box-flex: 1;
@@ -206,8 +214,8 @@ a.cbui-rightmargin {
 }
 
 #result_box {
-  border-left: 1px solid #cdced0;
-}
+    border-left: 1px solid #cdced0;
+  }
 
 #result_header {
   padding: 5px 8px
@@ -250,7 +258,7 @@ a.cbui-rightmargin {
   margin: 1px;
   font-size: 14px;
   font-weight: 400;
-  min-height: 170px; 
+  min-height: 75px; 
   border-right: 1px solid #e3e3e4;
 }
 

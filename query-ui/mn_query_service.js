@@ -43,6 +43,7 @@
 
     mnQueryService.executingQuery = {busy: false};
     mnQueryService.currentQueryRequest = null;
+    mnQueryService.currentQueryRequestID = null;
     mnQueryService.executeQuery = executeQuery;
     mnQueryService.cancelQuery = cancelQuery;
 
@@ -407,8 +408,32 @@
     function cancelQuery() {
       if (mnQueryService.currentQueryRequest != null) {
         var queryInFly = mnPendingQueryKeeper.getQueryInFly(mnQueryService.currentQueryRequest);
-        //console.log("Got queryInFly: " + queryInFly);
         queryInFly && queryInFly.canceler("test");
+
+        //
+        // also submit a new query to delete the running query on the server
+        //
+
+        var query = 'delete from system:active_requests where ClientContextID = "' +
+          mnQueryService.currentQueryRequestID + '";';
+        var queryData = {statement: query , client_context_id: UUID.generate()};
+
+        var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+        mnQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+            method: "POST",
+            headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':300*1000},
+            data: encodedQuery
+        };
+        var promise = $http(mnQueryService.currentQueryRequest)
+
+        // sanity check - if there was an error put a message in the console.
+        .error(function(data, status, headers, config) {
+          console.log("Error cancelling query.");
+          console.log("    Data: " + JSON.stringify(data));
+          console.log("    Status: " + JSON.stringify(status));
+        });
+
+
       }
     }
 
@@ -499,6 +524,9 @@
       // add the credentials for bucket passwords
       if (credString.length > 0)
         queryData.creds = '[' + credString + ']';
+
+      mnQueryService.currentQueryRequestID = UUID.generate();
+      queryData.client_context_id = mnQueryService.currentQueryRequestID;
 
       // send the query off via REST API
       //

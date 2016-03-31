@@ -58,6 +58,13 @@
     qc.updateEditorSizes = updateEditorSizes;
 
     //
+    // expand/collapse the analysis pane
+    //
+
+    qc.analysisExpanded = false;
+    qc.toggleAnalysisSize = toggleAnalysisSize;
+
+    //
     // functions for running queries and saving results
     //
 
@@ -237,8 +244,12 @@
 
       qc.inputEditor.$blockScrolling = Infinity;
 
-      //console.log("last char: " + curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1]);
+      //
+      // allow the query editor to grow and shrink a certain amount based
+      // on the number of lines in the query
+      //
 
+      //console.log("last char: " + curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1]);
 
       // if they hit enter and the query ends with a semicolon, run the query
       if (e[0].action === 'insert' && // they typed something
@@ -248,6 +259,12 @@
           curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
           endsWithSemi.test(qc.lastResult.query))
         qc.query();
+
+      // as the query is edited, allow it more vertical space, but max sure it
+      // doesn't have fewer than 5 lines or more than
+      var lines = curSession.getLength();
+      var height = Math.min(Math.max(75,(lines-1)*17),240);
+      $("#query_editor").height(height);
     };
 
     function aceInputLoaded(_editor) {
@@ -345,7 +362,7 @@
 
       //console.log(" editor_size: " + editor_size);
       $('#sidebar_body').height(editor_size + resultSummaryHeight + 25);
-      $('#result_editor').height(editor_size);
+      $('#result_editor').height(editor_size + 10);
       $('#result_table').height(editor_size+20);
       $('#result_tree').height(editor_size+20);
 
@@ -505,7 +522,25 @@
       });
     };
 
+    //
+    // toggle the size of the analysis pane
+    //
 
+    function toggleAnalysisSize() {
+      if (!qc.analysisExpanded) {
+        $("#metadata").removeClass("cbui-column25");
+        $("#result_box").removeClass("cbui-column75");
+        $("#metadata").addClass("cbui-column66");
+        $("#result_box").addClass("cbui-column33");
+      }
+      else {
+        $("#metadata").removeClass("cbui-column66");
+        $("#result_box").removeClass("cbui-column33");
+        $("#metadata").addClass("cbui-column25");
+        $("#result_box").addClass("cbui-column75");
+      }
+      qc.analysisExpanded = !qc.analysisExpanded;
+    }
     //
     // let's start off with a list of the buckets
     //
@@ -541,6 +576,11 @@
 
       // get the list of buckets
       qc.updateBuckets();
+
+      //$( "#resizable-2" ).resizable({
+      //  animate: true
+    // });
+      //$(".resizable").resizable({handles: "w"});
 
       //
       // now let's make sure the window is the right size
