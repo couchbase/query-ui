@@ -274,6 +274,7 @@
       _editor.setOptions({enableBasicAutocompletion: true});
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
+      _editor.setReadOnly(qc.executingQuery.busy);
       qc.inputEditor = _editor;
 
       // this function is used for autocompletion of dynamically known names such
