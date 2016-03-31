@@ -2,7 +2,7 @@
 
   // some globals used by both the highlighter and the autocompleter
   var keywords = (
-      "all|alter|analyze|and|any|array|as|asc|begin|between|binary|boolean|break|bucket|build|by|call|case|cast|cluster|collate|collection|commit|connect|continue|correlate|create|database|dataset|datastore|declare|decrement|delete|derived|desc|describe|distinct|do|drop|each|element|else|end|every|except|exclude|execute|exists|explain|first|flatten|for|force|from|function|grant|group|gsi|having|if|ignore|ilike|in|include|increment|index|infer|inline|inner|insert|intersect|into|is|join|key|keys|keyspace|last|left|let|letting|like|limit|lsm|map|mapping|matched|materialized|merge|minus|missing|namespace|nest|not|null|number|object|offset|on|option|or|order|outer|over|parse|partition|password|path|pool|prepare|primary|private|privilege|procedure|public|raw|realm|reduce|rename|return|returning|revoke|right|role|rollback|satisfies|schema|select|self|semi|set|show|some|start|statistics|string|system|then|to|transaction|trigger|truncate|under|union|unique|unnest|unset|update|upsert|use|user|using|validate|value|valued|values|via|view|when|where|while|with|within|work|xor"
+      "all|alter|analyze|and|any|array|as|asc|begin|between|binary|boolean|break|bucket|build|by|call|case|cast|cluster|collate|collection|commit|connect|continue|correlate|create|database|dataset|datastore|declare|decrement|delete|derived|desc|describe|distinct|do|drop|each|element|else|end|every|except|exclude|execute|exists|explain|first|flatten|for|force|from|function|grant|group|gsi|having|if|ignore|ilike|in|include|increment|index|infer|inline|inner|insert|intersect|into|is|join|key|keys|keyspace|last|left|let|letting|like|limit|lsm|map|mapping|matched|materialized|merge|minus|missing|namespace|nest|not|null|number|object|offset|on|option|or|order|outer|over|parse|partition|password|path|pool|prepare|primary|private|privilege|procedure|public|raw|realm|reduce|rename|return|returning|revoke|right|role|rollback|satisfies|schema|select|self|semi|set|show|some|start|statistics|string|system:keyspaces|system:indexes|then|to|transaction|trigger|truncate|under|union|unique|unnest|unset|update|upsert|use|user|using|validate|value|valued|values|via|view|when|where|while|with|within|work|xor"
   );
   var keywords_array = keywords.split('|');
 
@@ -90,7 +90,7 @@
    */
 
   var util = require("ace/autocomplete/util");
-  var ID_REGEX = /[a-z\.A-Z_0-9\$\-\u00A2-\uFFFF]/;
+  var ID_REGEX = /[a-z\.:A-Z_0-9\$\-\u00A2-\uFFFF]/;
 
   util.retrievePrecedingIdentifier = function(text, pos, regex) {
     regex = regex || ID_REGEX;
