@@ -804,13 +804,14 @@
         mnQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
-        if (data && data.errors)
-          mnQueryService.buckets.push({id: data.errors, schema: []});
-        else if (status)
-          mnQueryService.buckets.push({id: status, schema: []});
-        else
-          mnQueryService.buckets.push({id: "Error retrieving schema.", schema: []});
+        var error = "Error retrieving list of buckets";
 
+        if (data && data.errors)
+          error = error + ": " + data.errors;
+        else if (status)
+          error = error + ", contacting query service returned status: " + status;
+
+        mnQueryService.buckets.push({id: error, schema: []});
         mnQueryService.gettingBuckets.busy = false;
       });
 
