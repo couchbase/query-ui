@@ -451,8 +451,9 @@
       if ((currentQueryIndex < pastQueries.length &&
           lastResult.query.trim() === pastQueries[currentQueryIndex].query.trim()) ||
           (lastResult.status == newQueryTemplate.status)){
-        newResult = pastQueries[currentQueryIndex];
+        newResult = executingQueryTemplate.clone();
         newResult.query = lastResult.query.trim();
+        pastQueries[currentQueryIndex] = newResult; // forget previous results
       }
 
       // otherwise, we have a new/edited query, so we create a new empty result
