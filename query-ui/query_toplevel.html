@@ -7,8 +7,8 @@
     </div>
     <div ng-if="qc.validated.otherNodes().length">
       <h1>The query interface is only available on Couchbase nodes
-        running the query service.</h1>
-      <h1>Query services were found at the following nodes:</h1>
+        running the query service, due to authentication requirements.</h1>
+      <h1>You may access the interface here:</h1>
       <ul>
         <li class="cbui-nodelist"
           ng-repeat="url in qc.validated.otherNodes()"><a
@@ -16,7 +16,7 @@
       </ul>
     </div>
     <div ng-if="qc.validated.otherNodes().length == 0">
-      <h1>No query nodes were found on this cluster, so querying is not possible.</h1>
+      <h1>No query nodes were found on this cluster, so N1QL querying is not possible.</h1>
     </div>
   </div>
   <!-- ul ng-if="qc.validated.valid()" class="second-level-nav">
