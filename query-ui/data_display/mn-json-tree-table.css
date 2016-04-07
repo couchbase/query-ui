@@ -37,7 +37,12 @@
 
 
 .ajtd-value {
+  padding-right: 1em;
+}
+
+.ajtd-cell {
   border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
   padding-right: 1em;
 }
 
@@ -135,10 +140,6 @@
   background-color: #0099CC;
   text-align: left;
   padding-right: 1em;
-}
-
-.ajtd-cell {
-  padding-right: 1em;	
 }
 
 .ajtd-type-object > li,
