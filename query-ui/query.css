@@ -155,8 +155,12 @@ a.cbui-rightmargin {
     endColorstr='#cdced0', GradientType=0); /* IE6-9 */
 }
 
+.cbui-error-message {
+  font-size: 14px;
+  color: #616062;
+}
 .cbui-nodelist {
-  font-size: 20px;
+  font-size: 14px;
   font-weight: normal;
   padding: 0 0 15px 9px;
 }
