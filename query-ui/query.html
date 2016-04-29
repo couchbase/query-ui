@@ -1,6 +1,6 @@
 
 <div id="query_pane" style="background-color: #fff"
-  ng-controller="mnQueryController as qc" ng-if="qc.validated.valid()"
+  ng-controller="qwQueryController as qc" ng-if="qc.validated.valid()"
   class="container ui-layout-center shadow_box">
 
   <div id="query_ui" mn-spinner="queryInProgress" class="contents">
@@ -151,10 +151,10 @@
             style="border-right: 1px solid #e3e3e4;"></div>
           <div id="result_table"
             ng-if="qc.isSelected(2) && (!qc.dataTooBig() || qc.showBigDatasets)"
-            mn-json-table="qc.lastResult.data"></div>
+            qw-json-table="qc.lastResult.data"></div>
           <div id="result_tree"
             ng-if="qc.isSelected(3) && (!qc.dataTooBig() || qc.showBigDatasets)"
-            mn-json-tree="qc.lastResult.data"></div>
+            qw-json-tree="qc.lastResult.data"></div>
         </div>
 
       </div>

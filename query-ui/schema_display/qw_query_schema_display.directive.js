@@ -16,7 +16,7 @@
    * http://stackoverflow.com/questions/14430655/recursion-in-angular-directives
    */
 
-  angular.module('mnQuery').factory('MyRecursionHelper', ['$compile', getRecursionHelper]);
+  angular.module('qwQuery').factory('MyRecursionHelper', ['$compile', getRecursionHelper]);
 
   function getRecursionHelper($compile) {
     return {
@@ -98,13 +98,13 @@
   //the bucketDisplay directive iterates over a bucket's schema "flavors", and
   //calls the schemaDisplay directive for each flavor.
 
-  angular.module('mnQuery').
-  directive('bucketDisplay', ['mnQueryService',/*'$modal',*/getBucketDisplay]);
+  angular.module('qwQuery').
+  directive('bucketDisplay', ['qwQueryService',/*'$modal',*/getBucketDisplay]);
 
   var fakePromise = {then: function() {}};
   var $modal = {open: function() {console.log("fake modal");return(then);}};
 
-  function getBucketDisplay(mnQueryService,$modal,$scope,ModalService) {
+  function getBucketDisplay(qwQueryService,$modal,$scope,ModalService) {
     return {
       restrict: 'A',
       scope: { bucket: '=bucketDisplay' },
@@ -153,24 +153,24 @@
                 if (bucket.passwordNeeded && !bucket.validated) {
 
                   var promise = $modal.open({
-                    templateUrl: 'query/password_dialog/mn_query_password_dialog.html',
+                    templateUrl: 'query/password_dialog/qw_query_password_dialog.html',
                     scope: scope
                   }).result;
 
                   promise.then(function (res) {
-                    mnQueryService.authenticateBuckets([bucket.id],[bucket.tempPassword],
+                    qwQueryService.authenticateBuckets([bucket.id],[bucket.tempPassword],
                         function(data,status,headers,config) {
                       if (data.success[0]) {
                         bucket.validated = true;
                         bucket.password = bucket.tempPassword;
-                        mnQueryService.getSchemaForBucket(bucket);
+                        qwQueryService.getSchemaForBucket(bucket);
                         bucket.expanded = true;
                         //console.log("Bucket validated");
                       }
                       else {
                         //console.log("Bucket not validated");
                         $modal.open({
-                          templateUrl: 'query/password_dialog/mn_query_error_dialog.html',
+                          templateUrl: 'query/password_dialog/qw_query_error_dialog.html',
                           scope: scope
                         });
                       }
@@ -184,7 +184,7 @@
                 }
 
                 if (bucket.schema.length == 0)
-                  mnQueryService.getSchemaForBucket(bucket);
+                  qwQueryService.getSchemaForBucket(bucket);
 
                 bucket.expanded = true;
               }
@@ -194,7 +194,7 @@
               }
             };
 
-            scope.collapseBucket = //mnQueryService.collapseBucket;
+            scope.collapseBucket = //qwQueryService.collapseBucket;
               function(bucket) {
               bucket.expanded = false;
             };
@@ -209,7 +209,7 @@
   //the subfields of any object-typed fields.
 
 
-  angular.module('mnQuery').directive('schemaDisplay', getSchemaDisplay);
+  angular.module('qwQuery').directive('schemaDisplay', getSchemaDisplay);
 
   function getSchemaDisplay(MyRecursionHelper) {
     return {

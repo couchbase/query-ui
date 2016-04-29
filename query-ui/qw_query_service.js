@@ -1,64 +1,64 @@
 (function() {
 
-  angular.module('mnQuery').factory('mnQueryService', getMnQueryService);
+  angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getMnQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper', 'mnPendingQueryKeeper', '$httpParamSerializer'];
+  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper', 'mnPendingQueryKeeper', '$httpParamSerializer'];
 
-  function getMnQueryService($q, $timeout, $http, mnHelper, mnPendingQueryKeeper, $httpParamSerializer) {
+  function getQwQueryService($q, $timeout, $http, mnHelper, mnPendingQueryKeeper, $httpParamSerializer) {
 
-    var mnQueryService = {};
+    var qwQueryService = {};
 
     //
     // remember which tab is selected for output style: JSON, table, or tree
     //
 
-    mnQueryService.selectTab = function(newTab) {mnQueryService.outputTab = newTab;};
-    mnQueryService.isSelected = function(checkTab) {return mnQueryService.outputTab === checkTab;};
+    qwQueryService.selectTab = function(newTab) {qwQueryService.outputTab = newTab;};
+    qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
 
-    mnQueryService.outputTab = 1;     // remember selected output tab
-    mnQueryService.defaultLimit = 500;
-    mnQueryService.limit = {max: mnQueryService.defaultLimit};
+    qwQueryService.outputTab = 1;     // remember selected output tab
+    qwQueryService.defaultLimit = 500;
+    qwQueryService.limit = {max: qwQueryService.defaultLimit};
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
 
-    mnQueryService.getResult = function() {return lastResult;};
-    mnQueryService.getCurrentIndex = getCurrentIndex;
-    mnQueryService.clearHistory = clearHistory;
-    mnQueryService.hasPrevResult = hasPrevResult;
-    mnQueryService.hasNextResult = hasNextResult;
-    mnQueryService.prevResult = prevResult;
-    mnQueryService.nextResult = nextResult;
+    qwQueryService.getResult = function() {return lastResult;};
+    qwQueryService.getCurrentIndex = getCurrentIndex;
+    qwQueryService.clearHistory = clearHistory;
+    qwQueryService.hasPrevResult = hasPrevResult;
+    qwQueryService.hasNextResult = hasNextResult;
+    qwQueryService.prevResult = prevResult;
+    qwQueryService.nextResult = nextResult;
 
-    mnQueryService.canCreateBlankQuery = canCreateBlankQuery;
+    qwQueryService.canCreateBlankQuery = canCreateBlankQuery;
 
     //
     // keep track of the bucket and field names we have seen, for use in autocompletion
     //
 
-    mnQueryService.autoCompleteTokens = {}; // keep a map, name and kind
-    mnQueryService.autoCompleteArray = []; // array for use with Ace Editor
+    qwQueryService.autoCompleteTokens = {}; // keep a map, name and kind
+    qwQueryService.autoCompleteArray = []; // array for use with Ace Editor
 
     // execute queries, and keep track of when we are busy doing so
 
-    mnQueryService.executingQuery = {busy: false};
-    mnQueryService.currentQueryRequest = null;
-    mnQueryService.currentQueryRequestID = null;
-    mnQueryService.executeQuery = executeQuery;
-    mnQueryService.cancelQuery = cancelQuery;
+    qwQueryService.executingQuery = {busy: false};
+    qwQueryService.currentQueryRequest = null;
+    qwQueryService.currentQueryRequestID = null;
+    qwQueryService.executeQuery = executeQuery;
+    qwQueryService.cancelQuery = cancelQuery;
 
     // update store the metadata about buckets
 
-    mnQueryService.buckets = [];
-    mnQueryService.gettingBuckets = {busy: false};
-    mnQueryService.updateBuckets = updateBuckets;             // get list of buckets
-    mnQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
-    mnQueryService.authenticateBuckets = authenticateBuckets; // check password
+    qwQueryService.buckets = [];
+    qwQueryService.gettingBuckets = {busy: false};
+    qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
+    qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
+    qwQueryService.authenticateBuckets = authenticateBuckets; // check password
 
     // for the front-end, distinguish error status and good statuses
 
-    mnQueryService.status_success = status_success;
-    mnQueryService.status_fail = status_fail;
+    qwQueryService.status_success = status_success;
+    qwQueryService.status_fail = status_fail;
 
     function status_success() {return(lastResult.status == 'success');}
     function status_fail()
@@ -187,8 +187,8 @@
           lastResult.copyIn(savedState.lastResult);
           currentQueryIndex = savedState.currentQueryIndex;
           pastQueries = savedState.pastQueries;
-          mnQueryService.outputTab = savedState.outputTab;
-          mnQueryService.limit = savedState.limit;
+          qwQueryService.outputTab = savedState.outputTab;
+          qwQueryService.limit = savedState.limit;
         }
         else
           console.log("No last result");
@@ -207,8 +207,8 @@
 
       var savedState = {};
       savedState.pastQueries = [];
-      savedState.outputTab = mnQueryService.outputTab;
-      savedState.limit = mnQueryService.limit;
+      savedState.outputTab = qwQueryService.outputTab;
+      savedState.limit = qwQueryService.limit;
       savedState.currentQueryIndex = currentQueryIndex;
       savedState.lastResult = savedResultTemplate.clone();
       savedState.lastResult.query = lastResult.query;
@@ -230,18 +230,18 @@
     function addToken(token, type) {
       // see if the token needs to be quoted
       if (token.indexOf(' ') >= 0 || token.indexOf('-') >= 0)
-        mnQueryService.autoCompleteTokens['`' + token + '`'] = type;
+        qwQueryService.autoCompleteTokens['`' + token + '`'] = type;
       else
-        mnQueryService.autoCompleteTokens[token] = type;
+        qwQueryService.autoCompleteTokens[token] = type;
     };
 
 
     function refreshAutoCompleteArray() {
-      mnQueryService.autoCompleteArray.length = 0;
+      qwQueryService.autoCompleteArray.length = 0;
 
-      for (var key in mnQueryService.autoCompleteTokens) {
-        mnQueryService.autoCompleteArray.push(
-            {caption:key,snippet:key,meta:mnQueryService.autoCompleteTokens[key]});
+      for (var key in qwQueryService.autoCompleteTokens) {
+        qwQueryService.autoCompleteArray.push(
+            {caption:key,snippet:key,meta:qwQueryService.autoCompleteTokens[key]});
       }
     };
 
@@ -295,7 +295,7 @@
       return (currentQueryIndex == pastQueries.length -1 &&
           lastResult.query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
           lastResult.status != newQueryTemplate.status &&
-          !mnQueryService.executingQuery.busy);
+          !qwQueryService.executingQuery.busy);
     }
     function hasPrevResult() {return currentQueryIndex > 0;}
 
@@ -371,7 +371,7 @@
 
     function clearHistory() {
       // don't clear the history if existing queries are already running
-      if (mnQueryService.executingQuery.busy)
+      if (qwQueryService.executingQuery.busy)
         return;
 
       lastResult.copyIn(dummyResult);
@@ -406,8 +406,8 @@
     //
 
     function cancelQuery() {
-      if (mnQueryService.currentQueryRequest != null) {
-        var queryInFly = mnPendingQueryKeeper.getQueryInFly(mnQueryService.currentQueryRequest);
+      if (qwQueryService.currentQueryRequest != null) {
+        var queryInFly = mnPendingQueryKeeper.getQueryInFly(qwQueryService.currentQueryRequest);
         queryInFly && queryInFly.canceler("test");
 
         //
@@ -415,16 +415,16 @@
         //
 
         var query = 'delete from system:active_requests where ClientContextID = "' +
-          mnQueryService.currentQueryRequestID + '";';
+          qwQueryService.currentQueryRequestID + '";';
         var queryData = {statement: query , client_context_id: UUID.generate()};
 
         var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-        mnQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+        qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
             method: "POST",
             headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':300*1000},
             data: encodedQuery
         };
-        var promise = $http(mnQueryService.currentQueryRequest)
+        var promise = $http(qwQueryService.currentQueryRequest)
 
         // sanity check - if there was an error put a message in the console.
         .error(function(data, status, headers, config) {
@@ -492,10 +492,10 @@
 
 
       // don't run new queries if existing queries are already running
-      if (mnQueryService.executingQuery.busy)
+      if (qwQueryService.executingQuery.busy)
         return;
 
-      mnQueryService.executingQuery.busy = true;
+      qwQueryService.executingQuery.busy = true;
       lastResult.result = executingQueryTemplate.result;
       lastResult.data = executingQueryTemplate.data;
       lastResult.status = executingQueryTemplate.status;
@@ -511,14 +511,14 @@
 
       var queryData = {statement: queryText};
       var credString = "";
-      for (var i = 0; i < mnQueryService.buckets.length; i++) {
+      for (var i = 0; i < qwQueryService.buckets.length; i++) {
         if (credString.length > 0)
           credString += ",";
 
-        var pw = mnQueryService.buckets[i].password ?
-            mnQueryService.buckets[i].password : "";
+        var pw = qwQueryService.buckets[i].password ?
+            qwQueryService.buckets[i].password : "";
 
-            credString += '{"user":"local:'+mnQueryService.buckets[i].id+'","pass":"' +
+            credString += '{"user":"local:'+qwQueryService.buckets[i].id+'","pass":"' +
             pw +'"}';
       }
 
@@ -526,8 +526,8 @@
       if (credString.length > 0)
         queryData.creds = '[' + credString + ']';
 
-      mnQueryService.currentQueryRequestID = UUID.generate();
-      queryData.client_context_id = mnQueryService.currentQueryRequestID;
+      qwQueryService.currentQueryRequestID = UUID.generate();
+      queryData.client_context_id = qwQueryService.currentQueryRequestID;
 
       // send the query off via REST API
       //
@@ -541,7 +541,7 @@
       // make sure the semicolons get urlencoded as well.
 
       var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-      mnQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
           method: "POST",
           headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
           data: encodedQuery
@@ -551,21 +551,21 @@
       // that triggers bug MB-16964, where the server currently fails to parse creds
       // when they are JSON encoded.
 
-//    mnQueryService.currentQueryRequest = {
+//    qwQueryService.currentQueryRequest = {
 //    url: "/_p/query/query/service",
 //    method: "POST",
 //    headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
 //    data: queryData,
-//    mnHttp: {isNotForm: true}
+//    qwHttp: {isNotForm: true}
 //};
 
-      //console.log("submitting query: " + JSON.stringify(mnQueryService.currentQueryRequest));
+      //console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
 
       //
       // Issue the request
       //
 
-      var promise = $http(mnQueryService.currentQueryRequest)
+      var promise = $http(qwQueryService.currentQueryRequest)
 
       // SUCCESS!
       .success(function(data, status, headers, config) {
@@ -727,8 +727,8 @@
 
     function finishQuery() {
       saveStateToStorage();                       // save the state
-      mnQueryService.currentQueryRequest = null;  // no query running
-      mnQueryService.executingQuery.busy = false; // enable the UI
+      qwQueryService.currentQueryRequest = null;  // no query running
+      qwQueryService.executingQuery.busy = false; // enable the UI
     }
 
     //
@@ -736,11 +736,11 @@
     //
 
     function updateBuckets() {
-      if (mnQueryService.gettingBuckets.busy)
+      if (qwQueryService.gettingBuckets.busy)
         return;
 
-      mnQueryService.gettingBuckets.busy = true;
-      mnQueryService.buckets.length = 0;
+      qwQueryService.gettingBuckets.busy = true;
+      qwQueryService.buckets.length = 0;
 
       // use a query to get buckets with a primary index
       //var queryText = "select distinct indexes.keyspace_id from system:indexes where is_primary = true order by indexes.keyspace_id ;";
@@ -773,7 +773,7 @@
           bucket.passwordNeeded = false;
           passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id);
-          mnQueryService.buckets.push(bucket);
+          qwQueryService.buckets.push(bucket);
           addToken(bucket.id,"bucket");
         }
         refreshAutoCompleteArray();
@@ -791,7 +791,7 @@
 
           if (_.isArray(data)) _.forEach(data, function(bucket, index) {
             if (bucket.name && _.isString(bucket.saslPassword))
-              _.forEach(mnQueryService.buckets, function(mBucket, i) {
+              _.forEach(qwQueryService.buckets, function(mBucket, i) {
                 if (mBucket.id === bucket.name) {
                   mBucket.password = bucket.saslPassword;
                   return(false);
@@ -802,7 +802,7 @@
         });
 
 
-        mnQueryService.gettingBuckets.busy = false;
+        qwQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
         var error = "Error retrieving list of buckets";
@@ -812,8 +812,8 @@
         else if (status)
           error = error + ", contacting query service returned status: " + status;
 
-        mnQueryService.buckets.push({id: error, schema: []});
-        mnQueryService.gettingBuckets.busy = false;
+        qwQueryService.buckets.push({id: error, schema: []});
+        qwQueryService.gettingBuckets.busy = false;
       });
 
     };
@@ -835,10 +835,10 @@
 
     function getSchemaForBucket(bucket) {
 
-      if (mnQueryService.gettingBuckets.busy)
+      if (qwQueryService.gettingBuckets.busy)
         return;
 
-      mnQueryService.gettingBuckets.busy = true;
+      qwQueryService.gettingBuckets.busy = true;
 
       var queryText = "infer `" + bucket.id + "`;";
       var queryData = {statement: queryText};
@@ -901,14 +901,14 @@
               hasFields: true});
         }
 
-        mnQueryService.gettingBuckets.busy = false;
+        qwQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
         if (data.errors)
           console.log("Query Error: " + JSON.stringify(data.errors,null,'  '));
         else
           console.log("Query Error: " + status);
-        mnQueryService.gettingBuckets.busy = false;
+        qwQueryService.gettingBuckets.busy = false;
       });
 
     };
@@ -952,7 +952,7 @@
     // all done creating the service, now return it
     //
 
-    return mnQueryService;
+    return qwQueryService;
   }
 
 

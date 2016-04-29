@@ -2,26 +2,26 @@
   "use strict";
 
   angular
-    .module('mnQuery', ["ui.router", "mnPluggableUiRegistry", "mnJquery",
-                      'mnJsonTree',
-                      'mnJsonTable',
+    .module('qwQuery', ["ui.router", "mnPluggableUiRegistry", "mnJquery",
+                      'qwJsonTree',
+                      'qwJsonTable',
                       'ui.ace'])
     .config(function($stateProvider, mnPluggableUiRegistryProvider) {
       $stateProvider
       .state('app.admin.query', {
         abstract: true,
         url: '/query',
-        controller: 'mnQueryController',
+        controller: 'qwQueryController',
         templateUrl: '/_p/ui/query/query_toplevel.html'
       })
       .state('app.admin.query.monitoring', {
         url: '/monitoring',
-        controller: 'mnQueryController',
+        controller: 'qwQueryController',
         templateUrl: '/_p/ui/query/query_monitoring.html'
       })
       .state('app.admin.query.workbench', {
         url: '/workbench',
-        controller: 'mnQueryController',
+        controller: 'qwQueryController',
         templateUrl: '/_p/ui/query/query.html'
       })
       ;
@@ -85,5 +85,5 @@
     });
 
 
-  angular.module('mnAdmin').requires.push('mnQuery');
+  angular.module('mnAdmin').requires.push('qwQuery');
 }());

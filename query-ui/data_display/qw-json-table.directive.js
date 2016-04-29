@@ -14,21 +14,21 @@
  *  JSON, but is more compact (no braces or commas), and permits using colors
  *  to highlight field names vs. values, and one line from the next.
  *
- *  For usage, see the header to mn-json-table.
+ *  For usage, see the header to qw-json-table.
  */
 /* global _, angular */
 (function() {
 
 	'use strict';
-	angular.module('mnJsonTable', []).directive('mnJsonTable', function () {
+	angular.module('qwJsonTable', []).directive('qwJsonTable', function () {
 		return {
 			restrict: 'A',
-			scope: { data: '=mnJsonTable' },
+			scope: { data: '=qwJsonTable' },
 			template: '<div></div>',
 			link: function (scope, element) {
 
-				scope.mnJsonTableToggleExpand = mnJsonTableToggleExpand;
-				//console.log("Got toggleExpoand: " + mnToggleExpand);
+				scope.qwJsonTableToggleExpand = qwJsonTableToggleExpand;
+				//console.log("Got toggleExpoand: " + qwToggleExpand);
 
 				scope.$watch('data', function (json) {
 					if (typeof json === 'string') {
@@ -183,7 +183,7 @@
 
 						// for long strings, output an expandable cell
 						else if (_.isString(value) && value.length > 128)
-							result += '<div class=ajtd-value><div class="ajtd-hideContent">' + value + '</div><a onClick="mnJsonTableToggleExpand(this)">(more...)</a></div>';
+							result += '<div class=ajtd-value><div class="ajtd-hideContent">' + value + '</div><a onClick="qwJsonTableToggleExpand(this)">(more...)</a></div>';
 
 						// for everything else, just output the values
 						else if (!_.isUndefined(value) || value === 0)
@@ -361,7 +361,7 @@
 // the HTML generated above
 
 
-var mnJsonTableToggleExpand = function(ev) {
+var qwJsonTableToggleExpand = function(ev) {
 	var textElem = ev.parentNode.children[0];
 	//console.log("ToggleExpand, class: " + textElem.className + ", src: " + ev.textContent);
 	if (textElem.className.indexOf("ajtd-hideContent") > -1)

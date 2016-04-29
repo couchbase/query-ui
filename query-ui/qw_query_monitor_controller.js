@@ -1,11 +1,11 @@
 (function() {
 
 
-  angular.module('mnQuery').controller('mnQueryMonitorController', queryController);
+  angular.module('qwQuery').controller('qwQueryMonitorController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'mnQueryService', 'mnPromiseHelper'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService'];
 
-  function queryController ($rootScope, $uibModal, $timeout, mnQueryService, mnPromiseHelper) {
+  function queryController ($rootScope, $uibModal, $timeout, qwQueryService) {
 
     var qc = this;
 
@@ -17,7 +17,7 @@
 
 
     //
-    // 
+    //
     //
 
     function activate() {
@@ -26,16 +26,16 @@
         var doPrevent = false;
         if (event.keyCode === 8) {
           var d = event.srcElement || event.target;
-          if ((d.tagName.toUpperCase() === 'INPUT' && 
+          if ((d.tagName.toUpperCase() === 'INPUT' &&
               (
                   d.type.toUpperCase() === 'TEXT' ||
-                  d.type.toUpperCase() === 'PASSWORD' || 
-                  d.type.toUpperCase() === 'FILE' || 
-                  d.type.toUpperCase() === 'SEARCH' || 
-                  d.type.toUpperCase() === 'EMAIL' || 
-                  d.type.toUpperCase() === 'NUMBER' || 
+                  d.type.toUpperCase() === 'PASSWORD' ||
+                  d.type.toUpperCase() === 'FILE' ||
+                  d.type.toUpperCase() === 'SEARCH' ||
+                  d.type.toUpperCase() === 'EMAIL' ||
+                  d.type.toUpperCase() === 'NUMBER' ||
                   d.type.toUpperCase() === 'DATE' )
-          ) || 
+          ) ||
           d.tagName.toUpperCase() === 'TEXTAREA') {
             doPrevent = d.readOnly || d.disabled;
           }
@@ -48,7 +48,7 @@
           event.preventDefault();
         }
       });
-      
+
     }
   }
 

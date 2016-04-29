@@ -1,4 +1,4 @@
-<div id="maiPanel" class="query" ng-controller="mnQueryController as qc">
+<div id="maiPanel" class="query" ng-controller="qwQueryController as qc">
   <h3 ng-if="qc.validated.inProgress()">Contacting Query Node</h3>
   <div ng-if="!qc.validated.inProgress() && !qc.validated.valid()">
     <div ng-if="qc.validated.otherStatus()">

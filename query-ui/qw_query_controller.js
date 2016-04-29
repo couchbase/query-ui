@@ -1,11 +1,11 @@
 (function() {
 
 
-  angular.module('mnQuery').controller('mnQueryController', queryController);
+  angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'mnQueryService', 'validateQueryService','mnPools'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools'];
 
-  function queryController ($rootScope, $uibModal, $timeout, mnQueryService, validateQueryService, mnPools) {
+  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools) {
 
     var qc = this;
 
@@ -16,36 +16,36 @@
     qc.version = "1.0.2";
 
     //
-    // alot of state is provided by the mnQueryService
+    // alot of state is provided by the qwQueryService
     //
 
-    qc.buckets = mnQueryService.buckets;                // buckets on cluster
-    qc.gettingBuckets = mnQueryService.gettingBuckets;  // busy retrieving?
-    qc.updateBuckets = mnQueryService.updateBuckets;    // function to update
-    qc.lastResult = mnQueryService.getResult(); // holds the current query and result
-    //qc.limit = mnQueryService.limit;            // automatic result limiter
-    qc.executingQuery = mnQueryService.executingQuery;
+    qc.buckets = qwQueryService.buckets;                // buckets on cluster
+    qc.gettingBuckets = qwQueryService.gettingBuckets;  // busy retrieving?
+    qc.updateBuckets = qwQueryService.updateBuckets;    // function to update
+    qc.lastResult = qwQueryService.getResult(); // holds the current query and result
+    //qc.limit = qwQueryService.limit;            // automatic result limiter
+    qc.executingQuery = qwQueryService.executingQuery;
 
     // some functions for handling query history, going backward and forward
 
     qc.prev = prevResult;
     qc.next = nextResult;
 
-    qc.hasNext = mnQueryService.hasNextResult;
-    qc.hasPrev = mnQueryService.hasPrevResult;
+    qc.hasNext = qwQueryService.hasNextResult;
+    qc.hasPrev = qwQueryService.hasPrevResult;
 
-    qc.canCreateBlankQuery = mnQueryService.canCreateBlankQuery;
+    qc.canCreateBlankQuery = qwQueryService.canCreateBlankQuery;
 
-    qc.getCurrentIndex = mnQueryService.getCurrentIndex;
-    qc.clearHistory= mnQueryService.clearHistory;
+    qc.getCurrentIndex = qwQueryService.getCurrentIndex;
+    qc.clearHistory= qwQueryService.clearHistory;
 
     // variable and code for managing the choice of output format in different tabs
 
     qc.selectTab = selectTab;
-    qc.isSelected = mnQueryService.isSelected;
+    qc.isSelected = qwQueryService.isSelected;
 
-    qc.status_success = mnQueryService.status_success;
-    qc.status_fail = mnQueryService.status_fail;
+    qc.status_success = qwQueryService.status_success;
+    qc.status_fail = qwQueryService.status_fail;
 
     //
     // options for the two editors, query and result
@@ -129,7 +129,7 @@
     //
 
     function dataTooBig() {
-      switch (mnQueryService.outputTab) {
+      switch (qwQueryService.outputTab) {
       case 1: return(qc.lastResult.resultSize / qc.maxAceSize) > 1.1;
       case 2: return(qc.lastResult.resultSize / qc.maxTableSize) > 1.1;
       case 3: return(qc.lastResult.resultSize / qc.maxTreeSize) > 1.1;
@@ -143,7 +143,7 @@
 
     function getBigDataMessage() {
       var fraction;
-      switch (mnQueryService.outputTab) {
+      switch (qwQueryService.outputTab) {
       case 1: fraction = qc.lastResult.resultSize / qc.maxAceSize; break;
       case 2: fraction = qc.lastResult.resultSize / qc.maxTableSize; break;
       case 3: fraction = qc.lastResult.resultSize / qc.maxTreeSize; break;
@@ -160,7 +160,7 @@
         "might freeze your browser for " + timeEstimate + " to " + timeEstimate*4 +
         " " + timeUnits + " or more. ";
 
-      if (mnQueryService.outputTab != 1) {
+      if (qwQueryService.outputTab != 1) {
         message += "The JSON view is about 10x faster. ";
       }
 
@@ -182,25 +182,25 @@
         return; // avoid noop
 
       qc.showBigDatasets = false;
-      mnQueryService.selectTab(tabNum);
+      qwQueryService.selectTab(tabNum);
       // select focus after a delay to try and force update of the editor
       $timeout(swapEditorFocus,10);
     };
 
     //
-    // we need to define a wrapper around mn_query_server.nextResult, because if the
+    // we need to define a wrapper around qw_query_server.nextResult, because if the
     // user creates a new blank query, we need to refocus on it.
     //
 
     function nextResult() {
       qc.showBigDatasets = false;
-      mnQueryService.nextResult();
+      qwQueryService.nextResult();
       $timeout(swapEditorFocus,10);
     }
 
     function prevResult() {
       qc.showBigDatasets = false;
-      mnQueryService.prevResult();
+      qwQueryService.prevResult();
       $timeout(swapEditorFocus,10);
     }
 
@@ -287,13 +287,13 @@
             var modPrefix = '.' + prefix;
             var modPrefix2 = '`' + prefix;
             //console.log("Looking for: *" + prefix + "*");
-            for (var i=0; i<mnQueryService.autoCompleteArray.length; i++) {
-              //console.log("  *" + mnQueryService.autoCompleteArray[i].caption + "*");
-              if (_.startsWith(mnQueryService.autoCompleteArray[i].caption,prefix) ||
-                  mnQueryService.autoCompleteArray[i].caption.indexOf(modPrefix) >= 0 ||
-                  mnQueryService.autoCompleteArray[i].caption.indexOf(modPrefix2) >= 0) {
+            for (var i=0; i<qwQueryService.autoCompleteArray.length; i++) {
+              //console.log("  *" + qwQueryService.autoCompleteArray[i].caption + "*");
+              if (_.startsWith(qwQueryService.autoCompleteArray[i].caption,prefix) ||
+                  qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix) >= 0 ||
+                  qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix2) >= 0) {
                 //console.log("    Got it!");
-                results.push(mnQueryService.autoCompleteArray[i]);
+                results.push(qwQueryService.autoCompleteArray[i]);
               }
             }
             callback(null,results);
@@ -396,7 +396,7 @@
     function query() {
       // if a query is already running, we should cancel it
       if (qc.executingQuery.busy) {
-        mnQueryService.cancelQuery();
+        qwQueryService.cancelQuery();
         return;
       }
 
@@ -421,22 +421,22 @@
       // add a limit to all "select" statements by wrapping
 //      if (startsWithSelect && !hasLimit && !hasElement.test(queryStr)) {
 //        // handle garbage in the limit dialog
-//        if (isNaN(Number(mnQueryService.limit.max)) ||
-//            mnQueryService.limit.max < 1)
-//          mnQueryService.limit.max = mnQueryService.defaultLimit;
+//        if (isNaN(Number(qwQueryService.limit.max)) ||
+//            qwQueryService.limit.max < 1)
+//          qwQueryService.limit.max = qwQueryService.defaultLimit;
 //
 //        // remove ;
 //        if (endsWithSemi.test(queryStr))
 //          queryStr = queryStr.replace(endsWithSemi,"");
 //
 //        // wrap the query in a new query with a limit
-//        queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + mnQueryService.limit.max + ";";
+//        queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + qwQueryService.limit.max + ";";
 //      }
 
       //console.log("Running query: " + queryStr);
       // run the query and show a spinner
 
-      var promise = mnQueryService.executeQuery(queryStr,qc.lastResult.query);
+      var promise = qwQueryService.executeQuery(queryStr,qc.lastResult.query);
 
       if (promise) {
         // also have the input grab focus at the end
@@ -481,7 +481,7 @@
       dialogScope.file = dialogScope.data_file;
 
       var promise = $uibModal.open({
-        templateUrl: '/_p/ui/query/file_dialog/mn_query_file_dialog.html',
+        templateUrl: '/_p/ui/query/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -516,7 +516,7 @@
       dialogScope.file = dialogScope.query_file;
 
       var promise = $uibModal.open({
-        templateUrl: '/_p/ui/query/file_dialog/mn_query_file_dialog.html',
+        templateUrl: '/_p/ui/query/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 

@@ -9,17 +9,17 @@
  *  JSON, but is more compact (no braces or commas), and permits using colors
  *  to highlight field names vs. values, and one line from the next.
  *
- *  For usage, see the header to mn-json-table.
+ *  For usage, see the header to qw-json-table.
  */
 /* global _, angular */
 
 (function() {
 
   'use strict';
-  angular.module('mnJsonTree',[]).directive('mnJsonTree', function () {
+  angular.module('qwJsonTree',[]).directive('qwJsonTree', function () {
     return {
       restrict: 'A',
-      scope: { data: '=mnJsonTree' },
+      scope: { data: '=qwJsonTree' },
       template: '<div></div>',
       link: function (scope, element) {
 
