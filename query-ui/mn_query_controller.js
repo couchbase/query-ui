@@ -3,9 +3,9 @@
 
   angular.module('mnQuery').controller('mnQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'mnQueryService', 'mnPromiseHelper', 'validateQueryService'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'mnQueryService', 'validateQueryService','mnPools'];
 
-  function queryController ($rootScope, $uibModal, $timeout, mnQueryService, mnPromiseHelper, validateQueryService) {
+  function queryController ($rootScope, $uibModal, $timeout, mnQueryService, validateQueryService, mnPools) {
 
     var qc = this;
 
@@ -271,7 +271,6 @@
       var langTools = ace.require("ace/ext/language_tools");
 
       _editor.$blockScrolling = Infinity;
-      _editor.setOptions({enableBasicAutocompletion: true});
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
       _editor.setReadOnly(qc.executingQuery.busy);
@@ -300,7 +299,15 @@
             callback(null,results);
           }
       };
-      langTools.addCompleter(identifierCompleter);
+
+      //
+      // only support auto-complete if we're in enterprise mode
+      //
+
+      if (mnPools.export.isEnterprise) {
+        _editor.setOptions({enableBasicAutocompletion: true});
+        langTools.addCompleter(identifierCompleter);
+      }
 
       focusOnInput();
     };
@@ -432,8 +439,6 @@
       var promise = mnQueryService.executeQuery(queryStr,qc.lastResult.query);
 
       if (promise) {
-        // for long queries, show a spinner
-        //mnPromiseHelper.promiseHelper(this,promise/*, dialog*/).showSpinner("queryInProgress");
         // also have the input grab focus at the end
         promise.success(doneWithQuery)
         .error(doneWithQuery);
