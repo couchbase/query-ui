@@ -10,7 +10,7 @@
       $stateProvider
       .state('app.admin.query', {
         abstract: true,
-        url: '/_p/ui/query',
+        url: '/query',
         controller: 'mnQueryController',
         templateUrl: '/_p/ui/query/query_toplevel.html'
       })
