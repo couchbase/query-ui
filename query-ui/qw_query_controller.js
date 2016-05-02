@@ -274,6 +274,10 @@
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
       _editor.setReadOnly(qc.executingQuery.busy);
+
+      if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
+        _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
+
       qc.inputEditor = _editor;
 
       // this function is used for autocompletion of dynamically known names such
@@ -317,7 +321,11 @@
       //console.log("AceOutputLoaded");
       _editor.$blockScrolling = Infinity;
       _editor.setReadOnly(true);
-      _editor.renderer.setPrintMarginColumn(false);
+      _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
+
+      if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
+        _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
+
       qc.outputEditor = _editor;
       updateEditorSizes();
     };
