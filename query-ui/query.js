@@ -72,7 +72,7 @@
           var nodes = resp.allNodes;
           for (var i = 0; i < nodes.length; i++)
             if (_.contains(nodes[i].services,"n1ql"))
-              _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/_p/ui/query/workbench");
+              _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/query/workbench");
         });
         // some other error to show
         else {
