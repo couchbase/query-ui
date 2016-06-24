@@ -16,8 +16,6 @@
     qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
 
     qwQueryService.outputTab = 1;     // remember selected output tab
-    qwQueryService.defaultLimit = 500;
-    qwQueryService.limit = {max: qwQueryService.defaultLimit};
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -72,7 +70,8 @@
     // and defines the object for holding the query history
     //
 
-    function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,data,query,requestID) {
+    function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
+        data,query,requestID,explainResult) {
       this.status = status;
       this.resultCount = resultCount;
       this.resultSize = resultSize;
@@ -80,6 +79,7 @@
       this.data = data;
       this.query = query;
       this.requestID = requestID;
+      this.explainResult = explainResult;
 
       this.elapsedTime = truncateTime(elapsedTime);
       this.executionTime = truncateTime(executionTime);
@@ -107,7 +107,7 @@
     QueryResult.prototype.clone = function()
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
-          this.resultSize,this.result,this.data,this.query,this.requestID);
+          this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult);
     };
     QueryResult.prototype.copyIn = function(other)
     {
@@ -120,6 +120,7 @@
       this.data = other.data;
       this.query = other.query;
       this.requestID = other.requestID;
+      this.explainResult = other.explainResult;
     };
 
 
@@ -188,7 +189,6 @@
           currentQueryIndex = savedState.currentQueryIndex;
           pastQueries = savedState.pastQueries;
           qwQueryService.outputTab = savedState.outputTab;
-          qwQueryService.limit = savedState.limit;
         }
         else
           console.log("No last result");
@@ -208,7 +208,6 @@
       var savedState = {};
       savedState.pastQueries = [];
       savedState.outputTab = qwQueryService.outputTab;
-      savedState.limit = qwQueryService.limit;
       savedState.currentQueryIndex = currentQueryIndex;
       savedState.lastResult = savedResultTemplate.clone();
       savedState.lastResult.query = lastResult.query;
@@ -438,7 +437,7 @@
     }
 
     //
-    // call the proxy which handles N1QL queries
+    // executeQuery
     //
 
     function executeQuery(queryText, userQuery) {
@@ -510,21 +509,20 @@
       //
 
       var queryData = {statement: queryText};
-      var credString = "";
+      var credArray = [];
+
       for (var i = 0; i < qwQueryService.buckets.length; i++) {
-        if (credString.length > 0)
-          credString += ",";
-
-        var pw = qwQueryService.buckets[i].password ?
-            qwQueryService.buckets[i].password : "";
-
-            credString += '{"user":"local:'+qwQueryService.buckets[i].id+'","pass":"' +
-            pw +'"}';
+        var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
+        credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
       }
 
+      queryData.creds = credArray;
+
       // add the credentials for bucket passwords
-      if (credString.length > 0)
-        queryData.creds = '[' + credString + ']';
+//      var credString = JSON.stringify(credArray);
+//      console.log("creds: " + credString);
+//      if (credString.length > 0)
+//        queryData.creds = '[' + credString + ']';
 
       qwQueryService.currentQueryRequestID = UUID.generate();
       queryData.client_context_id = qwQueryService.currentQueryRequestID;
@@ -532,7 +530,7 @@
       // send the query off via REST API
       //
       //
-      var timeout = 300; // query timeout in seconds
+      var timeout = 600; // query timeout in seconds
 
       // Because Angular automatically urlencodes JSON parameters, but has a special
       // algorithm that doesn't encode semicolons, any semicolons inside the query
@@ -540,26 +538,33 @@
       // for an example). To bypass this, we will url-encode ahead of time, and then
       // make sure the semicolons get urlencoded as well.
 
-      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-          method: "POST",
-          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
-          data: encodedQuery
-          };
+//      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+//      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+//          method: "POST",
+//          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+//          data: encodedQuery,
+//          mnHttp: {
+//            group: "global"
+//          }
+//      };
 
       // An alternate way to get around Angular's encoding is "isNotForm: true". But
       // that triggers bug MB-16964, where the server currently fails to parse creds
       // when they are JSON encoded.
+      // MB-16964 is now fixed, so we'll send queries this way and avoid URL encoding
 
-//    qwQueryService.currentQueryRequest = {
-//    url: "/_p/query/query/service",
-//    method: "POST",
-//    headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-//    data: queryData,
-//    qwHttp: {isNotForm: true}
-//};
+      qwQueryService.currentQueryRequest = {
+          url: "/_p/query/query/service",
+          method: "POST",
+          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+          data: queryData,
+          mnHttp: {
+            isNotForm: true,
+            group: "global"
+          }
+      };
 
-      //console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
+//      console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
 
       //
       // Issue the request
@@ -597,7 +602,7 @@
             if (data.errors[i].msg &&
                 data.errors[i].msg.length >= failed.length &&
                 data.errors[i].msg.substring(0,failed.length) == failed)
-              data.errors[i].suggestion = "Try authorizing the necessary bucket(s) in the metadata panel to the left.";
+              data.errors[i].suggestion = "Try reloading bucket information by refreshing the Bucket Analysis pane.";
 
           result = data.errors;
         }
