@@ -5,6 +5,8 @@
     .module('qwQuery', ["ui.router", "mnPluggableUiRegistry", "mnJquery",
                       'qwJsonTree',
                       'qwJsonTable',
+                      'qwExplainViz',
+                      'qwLongPress',
                       'ui.ace'])
     .config(function($stateProvider, mnPluggableUiRegistryProvider) {
       $stateProvider

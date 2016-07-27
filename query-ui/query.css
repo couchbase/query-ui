@@ -159,10 +159,16 @@ a.cbui-rightmargin {
   font-size: 14px;
   color: #616062;
 }
+
 .cbui-nodelist {
   font-size: 14px;
   font-weight: normal;
   padding: 0 0 15px 9px;
+}
+
+.cbui-biglink {
+  font-size: 16px;
+  font-weight: normal;
 }
 
 #query_ui h2 {
@@ -300,4 +306,8 @@ a.cbui-rightmargin {
           align-items: flex-start;
   border: 1px solid #cdced0;
   border-width: 0 1px 1px 1px;
+}
+
+.ajtd-row-selected {
+  background-color: #00f2ff;
 }

@@ -21,8 +21,11 @@
     // of different results
 
     qwQueryService.getResult = function() {return lastResult;};
+    qwQueryService.getCurrentIndexNumber = getCurrentIndexNumber;
     qwQueryService.getCurrentIndex = getCurrentIndex;
+    qwQueryService.setCurrentIndex = setCurrentIndex;
     qwQueryService.clearHistory = clearHistory;
+    qwQueryService.clearCurrentQuery = clearCurrentQuery;
     qwQueryService.hasPrevResult = hasPrevResult;
     qwQueryService.hasNextResult = hasNextResult;
     qwQueryService.prevResult = prevResult;
@@ -30,12 +33,14 @@
 
     qwQueryService.canCreateBlankQuery = canCreateBlankQuery;
 
+    qwQueryService.getPastQueries = function() {return(pastQueries);}
+
     //
     // keep track of the bucket and field names we have seen, for use in autocompletion
     //
 
     qwQueryService.autoCompleteTokens = {}; // keep a map, name and kind
-    qwQueryService.autoCompleteArray = []; // array for use with Ace Editor
+    qwQueryService.autoCompleteArray = [];  // array for use with Ace Editor
 
     // execute queries, and keep track of when we are busy doing so
 
@@ -80,6 +85,10 @@
       this.query = query;
       this.requestID = requestID;
       this.explainResult = explainResult;
+      if (explainResult)
+        this.explainResultText = JSON.stringify(explainResult,null,'  ');
+      else
+        this.explainResultText = "";
 
       this.elapsedTime = truncateTime(elapsedTime);
       this.executionTime = truncateTime(executionTime);
@@ -121,6 +130,7 @@
       this.query = other.query;
       this.requestID = other.requestID;
       this.explainResult = other.explainResult;
+      this.explainResultText = other.explainResultText;
     };
 
 
@@ -134,6 +144,8 @@
     savedResultTemplate.status = "cached query";
     savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
     savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
+    savedResultTemplate.explainResult = savedResultTemplate.data;
+    savedResultTemplate.explainResultText = savedResultTemplate.result;
 
     var newQueryTemplate = dummyResult.clone();
     newQueryTemplate.status = "not yet run";
@@ -158,6 +170,22 @@
 
     function getCurrentIndex() {
       return (currentQueryIndex+1) + "/" + (pastQueries.length == 0 ? 1 : pastQueries.length);
+    }
+
+    function getCurrentIndexNumber() {
+      return (currentQueryIndex);
+    }
+
+    function setCurrentIndex(index) {
+      if (index < 0 || index >= pastQueries.length)
+        return;
+
+      currentQueryIndex = index;
+
+      $timeout(function(){
+        lastResult.copyIn(pastQueries[currentQueryIndex]);
+        currentQuery = lastResult.query;
+      },50);
     }
 
     //
@@ -239,6 +267,7 @@
       qwQueryService.autoCompleteArray.length = 0;
 
       for (var key in qwQueryService.autoCompleteTokens) {
+        //console.log("Got autoCompleteToken key: " + key);
         qwQueryService.autoCompleteArray.push(
             {caption:key,snippet:key,meta:qwQueryService.autoCompleteTokens[key]});
       }
@@ -257,7 +286,7 @@
           //console.log("  field[properties]: " + field['properties']);
           //console.log("  field[items]: " + field['items']);
           //if (field['items'])
-           // console.log("    field[items].subtype: " + field['items'].subtype);
+          // console.log("    field[items].subtype: " + field['items'].subtype);
 
           addToken(prefix + field_name,"field");
           // if the field has sub-properties, make a recursive call
@@ -272,8 +301,8 @@
 
           else if (_.isArray(field['items'])) for (var i=0;i<field['items'].length;i++)
             if (field['items'][i].subtype) {
-            getFieldNamesFromSchema([field['items'][i].subtype],prefix + field_name + "[0].");
-          }
+              getFieldNamesFromSchema([field['items'][i].subtype],prefix + field_name + "[0].");
+            }
         });
     }
 
@@ -368,6 +397,10 @@
       }
     }
 
+    //
+    // clear the entire query history
+    //
+
     function clearHistory() {
       // don't clear the history if existing queries are already running
       if (qwQueryService.executingQuery.busy)
@@ -376,6 +409,22 @@
       lastResult.copyIn(dummyResult);
       pastQueries.length = 0;
       currentQueryIndex = 0;
+    }
+
+    //
+    // clear the current query
+    //
+
+    function clearCurrentQuery() {
+      // don't clear the history if existing queries are already running
+      if (qwQueryService.executingQuery.busy)
+        return;
+
+      pastQueries.splice(currentQueryIndex,1);
+      if (currentQueryIndex >= pastQueries.length)
+        currentQueryIndex = pastQueries.length - 1;
+
+      lastResult.copyIn(pastQueries[currentQueryIndex]);
     }
 
     /**
@@ -414,7 +463,7 @@
         //
 
         var query = 'delete from system:active_requests where ClientContextID = "' +
-          qwQueryService.currentQueryRequestID + '";';
+        qwQueryService.currentQueryRequestID + '";';
         var queryData = {statement: query , client_context_id: UUID.generate()};
 
         var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
@@ -518,12 +567,6 @@
 
       queryData.creds = credArray;
 
-      // add the credentials for bucket passwords
-//      var credString = JSON.stringify(credArray);
-//      console.log("creds: " + credString);
-//      if (credString.length > 0)
-//        queryData.creds = '[' + credString + ']';
-
       qwQueryService.currentQueryRequestID = UUID.generate();
       queryData.client_context_id = qwQueryService.currentQueryRequestID;
 
@@ -538,15 +581,15 @@
       // for an example). To bypass this, we will url-encode ahead of time, and then
       // make sure the semicolons get urlencoded as well.
 
-//      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-//      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-//          method: "POST",
-//          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
-//          data: encodedQuery,
-//          mnHttp: {
-//            group: "global"
-//          }
-//      };
+//    var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+//    qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+//    method: "POST",
+//    headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+//    data: encodedQuery,
+//    mnHttp: {
+//    group: "global"
+//    }
+//    };
 
       // An alternate way to get around Angular's encoding is "isNotForm: true". But
       // that triggers bug MB-16964, where the server currently fails to parse creds
@@ -564,20 +607,91 @@
           }
       };
 
-//      console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
+      // if the query is not already an explain, run a version with explain to get the query plan
+
+      if (! /^\s*explain/gmi.test(queryText)) {
+        var explainQueryData = {statement: "explain " + queryText};
+        explainQueryData.creds = queryData.creds;
+
+        var explainQueryRequest = {
+            url: "/_p/query/query/service",
+            method: "POST",
+            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+            data: explainQueryData,
+            mnHttp: {
+              isNotForm: true,
+              group: "global"
+            }
+        };
+
+        newResult.explainDone = false;
+
+        $http(explainQueryRequest)
+        .success(function(data, status, headers, config) {
+          if (data && data.status == "success") {
+            var lists = analyzePlan(data.results[0].plan,null);
+            newResult.explainResult = {explain: data.results[0], analysis: lists,
+                buckets: qwQueryService.buckets, tokens: qwQueryService.autoCompleteTokens};
+            //console.log("Got plan analysis: " + JSON.stringify(lists,null,true));
+          }
+          else
+            newResult.explainResult = data.errors;
+
+          newResult.explainDone = true;
+          newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+
+          // if the query has run and finished already, mark everything as done
+          if (newResult.queryDone) {
+            lastResult.copyIn(newResult);
+            finishQuery();
+          }
+
+        })
+        .error(function(data, status, headers, config) {
+          if (data && _.isString(data))
+            newResult.explainResult = {errors: data};
+          else if (data && data.errors)
+            newResult.explainResult = {errors: data.errors};
+          else
+            newResult.explainResult = {errors: "Unknown error getting explain plan"};
+
+          newResult.explainDone = true;
+          newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+
+          //console.log("Explain: " + newResult.explainResult);
+
+          // if the query has run and finished already, mark everything as done
+          if (newResult.queryDone) {
+            lastResult.copyIn(newResult);
+            finishQuery();
+          }
+        });
+
+      }
+
+      // if the query already was an explain query, mark the explain query as done
+      else {
+        newResult.explainDone = true;
+        newResult.explainResult = {};
+        newResult.explainResultText = "";
+      }
+
+      // console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
 
       //
       // Issue the request
       //
 
+      newResult.queryDone = false;
+
       var promise = $http(qwQueryService.currentQueryRequest)
 
       // SUCCESS!
       .success(function(data, status, headers, config) {
-//        console.log("Success Data: " + JSON.stringify(data));
-//        console.log("Success Status: " + JSON.stringify(status));
-//        console.log("Success Headers: " + JSON.stringify(headers));
-//        console.log("Success Config: " + JSON.stringify(config));
+//      console.log("Success Data: " + JSON.stringify(data));
+//      console.log("Success Status: " + JSON.stringify(status));
+//      console.log("Success Headers: " + JSON.stringify(headers));
+//      console.log("Success Config: " + JSON.stringify(config));
 
         var result;
 
@@ -621,26 +735,22 @@
         newResult.result = angular.toJson(result, true);
         newResult.data = result;
         newResult.requestID = data.requestID;
-        lastResult.copyIn(newResult);
 
-        finishQuery();
+        newResult.queryDone = true;
 
-//      var post2_ms = new Date().getTime();
+        // make sure to only finish if the explain query is also done
+        if (newResult.explainDone) {
+          //console.log("Query done, got explain: " + newResult.explainResultText);
 
-//      $timeout(function(){
-//      var post3_ms = new Date().getTime();
-//      var diff1 = post_post_ms - pre_post_ms;
-//      var diff2 = post2_ms - post_post_ms;
-//      var diff3 = post3_ms - post2_ms;
-//      console.log("Query execution time: " + diff1 + ", processing: " + diff2 + ", rendering: " + diff3);
-//      },10);
-
+          lastResult.copyIn(newResult);
+          finishQuery();
+        }
       })
       .error(function(data, status, headers, config) {
-//        console.log("Error Data: " + JSON.stringify(data));
-//        console.log("Error Status: " + JSON.stringify(status));
-//        console.log("Error Headers: " + JSON.stringify(headers));
-//        console.log("Error Config: " + JSON.stringify(config));
+//      console.log("Error Data: " + JSON.stringify(data));
+//      console.log("Error Status: " + JSON.stringify(status));
+//      console.log("Error Headers: " + JSON.stringify(headers));
+//      console.log("Error Config: " + JSON.stringify(config));
 
         // if we don't get query metrics, estimate elapsed time
         if (!data || !data.metrics) {
@@ -656,8 +766,13 @@
           newResult.status = "errors";
           newResult.resultCount = 0;
           newResult.resultSize = 0;
-          lastResult.copyIn(newResult);
-          finishQuery();
+          newResult.queryDone = true;
+
+          // make sure to only finish if the explain query is also done
+          if (newResult.explainDone) {
+            lastResult.copyIn(newResult);
+            finishQuery();
+          }
           return;
         }
 
@@ -668,8 +783,13 @@
           newResult.status = "errors";
           newResult.resultCount = 0;
           newResult.resultSize = 0;
-          lastResult.copyIn(newResult);
-          finishQuery();
+          newResult.queryDone = true;
+
+          // make sure to only finish if the explain query is also done
+          if (newResult.explainDone) {
+            lastResult.copyIn(newResult);
+            finishQuery();
+          }
           return;
         }
 
@@ -686,8 +806,13 @@
 
           newResult.result = JSON.stringify(newResult.data,null,'  ');
           newResult.status = "errors";
-          lastResult.copyIn(newResult);
-          finishQuery();
+          newResult.queryDone = true;
+
+          // make sure to only finish if the explain query is also done
+          if (newResult.explainDone) {
+            lastResult.copyIn(newResult);
+            finishQuery();
+          }
           return;
         }
 
@@ -716,9 +841,13 @@
         if (data.requestID)
           newResult.requestID = data.requestID;
 
-        lastResult.copyIn(newResult);
+        newResult.queryDone = true;
 
-        finishQuery();
+        // make sure to only finish if the explain query is also done
+        if (newResult.explainDone) {
+          lastResult.copyIn(newResult);
+          finishQuery();
+        }
       });
 
       return(promise);
@@ -869,6 +998,7 @@
             totalDocCount += bucket.schema[i]['#docs'];
 
           getFieldNamesFromSchema(bucket.schema,"");
+          getFieldNamesFromSchema(bucket.schema,bucket.name);
           refreshAutoCompleteArray();
 
           //console.log("for bucket: " + bucket.name + " got doc count: " + totalDocCount)
@@ -946,6 +1076,188 @@
       });
     };
 
+
+    //
+    // When we get a query plan, we want to create a list of buckets and fields referenced
+    // by the query, so we can point out possible misspelled names
+    //
+
+    function analyzePlan(plan, lists) {
+
+      if (!lists)
+        lists = {buckets : {}, fields : {}, indexes: {}, aliases: []};
+
+      // make
+
+      if (_.isString(plan))
+        return(null);
+
+      //console.log("Inside analyzePlan: " + JSON.stringify(plan,null,true));
+
+      // iterate over fields, look for "#operator" field
+      var operatorName;
+      var fields = [];
+
+      _.forIn(plan,function(value,key) {
+        if (key === '#operator')
+          operatorName = value;
+
+        var type;
+        if (_.isString(value)) type = 'string';
+        else if (_.isArray(value)) type = 'array';
+        else if (_.isObject(value)) type = 'object';
+        else if (_.isNumber(value)) type = 'number';
+        else if (_.isNull(value)) type = 'null';
+        else type = 'unknown';
+
+        var field = {};
+        field[key] = type;
+        fields.push(field);
+      });
+
+      // at this point we should have an operation name and a field array
+
+      //console.log("  after analyze, got op name: " + operatorName);
+
+      // we had better have an operator name at this point
+
+      if (!operatorName) {
+        console.log("Error, no operator found for item: " + JSON.stringify(plan));
+        return(lists);
+      }
+
+      // if we have a sequence, we analyze the children in order
+      if (operatorName === "Sequence" && plan['~children']) {
+        // a sequence may have aliases that rename buckets, but those aliases become invalid after
+        // the sequence. Remember how long the sequence was at the beginning.
+        var initialAliasLen = lists.aliases.length;
+
+        for (var i = 0; i < plan['~children'].length; i++) {
+          // if we see a fetch, remember the keyspace for subsequent projects
+          if (plan['~children'][i]['#operator'] == "Fetch")
+            lists.currentKeyspace = plan['~children'][i].keyspace;
+          analyzePlan(plan['~children'][i], lists);
+        }
+
+        // remove any new aliases
+        lists.aliases.length = initialAliasLen;
+        return(lists);
+      }
+
+      // parallel groups are like sequences, but with only one child
+      else if (operatorName === "Parallel" && plan['~child']) {
+        analyzePlan(plan['~child'],lists);
+        return(lists);
+      }
+
+
+      // UNION operators will have an array of predecessors drawn from their "children".
+      // we expect predecessor to be null if we see a UNION
+      else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['children']) {
+        for (var i = 0; i < plan['children'].length; i++)
+         analyzePlan(plan['children'][i],lists);
+
+        return(lists);
+      }
+
+      // for all other operators, certain fields will tell us stuff:
+      //  - keyspace is a bucket name
+      //  - index is an index name
+      //  - condition is a string containing an expression, fields there are of the form (`keyspace`.`field`)
+      //  - expr is the same as condition
+      //  - on_keys is an expression
+      //  - group_keys is an array of fields
+
+      else {
+        if (plan.keyspace)
+          lists.buckets[plan.keyspace] = true;
+        if (plan.index && plan.keyspace)
+          lists.indexes[plan.keyspace + "." + plan.index] = true;
+        else if (plan.index)
+          lists.indexes[plan.index] = true;
+        if (plan.group_keys) for (var i=0; i < plan.group_keys.length; i++)
+          lists.fields[plan.group_keys[i]] = true;
+        if (plan.condition)
+          getFieldsFromExpression(plan.condition,lists);
+        if (plan.expr)
+          getFieldsFromExpression(plan.expr,lists);
+        if (plan.on_keys)
+          getFieldsFromExpression(plan.on_keys,lists);
+        if (plan.as && plan.keyspace)
+          lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
+        if (plan.result_terms && _.isArray(plan.result_terms))
+          for (var i=0; i< plan.result_terms.length; i++) if (plan.result_terms[i].expr )
+            if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
+                lists.currentKeyspace)
+              lists.fields[lists.currentKeyspace + '.*'] = true;
+            else
+              getFieldsFromExpression(plan.result_terms[i].expr,lists);
+
+        return(lists);
+      }
+    }
+
+    //
+    // pull bucket and field names out of arbitrary expressions
+    //
+    // field names are expressed in nested parents, the simplest case is:
+    //    (`bucket`.`field`)
+    // but if there is a subfield, it looks like:
+    //    ((`bucket`.`field`).`subfield`)
+    // and array references are of the form:
+    //    (((`bucket`.`field`)[5]).`subfield`)
+    //
+    // we need to work inside out, pulling out the bucket name and initial
+    // field, then building as we go out.
+    //
+
+    function getFieldsFromExpression(expression,lists) {
+
+      //console.log("Got field expr: " + expression);
+
+      var quotation = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/ig;
+      var coreFieldRef = /\(`((?:[^`\\]|\\.)+)`\.`((?:[^`\\]|\\.)+)`\)/i;
+      var innerFieldRef = /\(inner(?:\.`((?:[^`\\]|\\.)+)`|(\[[^\]]*\]))\)/i;
+
+      // remove anything in quotes, since we want to ignore user strings
+      var expr = expression.replace(quotation,"");
+
+      // now look for core field references, record the bucket name, and look
+      // for subfield or array references
+      var match;
+      while ((match = expr.match(coreFieldRef)) != null) {
+
+        // get the bucket name, and see if there is an alias for it
+        var bucket = match[1];
+        for (var i=0; i < lists.aliases.length; i++)
+          if (lists.aliases[i].as == bucket) {
+            bucket = lists.aliases[i].keyspace;
+            break;
+          }
+        lists.buckets[bucket] = true;
+
+        // get the first field name
+        var field = match[2];
+
+        if (field.indexOf(' ') >= 0 || field.indexOf('-') >= 0)
+          field = '`' + field + '`';
+
+        expr = expr.replace(coreFieldRef,"inner");
+        while (match = expr.match(innerFieldRef)) {
+          if (match[1]) {
+            if (match[1].indexOf(' ') >= 0 || match[1].indexOf('-') >= 0)
+              field = field + '.`' + match[1] + '`';
+            else
+              field = field + '.' + match[1];
+          }
+          else if (match[2]) field = field + "[0]";
+          expr = expr.replace(innerFieldRef,"inner");
+        }
+        lists.fields[bucket + "." + field] = true;
+        //console.log("got field: " + bucket + "." + field);
+      }
+
+    }
 
     //
     // load state from storage if possible

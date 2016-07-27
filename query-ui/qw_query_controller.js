@@ -3,9 +3,9 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope'];
 
-  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools) {
+  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope) {
 
     var qc = this;
 
@@ -39,6 +39,8 @@
     qc.getCurrentIndex = qwQueryService.getCurrentIndex;
     qc.clearHistory= qwQueryService.clearHistory;
 
+    qc.historyMenu = edit_history;
+
     // variable and code for managing the choice of output format in different tabs
 
     qc.selectTab = selectTab;
@@ -56,6 +58,9 @@
     qc.aceOutputLoaded = aceOutputLoaded;
     qc.aceOutputChanged = aceOutputChanged;
     qc.updateEditorSizes = updateEditorSizes;
+
+    qc.acePlanLoaded = acePlanLoaded;
+    qc.acePlanChanged = acePlanChanged;
 
     //
     // expand/collapse the analysis pane
@@ -90,6 +95,15 @@
         useWrapMode: true,
         onLoad: qc.aceOutputLoaded,
         onChange: qc.aceOutputChanged,
+        $blockScrolling: Infinity
+    };
+
+    qc.acePlanOptions = {
+        mode: 'json',
+        showGutter: true,
+        useWrapMode: true,
+        onLoad: qc.acePlanLoaded,
+        onChange: qc.acePlanChanged,
         $blockScrolling: Infinity
     };
 
@@ -353,9 +367,26 @@
         qc.outputEditor.renderer.emptyMessageNode = null;
       }
 
-    };
+    }
 
+    function acePlanLoaded(_editor) {
+      //console.log("AcePlanLoaded");
+      _editor.$blockScrolling = Infinity;
+      _editor.setReadOnly(true);
+      _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
 
+      if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
+        _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
+
+      //qc.outputEditor = _editor;
+      updateEditorSizes();
+    }
+
+    function acePlanChanged(e) {
+      //e.$blockScrolling = Infinity;
+
+      updateEditorSizes();
+    }
     //
     // called when the JSON output changes. We need to make sure the editor is the correct size,
     // since it doesn't auto-resize
@@ -381,6 +412,8 @@
       $('#result_editor').height(editor_size + 10);
       $('#result_table').height(editor_size+20);
       $('#result_tree').height(editor_size+20);
+      $('#query_plan').height(editor_size + 10);
+      $('#query_plan_text').height(editor_size + 10);
 
       $('#result_box').height(editor_size+109);
     }
@@ -472,7 +505,10 @@
     //
 
     var dialogScope = $rootScope.$new(true);
+
+    // default names for save and save_query
     dialogScope.data_file = {name: "data.json"};
+    dialogScope.query_file = {name: "n1ql_query.txt"};
 
     function save() {
       var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
@@ -507,8 +543,6 @@
     // to the file name dialog and get it back again.
     //
 
-    dialogScope.query_file = {name: "n1ql_query.txt"};
-
     function save_query() {
       var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
 
@@ -534,6 +568,39 @@
         var file = new Blob([qc.lastResult.query],{type: "text/plain"});
         saveAs(file,dialogScope.file.name);
       });
+    };
+
+    //
+    // save the current query to a file. Here we need to use a scope to to send the file name
+    // to the file name dialog and get it back again.
+    //
+
+    function edit_history() {
+
+      // history dialog needs a pointer to the query service
+      dialogScope.pastQueries = qwQueryService.getPastQueries();
+      dialogScope.select = function(index) {qwQueryService.setCurrentIndex(index);};
+      dialogScope.isRowSelected = function(row) {if (row == qwQueryService.getCurrentIndexNumber()) {return(true);}};
+      dialogScope.del = qwQueryService.clearCurrentQuery;
+      dialogScope.delAll = qwQueryService.clearHistory;
+
+
+      var promise = $uibModal.open({
+        templateUrl: '/_p/ui/query/history_dialog/qw_history_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      // scroll the dialog's table
+      $timeout(function() {
+        document.getElementById("qw_history_table_"+qwQueryService.getCurrentIndexNumber()).scrollIntoView();
+        window.scrollTo(0,0);
+        },100);
+
+      // now save it
+//      promise.then(function (res) {
+//        console.log("Done editing history");
+//
+//      });
     };
 
     //

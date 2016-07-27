@@ -12,18 +12,20 @@
           <span title="Stop the running query" ng-if="qc.executingQuery.busy">Cancel</span></a>
         </span> <span class="cbui-column cbui-centered"> <a
           title="View previous queries/results" ng-click="qc.prev()"
+          qw-long-press="qc.historyMenu"
           class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">
             <span>&larr;</span>
         </a>
-          <h5>{{qc.getCurrentIndex()}}</h5> <a
-          title="View subsequent queries/results" ng-click="qc.next()"
-          class="btn_1 cbui-rightmargin"
+
+          <span class="cbui-biglink" ><a ng-click="qc.historyMenu()">History </a>({{qc.getCurrentIndex()}})</span> 
+          <a title="View subsequent queries/results" ng-click="qc.next()"
+          qw-long-press="qc.historyMenu" class="btn_1 cbui-rightmargin"
           ng-class="{dynamic_disabled: !qc.hasNext()}"><span>&rarr;</span>
-        </a> <a ng-click="qc.clearHistory()"
+        </a> <!-- a ng-click="qc.clearHistory()"
           ng-class="{dynamic_disabled: qc.executingQuery.busy}"
           ng-disabled="qc.executingQuery.busy"
           class="btn_1 cbui-rightmargin"> <span>Clear History</span>
-        </a>
+        </a -->
         </span> <span class="cbui-column25 cbui-right"> <a
           ng-click="qc.save_query()" class="btn_1"> <span>Save
               Query</span></a>
@@ -112,8 +114,12 @@
                 ng-class="{selected: qc.isSelected(1)}">JSON</a></li>
               <li class="tab_middle"><a ng-click="qc.selectTab(2)"
                 ng-class="{selected: qc.isSelected(2)}">Table</a></li>
-              <li class="tab_right"><a ng-click="qc.selectTab(3)"
+               <li class="tab_middle"><a ng-click="qc.selectTab(3)"
                 ng-class="{selected: qc.isSelected(3)}">Tree</a></li>
+               <li class="tab_middle"><a ng-click="qc.selectTab(4)"
+                ng-class="{selected: qc.isSelected(4)}">Plan Text</a></li>
+               <li class="tab_right"><a ng-click="qc.selectTab(5)"
+                ng-class="{selected: qc.isSelected(5)}">Plan</a></li>
             </ul>
             <h4>Results</h4>
             <a style="overflow: hidden; line-height: 34px;"
@@ -155,6 +161,13 @@
           <div id="result_tree"
             ng-if="qc.isSelected(3) && (!qc.dataTooBig() || qc.showBigDatasets)"
             qw-json-tree="qc.lastResult.data"></div>
+          <div id="query_plan_text" ng-if="qc.isSelected(4)" 
+            ui-ace="qc.acePlanOptions"
+            ng-model="qc.lastResult.explainResultText"
+            style="border-right: 1px solid #e3e3e4;"></div>
+          <div id="query_plan" ng-if="qc.isSelected(5)" 
+            qw-explain-viz="qc.lastResult.explainResult"
+            style="border-right: 1px solid #e3e3e4;"></div>
         </div>
 
       </div>

@@ -1,0 +1,21 @@
+<div id="history_dialog" style="width: 600px; height: 600px">
+	<h1 class="dialog_corner_radius">Query History</h1>
+	<form class="simple-form">
+		<div id="qw_history_table" style="width: 595px; height: 555px; overflow-x: scroll; overflow-y: scroll" class="ajtd-root ajtd-type-array" style="margin: 1em">
+			<table class="ajtd-root ajtd-table" style="margin-left:0em">
+                <tr ng-repeat="query in pastQueries">
+                    <td ng-class="{'ajtd-row-selected': isRowSelected($index)}" ng-attr-id="{{'qw_history_table_' + $index}}"  class="ajtd-cell ajtd-value">{{$index + 1}}</td>
+                    <td ng-class="{'ajtd-row-selected': isRowSelected($index)}" ng-click="select($index)" class="ajtd-cell ajtd-key">{{query.query}}</td>
+                </tr>
+            </table>
+		</div>
+		<div class="cbui-row save_cancel">
+            <button type="submit" class="save_button cbui-align-left"
+                ng-click="del()">Delete</button>
+            <button type="submit" class="save_button cbui-align-left"
+                ng-click="delAll()">Delete All History</button>
+            <button type="submit" class="save_button cbui-align_right"
+                ng-click="$close('ok')">Done</button>
+		</div>
+	</form>
+</div>
