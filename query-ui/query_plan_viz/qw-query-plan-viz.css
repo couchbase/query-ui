@@ -15,16 +15,17 @@
 
 .qw-union {
   border: solid 0 #007; 
-  border-bottom-width:1px;
+  border-top-width:1px;
+  margin-top: 10px;
 }
 
 .qw-union-text {
   color: #007; 
-  border-right-width:1px;
+  border-left-width:1px;
 }
 
 .qw-union-child {
-  border-left-width:1px;
+  border-right-width:1px;
 }
 
 .qw-field {
@@ -39,5 +40,9 @@
 
 .cbui-plan-expensive {
   background-color: #ffe6de;
+}
+
+.cbui-explain-table {
+  padding-bottom: 1px;
 }
 

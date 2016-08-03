@@ -135,7 +135,8 @@
       }
 
       //
-      putPlanInArray(array,transformedPlan,width-1,depth-1);
+      //putPlanInArray(array,transformedPlan,width-1,depth-1);
+      putPlanInArray(array,transformedPlan,0,0);
 
       for (var row = 0; row < depth; row++) {
         result += '<tr>';
@@ -145,7 +146,7 @@
           // start with a blank cell to break up the cell border lines
           result += '<td class="';
 
-          if (cell.union && !cell.unionChild)
+          if (cell.union && !cell.unionText)
             result += 'qw-union ';
           if (cell.parallel)
             result += 'qw-parallel ';
@@ -157,13 +158,7 @@
           result += '"> </td>';
 
           // style the cell based on whether it's part of a parallel block, or a union
-          result += '<td class="';
-//        if (cell.parallel)
-//        result += 'qw-parallel ';
-//        if (cell.parallelBegin)
-//        result += 'qw-parallel-begin ';
-//        if (cell.parallelEnd)
-//        result += 'qw-parallel-end ';
+          result += '<td class="cbui-explain-table ';
 
           if (cell.union)
             result += 'qw-union ';
@@ -188,6 +183,16 @@
 
           // and, of course, the actual content of the cell, a label
           result += '>' + getLabelForArrayEntry(array[col][row]) + '</td>';
+
+          // one more blank cell to keep union lines from running in to parallel lines
+
+          result += '<td class="';
+
+          if (cell.union && !cell.unionChild)
+            result += 'qw-union ';
+
+          result += '">&nbsp</td>';
+
         }
         result += '</tr>';
         //if (row == 0)
@@ -247,7 +252,8 @@
 
 
   //
-  //
+  // Once we have the tree structure of operators, we want to convert that tree into
+  // an array that can be used to fill in an HTML table
   //
 
   function putPlanInArray(array,plan,curX,curY) {
@@ -273,7 +279,7 @@
 
     // if we have a single predecessor, make a recursive call
     else if (!_.isArray(plan.predecessor))
-      putPlanInArray(array,plan.predecessor,curX,curY-ourDepth);
+      putPlanInArray(array,plan.predecessor,curX,curY+ourDepth);
 
     // if we have an array of predecessors, make a recursive call for each, placing each in a
     // different column
@@ -281,21 +287,33 @@
       array[curX][curY].union = true;
       array[curX][curY].unionText = true;
       var childX = curX;
-      var prevChildX = curX;
+      console.log("Starting union at: " + curX + "," + curY + ", pred len: " + plan.predecessor.length);
+      //var prevChildX = curX;
 
+      // iterate over the children we are unioning
       for (var i = 0; i < plan.predecessor.length; i++) {
+        console.log("  Got childX: " + childX + ", and branch count: " + plan.predecessor[i].BranchCount());
+        // add the child to the array
+        putPlanInArray(array,plan.predecessor[i],childX,curY+ourDepth);
+
+        // if there are any gaps between this child and the next, fill in with union line
+        if (i < plan.predecessor.length - 1)
+          for (var c = childX + 1; c < childX + plan.predecessor[i].BranchCount(); c++) {
+            console.log('   setting union for: ' + c + "," + curY);
+            array[c][curY] = {union: true, operator: ""};
+          }
+
         // for subsequent children, add marks to indicate union parentage
         if (i > 0) {
-          // here is the actual child
+          // here is the box right above the child
           array[childX][curY] = {union: true, unionChild: true, operator: ""};
           // fill in any gaps between current child and previous child
-          for (var c = prevChildX - 1; c > childX; c--)
-            array[c][curY] = {union: true, operator: ""};
-          prevChildX = childX;
+//          for (var c = prevChildX - 1; c > childX; c--)
+          //prevChildX = childX;
         }
 
-        putPlanInArray(array,plan.predecessor[i],childX,curY-ourDepth);
-        childX = childX - plan.predecessor[i].BranchCount();
+        // the next child may be displaced by many rows if we have many branches
+        childX = childX + plan.predecessor[i].BranchCount();
       }
     }
   }
@@ -409,9 +427,9 @@
       // mark the elements of a parallel subsequence for later annotation
       for (var subNode = subsequence; subNode != null; subNode = subNode.predecessor) {
         if (subNode == subsequence)
-          subNode.parallelEnd = true;
-        if (subNode.predecessor == null)
           subNode.parallelBegin = true;
+        if (subNode.predecessor == null)
+          subNode.parallelEnd = true;
         subNode.parallel = true;
       }
       return(new PlanNode(predecessor,plan,subsequence));

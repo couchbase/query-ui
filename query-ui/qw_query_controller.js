@@ -410,10 +410,10 @@
       //console.log(" editor_size: " + editor_size);
       $('#sidebar_body').height(editor_size + resultSummaryHeight + 25);
       $('#result_editor').height(editor_size + 10);
-      $('#result_table').height(editor_size+20);
-      $('#result_tree').height(editor_size+20);
-      $('#query_plan').height(editor_size + 10);
-      $('#query_plan_text').height(editor_size + 10);
+      $('#result_table').height(editor_size+25);
+      $('#result_tree').height(editor_size+25);
+      $('#query_plan').height(editor_size + 25);
+      $('#query_plan_text').height(editor_size + 25);
 
       $('#result_box').height(editor_size+109);
     }
@@ -592,7 +592,9 @@
 
       // scroll the dialog's table
       $timeout(function() {
-        document.getElementById("qw_history_table_"+qwQueryService.getCurrentIndexNumber()).scrollIntoView();
+        var label = "qw_history_table_"+qwQueryService.getCurrentIndexNumber();
+        var elem = document.getElementById(label);
+        elem.scrollIntoView();
         window.scrollTo(0,0);
         },100);
 

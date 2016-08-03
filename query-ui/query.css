@@ -281,7 +281,7 @@ a.cbui-rightmargin {
   font-weight: 400;
 }
 
-#result_table, #result_tree {
+#result_table, #result_tree, #query_plan, #query_plan_text {
   height: 200px;
   padding: 0px;
   padding-right: 4px;

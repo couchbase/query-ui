@@ -417,7 +417,7 @@
 
     function clearCurrentQuery() {
       // don't clear the history if existing queries are already running
-      if (qwQueryService.executingQuery.busy)
+      if (qwQueryService.executingQuery.busy || pastQueries.length == 0)
         return;
 
       pastQueries.splice(currentQueryIndex,1);
@@ -581,15 +581,15 @@
       // for an example). To bypass this, we will url-encode ahead of time, and then
       // make sure the semicolons get urlencoded as well.
 
-//    var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-//    qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-//    method: "POST",
-//    headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
-//    data: encodedQuery,
-//    mnHttp: {
-//    group: "global"
-//    }
-//    };
+//      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+//      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+//          method: "POST",
+//          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+//          data: encodedQuery,
+//          mnHttp: {
+//            group: "global"
+//          }
+//      };
 
       // An alternate way to get around Angular's encoding is "isNotForm: true". But
       // that triggers bug MB-16964, where the server currently fails to parse creds
@@ -609,7 +609,9 @@
 
       // if the query is not already an explain, run a version with explain to get the query plan
 
-      if (! /^\s*explain/gmi.test(queryText)) {
+      var queryIsExplain = /^\s*explain/gmi.test(queryText);
+
+      if (! queryIsExplain) {
         var explainQueryData = {statement: "explain " + queryText};
         explainQueryData.creds = queryData.creds;
 
@@ -640,9 +642,10 @@
           newResult.explainDone = true;
           newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
 
+          lastResult.copyIn(newResult);
+
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone) {
-            lastResult.copyIn(newResult);
             finishQuery();
           }
 
@@ -658,11 +661,15 @@
           newResult.explainDone = true;
           newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
 
+          lastResult.copyIn(newResult);
+
           //console.log("Explain: " + newResult.explainResult);
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone) {
-            lastResult.copyIn(newResult);
+            // when we have errors, don't show theh plan tabs
+            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+              qwQueryService.selectTab(1);
             finishQuery();
           }
         });
@@ -676,7 +683,7 @@
         newResult.explainResultText = "";
       }
 
-      // console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
+      //console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
 
       //
       // Issue the request
@@ -688,10 +695,10 @@
 
       // SUCCESS!
       .success(function(data, status, headers, config) {
-//      console.log("Success Data: " + JSON.stringify(data));
-//      console.log("Success Status: " + JSON.stringify(status));
-//      console.log("Success Headers: " + JSON.stringify(headers));
-//      console.log("Success Config: " + JSON.stringify(config));
+      //console.log("Success Data: " + JSON.stringify(data));
+      //console.log("Success Status: " + JSON.stringify(status));
+      //console.log("Success Headers: " + JSON.stringify(headers));
+      //console.log("Success Config: " + JSON.stringify(config));
 
         var result;
 
@@ -738,6 +745,17 @@
 
         newResult.queryDone = true;
 
+        // if this was an explain query, change the result to show the
+        // explain plan
+
+        if (queryIsExplain) {
+          var lists = analyzePlan(data.results[0].plan,null);
+          newResult.explainResult = {explain: data.results[0], analysis: lists,
+              buckets: qwQueryService.buckets, tokens: qwQueryService.autoCompleteTokens};
+          newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+          qwQueryService.selectTab(4); // make the explain visible
+        }
+
         // make sure to only finish if the explain query is also done
         if (newResult.explainDone) {
           //console.log("Query done, got explain: " + newResult.explainResultText);
@@ -771,6 +789,9 @@
           // make sure to only finish if the explain query is also done
           if (newResult.explainDone) {
             lastResult.copyIn(newResult);
+            // when we have errors, don't show theh plan tabs
+            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+              qwQueryService.selectTab(1);
             finishQuery();
           }
           return;
@@ -788,6 +809,9 @@
           // make sure to only finish if the explain query is also done
           if (newResult.explainDone) {
             lastResult.copyIn(newResult);
+            // when we have errors, don't show theh plan tabs
+            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+              qwQueryService.selectTab(1);
             finishQuery();
           }
           return;
@@ -811,6 +835,9 @@
           // make sure to only finish if the explain query is also done
           if (newResult.explainDone) {
             lastResult.copyIn(newResult);
+            // when we have errors, don't show theh plan tabs
+            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+              qwQueryService.selectTab(1);
             finishQuery();
           }
           return;
@@ -846,6 +873,9 @@
         // make sure to only finish if the explain query is also done
         if (newResult.explainDone) {
           lastResult.copyIn(newResult);
+          // when we have errors, don't show theh plan tabs
+          if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+            qwQueryService.selectTab(1);
           finishQuery();
         }
       });
