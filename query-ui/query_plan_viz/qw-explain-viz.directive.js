@@ -66,7 +66,7 @@
             }
 
             if (data.explain && (data.explain.plan || _.isString(data.explain.plan))) {
-              content += "<br><h3>Query Operator Data Flows (top to bottom):</h3><br>";
+              content += "<br><h3>Query Operator Data Flows (bottom to top):</h3><br>";
               content += '<div class="ajtd-root ajtd-type-array">' +
               makeHTMLtable(data.explain,"") + "</div>";
             }
@@ -79,28 +79,28 @@
     };
   });
 
-//function printPlan(plan, indent) {
-//var result = '';
-//for (var i = 0; i < indent; i++)
-//result += ' ';
-//var opName = plan.operator['#operator'];
-//result += opName ? opName : "unknown op";
-//console.log(result);
+  function printPlan(plan, indent) {
+    var result = '';
+    for (var i = 0; i < indent; i++)
+      result += ' ';
+    var opName = plan.operator['#operator'];
+    result += opName ? opName : "unknown op";
+    console.log(result);
 
-//if (plan.subsequence)
-//printPlan(plan.subsequence,indent + 2);
+    if (plan.subsequence)
+      printPlan(plan.subsequence,indent + 2);
 
-//if (plan.predecessor)
-//if (_.isArray(plan.predecessor)) for (var i = 0; i < plan.predecessor.length; i++) {
-//result = '';
-//for (var j = 0; j < indent+2; j++)
-//result += ' ';
-//console.log(result + "branch " + i)
-//printPlan(plan.predecessor[i],indent + 4);
-//}
-//else
-//printPlan(plan.predecessor,indent);
-//}
+    if (plan.predecessor)
+      if (_.isArray(plan.predecessor)) for (var i = 0; i < plan.predecessor.length; i++) {
+        result = '';
+        for (var j = 0; j < indent+2; j++)
+          result += ' ';
+        console.log(result + "branch " + i)
+        printPlan(plan.predecessor[i],indent + 4);
+      }
+      else
+        printPlan(plan.predecessor,indent);
+  }
 
   //
   // We need to take the query plan, which is a somewhat arbitrary tree-like
@@ -228,7 +228,7 @@
         return(opName + ' <span class="qw-field">' + pNode.keyspace + (pNode.as ? " as "+pNode.as : "")  + '</span>');
       else if (opName === "Alias")
         return(opName + ' <span class="qw-field">' + pNode.as  + '</span>');
-      else if (opName === "Limit")
+      else if (opName === "Limit" || opName == "Offset")
         return(opName + ' <span class="qw-field">' + pNode.expr  + '</span>');
       else if (opName === "Join")
         return(opName + ' <span class="qw-field">' + pNode.keyspace + (pNode.as ? " as "+pNode.as : "") + ' on '

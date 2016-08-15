@@ -43,6 +43,6 @@
 }
 
 .cbui-explain-table {
-  padding-bottom: 1px;
+  padding-bottom: 1px; /* needed to prevent expensive background from overlapping union border */
 }
 
