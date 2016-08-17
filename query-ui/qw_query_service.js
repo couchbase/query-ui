@@ -1313,7 +1313,7 @@
         matchArray = matchNonQuotedLongInts.exec(rawBytes);
       }
 
-      //console.log("Got response, longIntcount: " + longIntCount /*+ ", raw bytes: " + rawBytes*/);
+//      console.log("Got response, longIntcount: " + longIntCount /*+ ", raw bytes: " + rawBytes*/);
 
       // if no long ints, just return the original bytes parsed
 
@@ -1348,9 +1348,9 @@
         result.rawJSON = rawBytes;
         //console.log("New raw: " + newBytes);
 
-        return result;// JSON.parse(rawBytes);
       }
 
+        return result;
     }
 
     //
