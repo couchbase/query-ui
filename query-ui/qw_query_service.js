@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnHelper', 'mnPendingQueryKeeper', '$httpParamSerializer'];
+  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', '$httpParamSerializer'];
 
-  function getQwQueryService($q, $timeout, $http, mnHelper, mnPendingQueryKeeper, $httpParamSerializer) {
+  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, $httpParamSerializer) {
 
     var qwQueryService = {};
 
@@ -938,7 +938,7 @@
           bucket.expanded = false;
           bucket.schema = [];
           bucket_names.push(bucket.id);
-          bucket.passwordNeeded = false;
+          bucket.passwordNeeded = true;
           passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id);
           qwQueryService.buckets.push(bucket);
@@ -957,11 +957,14 @@
           // 'name' and  'saslPassword' fields (amoung much other data)
           //
 
+          //console.log("Got bucket info...");
           if (_.isArray(data)) _.forEach(data, function(bucket, index) {
             if (bucket.name && _.isString(bucket.saslPassword))
+              //console.log("  for bucket: " + bucket.name + " got password: " + bucket.saslPassword);
               _.forEach(qwQueryService.buckets, function(mBucket, i) {
                 if (mBucket.id === bucket.name) {
                   mBucket.password = bucket.saslPassword;
+                  mBucket.passwordNeeded = false;
                   return(false);
                 }
               });
@@ -1349,6 +1352,7 @@
         //console.log("New raw: " + newBytes);
 
       }
+      return result;
 
         return result;
     }

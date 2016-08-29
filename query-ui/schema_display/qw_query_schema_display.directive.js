@@ -99,12 +99,14 @@
   //calls the schemaDisplay directive for each flavor.
 
   angular.module('qwQuery').
-  directive('bucketDisplay', ['qwQueryService',/*'$modal',*/getBucketDisplay]);
+  directive('bucketDisplay', ['qwQueryService','$uibModal',getBucketDisplay]);
 
-  var fakePromise = {then: function() {}};
-  var $modal = {open: function() {console.log("fake modal");return(then);}};
+  //var fakePromise = {then: function() {}};
+  //var $modal = {open: function() {console.log("fake modal");return(then);}};
 
-  function getBucketDisplay(qwQueryService,$modal,$scope,ModalService) {
+  function getBucketDisplay(qwQueryService,$uibModal,$scope) {
+    console.log("getBucketDisplay");
+
     return {
       restrict: 'A',
       scope: { bucket: '=bucketDisplay' },
@@ -115,7 +117,7 @@
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowDown.png" /> ' +
         '<img ng-hide="bucket.expanded"' +
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowRight.png" />' +
-        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="expandBucket(bucket)"/>' +
+        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
         '  {{bucket.id}}</div>' +
         '  <ul class="bucket" ng-show="bucket.expanded">' +
@@ -145,17 +147,20 @@
              */
             scope.changeExpandBucket = function(bucket) {
 
+              console.log("ChangeExpandBucket");
               if (!bucket.expanded) { //bucket is collapsed, expand it
                 scope.bucket = bucket;
                 bucket.tempPassword = "";
-                //console.log("Password required: " + scope.bucket.passwordNeeded);
-                //console.log("bucket: " + scope.bucket.id);
+                console.log("Password required: " + scope.bucket.passwordNeeded);
+                console.log("bucket: " + scope.bucket.id);
                 if (bucket.passwordNeeded && !bucket.validated) {
 
-                  var promise = $modal.open({
-                    templateUrl: 'query/password_dialog/qw_query_password_dialog.html',
+                  console.log(" opening dialog...");
+                  var promise = $uibModal.open({
+                    templateUrl: '/_p/ui/query/password_dialog/qw_query_password_dialog.html',
                     scope: scope
                   }).result;
+                  console.log("  ...got promise: " + JSON.stringify(promise));
 
                   promise.then(function (res) {
                     qwQueryService.authenticateBuckets([bucket.id],[bucket.tempPassword],
@@ -165,11 +170,11 @@
                         bucket.password = bucket.tempPassword;
                         qwQueryService.getSchemaForBucket(bucket);
                         bucket.expanded = true;
-                        //console.log("Bucket validated");
+                        console.log("Bucket validated");
                       }
                       else {
-                        //console.log("Bucket not validated");
-                        $modal.open({
+                        console.log("Bucket not validated");
+                        $uibModal.open({
                           templateUrl: 'query/password_dialog/qw_query_error_dialog.html',
                           scope: scope
                         });

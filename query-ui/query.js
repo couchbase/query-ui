@@ -7,7 +7,11 @@
                       'qwJsonTable',
                       'qwExplainViz',
                       'qwLongPress',
-                      'ui.ace'])
+                      'mnPendingQueryKeeper',
+                      'mnServersService',
+                      'mnPoolDefault',
+                      'ui.ace',
+                      'ui.bootstrap'])
     .config(function($stateProvider, mnPluggableUiRegistryProvider) {
       $stateProvider
       .state('app.admin.query', {
