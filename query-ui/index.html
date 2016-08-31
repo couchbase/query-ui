@@ -1,0 +1,95 @@
+<!doctype html>
+<html data-ng-app="app">
+<head>
+<title>CBQ Query DP</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<script src="libs/jquery-1.11.3.min.js" type="text/javascript" ></script>
+
+<script src="libs-standalone/angular.js"></script>
+<script src="libs-standalone/angular-ui-router-1.0.0-alpha.1.js"></script>
+
+<!-- 
+<script src="libs-standalone/angular-sanitize.js"></script>
+<script src="libs-standalone/angular-messages.js"></script>
+<script src="libs-standalone/angular-uib-stackedMap.js"></script>
+<script src="libs-standalone/angular-uib-alert.js"></script>
+<script src="libs-standalone/angular-uib-modal.js"></script>
+<script src="libs-standalone/angular-uib.js"></script>
+<script src="libs-standalone/angular-ui-select.js"></script>
+
+ -->
+<script src="libs-standalone/ui-bootstrap-tpls-2.1.2.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="libs-standalone/ui-bootstrap-2.1.2-csp.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/bootstrap.css">
+  
+<script src="libs-standalone/lodash.compat.js"></script>
+<script src="libs-standalone/lodash.mixin.js"></script>
+<script src="libs/sorttable.js"></script>
+
+<script src="app-standalone.js"></script>
+<script src="mn_focus_me.js"></script>
+
+<script src="libs-standalone/components/mn_buckets_stats.js"></script>
+<script src="libs-standalone/components/mn_http.js"></script>
+<script src="libs-standalone/components/directives/mn_spinner.js"></script>
+<script src="libs-standalone/components/mn_tasks_details.js"></script>
+<script src="libs-standalone/components/mn_pending_query_keeper.js"></script>
+<script src="libs-standalone/components/mn_jquery.js"></script>
+<script src="libs-standalone/components/mn_pool_default.js"></script>
+<script src="libs-standalone/components/mn_pools.js"></script>
+
+<script src="libs-standalone/mn_admin/mn_buckets/mn_buckets_service.js"></script>
+<script src="libs-standalone/mn_admin/mn_servers/mn_servers_service.js"></script>
+<script src="libs-standalone/mn_admin/mn_settings/cluster/mn_settings_cluster_service.js"></script>
+<script src="libs-standalone/mn_admin/mn_groups/mn_groups_service.js"></script>
+
+<script src="qw_query_controller.js"></script>
+<script src="qw_query_service.js"></script>
+<script src="data_display/qw-json-tree.directive.js"></script>
+<script src="data_display/qw-json-table.directive.js"></script>
+<script src="query_plan_viz/qw-explain-viz.directive.js"></script>
+<script src="long_press/qw-long-press.directive.js"></script>
+<script src="schema_display/qw_query_schema_display.directive.js"></script>
+
+<script src="libs/ui-ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="libs/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="libs/ace/ext-language_tools.js" type="text/javascript"></script>
+<script src="libs/Blob.js" type="text/javascript" charset="utf-8"></script>
+<script src="libs/FileSaver.js" type="text/javascript" charset="utf-8"></script>
+ 
+<link rel="stylesheet" type="text/css" href="libs-standalone/template/alert/alert.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/template/modal/modal.css">
+
+<link rel="stylesheet" type="text/css" href="libs-standalone/layout-default-latest.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/selectize.default.css">
+<link rel="stylesheet" type="text/css" href="app-standalone.css">
+
+<link rel="stylesheet" type="text/css" href="data_display/qw-json-tree-table.css">
+<link rel="stylesheet" type="text/css" href="schema_display/qw_query_schema_display.css">
+<link rel="stylesheet" type="text/css" href="query_plan_viz/qw-query-plan-viz.css">
+<link rel="stylesheet" type="text/css" href="query.css">
+
+
+</head>
+<body>
+  <div>
+    <div id="north_ui" class="ui-layout-north"
+      style="display: inline-block; white-space: nowrap">
+      <h2
+        style="margin-left: 0.5em; margin-top: 0.50em; margin-bottom: 0em; color: black">
+        <img style="vertical-align: middle"
+          src="/images/couchbase_small_2.0.2.png" /> Stand-Alone Query
+        Workbench {{ qc.version }}
+      </h2>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="container">
+      <div ui-view></div>
+    </div>
+  </div>
+</body>
+</html>
