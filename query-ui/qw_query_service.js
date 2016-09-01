@@ -56,7 +56,7 @@
     qwQueryService.gettingBuckets = {busy: false};
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
-    qwQueryService.authenticateBuckets = authenticateBuckets; // check password
+    //qwQueryService.authenticateBuckets = authenticateBuckets; // check password
 
     // for the front-end, distinguish error status and good statuses
 
@@ -488,6 +488,8 @@
     //
     // executeQuery
     //
+    
+    var timeout = 600; // query timeout in seconds
 
     function executeQuery(queryText, userQuery) {
       var newResult;
@@ -573,7 +575,6 @@
       // send the query off via REST API
       //
       //
-      var timeout = 600; // query timeout in seconds
 
       // Because Angular automatically urlencodes JSON parameters, but has a special
       // algorithm that doesn't encode semicolons, any semicolons inside the query
@@ -993,11 +994,17 @@
     //
     //
 
-    function authenticateBuckets(bucket_names, passwords, onSuccess, onError) {
-      $http.post("/authenticate",{bucket : bucket_names, password: passwords})
-      .success(onSuccess)
-      .error(onError);
-    };
+//    function authenticateBucket(bucket_name, password, onSuccess, onError) {
+//      console.log("Authenticating buckets: " + JSON.stringify(bucket_names));
+//      console.log("Authenticating passwords: " + JSON.stringify(passwords));
+//      
+//      
+//      console.log("Sending request: " + JSON.stringify(currentQueryRequest));
+//      //$http.post("/authenticate",{bucket : bucket_names, password: passwords})
+//      $http(currentQueryRequest)
+//      .success(onSuccess)
+//      .error(onError);
+//    };
 
 
     //
@@ -1007,16 +1014,29 @@
     function getSchemaForBucket(bucket) {
 
       if (qwQueryService.gettingBuckets.busy)
-        return;
+        return("Server Busy");
 
       qwQueryService.gettingBuckets.busy = true;
 
-      var queryText = "infer `" + bucket.id + "`;";
-      var queryData = {statement: queryText};
-      if (bucket.password)
-        queryData.creds = '[{"user":"local:'+bucket.id+'","pass":"' + bucket.password +'"}]';
+      var inferQueryData = {statement: "infer `" + bucket.id + "`;"};
+      var credArray = [];
+      credArray.push({user:"local:"+bucket.id,pass: bucket.password });
+      inferQueryData.creds = credArray;
 
-      return $http.post("/_p/query/query/service",queryData)
+      var inferQueryRequest = {
+          url: "/_p/query/query/service",
+          method: "POST",
+          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+          data: inferQueryData,
+          mnHttp: {
+            isNotForm: true,
+            group: "global"
+          }
+      };
+
+      //console.log("Getting schema: " + JSON.stringify(inferQueryRequest));
+
+      return $http(inferQueryRequest)
       .success(function(data, status, headers, config) {
         //console.log("Done!");
         bucket.schema.length = 0;
@@ -1076,10 +1096,12 @@
         qwQueryService.gettingBuckets.busy = false;
       })
       .error(function(data, status, headers, config) {
+        var error = "Error getting schema for bucket: " + bucket.id;
         if (data.errors)
-          console.log("Query Error: " + JSON.stringify(data.errors,null,'  '));
+          error += ", " + JSON.stringify(data.errors,null,'  ');
         else
-          console.log("Query Error: " + status);
+          error += ", " + status;
+        console.log("   error: " + error);
         qwQueryService.gettingBuckets.busy = false;
       });
 

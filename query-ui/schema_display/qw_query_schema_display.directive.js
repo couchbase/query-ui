@@ -105,7 +105,7 @@
   //var $modal = {open: function() {console.log("fake modal");return(then);}};
 
   function getBucketDisplay(qwQueryService,$uibModal,$scope) {
-    console.log("getBucketDisplay");
+    //console.log("getBucketDisplay");
 
     return {
       restrict: 'A',
@@ -147,46 +147,45 @@
              */
             scope.changeExpandBucket = function(bucket) {
 
-              console.log("ChangeExpandBucket");
+              //console.log("ChangeExpandBucket");
               if (!bucket.expanded) { //bucket is collapsed, expand it
                 scope.bucket = bucket;
                 bucket.tempPassword = "";
-                console.log("Password required: " + scope.bucket.passwordNeeded);
-                console.log("bucket: " + scope.bucket.id);
+                //console.log("Password required: " + scope.bucket.passwordNeeded);
+                //console.log("bucket: " + scope.bucket.id);
                 if (bucket.passwordNeeded && !bucket.validated) {
 
-                  console.log(" opening dialog...");
+                  // open the dialog to ask for a password
+                  
                   var promise = $uibModal.open({
                     templateUrl: '/_p/ui/query/password_dialog/qw_query_password_dialog.html',
                     scope: scope
                   }).result;
-                  console.log("  ...got promise: " + JSON.stringify(promise));
 
+                  // if they gave us one, try and get the schema to test the password
                   promise.then(function (res) {
-                    qwQueryService.authenticateBuckets([bucket.id],[bucket.tempPassword],
-                        function(data,status,headers,config) {
-                      if (data.success[0]) {
-                        bucket.validated = true;
-                        bucket.password = bucket.tempPassword;
-                        qwQueryService.getSchemaForBucket(bucket);
-                        bucket.expanded = true;
-                        console.log("Bucket validated");
-                      }
-                      else {
-                        console.log("Bucket not validated");
-                        $uibModal.open({
-                          templateUrl: 'query/password_dialog/qw_query_error_dialog.html',
-                          scope: scope
-                        });
-                      }
-                    },
-                    function(data,status,headers,config) {
-                      console.log(data.errors);
-                    })
-                  });
+                    bucket.password = bucket.tempPassword;
+                    qwQueryService.getSchemaForBucket(bucket)
 
-                  return;
-                }
+                    .success(function(data, status, headers, config) {
+                      //console.log("Got authentication success!");
+                      bucket.validated = true;
+                      bucket.expanded = true;                      
+                    })
+                    .error(function(data, status, headers, config) {
+                      bucket.validated = false;
+                      bucket.password = null;
+                      //console.log("Error authenticating: ");
+                      $uibModal.open({
+                        templateUrl: '/_p/ui/query/password_dialog/qw_query_error_dialog.html',
+                        scope: scope
+                      });
+                    }
+                    );
+                  }); // end of 'o.k.' from password dialog
+
+                  return; // either way, we're done here
+                } // end of entering password
 
                 if (bucket.schema.length == 0)
                   qwQueryService.getSchemaForBucket(bucket);

@@ -18,7 +18,7 @@ import (
 	//	"github.com/couchbase/gocb/gocbcore"
 	//	infer "github.com/couchbase/cbq-gui/inferencer"
 	"github.com/couchbase/go-couchbase"
-	"github.com/couchbase/gomemcached/client"
+    //"github.com/couchbase/gomemcached/client"
 	json "github.com/dustin/gojson"
 )
 
@@ -104,7 +104,7 @@ func getClusterQueryKVsAndMgmt(server, user, pass string) ([]string, []string, [
 			if strings.EqualFold(k, "mgmt") {
 				mgmt = append(mgmt, fmt.Sprintf("%s:%d", host_name, v))
 			}
-			if strings.EqualFold(k, "kvs") {
+			if strings.EqualFold(k, "kv") {
 				kvs = append(kvs, fmt.Sprintf("%s:%d", host_name, v))
 			}
 		}
@@ -209,9 +209,6 @@ func launchWebService(server, user, pass string) {
 	http.Handle("/pools", mgmtProxy)
 	http.Handle("/pools/", mgmtProxy)
 
-	// have a separate service for handing bucket SASL authentication requests
-	http.HandleFunc("/authenticate", ServeAuthenticate)
-
 	// Handle static endpoint for serving the web content
 	http.Handle("/", http.FileServer(http.Dir(staticPath)))
 	//http.Handle("/_p/ui/query/images/", http.FileServer(http.Dir(fmt.Sprintf("%s/query-ui/images",staticPath))))
@@ -246,13 +243,13 @@ func toMgmt(r *http.Request) {
 
 
 func toImage(r *http.Request) {
-    fmt.Printf("toImage, path %v\n",r.URL.Path);
+    //fmt.Printf("toImage, path %v\n",r.URL.Path);
     // r.URL.Path = strings.Replace(r.URL.Path,"/_p/ui/query/images/","/images/",1)
     r.URL.Path = strings.Replace(r.URL.Path,"/_p/ui/query/","/",1)
     //r.Host = serverHost
     r.URL.Host = r.Host
     r.URL.Scheme = "http"
-    fmt.Printf(" post toImage, path %v\n",r.URL.Path);
+    //fmt.Printf(" post toImage, path %v\n",r.URL.Path);
 }
 
 //
@@ -289,130 +286,6 @@ func writeHttpError(message string, resp http.ResponseWriter) {
 	resp.Write(bytes)
 }
 
-//
-// Function that handles authentication requests on /authenticate
-//
-// we expect:
-//  - bucket - the name of the bucket(s)
-//  - password - the password(s) to authenticate with
-//
-// we return:
-//  - success - either true or false
-//  - detail - a string describing an error message, if any
-//
-// This is used to test whether or not the password given works.
-//
-
-func ServeAuthenticate(resp http.ResponseWriter, req *http.Request) {
-
-	//fmt.Printf("Got request: %v\n",req)
-
-	//
-	// make sure we can connect to Couchbase
-	//
-
-	if len(kvs) == 0 {
-		writeAuthenticateResp([]bool{false}, []string{fmt.Sprintf("No server connections\n")}, resp)
-		return
-	}
-
-	mclient, err := memcached.Connect("tcp", kvs[0])
-	if err != nil {
-		writeAuthenticateResp([]bool{false}, []string{fmt.Sprintf("Error connecting: %v\n", err)}, resp)
-		return
-	}
-
-	//
-	// make sure we got the right parameters
-	//
-
-	req.ParseForm()
-	
-//	for k, v := range req.Form {
-//		log(fmt.Sprintf("\nGot form: `%v` (%d) - %v (%d)\n", k, len(k), v, len(v)))
-//	}
-	
-	bucket_array := req.Form["bucket[]"]
-	password_array := req.Form["password[]"]
-	
-//	fmt.Printf("req.Form[buckets] = %v\n",req.Form["bucket[]"])
-
-	buckets := make([]string, 0, 0)
-	passwords := make([]string, 0, 0)
-	for i := 0; i < len(bucket_array); i++ {
-		//bucket_name := req.Form[fmt.Sprintf("bucket[%d]", i)]
-		bucket_name := bucket_array[i]
-		password := password_array[i]
-		//fmt.Printf("Bucket %d named %v len %d\n",i,bucket_name, len(bucket_name))
-		if len(bucket_name) > 0 {
-			buckets = append(buckets, bucket_name)
-			passwords = append(passwords, password)
-            //passwords = append(passwords, req.Form[fmt.Sprintf("password[%d]", i)][0])
-		} else {
-			break
-		}
-	}
-
-	if buckets == nil || passwords == nil || len(buckets) == 0 || len(passwords) == 0 {
-	    errMsg := fmt.Sprintf("1. you must specify 'bucket' %v (%d) and 'password' %v (%d) parameters, got %v", 
-		            buckets,len(buckets),passwords,len(passwords),req.Form)
-	    fmt.Print(errMsg)
-		writeAuthenticateResp([]bool{false}, []string{errMsg}, resp)
-		return
-	}
-
-	if len(buckets) != len(passwords) {
-		writeAuthenticateResp([]bool{false}, []string{fmt.Sprintf("2. you must specify 'bucket' and 'password' parameters, got %v", req.Form)}, resp)
-		return
-	}
-	
-
-	successes := make([]bool, len(buckets))
-	details := make([]string, len(buckets))
-
-	for i, bucket := range buckets {
-
-		password := passwords[i]
-
-		//
-		// connect to couchbase and authenticate against the bucket with the password
-		//
-
-		_, err = mclient.Auth(bucket, password)
-		if err != nil {
-			successes[i] = false
-			details[i] = fmt.Sprintf("Auth error. Bucket `%s` may need a password, or doesn't exist. %v", bucket, err)
-		} else {
-			successes[i] = true
-			details[i] = ""
-		}
-
-	}
-
-	//
-	// write back the result
-	//
-
-	writeAuthenticateResp(successes, details, resp)
-}
-
-//
-// convenience method for returning the authentication results as JSON
-//
-
-func writeAuthenticateResp(success []bool, messages []string, resp http.ResponseWriter) {
-	response := map[string]interface{}{}
-	response["success"] = success
-	response["detail"] = messages
-
-	bytes, err := json.Marshal(response)
-	if err != nil {
-		resp.WriteHeader(500)
-		resp.Write([]byte(fmt.Sprintf("internal error marshalling JSON: %v\n", err)))
-		return
-	}
-	resp.Write(bytes)
-}
 
 //
 // in verbose mode, output messages on the command line
