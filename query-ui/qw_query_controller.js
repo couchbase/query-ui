@@ -409,11 +409,11 @@
 
       //console.log(" editor_size: " + editor_size);
       $('#sidebar_body').height(editor_size + resultSummaryHeight + 25);
-      $('#result_editor').height(editor_size + 10);
+      $('#result_editor').height(500);//$('#result_editor').height(editor_size + 10);
       $('#result_table').height(editor_size+25);
       $('#result_tree').height(editor_size+25);
       $('#query_plan').height(editor_size + 25);
-      $('#query_plan_text').height(editor_size + 25);
+      $('#query_plan_text').height(500);//$('#query_plan_text').height(editor_size + 25);
 
       $('#result_box').height(editor_size+109);
     }
@@ -594,7 +594,8 @@
       $timeout(function() {
         var label = "qw_history_table_"+qwQueryService.getCurrentIndexNumber();
         var elem = document.getElementById(label);
-        elem.scrollIntoView();
+	if (elem)
+	    elem.scrollIntoView();
         window.scrollTo(0,0);
         },100);
 
