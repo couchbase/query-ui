@@ -9,7 +9,6 @@
 <script src="libs-standalone/angular.js"></script>
 <script src="libs-standalone/angular-ui-router-1.0.0-alpha.1.js"></script>
 
-<!-- 
 <script src="libs-standalone/angular-sanitize.js"></script>
 <script src="libs-standalone/angular-messages.js"></script>
 <script src="libs-standalone/angular-uib-stackedMap.js"></script>
@@ -18,10 +17,11 @@
 <script src="libs-standalone/angular-uib.js"></script>
 <script src="libs-standalone/angular-ui-select.js"></script>
 
- -->
+<!-- 
 <script src="libs-standalone/ui-bootstrap-tpls-2.1.2.js" type="text/javascript" charset="utf-8"></script>
 <link rel="stylesheet" type="text/css" href="libs-standalone/ui-bootstrap-2.1.2-csp.css">
 <link rel="stylesheet" type="text/css" href="libs-standalone/bootstrap.css">
+ -->
   
 <script src="libs-standalone/lodash.compat.js"></script>
 <script src="libs-standalone/lodash.mixin.js"></script>
@@ -72,16 +72,14 @@
 
 
 </head>
-<body>
+<body ng-controller="qwQueryController as qc">
   <div>
-    <div id="north_ui" class="ui-layout-north"
-      style="display: inline-block; white-space: nowrap">
-      <h2
-        style="margin-left: 0.5em; margin-top: 0.50em; margin-bottom: 0em; color: black">
-        <img style="vertical-align: middle"
-          src="/images/couchbase_small_2.0.2.png" /> Stand-Alone Query
-        Workbench {{ qc.version }}
-      </h2>
+    <div style="display: inline-block; white-space: nowrap">
+      <h3 style="margin-left: 0.5em; margin-top: 0.750em; margin-bottom: 0em; color: black;vertical-align: middle;">
+      <img style="vertical-align: middle; margin-right: 1em" width="140" height="32"
+          src="/images/logo.svg" />
+         Stand-Alone Query Workbench {{ qc.version }}
+      </h3> 
     </div>
 
     <br>
