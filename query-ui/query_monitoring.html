@@ -1,3 +1,81 @@
-<div>
-    <h1>Welcome to Query Monitoring</h1>
+<div id="query_ui" ng-controller="qwQueryMonitorController as qmc"
+  ng-show="qc.validated.valid()"
+  class="container ui-layout-center shadow_box">
+
+  <div id="result_header"
+    class="cbui-row cbui-header-oldgray cbui-rounded-top">
+    <span class="cbui-column25 cbui-left">
+      <h5 style="vertical-align: top; margin-top: 10px">updated {{qmc.updatedTime()}}</h5>
+      <ul class="tabs">
+        <li class="tab_middle" ng-class=""><a ng-click="qmc.toggle_update()">{{qmc.get_toggle_label()}}</a></li>
+      </ul>
+    </span> <span class="cbui-column25 cbui-right">
+      <ul class="tabs">
+        <li class="tab_left"><a ng-click="qmc.selectTab(1)"
+          ng-class="{selected: qmc.isSelected(1)}">Active</a></li>
+        <li class="tab_middle"><a ng-click="qmc.selectTab(2)"
+          ng-class="{selected: qmc.isSelected(2)}">Completed</a></li>
+        <li class="tab_right"><a ng-click="qmc.selectTab(3)"
+          ng-class="{selected: qmc.isSelected(3)}">Prepared</a></li>
+      </ul>
+    </span>
+  </div>
+
+  <div id="active_table" ng-if="qmc.isSelected(1)">
+  <table class="ajtd-root ajtd-table sortable">
+    <thead>
+        <th class=ajtd-column-header>Query</th>
+        <th class=ajtd-column-header>Duration</th>
+        <th class=ajtd-column-header>Result Count</th>
+        <th class=ajtd-column-header>State</th>
+    </thead>
+    <tbody>
+    <tr ng-repeat="result in qmc.monitoring.active_requests">
+    <td class="ajtd-cell">{{result.Statement}}</td>
+    <td class="ajtd-cell">{{result.ElapsedTime}}</td>
+    <td class="ajtd-cell">{{result.ResultCount}}</td>
+    <td class="ajtd-cell">{{result.State}}</td>
+    </tr>
+    </tbody>
+   </table>
+
+  </div>
+  
+  <div id="completed_table" ng-if="qmc.isSelected(2)">
+  <table class="ajtd-root ajtd-table sortable">
+    <thead>
+        <th class=ajtd-column-header>Query</th>
+        <th class=ajtd-column-header>Duration</th>
+        <th class=ajtd-column-header>Result Count</th>
+        <th class=ajtd-column-header>State</th>
+    </thead>
+    <tbody>
+    <tr ng-repeat="result in qmc.monitoring.completed_requests">
+    <td class="ajtd-cell">{{result.Statement}}</td>
+    <td class="ajtd-cell">{{result.ElapsedTime}}</td>
+    <td class="ajtd-cell">{{result.ResultCount}}</td>
+    <td class="ajtd-cell">{{result.State}}</td>
+    </tr>
+    </tbody>
+   </table>
+  </div>
+  
+  <div id="prepareds_table" ng-if="qmc.isSelected(3)">
+  <table class="ajtd-root ajtd-table sortable">
+    <thead>
+        <th class=ajtd-column-header>Query</th>
+        <th class=ajtd-column-header>Duration</th>
+        <th class=ajtd-column-header>Result Count</th>
+        <th class=ajtd-column-header>State</th>
+    </thead>
+    <tbody>
+    <tr ng-repeat="result in qmc.monitoring.prepareds">
+    <td class="ajtd-cell">{{result.Statement}}</td>
+    <td class="ajtd-cell">{{result.ElapsedTime}}</td>
+    <td class="ajtd-cell">{{result.ResultCount}}</td>
+    <td class="ajtd-cell">{{result.State}}</td>
+    </tr>
+    </tbody>
+   </table>
+  </div>
 </div>

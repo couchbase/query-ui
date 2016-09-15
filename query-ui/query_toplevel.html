@@ -19,7 +19,7 @@
       No query nodes were found on this cluster, so N1QL querying is not possible.
     </div>
   </div>
-  <!-- ul ng-if="qc.validated.valid()" class="second-level-nav">
+  <ul ng-if="qc.validated.valid()" class="second-level-nav">
     <li><a ui-sref="app.admin.query.workbench"
       ui-sref-active="selected">Workbench</a></li>
     <li>
@@ -27,6 +27,6 @@
         ui-sref="app.admin.query.monitoring"
         ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">Monitoring</a>
     </li>
-  </ul -->
+  </ul>
   <div ui-view=""></div>
 </div>

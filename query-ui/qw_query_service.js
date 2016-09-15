@@ -58,6 +58,30 @@
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     //qwQueryService.authenticateBuckets = authenticateBuckets; // check password
 
+    //
+    // keep track of active queries, complete requests, and prepared statements
+    //
+
+    var active_requests = [];
+    var completed_requests = [];
+    var prepareds = [];
+
+    var active_updated = "never"; // last update time
+    var completed_updated = "never"; // last update time
+    var prepareds_updated = "never"; // last update time
+
+    qwQueryService.monitoring = {
+        active_requests: active_requests,
+        completed_requests: completed_requests,
+        prepareds: prepareds,
+
+        active_updated: active_updated,
+        completed_updated: completed_updated,
+        prepareds_updated: prepareds_updated,
+    };
+
+    qwQueryService.updateQueryMonitoring = updateQueryMonitoring;
+
     // for the front-end, distinguish error status and good statuses
 
     qwQueryService.status_success = status_success;
@@ -162,7 +186,7 @@
 
     var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
-    // end of the array, since there's no history yet
+                                // end of the array, since there's no history yet
 
     //
     // where are we w.r.t. the query history?
@@ -488,7 +512,7 @@
     //
     // executeQuery
     //
-    
+
     var timeout = 600; // query timeout in seconds
 
     function executeQuery(queryText, userQuery) {
@@ -904,6 +928,79 @@
     // manage metadata, including buckets, fields, and field descriptions
     //
 
+    function updateQueryMonitoring(category) {
+
+      var query1 = "select active_requests.* from system:active_requests";
+      var query2 = "select completed_requests.* from system:completed_requests";
+      var query3 = "select prepareds.* from system:prepareds";
+      var payload = {statement: null};
+
+      switch (category) {
+      case 1: payload.statement = query1; break;
+      case 2: payload.statement = query2; break;
+      case 3: payload.statement = query3; break;
+      }
+
+      var result = [];
+
+      res1 = $http.post("/_p/query/query/service",payload)
+      .success(function(data, status, headers, config) {
+        if (data.status == "success") {
+          result = data.results;
+        }
+        else {
+          result = [data.errors];
+        }
+
+        switch (category) {
+        case 1:
+          qwQueryService.monitoring.active_requests = result;
+          qwQueryService.monitoring.active_updated = new Date();
+          break;
+        case 2:
+          qwQueryService.monitoring.completed_requests = result;
+          qwQueryService.monitoring.completed_updated = new Date();
+          break;
+        case 3:
+          qwQueryService.monitoring.prepareds = result;
+          qwQueryService.monitoring.prepareds_updated = new Date();
+          break;
+        }
+
+
+      })
+      .error(function(data, status, headers, config) {
+        var error = "Error with query monitoring";
+
+        if (data && data.errors)
+          error = error + ": " + JSON.stringify(data.errors);
+        else if (status)
+          error = error + ", query service returned status: " + status;
+
+        console.log("Got error: " + error);
+
+        switch (category) {
+        case 1:
+          qwQueryService.monitoring.active_requests = [{Statment: error}];
+          qwQueryService.monitoring.active_updated = new Date();
+          break;
+        case 2:
+          qwQueryService.monitoring.completed_requests = [{Statement: error}];
+          qwQueryService.monitoring.completed_updated = new Date();
+          break;
+        case 3:
+          qwQueryService.monitoring.prepareds = [{Statement: error}];
+          qwQueryService.monitoring.prepareds_updated = new Date();
+          break;
+        }
+
+      });
+    };
+
+    //
+    // manage metadata, including buckets, fields, and field descriptions
+    //
+
     function updateBuckets() {
       if (qwQueryService.gettingBuckets.busy)
         return;
@@ -997,8 +1094,8 @@
 //    function authenticateBucket(bucket_name, password, onSuccess, onError) {
 //      console.log("Authenticating buckets: " + JSON.stringify(bucket_names));
 //      console.log("Authenticating passwords: " + JSON.stringify(passwords));
-//      
-//      
+//
+//
 //      console.log("Sending request: " + JSON.stringify(currentQueryRequest));
 //      //$http.post("/authenticate",{bucket : bucket_names, password: passwords})
 //      $http(currentQueryRequest)
