@@ -557,8 +557,8 @@
 
       if (semicolonCount > 0) {
         newResult.status = "errors";
-        newResult.result = '{"error": "you cannot issue more than one query at once."}';
-        newResult.data = {error: "Error, you cannot issue more than one query at once."};
+        newResult.data = {error: "Error, you cannot issue more than one query at once. Please remove all text after the semicolon closing the first query."};
+        newResult.result = JSON.stringify(newResult.data);
         lastResult.copyIn(newResult);
         saveStateToStorage(); // save current history
         return null;
