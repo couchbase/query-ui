@@ -1426,7 +1426,7 @@
     //
 
     function fixLongInts(rawBytes) {
-      var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*)[,\s}]/ig;
+      var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*)[,\s}]/ig;
       var longIntCount = 0;
       var matchArray = matchNonQuotedLongInts.exec(rawBytes);
       while (matchArray != null) {
@@ -1435,7 +1435,7 @@
         matchArray = matchNonQuotedLongInts.exec(rawBytes);
       }
 
-//      console.log("Got response, longIntcount: " + longIntCount /*+ ", raw bytes: " + rawBytes*/);
+      //console.log("Got response, longIntcount: " + longIntCount + ", raw bytes: " + rawBytes);
 
       // if no long ints, just return the original bytes parsed
 
@@ -1466,9 +1466,9 @@
           matchArray = matchNonQuotedLongInts.exec(curBytes);
         }
         newBytes += curBytes;
+        //console.log("New raw: " + newBytes);
         result = JSON.parse(newBytes);
         result.rawJSON = rawBytes;
-        //console.log("New raw: " + newBytes);
 
       }
       return result;
