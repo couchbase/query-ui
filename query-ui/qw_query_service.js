@@ -1047,6 +1047,7 @@
         }
         refreshAutoCompleteArray();
 
+
         //
         // get the passwords from the REST API (how gross!)
         //
@@ -1094,6 +1095,7 @@
             qwQueryService.indexes = data.results;
             // make sure each bucket knows about each relevant index
             for (var i=0; i < data.results.length; i++) {
+              addToken(data.results[i].name,'index');
               for (var b=0; b < qwQueryService.buckets.length; b++)
                 if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
                   qwQueryService.buckets[b].indexes.push(data.results[i]);
@@ -1102,6 +1104,7 @@
             }
           }
 
+          refreshAutoCompleteArray();
           qwQueryService.gettingBuckets.busy = false;
         })
 
