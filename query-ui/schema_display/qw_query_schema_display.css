@@ -21,3 +21,13 @@
   color: #839B00;
   font-weight: bold;
 }
+
+.index {
+  color: #43108c;
+  font-style: normal;
+  font-size: small;
+  white-space: nowrap;
+  margin-left: 1em;
+  cursor: default;
+}
+

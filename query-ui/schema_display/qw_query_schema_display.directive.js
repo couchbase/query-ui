@@ -134,7 +134,12 @@
 
         '      <schema-display ng-hide="flavor.Summary" schema="flavor" path=""></schema-display>' +
 
-
+        '      <li class="index" ng-show="bucket.indexes.length > 0">Indexes: <ul class="bucket">' +
+        '        <li class="index" ng-repeat="index in bucket.indexes">' +
+        '        \'{{index.name}}\' <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
+        '         <span ng-if="index.condition"> where {{index.condition}}</span>' +
+        '        </li>' +
+        '      </ul></li>' +
         '  </ul>'
         ,
         link: function (scope) {
@@ -156,7 +161,7 @@
                 if (bucket.passwordNeeded && !bucket.validated) {
 
                   // open the dialog to ask for a password
-                  
+
                   var promise = $uibModal.open({
                     templateUrl: '/_p/ui/query/password_dialog/qw_query_password_dialog.html',
                     scope: scope
@@ -170,7 +175,7 @@
                     .success(function(data, status, headers, config) {
                       //console.log("Got authentication success!");
                       bucket.validated = true;
-                      bucket.expanded = true;                      
+                      bucket.expanded = true;
                     })
                     .error(function(data, status, headers, config) {
                       bucket.validated = false;

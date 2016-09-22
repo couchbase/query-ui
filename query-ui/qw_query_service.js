@@ -53,7 +53,9 @@
     // update store the metadata about buckets
 
     qwQueryService.buckets = [];
+    qwQueryService.indexes = [];
     qwQueryService.gettingBuckets = {busy: false};
+    //qwQueryService.gettingSchemas = {busy: false};
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     //qwQueryService.authenticateBuckets = authenticateBuckets; // check password
@@ -1037,6 +1039,7 @@
           bucket.schema = [];
           bucket_names.push(bucket.id);
           bucket.passwordNeeded = true;
+          bucket.indexes = [];
           passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id);
           qwQueryService.buckets.push(bucket);
@@ -1070,8 +1073,52 @@
 
         });
 
+        // in background, go get the schemas for each bucket
 
-        qwQueryService.gettingBuckets.busy = false;
+        $timeout(function() {
+          getSchemaForBucketBackground(qwQueryService.buckets,0);
+        },50);
+
+        /////////////////////////////////////////////////////////////////////////
+        // now run a query to get the list of indexes
+        /////////////////////////////////////////////////////////////////////////
+
+        queryText = "select indexes.* from system:indexes";
+
+        res1 = $http.post("/_p/query/query/service",{statement : queryText})
+        .success(function(data, status, headers, config) {
+
+          //console.log("Got index info: " + JSON.stringify(data));
+
+          if (data && _.isArray(data.results)) {
+            qwQueryService.indexes = data.results;
+            // make sure each bucket knows about each relevant index
+            for (var i=0; i < data.results.length; i++) {
+              for (var b=0; b < qwQueryService.buckets.length; b++)
+                if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
+                  qwQueryService.buckets[b].indexes.push(data.results[i]);
+                  break;
+                }
+            }
+          }
+
+          qwQueryService.gettingBuckets.busy = false;
+        })
+
+        // error status from query about indexes
+        .error(function(data, status, headers, config) {
+          var error = "Error retrieving list of indexes";
+
+          if (data && data.errors)
+            error = error + ": " + data.errors;
+          else if (status)
+            error = error + ", contacting query service returned status: " + status;
+
+          console.log(error);
+
+          qwQueryService.gettingBuckets.busy = false;
+        });
+
       })
       .error(function(data, status, headers, config) {
         var error = "Error retrieving list of buckets";
@@ -1082,14 +1129,35 @@
           error = error + ", contacting query service returned status: " + status;
 
         qwQueryService.buckets.push({id: error, schema: []});
+
         qwQueryService.gettingBuckets.busy = false;
       });
 
-    };
+
+    }
 
     //
+    // this method uses promises and recursion to get the schemas for a list of
+    // buckets in sequential order, waiting for each one before moving on to the next.
     //
-    //
+
+    function getSchemaForBucketBackground(bucketList,currentIndex) {
+      if (currentIndex < 0 || currentIndex >= bucketList.length)
+        return(null);
+      else {
+        //console.log("BG getting schema for: " + bucketList[currentIndex].id);
+
+        var res = getSchemaForBucket(bucketList[currentIndex]);
+        if (res && res.then)
+          res.then(function successCallback(response) {
+            getSchemaForBucketBackground(bucketList,currentIndex+1);
+          }, function errorCallback(response) {
+            getSchemaForBucketBackground(bucketList,currentIndex+1);
+          });
+      }
+    }
+
+
 
 //    function authenticateBucket(bucket_name, password, onSuccess, onError) {
 //      console.log("Authenticating buckets: " + JSON.stringify(bucket_names));
@@ -1110,10 +1178,10 @@
 
     function getSchemaForBucket(bucket) {
 
-      if (qwQueryService.gettingBuckets.busy)
-        return("Server Busy");
-
-      qwQueryService.gettingBuckets.busy = true;
+//      if (qwQueryService.gettingSchemas.busy)
+//        return("Server Busy");
+//
+//      qwQueryService.gettingSchemas.busy = true;
 
       var inferQueryData = {statement: "infer `" + bucket.id + "`;"};
       var credArray = [];
@@ -1131,21 +1199,21 @@
           }
       };
 
-      //console.log("Getting schema: " + JSON.stringify(inferQueryRequest));
+      //console.log("Getting schema for : " + bucket.id);
 
       return $http(inferQueryRequest)
-      .success(function(data, status, headers, config) {
-        //console.log("Done!");
+      .then(function successCallback(response) {
+        //console.log("Done with schema for: " + bucket.id);
         bucket.schema.length = 0;
         //console.log("Schema status: " + status);
-        //console.log("Schema results: " + JSON.stringify(data.results));
-        if (data.errors && data.errors[0] && data.errors[0].msg)
-          bucket.schema_error = data.errors[0].msg;
-        else if (_.isString(data.results))
-          bucket.schema_error = data.results;
+        //console.log("Schema results: " + JSON.stringify(response.daa.results));
+        if (response.data.errors && response.data.errors[0] && response.data.errors[0].msg)
+          bucket.schema_error = response.data.errors[0].msg;
+        else if (_.isString(response.data.results))
+          bucket.schema_error = response.data.results;
         else {
-          //console.log("Got schema: " + JSON.stringify(data.results));
-          bucket.schema = data.results[0];
+          //console.log("Got schema: " + JSON.stringify(response.data.results));
+          bucket.schema = response.data.results[0];
 
           var totalDocCount = 0;
           for (var i=0; i<bucket.schema.length; i++)
@@ -1190,16 +1258,15 @@
               hasFields: true});
         }
 
-        qwQueryService.gettingBuckets.busy = false;
-      })
-      .error(function(data, status, headers, config) {
+        //qwQueryService.gettingSchemas.busy = false;
+      }, function errorCallback(response) {
         var error = "Error getting schema for bucket: " + bucket.id;
-        if (data.errors)
-          error += ", " + JSON.stringify(data.errors,null,'  ');
+        if (response.data.errors)
+          error += ", " + JSON.stringify(response.data.errors,null,'  ');
         else
-          error += ", " + status;
+          error += ", " + response.status;
         console.log("   error: " + error);
-        qwQueryService.gettingBuckets.busy = false;
+        //qwQueryService.gettingSchemas.busy = false;
       });
 
     };
