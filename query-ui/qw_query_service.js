@@ -1078,7 +1078,7 @@
 
         $timeout(function() {
           getSchemaForBucketBackground(qwQueryService.buckets,0);
-        },50);
+        },250);
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes

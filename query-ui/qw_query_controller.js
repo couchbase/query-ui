@@ -77,6 +77,8 @@
     qc.save = save;
     qc.save_query = save_query;
 
+    qc.load_query = load_query;
+
     //
     // options for the two Ace editors, the input and the output
     //
@@ -328,8 +330,61 @@
       }
 
       focusOnInput();
+
+      //
+      // make the query editor "catch" drag and drop files
+      //
+
+      $("#query_editor")[0].addEventListener('dragover',handleDragOver,false);
+      $("#query_editor")[0].addEventListener('drop',handleFileDrop,false);
+      $("#loadQuery")[0].addEventListener('change',handleFileSelect,false);
     };
 
+    //
+    // We want to be able to handle a file drop on the query editor. Default behavior
+    // is to change the browser to a view of that file, so we need to override that
+    //
+
+    function handleDragOver(evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'copy';
+    }
+
+    //
+    // When they drop the file, take the contents and put in the
+    //
+    function handleFileSelect() {
+      loadQueryFileList(this.files);
+    }
+
+
+    function handleFileDrop(evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+
+      var files = evt.dataTransfer.files; // FileList object.
+      loadQueryFileList(files);
+    }
+
+    function loadQueryFileList(files) {
+      // files is a FileList of File objects. load the first one into the editor, if any.
+      if (files.length >= 1) {
+        var reader = new FileReader();
+        reader.addEventListener("loadend",function() {qc.inputEditor.getSession().setValue(reader.result);});
+        reader.readAsText(files[0]);
+      }
+    }
+
+    // when they click the Load Query button
+
+    function load_query() {
+      $("#loadQuery")[0].click();
+    }
+
+    //
+    // Initialize the output ACE editor
+    //
 
     function aceOutputLoaded(_editor) {
       //console.log("AceOutputLoaded");
