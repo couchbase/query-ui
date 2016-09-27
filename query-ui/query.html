@@ -24,12 +24,11 @@
           ng-disabled="qc.executingQuery.busy"
           class="btn_1 cbui-rightmargin"> <span>Clear History</span>
         </a -->
-        </span> 
+        </span>
         <span class="cbui-column25 cbui-right">
           <input type="file" id="loadQuery" name="files" style="display:none"/>
-          <a id="loadQueryButton" ng-click="qc.load_query()" class="btn_1" onchange="console.log("changed files")"> 
+          <a ng-if="qc.fileSupport" id="loadQueryButton" ng-click="qc.load_query()" class="btn_1" onchange="console.log("changed files")"> 
             <span>Load Query</span></a>
-          </input>
           <a ng-click="qc.save_query()" class="btn_1"> <span>Save Query</span></a>
         </span>
       </div>

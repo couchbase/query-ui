@@ -133,6 +133,13 @@
     qc.getBigDataMessage = getBigDataMessage;
 
     qc.renderPage = function() {updateEditorSizes();};
+
+    //
+    // does the browser support file choosing?
+    //
+
+    qc.fileSupport = (window.File && window.FileReader && window.FileList && window.Blob);
+
     //
     // call the activate method for initialization
     //
