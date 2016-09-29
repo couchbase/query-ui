@@ -8,6 +8,7 @@
   function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope) {
 
     var qc = this;
+    //console.log("Start controller at: " + new Date().toTimeString());
 
     //
     // current UI version number
@@ -723,7 +724,7 @@
       });
 
       // get the list of buckets
-      qc.updateBuckets();
+      //qc.updateBuckets();
 
       //$( "#resizable-2" ).resizable({
       //  animate: true
@@ -736,6 +737,7 @@
 
       $timeout(updateEditorSizes(),100);
     }
+
   }
 
 

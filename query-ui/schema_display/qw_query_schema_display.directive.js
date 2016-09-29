@@ -172,12 +172,11 @@
                     bucket.password = bucket.tempPassword;
                     qwQueryService.getSchemaForBucket(bucket)
 
-                    .success(function(data, status, headers, config) {
+                    .then(function success(data, status, headers, config) {
                       //console.log("Got authentication success!");
                       bucket.validated = true;
                       bucket.expanded = true;
-                    })
-                    .error(function(data, status, headers, config) {
+                    },function error(data, status, headers, config) {
                       bucket.validated = false;
                       bucket.password = null;
                       //console.log("Error authenticating: ");

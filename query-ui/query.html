@@ -140,7 +140,8 @@
                       Status: {{qc.lastResult.status}}</td>
                     <td>Elapsed: {{qc.lastResult.elapsedTime}}</td>
                     <td>Execution: {{qc.lastResult.executionTime}}</td>
-                    <td>Result Count: {{qc.lastResult.resultCount}}</td>
+                    <td ng-if="qc.lastResult.mutationCount">Mutation Count: {{qc.lastResult.mutationCount}}</td>
+                    <td ng-if="!qc.lastResult.mutationCount">Result Count: {{qc.lastResult.resultCount}}</td>
                     <td>Result Size: {{qc.lastResult.resultSize}}</td>
                   </tr>
                 </thead>

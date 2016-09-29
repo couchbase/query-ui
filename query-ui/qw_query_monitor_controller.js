@@ -17,9 +17,8 @@
 
     // should we show active, completed, or prepared queries?
 
-    qc.selectTab = selectTab;
-    qc.selected = 0;
-    qc.isSelected = function(tab) {return(tab == qc.selected);};
+    qc.selectTab = qwQueryService.selectMonitoringTab;
+    qc.isSelected = qwQueryService.isMonitoringSelected;
 
     //
     // keep track of results from the server
@@ -28,7 +27,6 @@
     qc.monitoring = qwQueryService.monitoring;
 
     qc.updatedTime = updatedTime;
-    qc.auto_update = true;
     qc.toggle_update = toggle_update;
     qc.get_toggle_label = get_toggle_label;
 
@@ -38,7 +36,7 @@
 
     function updatedTime() {
       var result;
-      switch (qc.selected) {
+      switch (qwQueryService.monitoringTab) {
       case 1: result = qc.monitoring.active_updated; break
       case 2: result = qc.monitoring.completed_updated; break;
       case 3: result = qc.monitoring.prepareds_updated; break;
@@ -51,21 +49,6 @@
     }
 
     //
-    // change the tab selection
-    //
-
-    function selectTab(tabNum) {
-      if (qc.isSelected(tabNum))
-        return; // avoid noop
-
-      qwQueryService.updateQueryMonitoring(tabNum);
-
-      //console.log("After select active len: " + qc.monitoring.active_requests.length);
-      qc.selected = tabNum;
-    };
-
-
-    //
     // call the activate method for initialization
     //
 
@@ -76,12 +59,18 @@
     //
 
     function activate() {
-      // initialize the monitoring data
-      qwQueryService.updateQueryMonitoring(1);
-      qwQueryService.updateQueryMonitoring(2);
-      qwQueryService.updateQueryMonitoring(3);
-      selectTab(1);
-      update();
+      // if we haven't been here before, initialize the monitoring data
+      if (qwQueryService.monitoringTab == 0) {
+        qc.selectTab(1); // default is 1st tab
+        update();     // start updating
+        qwQueryService.updateQueryMonitoring(2); // but also get data for other two tabs
+        qwQueryService.updateQueryMonitoring(3);
+      }
+
+      // if we have been here before, start auto-updating if necessary
+
+      else if (qwQueryService.monitoringAutoUpdate)
+        update();
 
       // Prevent the backspace key from navigating back. Thanks StackOverflow!
       $(document).unbind('keydown').bind('keydown', function (event) {
@@ -114,19 +103,19 @@
     }
 
     function toggle_update() {
-      if (qc.auto_update) {
+      if (qwQueryService.monitoringAutoUpdate) {
         if (qc.timer) // stop any timers
           $timeout.cancel(qc.timer);
-        qc.auto_update = false;
+        qwQueryService.monitoringAutoUpdate = false;
       }
       else {
-        qc.auto_update = true;
+        qwQueryService.monitoringAutoUpdate = true;
         update();
       }
     }
 
     function get_toggle_label() {
-      if (qc.auto_update)
+      if (qwQueryService.monitoringAutoUpdate)
         return("pause");
       else
         return("refresh");
@@ -139,20 +128,19 @@
 
     function update() {
       // update the currently selected tab
-      qwQueryService.updateQueryMonitoring(qc.selected);
+      qwQueryService.updateQueryMonitoring(qwQueryService.monitoringTab);
 
       // do it again in 5 seconds
-      if (!qc.stop_updating) qc.timer = $timeout(function(){
-        update();
-      },5000);
+      if (!qc.stop_updating && qwQueryService.monitoringAutoUpdate)
+        qc.timer = $timeout(function(){update();},5000);
 
     }
 
     // when the controller is destroyed, stop the updates
     $scope.$on('$destroy',function(){
+      qc.stop_updating = true;
       if (qc.timer)
          $timeout.cancel(qc.timer);
-      qc.stop_updating = true;
     });
 
     //

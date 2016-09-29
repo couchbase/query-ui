@@ -12,10 +12,15 @@
     // remember which tab is selected for output style: JSON, table, or tree
     //
 
+    qwQueryService.outputTab = 1;     // remember selected output tab
     qwQueryService.selectTab = function(newTab) {qwQueryService.outputTab = newTab;};
     qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
 
-    qwQueryService.outputTab = 1;     // remember selected output tab
+
+    qwQueryService.monitoringTab = 0;
+    qwQueryService.monitoringAutoUpdate = true;
+    qwQueryService.selectMonitoringTab = function(newTab) {qwQueryService.monitoringTab = newTab;};
+    qwQueryService.isMonitoringSelected = function(checkTab) {return qwQueryService.monitoringTab === checkTab;};
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -102,9 +107,10 @@
     //
 
     function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult) {
+        data,query,requestID,explainResult,mutationCount) {
       this.status = status;
       this.resultCount = resultCount;
+      this.resultCount = mutationCount;
       this.resultSize = resultSize;
       this.result = result;
       this.data = data;
@@ -142,7 +148,7 @@
     QueryResult.prototype.clone = function()
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
-          this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult);
+          this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,this.mutationCount);
     };
     QueryResult.prototype.copyIn = function(other)
     {
@@ -150,6 +156,7 @@
       this.elapsedTime = truncateTime(other.elapsedTime);
       this.executionTime = truncateTime(other.executionTime);
       this.resultCount = other.resultCount;
+      this.mutationCount = other.mutationCount;
       this.resultSize = other.resultSize;
       this.result = other.result;
       this.data = other.data;
@@ -512,6 +519,86 @@
     }
 
     //
+    // we run queries many places, the following function calls $http to run
+    // the query, and returns the promise so the caller can handle success/failure callbacks.
+    // queryText - the query to run
+    // is_user_query - with user queries, we need to
+    //   1) set a client_context_id to allow the query to be cancelled
+    //   2) transform responses to handle ints > 53 bits long?
+    //   3) set qwQueryService.currentQueryRequestID and qwQueryRequest.currentQueryRequest
+    //
+
+    function executeQueryUtil(queryText, is_user_query) {
+
+      //console.log("Running query: " + queryText);
+      //
+      // create a data structure for holding the query, and the credentials for any SASL
+      // protected buckets
+      //
+
+      var queryData = {statement: queryText};
+      var credArray = [];
+
+      for (var i = 0; i < qwQueryService.buckets.length; i++) {
+        var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
+        credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
+      }
+
+      queryData.creds = credArray;
+
+      // if the user might want to cancel it, give it an ID
+
+      if (is_user_query) {
+        qwQueryService.currentQueryRequestID = UUID.generate();
+        queryData.client_context_id = qwQueryService.currentQueryRequestID;
+      }
+
+      // Because Angular automatically urlencodes JSON parameters, but has a special
+      // algorithm that doesn't encode semicolons, any semicolons inside the query
+      // will get mis-parsed by the server as the end of the parameter (see MB-18621
+      // for an example). To bypass this, we will url-encode ahead of time, and then
+      // make sure the semicolons get urlencoded as well.
+
+//      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+//      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+//          method: "POST",
+//          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+//          data: encodedQuery,
+//          mnHttp: {
+//            group: "global"
+//          }
+//      };
+
+      // An alternate way to get around Angular's encoding is "isNotForm: true". But
+      // that triggers bug MB-16964, where the server currently fails to parse creds
+      // when they are JSON encoded.
+      // MB-16964 is now fixed, so we'll send queries this way and avoid URL encoding
+
+      var queryRequest = {
+          url: "/_p/query/query/service",
+          method: "POST",
+          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+          data: queryData,
+          mnHttp: {
+            isNotForm: true,
+            group: "global"
+          }
+      };
+
+      if (is_user_query) {
+        queryRequest.transformResponse = fixLongInts;
+        qwQueryService.currentQueryRequest = queryRequest;
+      }
+
+      //
+      // send the query off via REST API
+      //
+
+      return($http(queryRequest));
+    }
+
+
+    //
     // executeQuery
     //
 
@@ -623,40 +710,41 @@
       // when they are JSON encoded.
       // MB-16964 is now fixed, so we'll send queries this way and avoid URL encoding
 
-      qwQueryService.currentQueryRequest = {
-          url: "/_p/query/query/service",
-          method: "POST",
-          transformResponse: fixLongInts,
-          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-          data: queryData,
-          mnHttp: {
-            isNotForm: true,
-            group: "global"
-          }
-      };
+//      qwQueryService.currentQueryRequest = {
+//          url: "/_p/query/query/service",
+//          method: "POST",
+//          transformResponse: fixLongInts,
+//          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+//          data: queryData,
+//          mnHttp: {
+//            isNotForm: true,
+//            group: "global"
+//          }
+//      };
 
       // if the query is not already an explain, run a version with explain to get the query plan
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
 
       if (! queryIsExplain) {
-        var explainQueryData = {statement: "explain " + queryText};
-        explainQueryData.creds = queryData.creds;
-
-        var explainQueryRequest = {
-            url: "/_p/query/query/service",
-            method: "POST",
-            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-            data: explainQueryData,
-            mnHttp: {
-              isNotForm: true,
-              group: "global"
-            }
-        };
+//        var explainQueryData = {statement: "explain " + queryText};
+//        explainQueryData.creds = queryData.creds;
+//
+//        var explainQueryRequest = {
+//            url: "/_p/query/query/service",
+//            method: "POST",
+//            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+//            data: explainQueryData,
+//            mnHttp: {
+//              isNotForm: true,
+//              group: "global"
+//            }
+//        };
 
         newResult.explainDone = false;
 
-        $http(explainQueryRequest)
+        executeQueryUtil("explain " + queryText, false)
+        //$http(explainQueryRequest)
         .success(function(data, status, headers, config) {
           if (data && data.status == "success") {
             var lists = analyzePlan(data.results[0].plan,null);
@@ -695,7 +783,7 @@
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone) {
-            // when we have errors, don't show theh plan tabs
+            // when we have errors, don't show the plan tabs
             if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
               qwQueryService.selectTab(1);
             finishQuery();
@@ -719,8 +807,8 @@
 
       newResult.queryDone = false;
 
-      var promise = $http(qwQueryService.currentQueryRequest)
-
+      //var promise = $http(qwQueryService.currentQueryRequest)
+      var promise = executeQueryUtil(queryText, true)
       // SUCCESS!
       .success(function(data, status, headers, config) {
       //console.log("Success Data: " + JSON.stringify(data));
@@ -766,6 +854,8 @@
         newResult.elapsedTime = data.metrics.elapsedTime;
         newResult.executionTime = data.metrics.executionTime;
         newResult.resultCount = data.metrics.resultCount;
+        if (data.metrics.mutationCount)
+          newResult.mutationCount = data.metrics.mutationCount;
         newResult.resultSize = data.metrics.resultSize;
         if (data.rawJSON)
           newResult.result = data.rawJSON;
@@ -893,6 +983,8 @@
           newResult.elapsedTime = data.metrics.elapsedTime;
           newResult.executionTime = data.metrics.executionTime;
           newResult.resultCount = data.metrics.resultCount;
+          if (data.metrics.mutationCount)
+            newResult.mutationCount = data.metrics.mutationCount;
           newResult.resultSize = data.metrics.resultSize;
         }
 
@@ -935,20 +1027,33 @@
       var query1 = "select active_requests.* from system:active_requests";
       var query2 = "select completed_requests.* from system:completed_requests";
       var query3 = "select prepareds.* from system:prepareds";
-      var payload = {statement: null};
+      var query = "foo";
 
       switch (category) {
-      case 1: payload.statement = query1; break;
-      case 2: payload.statement = query2; break;
-      case 3: payload.statement = query3; break;
+      case 1: query = query1; break;
+      case 2: query = query2; break;
+      case 3: query = query3; break;
+      default: return;
       }
 
       var result = [];
 
-      res1 = $http.post("/_p/query/query/service",payload)
-      .success(function(data, status, headers, config) {
+      //console.log("Got query: " + query);
+
+//      var config = {headers: {'Content-Type':'application/json','ns-server-proxy-timeout':20000}};
+     // console.log("Running monitoring cat: " + category + ", query: " + payload.statement);
+
+      return(executeQueryUtil(query, false))
+//      return $http.post("/_p/query/query/service",payload, config)
+      .then(function success(response) {
+        var data = response.data;
+        var status = response.status;
+        var headers = response.headers;
+        var config = response.config;
+
         if (data.status == "success") {
           result = data.results;
+          //console.log(" monitor success: " + JSON.stringify(result));
         }
         else {
           result = [data.errors];
@@ -970,8 +1075,17 @@
         }
 
 
-      })
-      .error(function(data, status, headers, config) {
+      },
+      function error(response) {
+        var data = response.data;
+        var status = response.status;
+        var headers = response.headers;
+        var config = response.config;
+
+        console.log("Mon Error Data: " + JSON.stringify(data));
+        console.log("Mon Error Status: " + JSON.stringify(status));
+        console.log("Mon Error Headers: " + JSON.stringify(headers));
+        console.log("Mon Error Config: " + JSON.stringify(config));
         var error = "Error with query monitoring";
 
         if (data && data.errors)
@@ -1027,7 +1141,8 @@
         "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
         "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
-      res1 = $http.post("/_p/query/query/service",{statement : queryText})
+      res1 = executeQueryUtil(queryText, false)
+      //res1 = $http.post("/_p/query/query/service",{statement : queryText}, config)
       .success(function(data, status, headers, config) {
 
         var bucket_names = [];
@@ -1072,13 +1187,11 @@
               });
           });
 
+          // now that we have passwords, go get the schemas for each bucket
+
+          getSchemaForBucketBackground(qwQueryService.buckets,0);
         });
 
-        // in background, go get the schemas for each bucket
-
-        $timeout(function() {
-          getSchemaForBucketBackground(qwQueryService.buckets,0);
-        },250);
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes
@@ -1086,41 +1199,50 @@
 
         queryText = "select indexes.* from system:indexes";
 
-        res1 = $http.post("/_p/query/query/service",{statement : queryText})
-        .success(function(data, status, headers, config) {
+        res1 = executeQueryUtil(queryText, false)
+        //res1 = $http.post("/_p/query/query/service",{statement : queryText})
+        .success(function (data,status,headers,config) {
 
-          //console.log("Got index info: " + JSON.stringify(data));
+              //console.log("Got index info: " + JSON.stringify(data));
 
-          if (data && _.isArray(data.results)) {
-            qwQueryService.indexes = data.results;
-            // make sure each bucket knows about each relevant index
-            for (var i=0; i < data.results.length; i++) {
-              addToken(data.results[i].name,'index');
-              for (var b=0; b < qwQueryService.buckets.length; b++)
-                if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
-                  qwQueryService.buckets[b].indexes.push(data.results[i]);
-                  break;
+              if (data && _.isArray(data.results)) {
+                qwQueryService.indexes = data.results;
+                // make sure each bucket knows about each relevant index
+                for (var i=0; i < data.results.length; i++) {
+                  addToken(data.results[i].name,'index');
+                  for (var b=0; b < qwQueryService.buckets.length; b++)
+                    if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
+                      qwQueryService.buckets[b].indexes.push(data.results[i]);
+                      break;
+                    }
                 }
+              }
+
+              refreshAutoCompleteArray();
+              qwQueryService.gettingBuckets.busy = false;
+            })
+
+            // error status from query about indexes
+            .error(function (data,status,headers,config) {
+              console.log("Ind Error Data: " + JSON.stringify(data));
+              console.log("Ind Error Status: " + JSON.stringify(status));
+              console.log("Ind Error Headers: " + JSON.stringify(headers));
+              //console.log("Ind Error statusText: " + JSON.stringify(statusText));
+
+              var error = "Error retrieving list of indexes";
+
+              if (data && data.errors)
+                error = error + ": " + data.errors;
+              if (status)
+                error = error + ", contacting query service returned status: " + status;
+              if (response.statusText)
+                error = error + ", " + response.statusText;
+
+              console.log(error);
+
+              qwQueryService.gettingBuckets.busy = false;
             }
-          }
-
-          refreshAutoCompleteArray();
-          qwQueryService.gettingBuckets.busy = false;
-        })
-
-        // error status from query about indexes
-        .error(function(data, status, headers, config) {
-          var error = "Error retrieving list of indexes";
-
-          if (data && data.errors)
-            error = error + ": " + data.errors;
-          else if (status)
-            error = error + ", contacting query service returned status: " + status;
-
-          console.log(error);
-
-          qwQueryService.gettingBuckets.busy = false;
-        });
+            );
 
       })
       .error(function(data, status, headers, config) {
@@ -1148,8 +1270,6 @@
       if (currentIndex < 0 || currentIndex >= bucketList.length)
         return(null);
       else {
-        //console.log("BG getting schema for: " + bucketList[currentIndex].id);
-
         var res = getSchemaForBucket(bucketList[currentIndex]);
         if (res && res.then)
           res.then(function successCallback(response) {
@@ -1186,25 +1306,26 @@
 //
 //      qwQueryService.gettingSchemas.busy = true;
 
-      var inferQueryData = {statement: "infer `" + bucket.id + "`;"};
-      var credArray = [];
-      credArray.push({user:"local:"+bucket.id,pass: bucket.password });
-      inferQueryData.creds = credArray;
-
-      var inferQueryRequest = {
-          url: "/_p/query/query/service",
-          method: "POST",
-          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-          data: inferQueryData,
-          mnHttp: {
-            isNotForm: true,
-            group: "global"
-          }
-      };
+//      var inferQueryData = {statement: "infer `" + bucket.id + "`;"};
+//      var credArray = [];
+//      credArray.push({user:"local:"+bucket.id,pass: bucket.password });
+//      inferQueryData.creds = credArray;
+//
+//      var inferQueryRequest = {
+//          url: "/_p/query/query/service",
+//          method: "POST",
+//          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+//          data: inferQueryData,
+//          mnHttp: {
+//            isNotForm: true,
+//            group: "global"
+//          }
+//      };
 
       //console.log("Getting schema for : " + bucket.id);
 
-      return $http(inferQueryRequest)
+      //return $http(inferQueryRequest)
+      return executeQueryUtil("infer `" + bucket.id + "`;", false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
         bucket.schema.length = 0;
@@ -1264,10 +1385,14 @@
         //qwQueryService.gettingSchemas.busy = false;
       }, function errorCallback(response) {
         var error = "Error getting schema for bucket: " + bucket.id;
-        if (response.data.errors)
-          error += ", " + JSON.stringify(response.data.errors,null,'  ');
-        else
-          error += ", " + response.status;
+        if (response)
+          if (response.data && response.data.errors)
+            error += ", " + JSON.stringify(response.data.errors,null,'  ');
+          else if (response.status)
+            error += ", " + response.status;
+          else
+            error += JSON.stringify(response);
+
         console.log("   error: " + error);
         //qwQueryService.gettingSchemas.busy = false;
       });
@@ -1551,6 +1676,12 @@
     //
 
     loadStateFromStorage();
+
+    //
+    // when we are initialized, get the list of buckets
+    //
+
+    updateBuckets();
 
     //
     // all done creating the service, now return it
