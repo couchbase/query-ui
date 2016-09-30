@@ -487,25 +487,30 @@
     //
 
     function cancelQuery() {
+      //console.log("Cancelling query, currentQuery: " + qwQueryService.currentQueryRequest);
       if (qwQueryService.currentQueryRequest != null) {
         var queryInFly = mnPendingQueryKeeper.getQueryInFly(qwQueryService.currentQueryRequest);
         queryInFly && queryInFly.canceler("test");
 
+        //console.log("  queryInFly: " + queryInFly);
         //
         // also submit a new query to delete the running query on the server
         //
 
-        var query = 'delete from system:active_requests where ClientContextID = "' +
-        qwQueryService.currentQueryRequestID + '";';
-        var queryData = {statement: query , client_context_id: UUID.generate()};
+        var query = 'delete from system:active_requests where clientContextID = "' +
+          qwQueryService.currentQueryRequestID + '";';
 
-        var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-        qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-            method: "POST",
-            headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':300*1000},
-            data: encodedQuery
-        };
-        var promise = $http(qwQueryService.currentQueryRequest)
+//        var queryData = {statement: query , client_context_id: UUID.generate()};
+//
+//        var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+//        qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
+//            method: "POST",
+//            headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':300*1000},
+//            data: encodedQuery
+//        };
+//        var promise = $http(qwQueryService.currentQueryRequest)
+
+        executeQueryUtil(query,false)
 
         // sanity check - if there was an error put a message in the console.
         .error(function(data, status, headers, config) {
@@ -1621,6 +1626,9 @@
     //
 
     function fixLongInts(rawBytes) {
+      if (!rawBytes)
+        return rawBytes;
+
       var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*)[,\s}]/ig;
       var longIntCount = 0;
       var matchArray = matchNonQuotedLongInts.exec(rawBytes);
@@ -1667,8 +1675,6 @@
 
       }
       return result;
-
-        return result;
     }
 
     //
