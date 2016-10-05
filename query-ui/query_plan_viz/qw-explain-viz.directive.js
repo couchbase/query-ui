@@ -287,19 +287,19 @@
       array[curX][curY].union = true;
       array[curX][curY].unionText = true;
       var childX = curX;
-      console.log("Starting union at: " + curX + "," + curY + ", pred len: " + plan.predecessor.length);
+      //console.log("Starting union at: " + curX + "," + curY + ", pred len: " + plan.predecessor.length);
       //var prevChildX = curX;
 
       // iterate over the children we are unioning
       for (var i = 0; i < plan.predecessor.length; i++) {
-        console.log("  Got childX: " + childX + ", and branch count: " + plan.predecessor[i].BranchCount());
+        //console.log("  Got childX: " + childX + ", and branch count: " + plan.predecessor[i].BranchCount());
         // add the child to the array
         putPlanInArray(array,plan.predecessor[i],childX,curY+ourDepth);
 
         // if there are any gaps between this child and the next, fill in with union line
         if (i < plan.predecessor.length - 1)
           for (var c = childX + 1; c < childX + plan.predecessor[i].BranchCount(); c++) {
-            console.log('   setting union for: ' + c + "," + curY);
+            //console.log('   setting union for: ' + c + "," + curY);
             array[c][curY] = {union: true, operator: ""};
           }
 
