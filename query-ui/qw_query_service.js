@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', '$httpParamSerializer'];
+  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer'];
 
-  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, $httpParamSerializer) {
+  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer) {
 
     var qwQueryService = {};
 
@@ -582,7 +582,7 @@
       var queryRequest = {
           url: "/_p/query/query/service",
           method: "POST",
-          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
+          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,'ignore-401':'true'},
           data: queryData,
           mnHttp: {
             isNotForm: true,
@@ -1160,9 +1160,11 @@
           bucket_names.push(bucket.id);
           bucket.passwordNeeded = true;
           bucket.indexes = [];
+          bucket.validated = _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
           passwords.push(""); // assume no password for now
-          //console.log("Got bucket: " + bucket.id);
-          qwQueryService.buckets.push(bucket);
+          //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
+          if (bucket.validated)
+            qwQueryService.buckets.push(bucket); // only include buckets we have access to
           addToken(bucket.id,"bucket");
         }
         refreshAutoCompleteArray();
@@ -1176,7 +1178,7 @@
         .success(function(data) {
           //
           // bucket data should be an array of objects, where each object has
-          // 'name' and  'saslPassword' fields (amoung much other data)
+          // 'name' and  'saslPassword' fields (among much other data)
           //
 
           //console.log("Got bucket info...");
@@ -1272,6 +1274,14 @@
     //
 
     function getSchemaForBucketBackground(bucketList,currentIndex) {
+
+      // skip any buckets that require passwords
+      while (currentIndex < bucketList.length &&
+          bucketList[currentIndex].passwordNeeded == true &&
+          !bucketList[currentIndex].password)
+        currentIndex++;
+
+      // if we've run out of buckets, nothing more to do
       if (currentIndex < 0 || currentIndex >= bucketList.length)
         return(null);
       else {
