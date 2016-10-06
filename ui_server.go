@@ -1,40 +1,34 @@
 package main
 
 import (
-	//	"bytes"
 	"flag"
 	"fmt"
-//	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-//	"regexp"
-//	"strconv"
 	"strings"
-//	"time"
 
-	//	"github.com/couchbase/gocb"
-	//	"github.com/couchbase/gocb/gocbcore"
-	//	infer "github.com/couchbase/cbq-gui/inferencer"
 	"github.com/couchbase/go-couchbase"
-    //"github.com/couchbase/gomemcached/client"
 	json "github.com/dustin/gojson"
 )
 
 const TEST_URL = "http://localhost:8091/"
 
-var DATASTORE = flag.String("datastore", "http://localhost:8091", "Datastore address (e.g., http://localhost:8091)")
+var DATASTORE = flag.String("datastore", "", "Datastore URL (e.g., http://localhost:8091)")
 var USER = flag.String("user", "", "Authorized user login for Couchbase")
 var PASS = flag.String("pass", "", "Authorized user password for Couchbase")
+
+var QUERYENGINE = flag.String("queryEngine", "", "Query URL (e.g., http://localhost:8093)")
+var QUERY_PREFIX = flag.String("queryPrefix", "/query", "prefix for URL of query service, e.g. '/query' or '/analytics'")
+
 var LOCALPORT = flag.String("localPort", ":8095", "Port on which the UI runs. E.g., :8095")
 var WEBCONTENT = flag.String("webcontent", "./", "Location of static folder containing web content. E.g., ./")
 var VERBOSE = flag.Bool("verbose", false, "Produce verbose output about program operation.")
 
 func main() {
 	flag.Parse()
-
-	launchWebService(*DATASTORE, *USER, *PASS)
+	launchWebService()
 }
 
 //
@@ -49,11 +43,10 @@ func getClusterQueryKVsAndMgmt(server, user, pass string) ([]string, []string, [
 	var client couchbase.Client
 	var err error
 
-	// need to connect to the server...
 	if len(user) == 0 {
 		client, err = couchbase.Connect(server)
 	} else {
-	    fmt.Printf("Connecting with user: %v pass: %v\n",user,pass)
+		fmt.Printf("Connecting with user: %v pass: %v\n", user, pass)
 		client, err = couchbase.ConnectWithAuthCreds(server, user, pass)
 	}
 
@@ -124,61 +117,73 @@ func getClusterQueryKVsAndMgmt(server, user, pass string) ([]string, []string, [
 var serverHost string
 var queryHost string
 var serverUrl, serverUser, serverPass string
-	var kvs []string
+var kvs []string
 
-func launchWebService(server, user, pass string) {
-	fmt.Printf("Launching query web service.\n    Using CB Server at: %s\n", server)
+func launchWebService() {
+	fmt.Printf("Launching query web service.\n")
 
-	serverUrl = server
-	serverUser = user
-	serverPass = pass
+	// the datastore allows us to get /pools, find out where every service is
+	if len(*DATASTORE) > 0 {
+		fmt.Printf("    Using CB Server at: %s\n", *DATASTORE)
+
+		serverUrl = *DATASTORE
+		serverUser = *USER
+		serverPass = *PASS
+
+		if strings.HasPrefix(strings.ToLower(*DATASTORE), "http://") {
+			serverHost = serverUrl[7:]
+		} else {
+			serverHost = serverUrl
+		}
+
+		//
+		// get a query and kv service that we'll need
+		//
+
+		var n1ql []string
+		var mgmt []string
+		n1ql, kvs, mgmt = getClusterQueryKVsAndMgmt(*DATASTORE, *USER, *PASS)
+
+		if len(n1ql) == 0 {
+			fmt.Printf("Unable to find a N1QL query service on: %s\n", *DATASTORE)
+			return
+		} else {
+			fmt.Printf("    Using N1QL query service on: %s\n", n1ql[0])
+			//queryURL = fmt.Sprintf("http://%s/query/service", n1ql[0])
+			queryHost = n1ql[0]
+		}
+
+		if len(mgmt) == 0 {
+			fmt.Printf("Unable to find the mgmt query service on: %s\n", *DATASTORE)
+			return
+		} else {
+			fmt.Printf("    Using mgmt query service on: %s\n", serverHost)
+		}
+		
+		
+	} else if len(*QUERYENGINE) > 0 {// if no DATASTORE, there must be a QUERYENGINE
 	
-	if (strings.HasPrefix(strings.ToLower(server),"http://")) {
-       serverHost = serverUrl[7:]
-	} else {
-	    serverHost = serverUrl
+    	queryHost = *QUERYENGINE
+
+	    if strings.HasPrefix(queryHost, "http://") {
+			queryHost = queryHost[7:]
+		}
+	    
+    	fmt.Printf("    Using query service on: %s\n", queryHost)
+	    
+	    
+	} else { // let the user know that they need either DATASTORE or QUERYENGINE
+	    fmt.Printf("Error: you must specify either -datastore=<couchbase URL> or -queryEngine=<query engine URL>\n")
+        os.Exit(1)
 	}
 
 	//
-	// get a query and kv service that we'll need
+	// make a set of proxies for query engine, management server, and image content
 	//
-
-	var n1ql []string
-	var mgmt []string
-	n1ql, kvs, mgmt = getClusterQueryKVsAndMgmt(server, user, pass)
-
-	if len(n1ql) == 0 {
-		fmt.Printf("Unable to find a N1QL query service on: %s\n", server)
-		return
-	} else {
-		fmt.Printf("    Using N1QL query service on: %s\n", n1ql[0])
-		//queryURL = fmt.Sprintf("http://%s/query/service", n1ql[0])
-		queryHost = n1ql[0]
-	}
-
-	if len(mgmt) == 0 {
-		fmt.Printf("Unable to find the mgmt query service on: %s\n", server)
-		return
-	} else {
-		fmt.Printf("    Using mgmt query service on: %s\n", serverHost)
-//		for _, url := range kvs {
-//			fmt.Printf("    Using memcached service on: %s\n", url)
-//			//kvURL = kv[0]
-//		}
-	}
-
-	//
-	// make a gocb connection as well
-	//
-
-	//	goClient, err := gocb.Connect(server)
-	//	if err != nil {
-	//		fmt.Printf("Error with go connection to %v: %v, %v\n", server, err,  goClient)
-	//	}
 
 	staticPath := strings.Join([]string{*WEBCONTENT, "query-ui"}, "")
 
-	fmt.Printf("    Using web content at: %s\n", staticPath)
+	fmt.Printf("    Using -webcontent=%s, web content path at: %s\n", *WEBCONTENT, staticPath)
 
 	_, err := os.Stat(staticPath)
 	if err != nil {
@@ -190,67 +195,48 @@ func launchWebService(server, user, pass string) {
 		os.Exit(1)
 	}
 
-    // create proxies to query and mgmt ports
-    queryProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: queryHost}) 
-    queryProxy.Director = toQuery
-    
-    mgmtProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost}) 
-    mgmtProxy.Director = toMgmt
+	// create proxies to query and mgmt ports
+	queryProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: queryHost})
+	queryProxy.Director = toQuery
 
-    imageProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost}) 
-    imageProxy.Director = toImage
+    if len(serverHost) > 0 {
+    	mgmtProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost})
+    	mgmtProxy.Director = toMgmt
+    	http.Handle("/pools", mgmtProxy)
+    	http.Handle("/pools/", mgmtProxy)
+    }
 
 	// handle queries at the service prefix
 	http.Handle("/query/service", queryProxy)
 	http.Handle("/_p/query/query/service", queryProxy)
 
-	http.Handle("/_p/ui/query/", imageProxy)
-
-	http.Handle("/pools", mgmtProxy)
-	http.Handle("/pools/", mgmtProxy)
-
 	// Handle static endpoint for serving the web content
 	http.Handle("/", http.FileServer(http.Dir(staticPath)))
-	//http.Handle("/_p/ui/query/images/", http.FileServer(http.Dir(fmt.Sprintf("%s/query-ui/images",staticPath))))
 
 	fmt.Printf("Launching UI server, to use, point browser at http://localhost%s\n", *LOCALPORT)
 
 	listenAndServe(*LOCALPORT)
-
-	// keep running until we receive input
-	//var input string
-	//fmt.Scanln(&input)
-	//fmt.Println("done")
 }
 
-
 func toQuery(r *http.Request) {
-    r.Host = queryHost
-    r.URL.Host = r.Host
-    r.URL.Scheme = "http"
-    if (strings.HasPrefix(strings.ToLower(r.URL.Path),"/_p/query")) {
-        r.URL.Path = r.URL.Path[9:]
-    }
+	r.Host = queryHost
+	r.URL.Host = r.Host
+	r.URL.Scheme = "http"
+	//fmt.Printf("Got path: %s\n", r.URL.Path)
+	if strings.HasPrefix(strings.ToLower(r.URL.Path), "/_p/query/query") {
+		r.URL.Path = *QUERY_PREFIX + r.URL.Path[15:]
+		//fmt.Printf("  new path: %s\n", r.URL.Path)
+	}
 }
 
 func toMgmt(r *http.Request) {
-    //fmt.Printf("toMgmt, host %v path %v\n",r.Host,r.URL.Path);
-    r.Host = serverHost
-    r.URL.Host = r.Host
-    r.URL.Scheme = "http"
-    //fmt.Printf(" post toMgmt, host %v path %v\n",r.Host,r.URL.Path);
+	//fmt.Printf("toMgmt, host %v path %v\n",r.Host,r.URL.Path);
+	r.Host = serverHost
+	r.URL.Host = r.Host
+	r.URL.Scheme = "http"
+	//fmt.Printf(" post toMgmt, host %v path %v\n",r.Host,r.URL.Path);
 }
 
-
-func toImage(r *http.Request) {
-    //fmt.Printf("toImage, path %v\n",r.URL.Path);
-    // r.URL.Path = strings.Replace(r.URL.Path,"/_p/ui/query/images/","/images/",1)
-    r.URL.Path = strings.Replace(r.URL.Path,"/_p/ui/query/","/",1)
-    //r.Host = serverHost
-    r.URL.Host = r.Host
-    r.URL.Scheme = "http"
-    //fmt.Printf(" post toImage, path %v\n",r.URL.Path);
-}
 
 //
 // This function is used to launch the http server inside a goroutine, accepting a
@@ -265,7 +251,6 @@ func listenAndServe(localport string) {
 	}
 
 }
-
 
 //
 // convenience method for returning errors
@@ -285,7 +270,6 @@ func writeHttpError(message string, resp http.ResponseWriter) {
 	}
 	resp.Write(bytes)
 }
-
 
 //
 // in verbose mode, output messages on the command line

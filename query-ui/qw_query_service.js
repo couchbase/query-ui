@@ -1160,7 +1160,7 @@
           bucket_names.push(bucket.id);
           bucket.passwordNeeded = true;
           bucket.indexes = [];
-          bucket.validated = _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
+          bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
           passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
           if (bucket.validated)
