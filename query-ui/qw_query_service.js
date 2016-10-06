@@ -1181,7 +1181,7 @@
           // 'name' and  'saslPassword' fields (among much other data)
           //
 
-          //console.log("Got bucket info...");
+          //console.log("Getting bucket info from /pools/default/buckets...");
           if (_.isArray(data)) _.forEach(data, function(bucket, index) {
             if (bucket.name && _.isString(bucket.saslPassword))
               //console.log("  for bucket: " + bucket.name + " got password: " + bucket.saslPassword);

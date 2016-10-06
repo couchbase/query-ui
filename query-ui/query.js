@@ -68,6 +68,7 @@
         _.forEach(perms.bucket,function(v,k) {
           if (v && v.data && (v.data.read || v.data.write)) {
             _bucketList.push(k);
+            //console.log("Allowed to query: "+ k);
           }
         });
 
@@ -101,23 +102,6 @@
       return service;
     });
 
-  //
-  // parse the RBAC data to see if we can query any buckets
-  //
-
-  function canQuery(perms) {
-    var result = false;
-    if (perms && perms.bucket) _.forEach(perms.bucket,function(k,v) {
-      if (perms.bucket[k] && perms.bucket[k].data &&
-          (perms.bucket[k].data.read || perms.bucket[k].data.write)) {
-        console.log("Can query: " + k);
-        result = true;
-        return(false);
-      }
-
-    });
-    return(result);
-  }
 
   angular.module('mnAdmin').requires.push('qwQuery');
 }());

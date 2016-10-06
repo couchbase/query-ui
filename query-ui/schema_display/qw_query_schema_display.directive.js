@@ -120,7 +120,7 @@
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
         '  {{bucket.id}}</div>' +
-        '  <ul class="bucket" ng-show="bucket.expanded">' +
+        '  <ul class="bucket" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         '    <li class="schema" ng-repeat="flavor in bucket.schema">' +
 
@@ -226,13 +226,13 @@
       template:
         '<ul class="schema">' +
         '  <li style="white-space: nowrap" ng-repeat="(name,  field) in schema.properties">' +
-        '    <div class="indexed" ng-show="field.type!=\'object\' && field.indexed"' +
+        '    <div class="indexed" ng-if="field.type!=\'object\' && field.indexed"' +
         '     ng-attr-title="{{showSamples(field)}}"> {{name}}' +
         '      {{" ("+ field.type + ", indexed)"}}</div>' +
-        '    <div ng-show="field.type!=\'object\' && !field.indexed"' +
+        '    <div ng-if="field.type!=\'object\' && !field.indexed"' +
         '      ng-attr-title="{{showSamples(field)}}"> {{name}}' +
         '      {{" ("+ field.type + ")"}}</div>' +
-        '    <div ng-show="field.type==\'object\'"> {{name}}' +
+        '    <div ng-if="field.type==\'object\'"> {{name}}' +
         '      {{" ("+ field.type + "), child type: "}} ' +
         '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +
         '   </li>' +
