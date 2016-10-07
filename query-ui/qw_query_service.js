@@ -1253,10 +1253,14 @@
 
       })
       .error(function(data, status, headers, config) {
+//        console.log("Schema Error Data: " + JSON.stringify(data));
+//        console.log("Schema Error Status: " + JSON.stringify(status));
+//        console.log("Schema Error Headers: " + JSON.stringify(headers));
+//        console.log("Schema Error Config: " + JSON.stringify(config));
         var error = "Error retrieving list of buckets";
 
         if (data && data.errors)
-          error = error + ": " + data.errors;
+          error = error + ": " + JSON.stringify(data.errors);
         else if (status)
           error = error + ", contacting query service returned status: " + status;
 
@@ -1296,46 +1300,11 @@
     }
 
 
-
-//    function authenticateBucket(bucket_name, password, onSuccess, onError) {
-//      console.log("Authenticating buckets: " + JSON.stringify(bucket_names));
-//      console.log("Authenticating passwords: " + JSON.stringify(passwords));
-//
-//
-//      console.log("Sending request: " + JSON.stringify(currentQueryRequest));
-//      //$http.post("/authenticate",{bucket : bucket_names, password: passwords})
-//      $http(currentQueryRequest)
-//      .success(onSuccess)
-//      .error(onError);
-//    };
-
-
     //
     // Get a schema for a given, named bucket.
     //
 
     function getSchemaForBucket(bucket) {
-
-//      if (qwQueryService.gettingSchemas.busy)
-//        return("Server Busy");
-//
-//      qwQueryService.gettingSchemas.busy = true;
-
-//      var inferQueryData = {statement: "infer `" + bucket.id + "`;"};
-//      var credArray = [];
-//      credArray.push({user:"local:"+bucket.id,pass: bucket.password });
-//      inferQueryData.creds = credArray;
-//
-//      var inferQueryRequest = {
-//          url: "/_p/query/query/service",
-//          method: "POST",
-//          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-//          data: inferQueryData,
-//          mnHttp: {
-//            isNotForm: true,
-//            group: "global"
-//          }
-//      };
 
       //console.log("Getting schema for : " + bucket.id);
 
