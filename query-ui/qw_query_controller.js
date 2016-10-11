@@ -459,19 +459,41 @@
       var margins = 200;
       //if (navigator.userAgent.match(/safari/i))
       //	constant = 10;
-      var windowHeight = document.body.offsetHeight;
-      var pageHeaderHeight =  $('#page_header').height();
-      var pageFooterHeight =  $('#page_footer').height();
+      var windowHeight = window.innerHeight;
+      var pageFooterHeight =  96; //$('#page_footer').height();
+      var pageHeaderHeight = 42;
       var headerNavHeight =  $('#headerNav').height();
+      if (headerNavHeight == null)
+        headerNavHeight = 47;
       var queryBoxHeight = $('#query_box').height();
       var resultHeaderHeight =  $('#result_header').height();
+      var sidebarHeaderHeight =  $('#sidebar_header').height();
       var resultSummaryHeight = $('#result_summary').height();
 
-      var otherStuff = pageHeaderHeight + pageFooterHeight + headerNavHeight + queryBoxHeight;
-      var editor_size = windowHeight - otherStuff - margins;
+      var otherStuff = pageHeaderHeight + pageFooterHeight +
+        headerNavHeight + queryBoxHeight;
 
-      //console.log(" editor_size: " + editor_size);
-      $('#sidebar_body').height(editor_size + resultSummaryHeight + 25);
+      if (//pageHeaderHeight == null || pageFooterHeight == null ||
+          headerNavHeight == null || queryBoxHeight == null)
+        return;
+
+      var editor_size = windowHeight - otherStuff - margins - resultHeaderHeight;
+      if (editor_size > 1000)
+        editor_size = 1000;
+      if (editor_size < 300)
+        editor_size = 300;
+
+      //console.log("pageHeaderHeight: " + pageHeaderHeight);
+      //console.log("pageFooterHeight: " + pageFooterHeight);
+//      console.log("headerNavHeight: " + headerNavHeight);
+//      console.log("queryBoxHeight: " + queryBoxHeight);
+//      console.log("windowHeight: " + windowHeight);
+//      console.log("resultHeaderHeight: " + resultHeaderHeight);
+//      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
+//      console.log(" editor_size: " + editor_size);
+//      console.log("  result is now: " + $('#result_editor').height() + ", setting to " + (editor_size + 10) + "\n\n");
+
+      $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
       //$('#result_editor').height(500);
       $('#result_editor').height(editor_size + 10);
       $('#result_table').height(editor_size+25);
@@ -645,10 +667,15 @@
       // history dialog needs a pointer to the query service
       dialogScope.pastQueries = qwQueryService.getPastQueries();
       dialogScope.select = function(index) {qwQueryService.setCurrentIndex(index);};
-      dialogScope.isRowSelected = function(row) {if (row == qwQueryService.getCurrentIndexNumber()) {return(true);}};
+      dialogScope.isRowSelected = function(row) {return(row == qwQueryService.getCurrentIndexNumber());};
+      dialogScope.isRowMatched = function(row) {return(_.indexOf(historySearchResults,row) > -1);};
+      dialogScope.showRow = function(row) {return(historySearchResults.length == 0 || dialogScope.isRowMatched(row));};
       dialogScope.del = qwQueryService.clearCurrentQuery;
       dialogScope.delAll = qwQueryService.clearHistory;
-
+      dialogScope.searchInfo = searchInfo;
+      dialogScope.updateSearchResults = updateSearchResults;
+      dialogScope.selectNextMatch = selectNextMatch;
+      dialogScope.selectPrevMatch = selectPrevMatch;
 
       var promise = $uibModal.open({
         templateUrl: '/_p/ui/query/history_dialog/qw_history_dialog.html',
@@ -656,22 +683,88 @@
       }).result;
 
       // scroll the dialog's table
-      $timeout(function() {
-        var label = "qw_history_table_"+qwQueryService.getCurrentIndexNumber();
-        var elem = document.getElementById(label);
-	if (elem)
-	    elem.scrollIntoView();
-        window.scrollTo(0,0);
-        },100);
+      $timeout(scrollHistoryToSelected,100);
 
-      // now save it
-//      promise.then(function (res) {
-//        console.log("Done editing history");
-//
-//      });
     };
 
-    //
+    var historySearchResults = [];
+    var searchInfo = {searchText: "", searchLabel: "search:"};
+
+    function scrollHistoryToSelected() {
+      var label = "qw_history_table_"+qwQueryService.getCurrentIndexNumber();
+      var elem = document.getElementById(label);
+      if (elem)
+        elem.scrollIntoView();
+      window.scrollTo(0,0);
+    }
+
+    function updateSearchLabel() {
+      if (searchInfo.searchText.trim().length == 0)
+        searchInfo.searchLabel = "search:";
+      else
+        searchInfo.searchLabel = historySearchResults.length + " matches";
+    }
+
+    function updateSearchResults() {
+      var history = qwQueryService.getPastQueries();
+      // reset the history
+      historySearchResults.length = 0;
+      if (searchInfo.searchText.trim().length > 0)
+        for (var i=0; i<history.length; i++) {
+          //console.log("  comparing to: " + history[i].query)
+          if (history[i].query.indexOf(searchInfo.searchText) > -1)
+            historySearchResults.push(i);
+        }
+
+      updateSearchLabel();
+
+      if (historySearchResults.length == 0)
+        scrollHistoryToSelected();
+    }
+
+    // get the next/previous query matching the search results
+
+    function selectNextMatch() {
+      var curMatch = qwQueryService.getCurrentIndexNumber();
+
+      // nothing to do if no search results
+      if (historySearchResults.length == 0)
+        return;
+
+      // need to find the value in the history array larger than the current selection, or wrap around
+      for (var i=0; i < historySearchResults.length; i++)
+        if (historySearchResults[i] > curMatch) {
+          qwQueryService.setCurrentIndex(historySearchResults[i]);
+          scrollHistoryToSelected();
+          return;
+        }
+
+      // if we get this far, wrap around to the beginning
+      qwQueryService.setCurrentIndex(historySearchResults[0]);
+      scrollHistoryToSelected();
+    }
+
+    function selectPrevMatch() {
+      var curMatch = qwQueryService.getCurrentIndexNumber();
+
+      // nothing to do if no search results
+      if (historySearchResults.length == 0)
+        return;
+
+      // need to find the last value in the history array smaller than the current selection, or wrap around
+      for (var i=historySearchResults.length-1;i>=0; i--)
+        if (historySearchResults[i] < curMatch) {
+          qwQueryService.setCurrentIndex(historySearchResults[i]);
+          scrollHistoryToSelected();
+          return;
+        }
+
+      // if we get this far, wrap around to the beginning
+      qwQueryService.setCurrentIndex(historySearchResults[historySearchResults.length-1]);
+      scrollHistoryToSelected();
+    }
+
+     //
     // toggle the size of the analysis pane
     //
 

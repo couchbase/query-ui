@@ -311,3 +311,7 @@ a.cbui-rightmargin {
 .ajtd-row-selected {
   background-color: #00f2ff;
 }
+
+.ajtd-row-matched-search {
+  background-color: #d9c5ff;
+}
