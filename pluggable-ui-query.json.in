@@ -2,5 +2,9 @@
   "service": "n1ql",
   "proxy-strategy": "local",
   "rest-api-prefix": "query",
+  "version-dirs": [
+    {"version": [4, 5], "dir": "."},
+    {"version": [5, 0], "dir": "spock"}
+  ],
   "doc-root": "@BIN_PREFIX@query-ui"
 }
