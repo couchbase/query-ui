@@ -1374,6 +1374,11 @@
       if (_.isString(plan))
         return(null);
 
+      // special case: prepared queries are marked by an "operator" field
+
+      if (plan.operator)
+        return(analyzePlan(plan.operator,null));
+
       //console.log("Inside analyzePlan: " + JSON.stringify(plan,null,true));
 
       // iterate over fields, look for "#operator" field

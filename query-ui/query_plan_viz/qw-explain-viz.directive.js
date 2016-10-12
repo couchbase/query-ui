@@ -372,12 +372,20 @@
   // children are those operators that feed data in to the result, all the way
   // back to the leaves which are the original data scans.
   //
+  // usually, elements in the tree all have #operator fields, but in the case
+  // of prepared queries, the tree starts as a field called "operator"
+  //
 
   function analyzePlan(plan, predecessor) {
 
     // sanity check
     if (_.isString(plan))
       return(null);
+
+    // special case: prepared queries
+
+    if (plan.operator)
+      return(analyzePlan(plan.operator,null));
 
     //console.log("Inside analyzePlan");
 
@@ -409,7 +417,11 @@
     // we had better have an operator name at this point
 
     if (!operatorName) {
-      console.log("Error, no operator found for item: " + JSON.stringify(plan));
+      console.log("Error, no operator found for item, fields were:");
+      _.forIn(plan,function(value,key) {
+        console.log(" key: " + key);
+      });
+      console.log(JSON.stringify(plan));
       return(null);
     }
 

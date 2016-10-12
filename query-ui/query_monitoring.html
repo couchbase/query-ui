@@ -70,16 +70,16 @@
   <table class="ajtd-root ajtd-table sortable">
     <thead>
         <th class="ajtd-column-header">Query</th>
-        <th class="ajtd-column-header">Duration</th>
-        <th class="ajtd-column-header">Result Count</th>
-        <th class="ajtd-column-header">State</th>
+        <th class="ajtd-column-header">Avg Elapsed</th>
+        <th class="ajtd-column-header">#Uses</th>
+        <th class="ajtd-column-header">Node</th>
     </thead>
     <tbody>
     <tr ng-repeat="result in qmc.monitoring.prepareds">
     <td class="ajtd-cell">{{result.statement}}</td>
-    <td class="ajtd-cell">{{result.elapsedTime}}</td>
-    <td class="ajtd-cell">{{result.resultCount}}</td>
-    <td class="ajtd-cell">{{result.state}}</td>
+    <td class="ajtd-cell">{{result.avgElapsedTime}}</td>
+    <td class="ajtd-cell">{{result.uses}}</td>
+    <td class="ajtd-cell">{{result.node}}</td>
     </tr>
     </tbody>
    </table>
