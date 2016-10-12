@@ -500,16 +500,6 @@
         var query = 'delete from system:active_requests where clientContextID = "' +
           qwQueryService.currentQueryRequestID + '";';
 
-//        var queryData = {statement: query , client_context_id: UUID.generate()};
-//
-//        var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-//        qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-//            method: "POST",
-//            headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':300*1000},
-//            data: encodedQuery
-//        };
-//        var promise = $http(qwQueryService.currentQueryRequest)
-
         executeQueryUtil(query,false)
 
         // sanity check - if there was an error put a message in the console.
@@ -518,7 +508,6 @@
           console.log("    Data: " + JSON.stringify(data));
           console.log("    Status: " + JSON.stringify(status));
         });
-
 
       }
     }
@@ -612,8 +601,10 @@
     function executeQuery(queryText, userQuery) {
       var newResult;
 
+      //XSconsole.log("Got query to execute: " + queryText);
+
       // if the current query is part of the history,
-      // or currentQuery is "not yet run",
+      // or current query is "not yet run",
       // update the results from the history
 
       if ((currentQueryIndex < pastQueries.length &&
@@ -694,57 +685,13 @@
       //
       //
 
-      // Because Angular automatically urlencodes JSON parameters, but has a special
-      // algorithm that doesn't encode semicolons, any semicolons inside the query
-      // will get mis-parsed by the server as the end of the parameter (see MB-18621
-      // for an example). To bypass this, we will url-encode ahead of time, and then
-      // make sure the semicolons get urlencoded as well.
-
-//      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-//      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-//          method: "POST",
-//          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
-//          data: encodedQuery,
-//          mnHttp: {
-//            group: "global"
-//          }
-//      };
-
-      // An alternate way to get around Angular's encoding is "isNotForm: true". But
-      // that triggers bug MB-16964, where the server currently fails to parse creds
-      // when they are JSON encoded.
-      // MB-16964 is now fixed, so we'll send queries this way and avoid URL encoding
-
-//      qwQueryService.currentQueryRequest = {
-//          url: "/_p/query/query/service",
-//          method: "POST",
-//          transformResponse: fixLongInts,
-//          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-//          data: queryData,
-//          mnHttp: {
-//            isNotForm: true,
-//            group: "global"
-//          }
-//      };
 
       // if the query is not already an explain, run a version with explain to get the query plan
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
+      var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
 
-      if (! queryIsExplain) {
-//        var explainQueryData = {statement: "explain " + queryText};
-//        explainQueryData.creds = queryData.creds;
-//
-//        var explainQueryRequest = {
-//            url: "/_p/query/query/service",
-//            method: "POST",
-//            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000},
-//            data: explainQueryData,
-//            mnHttp: {
-//              isNotForm: true,
-//              group: "global"
-//            }
-//        };
+      if (!queryIsExplain && !queryIsPrepare) {
 
         newResult.explainDone = false;
 
@@ -761,7 +708,7 @@
             newResult.explainResult = data.errors;
 
           newResult.explainDone = true;
-          newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+          newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
 
           lastResult.copyIn(newResult);
 
