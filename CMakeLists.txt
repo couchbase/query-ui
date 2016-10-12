@@ -4,7 +4,7 @@
 # We need to copy the pluggable-ui-query.json to install/etc/couchbase,
 # and copy everything else to install/lib/query-ui
 # 
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8.10)
 
 PROJECT (query-ui)
 
@@ -27,3 +27,11 @@ SET (BIN_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/")
 configure_file (pluggable-ui-query.json.in ${_instdir}/../cluster_run_ui_plugins/pluggable-ui-query.cluster_run.json)
 
 
+#
+# We also need to create the 'query-ui' executable, which permits stand-alone execution
+#
+
+SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tlm/cmake/Modules/")
+SET (GODEPSDIR "${CMAKE_CURRENT_SOURCE_DIR}/godeps")
+
+INCLUDE (FindCouchbaseGo)

@@ -601,7 +601,7 @@
     function executeQuery(queryText, userQuery) {
       var newResult;
 
-      //XSconsole.log("Got query to execute: " + queryText);
+      //console.log("Got query to execute: " + queryText);
 
       // if the current query is part of the history,
       // or current query is "not yet run",
