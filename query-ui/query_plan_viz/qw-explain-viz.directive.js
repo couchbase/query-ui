@@ -85,6 +85,7 @@
       result += ' ';
     var opName = plan.operator['#operator'];
     result += opName ? opName : "unknown op";
+    result += " (" + plan.BranchCount() + "," + plan.Depth() + "), pred: " + plan.predecessor;
     console.log(result);
 
     if (plan.subsequence)
@@ -267,9 +268,9 @@
 
     // just one op
     else {
-//    console.log(" Putting item: " + plan.operator['#operator'] + " into position: " + curX + "," + curY);
-//    console.log(" array[] length: " + array.length);
-//    console.log(" array[curX] length: " + array[curX].length);
+    //console.log(" Putting item: " + plan.operator['#operator'] + " into position: " + curX + "," + curY);
+    //console.log(" array[] length: " + array.length);
+    //console.log(" array[curX] length: " + array[curX].length);
       array[curX][curY] = plan; // put the name in
     }
 
@@ -333,13 +334,24 @@
   PlanNode.prototype.BranchCount = function() {
     if (this.predecessor == null)
       return(1);
-    else if (!_.isArray(this.predecessor))
-      return(this.predecessor.BranchCount());
     else {
-      var count = 0;
-      for (var i=0; i < this.predecessor.length; i++)
-        count += this.predecessor[i].BranchCount();
-      return(count);
+      // our width is the max of the predecessor and the subsequence widths
+      var predWidth = 0;
+      var subsequenceWidth = 0;
+
+      if (!_.isArray(this.predecessor))
+        predWidth = this.predecessor.BranchCount();
+      else
+        for (var i=0; i < this.predecessor.length; i++)
+          predWidth += this.predecessor[i].BranchCount();
+
+      if (this.subsequence != null)
+        subsequenceWidth = this.subsequence.BranchCount();
+
+      if (subsequenceWidth > predWidth)
+        return(subsequenceWidth);
+      else
+        return(predWidth);
     }
   }
 
@@ -375,6 +387,19 @@
   // usually, elements in the tree all have #operator fields, but in the case
   // of prepared queries, the tree starts as a field called "operator"
   //
+  // Some nodes have children that must be traversed:
+  //   Sequence has '~children'
+  //   Parallel has '~child'
+  //   UnionAll has 'children'
+  //   UnionScan/IntersectScan have 'scans'
+  //   ExceptAll/IntersetAll have 'first' and 'second'
+  //   DistinctScan has 'scan'
+  //   Authorize has 'child'
+  //   Merge has 'as', 'key', 'keyspace', 'delete' and 'update'
+  //
+  //  Update has 'set_terms' (array of {"path":"...","value":"..."}),
+  //             'unset_terms' (array of {"path":"..."})
+  //  Let?
 
   function analyzePlan(plan, predecessor) {
 
@@ -447,9 +472,56 @@
       return(new PlanNode(predecessor,plan,subsequence));
     }
 
+    // Prepare operators have their plan inside prepared.operator
+    else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
+      return(analyzePlan(plan.prepared.operator,null));
+    }
+
+    // ExceptAll and InterceptAll have 'first' and 'second' subqueries
+    else if (operatorName === "ExceptAll" || operatorName === "InterceptAll") {
+      var children = [];
+
+      if (plan['first'])
+        children.push(analyzePlan(plan['first'],null));
+
+      if (plan['second'])
+        children.push(analyzePlan(plan['second'],null));
+
+      if (children.length > 0)
+        return(new PlanNode(children,plan));
+      else
+        return(null);
+    }
+
+    // Merge has two children: 'delete' and 'update'
+    else if (operatorName === "Merge") {
+      var children = [];
+
+      if (plan['delete'])
+        children.push(analyzePlan(plan['delete'],null));
+
+      if (plan['update'])
+        children.push(analyzePlan(plan['update'],null));
+
+      if (children.length > 0)
+        return(new PlanNode(children,plan));
+      else
+        return(null);
+    }
+
+    // Authorize operators have a single child called 'child'
+    else if (operatorName === "Authorize" && plan['child']) {
+      return(new PlanNode(analyzePlan(plan['child'],null),plan));
+    }
+
+    // DistinctScan operators have a single child called 'scan'
+    else if (operatorName === "DistinctScan" && plan['scan']) {
+      return(new PlanNode(analyzePlan(plan['scan'],null),plan));
+    }
+
     // UNION operators will have an array of predecessors drawn from their "children".
     // we expect predecessor to be null if we see a UNION
-    else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['children']) {
+    else if (operatorName === "UnionAll" && plan['children']) {
       if (predecessor != null)
         console.log("ERROR: Union with unexpected predecessor: " + JSON.stringify(predecessor));
 

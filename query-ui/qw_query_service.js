@@ -825,7 +825,7 @@
           var lists = analyzePlan(data.results[0].plan,null);
           newResult.explainResult = {explain: data.results[0], analysis: lists,
               buckets: qwQueryService.buckets, tokens: qwQueryService.autoCompleteTokens};
-          newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+          newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           qwQueryService.selectTab(4); // make the explain visible
         }
 
@@ -1363,6 +1363,15 @@
     // When we get a query plan, we want to create a list of buckets and fields referenced
     // by the query, so we can point out possible misspelled names
     //
+    //   Sequence has '~children'
+    //   Parallel has '~child'
+    //   UnionAll has 'children'
+    //   UnionScan/IntersectScan have 'scans'
+    //   ExceptAll/IntersetAll have 'first' and 'second'
+    //   DistinctScan has 'scan'
+    //   Authorize has 'child'
+    //   Merge has 'as', 'key', 'keyspace', 'delete' and 'update'
+
 
     function analyzePlan(plan, lists) {
 
@@ -1403,9 +1412,7 @@
       });
 
       // at this point we should have an operation name and a field array
-
       //console.log("  after analyze, got op name: " + operatorName);
-
       // we had better have an operator name at this point
 
       if (!operatorName) {
@@ -1438,6 +1445,74 @@
       }
 
 
+
+
+
+      // Prepare operators have their plan inside prepared.operator
+      else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
+        analyzePlan(plan.prepared.operator,lists);
+        return(lists);
+      }
+
+      // ExceptAll and InterceptAll have 'first' and 'second' subqueries
+      else if (operatorName === "ExceptAll" || operatorName === "InterceptAll") {
+        if (plan['first'])
+          analyzePlan(plan['first'],lists);
+
+        if (plan['second'])
+          analyzePlan(plan['second'],lists);
+
+        return(lists);
+      }
+
+      // Merge has two children: 'delete' and 'update'
+      else if (operatorName === "Merge") {
+        if (plan.as)
+          lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
+
+        if (plan['delete'])
+          analyzePlan(plan['delete'],lists);
+
+        if (plan['update'])
+          analyzePlan(plan['update'],lists);
+
+        if (plan.keyspace)
+          getFieldsFromExpression(plan.keyspace,lists);
+
+        if (plan.key)
+          getFieldsFromExpression(plan.key,lists);
+
+        return(lists);
+      }
+
+      // Authorize operators have a single child called 'child'
+      else if (operatorName === "Authorize" && plan['child']) {
+        analyzePlan(plan['child'],lists);
+        return(lists);
+      }
+
+      // DistinctScan operators have a single child called 'scan'
+      else if (operatorName === "DistinctScan" && plan['scan']) {
+        analyzePlan(plan['scan'],lists);
+        return(lists);
+      }
+
+      // Similar to UNIONs, IntersectScan, UnionScan group a number of different scans
+      // have an array of 'scan' that are merged together
+
+      else if ((operatorName == "UnionScan") || (operatorName == "IntersectScan")) {
+        for (var i = 0; i < plan['scans'].length; i++)
+          analyzePlan(plan['scans'][i],lists);
+
+        return(lists);
+      }
+
+
+
+
+
+
+
       // UNION operators will have an array of predecessors drawn from their "children".
       // we expect predecessor to be null if we see a UNION
       else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['children']) {
@@ -1455,33 +1530,31 @@
       //  - on_keys is an expression
       //  - group_keys is an array of fields
 
-      else {
-        if (plan.keyspace)
-          lists.buckets[plan.keyspace] = true;
-        if (plan.index && plan.keyspace)
-          lists.indexes[plan.keyspace + "." + plan.index] = true;
-        else if (plan.index)
-          lists.indexes[plan.index] = true;
-        if (plan.group_keys) for (var i=0; i < plan.group_keys.length; i++)
-          lists.fields[plan.group_keys[i]] = true;
-        if (plan.condition)
-          getFieldsFromExpression(plan.condition,lists);
-        if (plan.expr)
-          getFieldsFromExpression(plan.expr,lists);
-        if (plan.on_keys)
-          getFieldsFromExpression(plan.on_keys,lists);
-        if (plan.as && plan.keyspace)
-          lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
-        if (plan.result_terms && _.isArray(plan.result_terms))
-          for (var i=0; i< plan.result_terms.length; i++) if (plan.result_terms[i].expr )
-            if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
-                lists.currentKeyspace)
-              lists.fields[lists.currentKeyspace + '.*'] = true;
-            else
-              getFieldsFromExpression(plan.result_terms[i].expr,lists);
+      if (plan.keyspace)
+        lists.buckets[plan.keyspace] = true;
+      if (plan.index && plan.keyspace)
+        lists.indexes[plan.keyspace + "." + plan.index] = true;
+      else if (plan.index)
+        lists.indexes[plan.index] = true;
+      if (plan.group_keys) for (var i=0; i < plan.group_keys.length; i++)
+        lists.fields[plan.group_keys[i]] = true;
+      if (plan.condition)
+        getFieldsFromExpression(plan.condition,lists);
+      if (plan.expr)
+        getFieldsFromExpression(plan.expr,lists);
+      if (plan.on_keys)
+        getFieldsFromExpression(plan.on_keys,lists);
+      if (plan.as && plan.keyspace)
+        lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
+      if (plan.result_terms && _.isArray(plan.result_terms))
+        for (var i=0; i< plan.result_terms.length; i++) if (plan.result_terms[i].expr )
+          if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
+              lists.currentKeyspace)
+            lists.fields[lists.currentKeyspace + '.*'] = true;
+          else
+            getFieldsFromExpression(plan.result_terms[i].expr,lists);
 
-        return(lists);
-      }
+      return(lists);
     }
 
     //
