@@ -115,11 +115,13 @@
                 ng-class="{selected: qc.isSelected(1)}">JSON</a></li>
               <li class="tab_middle"><a ng-click="qc.selectTab(2)"
                 ng-class="{selected: qc.isSelected(2)}">Table</a></li>
-               <li class="tab_middle"><a ng-click="qc.selectTab(3)"
+               <li ng-if="!qc.autoExplain" class="tab_right"><a ng-click="qc.selectTab(3)"
                 ng-class="{selected: qc.isSelected(3)}">Tree</a></li>
-               <li class="tab_middle"><a ng-click="qc.selectTab(4)"
+               <li ng-if="qc.autoExplain" class="tab_middle"><a ng-click="qc.selectTab(3)"
+                ng-class="{selected: qc.isSelected(3)}">Tree</a></li>
+               <li ng-if="qc.autoExplain" class="tab_middle"><a ng-click="qc.selectTab(4)"
                 ng-class="{selected: qc.isSelected(4)}">Plan</a></li>
-               <li class="tab_right"><a ng-click="qc.selectTab(5)"
+               <li ng-if="qc.autoExplain" class="tab_right"><a ng-click="qc.selectTab(5)"
                 ng-class="{selected: qc.isSelected(5)}">Plan Text</a></li>
             </ul>
             <h4>Results</h4>

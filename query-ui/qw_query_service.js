@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer'];
+  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService'];
 
-  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer) {
+  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService) {
 
     var qwQueryService = {};
 
@@ -234,7 +234,8 @@
     }
 
     var hasLocalStorage = supportsHtml5Storage();
-    var localStorageKey = 'CouchbaseQueryWorkbenchState_' + window.location.host;
+    var localStorageKey = 'CouchbaseQueryWorkbenchState_' + window.location.host 
+    + qwConstantsService.localStorageSuffix;
 
     function loadStateFromStorage() {
       // make sure we have local storage
@@ -569,7 +570,7 @@
       // MB-16964 is now fixed, so we'll send queries this way and avoid URL encoding
 
       var queryRequest = {
-          url: "/_p/query/query/service",
+          url: qwConstantsService.queryURL,
           method: "POST",
           headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,'ignore-401':'true'},
           data: queryData,
@@ -630,25 +631,26 @@
       // of quotes followed by non-whitespace. That final one is group 1. If we get any
       // matches for group 1, it looks like more than one query.
 
-      var matchNonQuotedSemicolons = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|(;\s*\S+)/ig;
-      var semicolonCount = 0;
+      if (qwConstantsService.forbidMultipleQueries) {
+        var matchNonQuotedSemicolons = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|(;\s*\S+)/ig;
+        var semicolonCount = 0;
 
-      var matchArray = matchNonQuotedSemicolons.exec(queryText);
-      while (matchArray != null) {
-        if (matchArray[1]) // group 1, a non-quoted semicolon with non-whitespace following
-          semicolonCount++;
-        matchArray = matchNonQuotedSemicolons.exec(queryText);
+        var matchArray = matchNonQuotedSemicolons.exec(queryText);
+        while (matchArray != null) {
+          if (matchArray[1]) // group 1, a non-quoted semicolon with non-whitespace following
+            semicolonCount++;
+          matchArray = matchNonQuotedSemicolons.exec(queryText);
+        }
+
+        if (semicolonCount > 0) {
+          newResult.status = "errors";
+          newResult.data = {error: "Error, you cannot issue more than one query at once. Please remove all text after the semicolon closing the first query."};
+          newResult.result = JSON.stringify(newResult.data);
+          lastResult.copyIn(newResult);
+          saveStateToStorage(); // save current history
+          return null;
+        }
       }
-
-      if (semicolonCount > 0) {
-        newResult.status = "errors";
-        newResult.data = {error: "Error, you cannot issue more than one query at once. Please remove all text after the semicolon closing the first query."};
-        newResult.result = JSON.stringify(newResult.data);
-        lastResult.copyIn(newResult);
-        saveStateToStorage(); // save current history
-        return null;
-      }
-
 
       // don't run new queries if existing queries are already running
       if (qwQueryService.executingQuery.busy)
@@ -691,12 +693,11 @@
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
 
-      if (!queryIsExplain && !queryIsPrepare) {
+      if (!queryIsExplain && !queryIsPrepare && qwConstantsService.autoExplain) {
 
         newResult.explainDone = false;
 
         executeQueryUtil("explain " + queryText, false)
-        //$http(explainQueryRequest)
         .success(function(data, status, headers, config) {
           if (data && data.status == "success") {
             var lists = analyzePlan(data.results[0].plan,null);
@@ -759,7 +760,6 @@
 
       newResult.queryDone = false;
 
-      //var promise = $http(qwQueryService.currentQueryRequest)
       var promise = executeQueryUtil(queryText, true)
       // SUCCESS!
       .success(function(data, status, headers, config) {
@@ -821,7 +821,7 @@
         // if this was an explain query, change the result to show the
         // explain plan
 
-        if (queryIsExplain) {
+        if (queryIsExplain && qwConstantsService.autoExplain) {
           var lists = analyzePlan(data.results[0].plan,null);
           newResult.explainResult = {explain: data.results[0], analysis: lists,
               buckets: qwQueryService.buckets, tokens: qwQueryService.autoCompleteTokens};
@@ -996,7 +996,6 @@
      // console.log("Running monitoring cat: " + category + ", query: " + payload.statement);
 
       return(executeQueryUtil(query, false))
-//      return $http.post("/_p/query/query/service",payload, config)
       .then(function success(response) {
         var data = response.data;
         var status = response.status;
@@ -1094,7 +1093,6 @@
         "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
       res1 = executeQueryUtil(queryText, false)
-      //res1 = $http.post("/_p/query/query/service",{statement : queryText}, config)
       .success(function(data, status, headers, config) {
 
         var bucket_names = [];
@@ -1121,7 +1119,8 @@
         // get the passwords from the REST API (how gross!)
         //
 
-        res1 = $http.get("/pools/default/buckets")
+        if (qwConstantsService.getCouchbaseBucketPasswords)
+            $http.get("/pools/default/buckets")
         .success(function(data) {
           //
           // bucket data should be an array of objects, where each object has

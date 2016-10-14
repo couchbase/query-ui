@@ -3,9 +3,9 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService'];
 
-  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope) {
+  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());
@@ -134,6 +134,10 @@
     qc.getBigDataMessage = getBigDataMessage;
 
     qc.renderPage = function() {updateEditorSizes();};
+
+    // should we have the extra explain tabs?
+
+    qc.autoExplain = qwConstantsService.autoExplain;
 
     //
     // does the browser support file choosing?
@@ -276,7 +280,8 @@
       //console.log("last char: " + curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1]);
 
       // if they hit enter and the query ends with a semicolon, run the query
-      if (e[0].action === 'insert' && // they typed something
+      if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
+          e[0].action === 'insert' && // they typed something
           e[0].end.column === 0 &&    // and ended up on a new line
           e[0].start.row+1 == e[0].end.row && // and added one line
           e[0].start.column > 0 && // and the previous line wasn't blank
