@@ -19,6 +19,7 @@ html {
 }
 
 .cbui-row {
+  position:relative;
   padding: 6px 8px;
   display: -webkit-box;
   display: -webkit-flex;

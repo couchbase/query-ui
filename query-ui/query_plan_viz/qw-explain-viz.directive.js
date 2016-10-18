@@ -65,10 +65,23 @@
               content += "</ul><br>";
             }
 
+            // Tabular plan
             if (data.explain && (data.explain.plan || _.isString(data.explain.plan))) {
               content += "<br><h3>Query Operator Data Flows (bottom to top):</h3><br>";
               content += '<div class="ajtd-root ajtd-type-array">' +
               makeHTMLtable(data.explain,"") + "</div>";
+
+              // graphical plan
+              //
+              // map the plan to a data structure, the walk the structure, turning it into
+              //
+
+              var transformedPlan = analyzePlan(data.explain.plan,null);
+              content += '<br><br><h3>Visual Plan</h3><br>'
+                content += '<div class="cbui-row cbui-padding0 qw-explain-wrapper"><div class="qw-node-wrapper qw-sequence flex-left qw-first-node">';
+              content += makeTree(transformedPlan);
+              content += '</div></div>';
+              //console.log("Visual tree: " + makeTree(transformedPlan));
             }
           }
 
@@ -78,6 +91,52 @@
       }
     };
   });
+
+  //
+  // recursively turn the tree of ops into a graphical tree
+  //
+
+  function makeTree(plan,hasSuccessor) {
+    var result = '';
+
+    var opName = plan.operator['#operator'] ? plan.operator['#operator'] : "unknown op";
+    var opClass = "qw-node";
+
+    // if we are at the end of the line, we need less padding
+    if (!plan.predecessor && !plan.subsequence && !hasSuccessor)
+     opClass += " qw-last-node";
+
+    // we ignore operators of nodes with subsequences
+    if (plan.subsequence)
+      result += makeTree(plan.subsequence,plan.predecessor);
+
+    // if we have no predecessor, or we do and it's a single op, output our operator
+    else if (!plan.predecessor || !_.isArray(plan.predecessor))
+      result += '<div class="' + opClass + '" title="'
+      + JSON.stringify(plan.operator).replace(/"/g,'\'') + '">'
+      + getLabelForOperator(plan.operator,'<br>')
+      + '</div>';
+
+    if (plan.predecessor)
+     if (_.isArray(plan.predecessor)) {
+        result += '</div><div class="cbui-row cbui-padding0 qw-combi-wrapper">';
+        result += '<div class="qw-node qw-combinor">' + opName + "</div>";
+        result += '<div class="qw-combinor-border"></div>';
+        result += '<div class="qw-rows-wrapper">';
+
+        for (var i = 0; i < plan.predecessor.length; i++) {
+          result += '<div class="cbui-row cbui-padding0"><div class="qw-node-wrapper qw-sequence"><div class="qw-arrow-tip"></div>';
+          result += makeTree(plan.predecessor[i],hasSuccessor);
+          result += '</div></div>';
+        }
+
+        result += '</div>';
+      }
+      else
+        result += makeTree(plan.predecessor,hasSuccessor);
+
+    return(result);
+  }
 
   function printPlan(plan, indent) {
     var result = '';
@@ -183,7 +242,7 @@
           }
 
           // and, of course, the actual content of the cell, a label
-          result += '>' + getLabelForArrayEntry(array[col][row]) + '</td>';
+          result += '>' + getLabelForCell(array[col][row]) + '</td>';
 
           // one more blank cell to keep union lines from running in to parallel lines
 
@@ -211,31 +270,41 @@
   //
   //
 
-  function getLabelForArrayEntry(entry) {
+  function getLabelForCell(entry) {
     if (!entry)
       return("");
     else if (_.isString(entry))
       return(entry);
-    else if (entry.operator && entry.operator['#operator']) {
-      var pNode = entry.operator;
+    else if (entry.operator && entry.operator['#operator'])
+      return(getLabelForOperator(entry.operator));
+    else
+      return("");
+  }
+
+
+  function getLabelForOperator(op, separator) {
+    if (!separator)
+      separator = '';
+    if (op && op['#operator']) {
+      var pNode = op;
       var opName = pNode['#operator'];
       if (opName === "IndexScan")
-        return(opName + ' <span class="qw-field">' + pNode.keyspace + "." + pNode.index + '</span>');
+        return(opName + separator + ' <span class="qw-field">' + pNode.keyspace + "." + pNode.index + '</span>');
       else if (opName === "PrimaryScan")
         return('<span class="cbui-plan-expensive">' + opName + ' <span class="qw-field">' + pNode.keyspace  + '</span></span>');
       else if (opName === "InitialProject")
-        return(opName + ' <span class="qw-field">' + pNode.result_terms.length + " terms" + '</span>');
+        return(opName + separator + ' <span class="qw-field">' + pNode.result_terms.length + " terms" + '</span>');
       else if (opName === "Fetch")
-        return(opName + ' <span class="qw-field">' + pNode.keyspace + (pNode.as ? " as "+pNode.as : "")  + '</span>');
+        return(opName + separator + ' <span class="qw-field">' + pNode.keyspace + (pNode.as ? " as "+pNode.as : "")  + '</span>');
       else if (opName === "Alias")
-        return(opName + ' <span class="qw-field">' + pNode.as  + '</span>');
+        return(opName + separator + ' <span class="qw-field">' + pNode.as  + '</span>');
       else if (opName === "Limit" || opName == "Offset")
-        return(opName + ' <span class="qw-field">' + pNode.expr  + '</span>');
+        return(opName + separator + ' <span class="qw-field">' + pNode.expr  + '</span>');
       else if (opName === "Join")
-        return(opName + ' <span class="qw-field">' + pNode.keyspace + (pNode.as ? " as "+pNode.as : "") + ' on '
+        return(opName + separator + ' <span class="qw-field">' + pNode.keyspace + (pNode.as ? " as "+pNode.as : "") + ' on '
             + pNode.on_keys + '</span>');
       else if (opName === "Order") {
-        var result = opName + ' <span class="qw-field">';
+        var result = opName + separator + ' <span class="qw-field">';
         if (pNode.sort_terms) for (var i = 0; i < pNode.sort_terms.length; i++)
           result += pNode.sort_terms[i].expr + " ";
         result +=  '</span>';
