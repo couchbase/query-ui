@@ -99,7 +99,8 @@
     {return(lastResult.status == '400' ||
         lastResult.status == 'errors' ||
         lastResult.status == '500' ||
-        lastResult.status == '404');}
+        lastResult.status == '404' ||
+        lastResult.status == 'stopped');}
 
     //
     // this structure holds the current query text, the current query result,
@@ -234,7 +235,7 @@
     }
 
     var hasLocalStorage = supportsHtml5Storage();
-    var localStorageKey = 'CouchbaseQueryWorkbenchState_' + window.location.host 
+    var localStorageKey = 'CouchbaseQueryWorkbenchState_' + window.location.host
     + qwConstantsService.localStorageSuffix;
 
     function loadStateFromStorage() {
@@ -784,7 +785,7 @@
           else
             result = data.results;
         }
-        else {
+        else if (data.errors) {
           var failed = "Authorization Failed";
           // hack - detect authorization failed, make a suggestion
           for (var i=0; i < data.errors.length; i++)
@@ -794,6 +795,13 @@
               data.errors[i].suggestion = "Try reloading bucket information by refreshing the Bucket Analysis pane.";
 
           result = data.errors;
+        }
+        else if (data.status == "stopped") {
+          result = {status: "Query stopped on server."};
+//          console.log("Success/Error Data: " + JSON.stringify(data));
+//          console.log("Success/Error Status: " + JSON.stringify(status));
+//          console.log("Success/Error Headers: " + JSON.stringify(headers));
+//          console.log("Success/Error Config: " + JSON.stringify(config));
         }
 
         // if we got no metrics, create a dummy version
