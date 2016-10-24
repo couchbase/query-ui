@@ -33,6 +33,29 @@
     // allow a suffix to the key used for local storage
     qwConstantsService.localStorageSuffix = "";
 
+    // query language mode for ACE editor
+    qwConstantsService.queryMode = 'n1ql';
+
+    // should queries include an array of credentials? ("creds")
+    qwConstantsService.sendCreds = true;
+
+    // the following query asks Couchbase for a list of keyspaces, returning the 'id',
+    // and a 'has_prim' boolean indicating whether or not it has a primary index, and
+    // 'has_sec' indicating secondary indexes. For a different system, just make sure
+    // the returned schema has 'id' and 'has_prim'.
+    qwConstantsService.keyspaceQuery =
+      "select max(keyspace_id) id, max(has_primary) has_prim, max(has_second) has_sec, max(secondary_indexes) sec_ind from (" +
+      " select indexes.keyspace_id, true has_primary" +
+      "  from system:indexes where is_primary = true and state = 'online'" +
+      "  union" +
+      "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes" +
+      "  from system:indexes where state = 'online' and is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
+      "  union" +
+      "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
+      "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
+
+
+    //
     //
     //
     // all done creating the service, now return it

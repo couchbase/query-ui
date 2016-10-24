@@ -533,14 +533,17 @@
       //
 
       var queryData = {statement: queryText};
-      var credArray = [];
 
-      for (var i = 0; i < qwQueryService.buckets.length; i++) {
-        var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
-        credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
+      if (qwConstantsService.sendCreds) {
+        var credArray = [];
+
+        for (var i = 0; i < qwQueryService.buckets.length; i++) {
+          var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
+          credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
+        }
+
+        queryData.creds = credArray;
       }
-
-      queryData.creds = credArray;
 
       // if the user might want to cancel it, give it an ID
 
@@ -672,14 +675,16 @@
       //
 
       var queryData = {statement: queryText};
-      var credArray = [];
+      if (qwConstantsService.sendCreds) {
+        var credArray = [];
 
-      for (var i = 0; i < qwQueryService.buckets.length; i++) {
-        var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
-        credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
+        for (var i = 0; i < qwQueryService.buckets.length; i++) {
+          var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
+          credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
+        }
+
+        queryData.creds = credArray;
       }
-
-      queryData.creds = credArray;
 
       qwQueryService.currentQueryRequestID = UUID.generate();
       queryData.client_context_id = qwQueryService.currentQueryRequestID;
@@ -1089,16 +1094,16 @@
       //"from system:indexes where state = 'online' group by indexes.keyspace_id having array_agg(is_primary) " +
       //"order by indexes.keyspace_id;";
 
-      var queryText =
-        "select max(keyspace_id) id, max(has_primary) has_prim, max(has_second) has_sec, max(secondary_indexes) sec_ind from (" +
-        " select indexes.keyspace_id, true has_primary" +
-        "  from system:indexes where is_primary = true and state = 'online'" +
-        "  union" +
-        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes" +
-        "  from system:indexes where state = 'online' and is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
-        "  union" +
-        "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
-        "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
+      var queryText = qwConstantsService.keyspaceQuery;
+//        "select max(keyspace_id) id, max(has_primary) has_prim, max(has_second) has_sec, max(secondary_indexes) sec_ind from (" +
+//        " select indexes.keyspace_id, true has_primary" +
+//        "  from system:indexes where is_primary = true and state = 'online'" +
+//        "  union" +
+//        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes" +
+//        "  from system:indexes where state = 'online' and is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
+//        "  union" +
+//        "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
+//        "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
       res1 = executeQueryUtil(queryText, false)
       .success(function(data, status, headers, config) {

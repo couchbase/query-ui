@@ -85,7 +85,7 @@
     //
 
     qc.aceInputOptions = {
-        mode: 'n1ql',
+        mode: qwConstantsService.queryMode,
         showGutter: true,
         onLoad: qc.aceInputLoaded,
         onChange: qc.aceInputChanged,
