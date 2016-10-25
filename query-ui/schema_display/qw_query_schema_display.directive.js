@@ -99,12 +99,12 @@
   //calls the schemaDisplay directive for each flavor.
 
   angular.module('qwQuery').
-  directive('bucketDisplay', ['qwQueryService','$uibModal',getBucketDisplay]);
+  directive('bucketDisplay', ['qwQueryService','qwConstantsService','$uibModal',getBucketDisplay]);
 
   //var fakePromise = {then: function() {}};
   //var $modal = {open: function() {console.log("fake modal");return(then);}};
 
-  function getBucketDisplay(qwQueryService,$uibModal,$scope) {
+  function getBucketDisplay(qwQueryService,qwConstantsService,$uibModal,$scope) {
     //console.log("getBucketDisplay");
 
     return {
@@ -113,9 +113,9 @@
       //templateUrl: 'template/bucket-display.tmpl',
       template:
         '<div ng-click="changeExpandBucket(bucket)" class="bucket">' +
-        ' <img ng-show="bucket.expanded"' +
+        ' <img ng-show="bucket.expanded && showSchemaControls"' +
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowDown.png" /> ' +
-        '<img ng-hide="bucket.expanded"' +
+        '<img ng-hide="bucket.expanded || !showSchemaControls"' +
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowRight.png" />' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
@@ -146,12 +146,16 @@
           scope.$watch('bucket', function (schema) {
             scope.schema = schema;
 
+            scope.showSchemaControls = qwConstantsService.showSchemas;
+            
             /*
              * This function is used to expand bucket descriptions (asking for SASL passwords
              * if necessary)
              */
             scope.changeExpandBucket = function(bucket) {
-
+              if (!scope.showSchemaControls)
+                return;
+              
               //console.log("ChangeExpandBucket");
               if (!bucket.expanded) { //bucket is collapsed, expand it
                 scope.bucket = bucket;

@@ -52,7 +52,7 @@
 
     <!-- Next we want the metadata and result boxes side by side -->
     <div class="cbui-row cbui-align-top cbui-query-results-wrapper">
-      <div id="metadata" class="cbui-column25">
+      <div ng-show="qc.showBucketAnalysis" id="metadata" class="cbui-column25">
         <div id="sidebar_header" class="cbui-row cbui-header-oldgray">
           
 
@@ -74,7 +74,7 @@
 
         <div id="sidebar_body" class="cbui-overflow">
           <div title="Buckets with a primary index support all queries.">
-            Fully Queryable Buckets
+            {{qc.fullyQueryableBuckets}}
             <ul class="bucket">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
                 ng-show="bucket.has_prim">
@@ -85,7 +85,7 @@
 
           <div
             title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">
-            Queryable on Indexed Fields
+            {{qc.queryOnIndexedBuckets}}
             <ul class="bucket">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
                 ng-show="!bucket.has_prim && bucket.has_sec">
@@ -95,7 +95,7 @@
           </div>
 
           <div title="Buckets with no index cannot be queried.">
-            Non-Indexed Buckets
+            {{qc.nonIndexedBuckets}}
             <ul class="bucket">
               <li class="bucket" ng-repeat="bucket in qc.buckets"
                 ng-show="!bucket.has_prim && !bucket.has_sec">

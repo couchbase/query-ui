@@ -14,7 +14,7 @@
     // current UI version number
     //
 
-    qc.version = "1.0.5 (DP 4)";
+    qc.version = "1.0.5 (DP 5)";
 
     //
     // alot of state is provided by the qwQueryService
@@ -138,13 +138,21 @@
     // should we have the extra explain tabs?
 
     qc.autoExplain = qwConstantsService.autoExplain;
-
+    
+    qc.showBucketAnalysis = qwConstantsService.showBucketAnalysis;
+    
     //
     // does the browser support file choosing?
     //
 
     qc.fileSupport = (window.File && window.FileReader && window.FileList && window.Blob);
 
+    //
+    // labels for bucket analysis pane
+    qc.fullyQueryableBuckets = qwConstantsService.fullyQueryableBuckets;
+    qc.queryOnIndexedBuckets = qwConstantsService.queryOnIndexedBuckets;
+    qc.nonIndexedBuckets = qwConstantsService.nonIndexedBuckets;
+    
     //
     // call the activate method for initialization
     //

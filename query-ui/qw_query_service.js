@@ -1116,7 +1116,7 @@
           bucket.expanded = false;
           bucket.schema = [];
           bucket_names.push(bucket.id);
-          bucket.passwordNeeded = true;
+          bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
           bucket.indexes = [];
           bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
           passwords.push(""); // assume no password for now
@@ -1163,52 +1163,56 @@
         // now run a query to get the list of indexes
         /////////////////////////////////////////////////////////////////////////
 
-        queryText = "select indexes.* from system:indexes";
+        if (qwConstantsService.showSchemas) {
+          queryText = "select indexes.* from system:indexes";
 
-        res1 = executeQueryUtil(queryText, false)
-        //res1 = $http.post("/_p/query/query/service",{statement : queryText})
-        .success(function (data,status,headers,config) {
+          res1 = executeQueryUtil(queryText, false)
+          //res1 = $http.post("/_p/query/query/service",{statement : queryText})
+          .success(function (data,status,headers,config) {
 
-              //console.log("Got index info: " + JSON.stringify(data));
+            //console.log("Got index info: " + JSON.stringify(data));
 
-              if (data && _.isArray(data.results)) {
-                qwQueryService.indexes = data.results;
-                // make sure each bucket knows about each relevant index
-                for (var i=0; i < data.results.length; i++) {
-                  addToken(data.results[i].name,'index');
-                  for (var b=0; b < qwQueryService.buckets.length; b++)
-                    if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
-                      qwQueryService.buckets[b].indexes.push(data.results[i]);
-                      break;
-                    }
-                }
+            if (data && _.isArray(data.results)) {
+              qwQueryService.indexes = data.results;
+              // make sure each bucket knows about each relevant index
+              for (var i=0; i < data.results.length; i++) {
+                addToken(data.results[i].name,'index');
+                for (var b=0; b < qwQueryService.buckets.length; b++)
+                  if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
+                    qwQueryService.buckets[b].indexes.push(data.results[i]);
+                    break;
+                  }
               }
-
-              refreshAutoCompleteArray();
-              qwQueryService.gettingBuckets.busy = false;
-            })
-
-            // error status from query about indexes
-            .error(function (data,status,headers,config) {
-              console.log("Ind Error Data: " + JSON.stringify(data));
-              console.log("Ind Error Status: " + JSON.stringify(status));
-              console.log("Ind Error Headers: " + JSON.stringify(headers));
-              //console.log("Ind Error statusText: " + JSON.stringify(statusText));
-
-              var error = "Error retrieving list of indexes";
-
-              if (data && data.errors)
-                error = error + ": " + data.errors;
-              if (status)
-                error = error + ", contacting query service returned status: " + status;
-              if (response.statusText)
-                error = error + ", " + response.statusText;
-
-              console.log(error);
-
-              qwQueryService.gettingBuckets.busy = false;
             }
-            );
+
+            refreshAutoCompleteArray();
+            qwQueryService.gettingBuckets.busy = false;
+          })
+
+          // error status from query about indexes
+          .error(function (data,status,headers,config) {
+            console.log("Ind Error Data: " + JSON.stringify(data));
+            console.log("Ind Error Status: " + JSON.stringify(status));
+            console.log("Ind Error Headers: " + JSON.stringify(headers));
+            //console.log("Ind Error statusText: " + JSON.stringify(statusText));
+
+            var error = "Error retrieving list of indexes";
+
+            if (data && data.errors)
+              error = error + ": " + data.errors;
+            if (status)
+              error = error + ", contacting query service returned status: " + status;
+//          if (response && response.statusText)
+//          error = error + ", " + response.statusText;
+
+            console.log(error);
+
+            qwQueryService.gettingBuckets.busy = false;
+          }
+          );
+        }
+        else
+          qwQueryService.gettingBuckets.busy = false;
 
       })
       .error(function(data, status, headers, config) {
@@ -1389,10 +1393,10 @@
 
       if (!lists)
         lists = {buckets : {}, fields : {}, indexes: {}, aliases: []};
-
+      
       // make
 
-      if (_.isString(plan))
+      if (!plan || _.isString(plan))
         return(null);
 
       // special case: prepared queries are marked by an "operator" field
@@ -1658,9 +1662,12 @@
 
       // if no long ints, just return the original bytes parsed
 
-      if (longIntCount == 0) {
+      if (longIntCount == 0) try {
         var result = JSON.parse(rawBytes);
         result.rawJSON = rawBytes;
+      }
+      catch (e) {
+        return(rawBytes);
       }
 
       // otherwise copy the raw bytes, replace all long ints in the copy, and add the raw bytes as a new field on the result
