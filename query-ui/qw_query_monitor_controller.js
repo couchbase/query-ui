@@ -19,6 +19,7 @@
 
     qc.selectTab = qwQueryService.selectMonitoringTab;
     qc.isSelected = qwQueryService.isMonitoringSelected;
+    qc.cancelQueryById = qwQueryService.cancelQueryById;
 
     //
     // keep track of results from the server

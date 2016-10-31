@@ -54,6 +54,7 @@
     qwQueryService.currentQueryRequestID = null;
     qwQueryService.executeQuery = executeQuery;
     qwQueryService.cancelQuery = cancelQuery;
+    qwQueryService.cancelQueryById = cancelQueryById;
 
     // update store the metadata about buckets
 
@@ -512,6 +513,25 @@
         });
 
       }
+    }
+
+
+    //
+    // query monitoring might want to cancel queries this way
+
+    function cancelQueryById(requestId) {
+      //console.log("Cancelling query: " + requestId);
+      var query = 'delete from system:active_requests where requestId = "' +
+        requestId + '";';
+
+      executeQueryUtil(query,false)
+
+      // sanity check - if there was an error put a message in the console.
+      .error(function(data, status, headers, config) {
+        console.log("Error cancelling query.");
+        console.log("    Data: " + JSON.stringify(data));
+        console.log("    Status: " + JSON.stringify(status));
+      });
     }
 
     //
@@ -1061,15 +1081,15 @@
 
         switch (category) {
         case 1:
-          qwQueryService.monitoring.active_requests = [{Statment: error}];
+          qwQueryService.monitoring.active_requests = [{statment: error}];
           qwQueryService.monitoring.active_updated = new Date();
           break;
         case 2:
-          qwQueryService.monitoring.completed_requests = [{Statement: error}];
+          qwQueryService.monitoring.completed_requests = [{statement: error}];
           qwQueryService.monitoring.completed_updated = new Date();
           break;
         case 3:
-          qwQueryService.monitoring.prepareds = [{Statement: error}];
+          qwQueryService.monitoring.prepareds = [{statement: error}];
           qwQueryService.monitoring.prepareds_updated = new Date();
           break;
         }

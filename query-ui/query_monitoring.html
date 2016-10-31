@@ -27,16 +27,23 @@
         <th class="ajtd-column-header">Query</th>
         <th class="ajtd-column-header">Node</th>        
         <th class="ajtd-column-header">Duration</th>
-        <th class="ajtd-column-header">Result Count</th>
+        <th class="ajtd-column-header">Request ID</th>
         <th class="ajtd-column-header">State</th>
+        <th class="ajtd-column-header"></th>
     </thead>
     <tbody>
     <tr ng-repeat="result in qmc.monitoring.active_requests">
     <td class="ajtd-cell">{{result.statement}}</td>
     <td class="ajtd-cell">{{result.node}}</td>
     <td class="ajtd-cell">{{result.elapsedTime}}</td>
-    <td class="ajtd-cell">{{result.resultCount}}</td>
+    <td class="ajtd-cell">{{result.requestId}}</td>
     <td class="ajtd-cell">{{result.state}}</td>
+    <td>
+        <a class="ajtd-cell"
+        ng-click="qmc.cancelQueryById(result.requestId)">
+        <span>Cancel</span>
+        </a>
+    </td>
     </tr>
     </tbody>
    </table>
