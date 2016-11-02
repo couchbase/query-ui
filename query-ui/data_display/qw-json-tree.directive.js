@@ -35,7 +35,7 @@
           // create an empty div, if we have data, convert it to HTML
           var content = "<div></div>";
           if (json && !_.isEmpty(json))
-            content = '<div class="ajtd-root ajtd-type-array">' +
+            content = '<div>' +
               makeHTMLtree(json,"") + "</div>";
 
           // set the html of the element to what we just generated

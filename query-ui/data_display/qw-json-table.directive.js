@@ -42,7 +42,7 @@
 					// start with an empty div, if we have data convert it to HTML
 					var content = "<div>{}</div>";
 					if (json) {
-						content = '<div class="ajtd-root ajtd-type-array">' +
+						content = '<div class="	">' +
 						  makeHTMLtable(json,"") + "</div>";
 					}
 
@@ -83,7 +83,7 @@
 		if (_.isArray(object)) {
 			// if the array is empty, say so
 			if (object.length == 0)
-				return('<div class=ajtd-key>[]</div>');
+				return('<div class="ajtd-key">[]</div>');
 
 			// find the columns
 			var arrayObjCount = 0;
@@ -108,7 +108,7 @@
 			//
 
 			if (arrayObjCount == 0)  {
-				result += '<table class="ajtd-root ajtd-object-value ajtd-value single-type-array"><tbody>';
+				result += '<table class="ajtd-root"><tbody>';
 
 				_.forEach(object, function (item,index) {
 					result += '<td title="' + prefix + "[" + index  + ']">' +
@@ -149,11 +149,11 @@
 			// Make a table whose columns are the union of all fields in all the objects. If we
 			// have a non-object, output it as a full-width cell.
 
-            result += '<table class="ajtd-object-value ajtd-table multi-type-array sortable"><thead>';
+            result += '<table class="ajtd-root ajtd-object-value ajtd-table multi-type-array sortable"><thead>';
 
 			var keys = (innerKeys ? innerKeys : itemsKeysToObject);
 			_.forIn(keys, function(value,key) {
-              result += '<th class=ajtd-column-header>' + key +'</th>';
+              result += '<th>' + key +'</th>';
 			});
 
 			result += '</thead><tbody>';
@@ -169,7 +169,7 @@
 					// if it's an empty object, just say so
 					if (_.keys(item).length == 0)
 						result += '<td title="' + prefix + "[" + index  +
-                        ']"><div class=ajtd-key>empty object</div></td>';
+                        ']"><div class="ajtd-key">empty object</div></td>';
 
 					else _.forIn(keys, function(b,key) {
 						var value = item ? item[key] : null;
@@ -183,7 +183,7 @@
 
 						// for long strings, output an expandable cell
 						else if (_.isString(value) && value.length > 128)
-							result += '<div class=ajtd-value><div class="ajtd-hideContent">' + value + '</div><a onClick="qwJsonTableToggleExpand(this)">(more...)</a></div>';
+							result += '<div class=ajtd-value><div class="ajtd-hideContent">' + value + '</div><a href="javascript:void();" onclick="qwJsonTableToggleExpand(this)">more...</a></div>';
 
 						// for everything else, just output the values
 						else if (!_.isUndefined(value) || value === 0)
@@ -191,7 +191,7 @@
 
 						// except undefined values, in which case output a nbsp
 						else
-							result += '&nbsp';
+							result += '&nbsp;';
 
 						result += '</td>'; // end the cell
 					});
@@ -252,9 +252,9 @@
 			// if we are doing special case, add a blank column for the object name, then
 			// all the names of the member keys
 			if (specialCase) {
-				result += '<th class=ajtd-column-header></th>';
+				result += '<th></th>';
 				_.forEach(memberKeys, function(item,index) {
-					result += '<th class=ajtd-column-header>' + item +'</th>';
+					result += '<th>' + item +'</th>';
 				});
 
 				// start the table body
@@ -283,7 +283,7 @@
 			// regular case, horizontal table with headers are names of keys
 			else {
 				_.forIn(object, function(value,key) {
-					result += '<th class=ajtd-column-header>' + key +'</th>';
+					result += '<th>' + key +'</th>';
 				});
 				result += '</thead><tbody><tr>';
 
@@ -298,7 +298,7 @@
 					// otherwise, for primitives, output key/value pair
 					else
 						result += '<td title="' + prefix + key  +
-                        '" class="ajtd-cell"><div>' + value + '</span></div></td>';
+                        '"><div>' + value + '</span></div></td>';
 				});
 			}
 			// finish the table
@@ -366,12 +366,12 @@ var qwJsonTableToggleExpand = function(ev) {
 	//console.log("ToggleExpand, class: " + textElem.className + ", src: " + ev.textContent);
 	if (textElem.className.indexOf("ajtd-hideContent") > -1)
 	{
-		ev.textContent = "(less...)";
+		ev.textContent = "less...";
 		textElem.className = textElem.className.replace("ajtd-hideContent","ajtd-showContent");
 	}
 	else if (textElem.className.indexOf("ajtd-showContent") > -1)
 	{
-		ev.textContent = "(more...)";
+		ev.textContent = "more...";
 		textElem.className = textElem.className.replace("ajtd-showContent","ajtd-hideContent");
 	}
 };

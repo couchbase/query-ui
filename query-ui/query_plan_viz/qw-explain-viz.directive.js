@@ -35,34 +35,36 @@
             content = "";
 
             if (_.isString(data))
-              content = "<h3>" + data + "</h3>";
+              content = '<p class="error">' + data + '</p>';
             else if (data.data_not_cached)
-              content = "<h3>" + JSON.stringify(data) + "</h3>";
+              content = '<p class="error">' + JSON.stringify(data) + '</p>';
 
             // summarize plan
             if (data.analysis) {
               content += "<h3>Query Plan Summary:</h3>";
-              content += "<br><ul class=\"cbui-plan-summary\">";
-
-              content += "<li>Indexes used: <ul>";
+              content += "<div class='row qw-planviz-summary width-8 flex-left text-small'>";
+              content += "<div class='column'>";
+              content += "<div class='semi-bold'>Indexes</div>";
+//              content += "<li>Indexes used: <ul>";
               for (var f in data.analysis.indexes)
                 if (f.indexOf("#primary") >= 0)
-                  content += "<li class='qw-field cbui-plan-expensive'>" + f + "</li>";
+                  content += "<em class='qw-field cbui-plan-expensive'>" + f + "</em>";
                 else
-                  content += "<li class='qw-field'>" + f + "</li>";
-              content += "</ul></li>";
+                  content += "<em class='qw-field'>" + f + "</em>";
+              content += "</div>";
 
-              content += "<li>Buckets used: <ul>";
+              content += "<div class='column'>";
+              content += "<div class='semi-bold'>Buckets</div>";
               for (var b in data.analysis.buckets)
-                content += "<li class='qw-field'>" + b + "</li>";
-              content += "</ul></li>";
+                content += "<em class='qw-field'>" + b + "</em>";
+              content += "</div>";
 
-              content += "<li>Fields used: <ul>";
+              content += "<div class='column'>";
+              content += "<div class='semi-bold'>Fields</div>";
               for (var f in data.analysis.fields)
-                content += "<li class='qw-field'>" + f + "</li>";
-              content += "</ul></li>";
-
-              content += "</ul><br>";
+                content += "<em class='qw-field'>" + f + "</em>";
+              content += "</div>";
+              content += "</div>";
             }
 
             // Tabular plan
@@ -78,7 +80,7 @@
 
               var transformedPlan = analyzePlan(data.explain.plan,null);
               content += '<br><br><h3>Visual Plan</h3><br>'
-                content += '<div class="cbui-row cbui-padding0 qw-explain-wrapper"><div class="qw-node-wrapper qw-sequence flex-left qw-first-node">';
+              content += '<div class="row qw-explain-wrapper"><div class="qw-node-wrapper qw-sequence flex-left qw-first-node">';
               content += makeTree(transformedPlan);
               content += '</div></div>';
               //console.log("Visual tree: " + makeTree(transformedPlan));
@@ -291,7 +293,7 @@
       if (opName === "IndexScan")
         return(opName + separator + ' <span class="qw-field">' + pNode.keyspace + "." + pNode.index + '</span>');
       else if (opName === "PrimaryScan")
-        return('<span class="cbui-plan-expensive">' + opName + ' <span class="qw-field">' + pNode.keyspace  + '</span></span>');
+        return('<span class="cbui-plan-expensive">' + opName + '</span>' + separator + ' <span class="qw-field">' + pNode.keyspace  + '</span>');
       else if (opName === "InitialProject")
         return(opName + separator + ' <span class="qw-field">' + pNode.result_terms.length + " terms" + '</span>');
       else if (opName === "Fetch")

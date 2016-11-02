@@ -1,24 +1,22 @@
-/*
- * these css layout classes are used in the query-ui, but should eventually
- * be moved into the master CSS.
- */
-
-/*
 html {
   box-sizing: border-box;
 }
-
+/*
 *,
 *:before,
 *:after {
   box-sizing: inherit;
 }
 */
+
+
+/*
 .cbui-overflow {
   overflow: auto;
 }
 
 .cbui-row {
+  position:relative;
   padding: 6px 8px;
   display: -webkit-box;
   display: -webkit-flex;
@@ -127,14 +125,14 @@ a.cbui-rightmargin {
   margin: 0 12px 0 0;
 }
 
-.cbui_color_success {
-  border: 1px solid;
-  border-color: #a5ff9f
+span.cbui_color_success {
+  color: #2ca01c !important;
+  font-weight: 600;
 }
 
-.cbui_color_fail {
-  border: 1px solid;
-  border-color: #fc7d83
+span.cbui_color_fail {
+  color: #fc7d83 !important;
+  font-weight: 600;
 }
 
 .cbui-query-resultsnumber input {
@@ -142,17 +140,6 @@ a.cbui-rightmargin {
   padding: 4px;
   border: 1px solid #ccc;
   border-radius: 3px;
-}
-
-.cbui-header-oldgray {
-  background: #e3e3e4; /* Old browsers */
-  /* FF3.6-15 */
-  background: -webkit-linear-gradient(top, #e3e3e4 0%, #cdced0 100%);
-  /* Chrome10-25,Safari5.1-6 */
-  background: linear-gradient(to bottom, #e3e3e4 0%, #cdced0 100%);
-  /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e4',
-    endColorstr='#cdced0', GradientType=0); /* IE6-9 */
 }
 
 .cbui-error-message {
@@ -206,95 +193,11 @@ a.cbui-rightmargin {
   cursor: none;
 }
 
-#sidebar_body {
-  background-color: #fff;
-  padding: 8px;
-  font-size: 14px;
-  font-weight: 400;
-  min-height: 128px;
-}
-
-#sidebar_header {
-  min-height: 32px
-}
-
-#metadata {
-  background-color: #fff;
-  margin-right: 2px
-}
-
-#result_box {
-    border-left: 1px solid #cdced0;
-  }
-
-#result_header {
-  padding: 5px 8px
-}
-
-#result_header ul {
-  display: inline-block;
-  border: 1px solid #cdced0;
-}
-
-#result_summary {
-  padding: 8px 8px;
-  margin-right: 2px;
-  font-size: 14px;
-  font-weight: 400;
-  min-height: 20px;
-}
-
-#result_summary table, #result_summary th, #result_summary tr,
-  #result_summary td {
-  font-size: 11px;
-  font-weight: 600;
-  vertical-align: middle;
-}
-
-#result_summary td {
-  width: 20%;
-  text-align: center;
-  padding: 4px 0;
-}
-
-#result_summary table {
-  
-}
-
-#query_editor {
-  overflow: auto;
-  background-color: #fff;
-  padding: 8px;
-  margin: 1px;
-  font-size: 14px;
-  font-weight: 400;
-  min-height: 75px; 
-  border-right: 1px solid #e3e3e4;
-}
-
-#result_editor {
-  overflow: auto;
-  background-color: #fff;
-  padding: 8px;
-  margin: 1px;
-  font-size: 14px;
-  font-weight: 400;
-}
-
-#result_table, #result_tree, #query_plan, #query_plan_text {
-  height: 200px;
-  padding: 0px;
-  padding-right: 4px;
-  margin-right: 4px;
-  margin-top: 0px;
-  overflow: auto;
-  background-color: #fff;
-}
-
 .cbui-viewslist {
   overflow: auto;
   width: 100%
 }
+*/
 
 .cbui-query-results-wrapper {
   border-radius: 4px 4px 0px 0px;
@@ -308,10 +211,170 @@ a.cbui-rightmargin {
   border-width: 0 1px 1px 1px;
 }
 
-.ajtd-row-selected {
-  background-color: #00f2ff;
+.query-history-controls-inner {
+  margin: 0 .25rem;
+}
+#result_summary {
+  margin-bottom: 1.5rem;
+}
+
+#result_summary span {
+  margin: 0 .5rem;
+  color: #555;
+}
+
+#result_summary span:first-child {
+  margin-left: 0;
+}
+
+#query_editor {
+  overflow: auto;
+  background-color: #f6f7f9;
+  margin: .5rem 0 .75rem 0;
+  font-weight: 400;
+}
+#editor_header {
+  min-height: 2rem;
+}
+#query_editor * {
+  line-height: 1.5rem !important;
+  font-size: 14px !important;
+}
+
+.ace_gutter {
+  background-color: #f6f7f9 !important;
+}
+
+.ace_print-margin {display:none !important;}
+
+#result_header {
+min-height: 2rem;
+}
+/* the wrapper around ALL results views...followed by the specific views */
+#result_box {
+background-color: #f6f7f9;
+margin-top: .5rem;
+}
+/* the wrappers around the TREE, PLAN, and PLAN TEXT views */
+#result_tree, #query_plan, #query_plan_text, #sidebar_body {
+  overflow: auto;
+}
+#result_tree {padding:.5rem .5rem .5rem 0;}
+#query_plan {padding:.5rem;}
+
+/* the wrapper around the JSON view */
+#result_editor {
+  overflow: auto;
+  background-color: #f6f7f9;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 1rem;
+}
+/* the wrapper around the JSON view to capture all its children brutally */
+#result_editor * {
+  line-height: 1.5rem !important;
+}
+/* the wrapper around the HTML Table view */
+#result_table {
+  overflow: auto;
+  padding: 0;
+}
+
+#sidebar_header {
+  min-height: 2rem;
+  border-left: 1px solid #d8d8d8;
+  margin-left: 1.5rem;
+  padding-left: .5rem;
+  }
+#sidebar_body {
+  border-left: 1px solid #d8d8d8;
+  margin-left: 1.5rem;
+  padding-left: .5rem;
+  padding-top: .5rem;
+}
+#sidebar_body h5 {
+  line-height: 2rem;
+  font-weight: 600;
+  color: #000;
+  }
+#sidebar_body .row {
+    line-height: 2rem;
+      margin-bottom:.5rem;
+      padding-right: 4px;
+}
+
+#sidebar_body .icon {
+  cursor: pointer;
+  color: #555;
 }
 
 .ajtd-row-matched-search {
   background-color: #d9c5ff;
+}
+
+#sidebar_body {
+  overflow:auto;
+}
+
+#sidebar_body ul {
+  margin: 0 0 .5rem 0;
+  }
+
+ #sidebar_body li {
+    list-style-type: none;
+  }
+#sidebar_body  section {
+  border:none;
+}
+#show_anyway {
+  color:red;
+  font-size:.875rem;
+  padding:1.5rem;
+}
+#show_anyway a {
+  display:block;
+  width:100%;
+  text-align:right;
+}
+#qw_history_dialog .panel-content .filter-input-group {
+  margin: 0 auto .5rem auto;
+}
+
+#qw_history_table section span.selected {
+  background-color: #ececec;
+}
+
+#qw_history_table section {
+  margin:0;padding:0;
+}
+#qw_history_table section:empty {
+  display: none;
+}
+
+#qw_history_table section span {
+  padding: .5rem 0;
+  min-height:2rem;
+  cursor:pointer;
+  line-height:1.3;}
+
+#qw_history_table section:hover {
+  background-color: #ecf3fa;}
+
+/* to be added to core css files when appropriate -------------------- */
+.hidden {display:none;}
+
+.panel-footer.spaced {
+  -webkit-justify-content:space-between;
+      -ms-flex-pack:justify;
+          justify-content:space-between;
+}
+
+.gray-6 {
+  background-color:#ececec;
+}
+
+.flex-top {
+    -webkit-align-items: flex-start;
+    -ms-flex-align: flex-start;
+    align-items: stretch;
 }

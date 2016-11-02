@@ -117,15 +117,17 @@
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowDown.png" /> ' +
         '<img ng-hide="bucket.expanded || !showSchemaControls"' +
         '  style="height: 0.75em" src="/_p/ui/query/images/ArrowRight.png" />' +
+//        '<span class="icon fa-caret-down" ng-show="bucket.expanded"></span>' +
+//        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded">&nbsp; </span>' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
-        '  {{bucket.id}}</div>' +
+        '  &nbsp; {{bucket.id}}</div>' +
         '  <ul class="bucket" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         '    <li class="schema" ng-repeat="flavor in bucket.schema">' +
 
 
-        '      <div ng-show="flavor.Summary">{{flavor.Summary}}</div>' + //  if a summary line, show it
+        '      <div ng-show="flavor.Summary" class="semi-bold margin-bottom-half">>{{flavor.Summary}}</div>' + //  if a summary line, show it
 
         '      <div ng-hide="flavor.Summary"><span ng-show="flavor[\'%docs\']">Flavor {{$index + " ("}}' +
         '        {{flavor[\'%docs\'] | number:1}}{{"%)"}}</span>' +
@@ -134,7 +136,7 @@
 
         '      <schema-display ng-hide="flavor.Summary" schema="flavor" path=""></schema-display>' +
 
-        '      <li class="index" ng-show="bucket.indexes.length > 0">Indexes: <ul class="bucket">' +
+        '      <li ng-show="bucket.indexes.length > 0"><span class="semi-bold">Indexes</span> <ul class="bucket">' +
         '        <li class="index" ng-repeat="index in bucket.indexes">' +
         '        \'{{index.name}}\' <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
         '         <span ng-if="index.condition"> where {{index.condition}}</span>' +
@@ -147,7 +149,7 @@
             scope.schema = schema;
 
             scope.showSchemaControls = qwConstantsService.showSchemas;
-            
+
             /*
              * This function is used to expand bucket descriptions (asking for SASL passwords
              * if necessary)
@@ -155,7 +157,7 @@
             scope.changeExpandBucket = function(bucket) {
               if (!scope.showSchemaControls)
                 return;
-              
+
               //console.log("ChangeExpandBucket");
               if (!bucket.expanded) { //bucket is collapsed, expand it
                 scope.bucket = bucket;

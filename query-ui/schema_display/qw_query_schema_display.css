@@ -2,23 +2,23 @@
 
 .bucket {
   font-weight: normal;
-  color: #5286BC;
+  color: #333;
   white-space: nowrap;
+  text-overflow: ellipsis;
   margin-left: 0px;
   cursor: pointer;
 }
 
 .schema {
-  color: #839B00;
+  color: #888;
   font-style: italic;
   font-size: small;
   white-space: nowrap;
-  margin-left: 1em;
   cursor: default;
 }
 
 .schema .indexed {
-  color: #839B00;
+  color: #333;
   font-weight: bold;
 }
 
@@ -30,4 +30,3 @@
   margin-left: 1em;
   cursor: default;
 }
-

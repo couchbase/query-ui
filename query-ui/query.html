@@ -5,7 +5,7 @@
     <div id="query_box" class="query_box">
       <div id="query_header"
         class="cbui-row cbui-header-oldgray cbui-rounded-top">
-        <span class="cbui-column25"> <a ng-click="qc.query()"
+        <span class="width-3"> <a ng-click="qc.query()"
           class="btn_1"><span title="(or hit enter after a semicolon)" ng-if="!qc.executingQuery.busy">Execute</span>
           <span title="Stop the running query" ng-if="qc.executingQuery.busy">Cancel</span></a>
         </span> <span class="cbui-column cbui-centered"> <a
@@ -25,7 +25,7 @@
           class="btn_1 cbui-rightmargin"> <span>Clear History</span>
         </a -->
         </span>
-        <span class="cbui-column25 cbui-right">
+        <span class="width-3 cbui-right">
           <input type="file" id="loadQuery" name="files" style="display:none"/>
           <a ng-if="qc.fileSupport" id="loadQueryButton" ng-click="qc.load_query()" class="btn_1" onchange="console.log("changed files")"> 
             <span>Load Query</span></a>
@@ -52,7 +52,7 @@
 
     <!-- Next we want the metadata and result boxes side by side -->
     <div class="cbui-row cbui-align-top cbui-query-results-wrapper">
-      <div ng-show="qc.showBucketAnalysis" id="metadata" class="cbui-column25">
+      <div ng-show="qc.showBucketAnalysis" id="metadata" class="width-3">
         <div id="sidebar_header" class="cbui-row cbui-header-oldgray">
           
 
@@ -107,7 +107,7 @@
       </div>
 
       <!-- Result panel -->
-      <div id="result_box" class="cbui-column75">
+      <div id="result_box" class="width-9 classic-ui">
         <div id="result_inner">
           <div id="result_header" class="cbui-row cbui-header-oldgray">
             <ul class="tabs">

@@ -1,4 +1,4 @@
-<div id="maiPanel" class="query" ng-controller="qwQueryController as qc">
+<div ng-controller="qwQueryController as qc">
   <h3 ng-if="qc.validated.inProgress()">Contacting Query Node</h3>
   <div ng-if="!qc.validated.inProgress() && !qc.validated.valid()">
     <div ng-if="qc.validated.otherStatus()">
@@ -19,7 +19,7 @@
       No query nodes were found on this cluster, so N1QL querying is not possible.
     </div>
   </div>
-  <ul ng-if="qc.validated.valid()" class="second-level-nav">
+  <!-- <ul ng-if="qc.validated.valid()" class="second-level-nav">
     <li><a ui-sref="app.admin.query.workbench"
       ui-sref-active="selected">Workbench</a></li>
     <li>
@@ -27,6 +27,20 @@
         ui-sref="app.admin.query.monitoring"
         ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">Monitoring</a>
     </li>
-  </ul>
+  </ul> -->
+  <div ng-if="qc.validated.valid()" class="interim row flex-left sub-nav">
+      <span class="pills">
+        <a
+          ui-sref="app.admin.query.workbench"
+          ui-sref-active="pills-selected">
+          Query Workbench</a>
+      </span>
+      <span class="pills">
+        <a
+          ui-sref="app.admin.query.monitoring"
+          ui-sref-active="pills-selected"
+          ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">Query Monitor</a>
+      </span>
+  </div>
   <div ui-view=""></div>
 </div>

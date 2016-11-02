@@ -138,9 +138,9 @@
     // should we have the extra explain tabs?
 
     qc.autoExplain = qwConstantsService.autoExplain;
-    
+
     qc.showBucketAnalysis = qwConstantsService.showBucketAnalysis;
-    
+
     //
     // does the browser support file choosing?
     //
@@ -152,7 +152,7 @@
     qc.fullyQueryableBuckets = qwConstantsService.fullyQueryableBuckets;
     qc.queryOnIndexedBuckets = qwConstantsService.queryOnIndexedBuckets;
     qc.nonIndexedBuckets = qwConstantsService.nonIndexedBuckets;
-    
+
     //
     // call the activate method for initialization
     //
@@ -191,7 +191,7 @@
         timeUnits = "minutes";
       }
       var message = "The current dataset, " + qc.lastResult.resultSize + " " +
-        "bytes, is too large to display quickly. Using a lower limit or a more " +
+        "bytes, is too large to display quickly.<br>Using a lower limit or a more " +
         "specific where clause in your query can reduce result size. Rendering " +
         "might freeze your browser for " + timeEstimate + " to " + timeEstimate*4 +
         " " + timeUnits + " or more. ";
@@ -260,6 +260,7 @@
     var endsWithSemi = /;\s*$/i;
 
     function aceInputChanged(e) {
+      //console.log("input changed, action: " + JSON.stringify(e[0]));
       // show a placeholder when nothing has been typed
       var curSession = qc.inputEditor.getSession();
       var noText = curSession.getValue().length == 0;
@@ -279,6 +280,13 @@
       }
 
       qc.inputEditor.$blockScrolling = Infinity;
+
+      // for inserts, by default move the cursor to the end of the insert
+
+      if (e[0].action === 'insert') {
+        qc.inputEditor.moveCursorToPosition(e[0].end);
+        qc.inputEditor.focus();
+      }
 
       //
       // allow the query editor to grow and shrink a certain amount based
@@ -482,40 +490,59 @@
       var resultHeaderHeight =  $('#result_header').height();
       var sidebarHeaderHeight =  $('#sidebar_header').height();
       var resultSummaryHeight = $('#result_summary').height();
+      var spock_ui = $('#editor_header').height() != null;
 
       var otherStuff = pageHeaderHeight + pageFooterHeight +
         headerNavHeight + queryBoxHeight;
 
       if (//pageHeaderHeight == null || pageFooterHeight == null ||
-          headerNavHeight == null || queryBoxHeight == null)
+          headerNavHeight == null || queryBoxHeight == null) {
         return;
+      }
 
       var editor_size = windowHeight - otherStuff - margins - resultHeaderHeight;
       if (editor_size > 1000)
         editor_size = 1000;
-      if (editor_size < 300)
-        editor_size = 300;
+      if (spock_ui)
+        editor_size += 70;
+      else
+        editor_size += 140;
+      if (editor_size < 0)
+        editor_size = 0;
 
-      //console.log("pageHeaderHeight: " + pageHeaderHeight);
-      //console.log("pageFooterHeight: " + pageFooterHeight);
-//      console.log("headerNavHeight: " + headerNavHeight);
-//      console.log("queryBoxHeight: " + queryBoxHeight);
+//    console.log("pageHeaderHeight: " + pageHeaderHeight);
+//    console.log("pageFooterHeight: " + pageFooterHeight);
+//    console.log("headerNavHeight: " + headerNavHeight);
+//    console.log("queryBoxHeight: " + queryBoxHeight);
 //      console.log("windowHeight: " + windowHeight);
 //      console.log("resultHeaderHeight: " + resultHeaderHeight);
 //      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
+//      console.log(" spock_ui: " + spock_ui);
 //      console.log(" editor_size: " + editor_size);
 //      console.log("  result is now: " + $('#result_editor').height() + ", setting to " + (editor_size + 10) + "\n\n");
 
-      $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
-      //$('#result_editor').height(500);
-      $('#result_editor').height(editor_size + 10);
-      $('#result_table').height(editor_size+25);
-      $('#result_tree').height(editor_size+25);
-      $('#query_plan').height(editor_size + 25);
-      //$('#query_plan_text').height(500);
-      $('#query_plan_text').height(editor_size + 25);
 
-      $('#result_box').height(editor_size+109);
+      if (!spock_ui) { // classic UI
+        $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
+        $('#result_editor').height(editor_size + 9);
+        $('#result_table').height(editor_size+25);
+        $('#result_tree').height(editor_size+ 24);
+        $('#query_plan').height(editor_size + 15);
+        $('#query_plan_text').height(editor_size + 25);
+        //$('#result_box').height(editor_size+50);
+      }
+      else {
+        if ($('#query_wrapper').height())
+          $('#sidebar_body').height($('#query_wrapper').height() - sidebarHeaderHeight - 8);
+        $('#result_editor').height(editor_size);
+        $('#result_table').height(editor_size+25);
+        $('#result_tree').height(editor_size+15);
+        $('#query_plan').height(editor_size + 15);
+        $('#query_plan_text').height(editor_size + 25);
+        //$('#result_box').height(editor_size+50);
+      }
+
+
     }
 
     $(window).resize(updateEditorSizes);
@@ -783,16 +810,20 @@
 
     function toggleAnalysisSize() {
       if (!qc.analysisExpanded) {
-        $("#metadata").removeClass("cbui-column25");
-        $("#result_box").removeClass("cbui-column75");
-        $("#metadata").addClass("cbui-column66");
-        $("#result_box").addClass("cbui-column33");
+        $("#metadata").removeClass("width-3");
+        $("#metadata").addClass("width-6");
+        if ($('#result_box').hasClass('classic-ui')) {
+          $("#result_box").removeClass("width-9");
+          $("#result_box").addClass("width-6")
+        }
       }
       else {
-        $("#metadata").removeClass("cbui-column66");
-        $("#result_box").removeClass("cbui-column33");
-        $("#metadata").addClass("cbui-column25");
-        $("#result_box").addClass("cbui-column75");
+        $("#metadata").removeClass("width-6");
+        $("#metadata").addClass("width-3");
+        if ($('#result_box').hasClass('classic-ui')) {
+          $("#result_box").removeClass("width-6");
+          $("#result_box").addClass("width-9");
+        }
       }
       qc.analysisExpanded = !qc.analysisExpanded;
     }

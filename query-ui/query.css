@@ -259,7 +259,7 @@ a.cbui-rightmargin {
 }
 
 #result_summary table {
-  
+
 }
 
 #query_editor {
@@ -269,7 +269,7 @@ a.cbui-rightmargin {
   margin: 1px;
   font-size: 14px;
   font-weight: 400;
-  min-height: 75px; 
+  min-height: 75px;
   border-right: 1px solid #e3e3e4;
 }
 
@@ -316,3 +316,7 @@ a.cbui-rightmargin {
 .ajtd-row-matched-search {
   background-color: #d9c5ff;
 }
+#metadata.width-3 {width:25% !important;}
+#result_box.width-9 {width:75% !important;}
+#metadata.width-6,
+#result_box.width-6 {width:50% !important;}

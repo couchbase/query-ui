@@ -110,7 +110,7 @@
 
 .ajtd-key {
 	display: inline-block;
-  color: #839B00;
+  color: red;
   font-style: italic;
   font-size: small;
   text-align: left;
@@ -191,4 +191,3 @@
 	word-wrap: break-word;      /* IE 5+ */
 	max-width: 40em;
 }
-
