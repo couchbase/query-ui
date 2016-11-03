@@ -19,7 +19,7 @@
                     <td ng-if="showRow($index)" ng-class="{'ajtd-row-selected': isRowSelected($index)}" 
                         ng-click="select($index)" ng-dblclick="select($index);$close('ok')"
                         ng-attr-id="{{'qw_history_table_' + $index}}"  
-                        class="ajtd-cell ajtd-value">{{$index + 1}}</td>
+                        class="ajtd-cell ajtd-value" style="min-width:40px">{{$index + 1}}</td>
                     <td ng-if="showRow($index)" ng-class="{'ajtd-row-selected': isRowSelected($index)}") 
                         ng-click="select($index)" ng-dblclick="select($index); $close('ok')" 
                        class="ajtd-cell ajtd-key">{{query.query}}</td>
