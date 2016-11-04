@@ -414,7 +414,7 @@
         // also submit a new query to delete the running query on the server
         //
 
-        var query = 'delete from system:active_requests where ClientContextID = "' +
+        var query = 'delete from system:active_requests where clientContextID = "' +
           qwQueryService.currentQueryRequestID + '";';
         var queryData = {statement: query , client_context_id: UUID.generate()};
 
