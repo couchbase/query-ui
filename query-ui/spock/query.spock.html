@@ -1,13 +1,13 @@
-<main
+<main id="spockUI"
    ng-controller="qwQueryController as qc"
    ng-show="qc.validated.valid()">
 
 <!-- wrapper for query editor and results -->
-  <div mn-spinner="queryInProgress" id="query_wrapper" class="width-9">
+  <div id="query_ui" mn-spinner="queryInProgress" id="query_wrapper" class="width-9">
 
     <div id="query_box">
 <!-- Editor "header row" -->
-    <div id="editor_header" class="row">
+    <div id="query_header" class="row">
       <h4>Query Editor</h4>
       <div class="query-history-controls">
         <button

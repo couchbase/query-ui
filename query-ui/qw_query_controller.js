@@ -284,18 +284,12 @@
       // for inserts, by default move the cursor to the end of the insert
 
       if (e[0].action === 'insert') {
+        updateEditorSizes();
         qc.inputEditor.moveCursorToPosition(e[0].end);
         qc.inputEditor.focus();
       }
 
-      //
-      // allow the query editor to grow and shrink a certain amount based
-      // on the number of lines in the query
-      //
-
-      //console.log("last char: " + curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1]);
-
-      // if they hit enter and the query ends with a semicolon, run the query
+     // if they hit enter and the query ends with a semicolon, run the query
       if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
           e[0].action === 'insert' && // they typed something
           e[0].end.column === 0 &&    // and ended up on a new line
@@ -305,12 +299,11 @@
           endsWithSemi.test(qc.lastResult.query))
         qc.query();
 
-      // as the query is edited, allow it more vertical space, but max sure it
-      // doesn't have fewer than 5 lines or more than
-      var lines = curSession.getLength();
-      var height = Math.min(Math.max(75,(lines-1)*17),240);
-      $("#query_editor").height(height);
     };
+
+    //
+    // initialize the query editor
+    //
 
     function aceInputLoaded(_editor) {
       var langTools = ace.require("ace/ext/language_tools");
@@ -490,7 +483,7 @@
       var resultHeaderHeight =  $('#result_header').height();
       var sidebarHeaderHeight =  $('#sidebar_header').height();
       var resultSummaryHeight = $('#result_summary').height();
-      var spock_ui = $('#editor_header').height() != null;
+      var spock_ui = $('#spockUI').height() != null;
 
       var otherStuff = pageHeaderHeight + pageFooterHeight +
         headerNavHeight + queryBoxHeight;
@@ -540,6 +533,29 @@
         $('#query_plan').height(editor_size + 15);
         $('#query_plan_text').height(editor_size + 25);
         //$('#result_box').height(editor_size+50);
+      }
+
+
+      //
+      // allow the query editor to grow and shrink a certain amount based
+      // on the number of lines in the query
+      //
+      // as the query is edited, allow it more vertical space, but max sure it
+      // doesn't have fewer than 5 lines or more than ~50% of the window
+
+      if (qc.inputEditor) {
+        var queryAreaHeight = Math.max($('#query_ui').height(),240);
+        var queryHeaderHeight = $('#query_header').height();
+        var curSession = qc.inputEditor.getSession();
+        var lines = curSession.getLength();
+        var halfScreen = queryAreaHeight/2-queryHeaderHeight*3;
+        var height = Math.max(75,(lines-1)*17); // make sure height no less than 75
+        if (halfScreen > 75 && height > halfScreen)
+          height = halfScreen;
+
+        //console.log("Area height: " + queryAreaHeight + ", header: " + queryHeaderHeight + ", setting height to: " + height);
+
+        $("#query_editor").height(height);
       }
 
 

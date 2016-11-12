@@ -30,6 +30,7 @@
     qc.updatedTime = updatedTime;
     qc.toggle_update = toggle_update;
     qc.get_toggle_label = get_toggle_label;
+    qc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
 
     //
     // when was the data last updated?

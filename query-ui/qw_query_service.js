@@ -490,12 +490,11 @@
     //
 
     function cancelQuery() {
-      //console.log("Cancelling query, currentQuery: " + qwQueryService.currentQueryRequest);
+//      console.log("Cancelling query, currentQuery: " + qwQueryService.currentQueryRequest);
       if (qwQueryService.currentQueryRequest != null) {
         var queryInFly = mnPendingQueryKeeper.getQueryInFly(qwQueryService.currentQueryRequest);
         queryInFly && queryInFly.canceler("test");
 
-        //console.log("  queryInFly: " + queryInFly);
         //
         // also submit a new query to delete the running query on the server
         //
@@ -503,7 +502,16 @@
         var query = 'delete from system:active_requests where clientContextID = "' +
           qwQueryService.currentQueryRequestID + '";';
 
+//        console.log("  queryInFly: " + queryInFly + "\n  query: " + query);
+
         executeQueryUtil(query,false)
+
+//        .success(function(data, status, headers, config) {
+//          console.log("Success cancelling query.");
+//          console.log("    Data: " + JSON.stringify(data));
+//          console.log("    Status: " + JSON.stringify(status));
+//        })
+
 
         // sanity check - if there was an error put a message in the console.
         .error(function(data, status, headers, config) {
@@ -1009,7 +1017,7 @@
 
     function updateQueryMonitoring(category) {
 
-      var query1 = "select active_requests.* from system:active_requests";
+      var query1 = "select active_requests.* from system:active_requests order by elapsedTime desc";
       var query2 = "select completed_requests.* from system:completed_requests";
       var query3 = "select prepareds.* from system:prepareds";
       var query = "foo";
@@ -1413,7 +1421,7 @@
 
       if (!lists)
         lists = {buckets : {}, fields : {}, indexes: {}, aliases: []};
-      
+
       // make
 
       if (!plan || _.isString(plan))

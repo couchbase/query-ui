@@ -214,6 +214,7 @@ span.cbui_color_fail {
 .query-history-controls-inner {
   margin: 0 .25rem;
 }
+
 #result_summary {
   margin-bottom: 1.5rem;
 }
@@ -230,6 +231,8 @@ span.cbui_color_fail {
 #query_editor {
   overflow: auto;
   background-color: #f6f7f9;
+  padding: 8px;
+  /*margin: 1px;*/
   margin: .5rem 0 .75rem 0;
   font-weight: 400;
 }
@@ -237,8 +240,8 @@ span.cbui_color_fail {
   min-height: 2rem;
 }
 #query_editor * {
-  line-height: 1.5rem !important;
-  font-size: 14px !important;
+  /*line-height: 1.5rem !important;*/
+  /*font-size: 14px !important;*/
 }
 
 .ace_gutter {
