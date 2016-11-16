@@ -544,8 +544,10 @@
       qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
           method: "POST",
           headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
-          data: encodedQuery
+          data: encodedQuery,
+          transformResponse: fixLongInts
           };
+
 
       // An alternate way to get around Angular's encoding is "isNotForm: true". But
       // that triggers bug MB-16964, where the server currently fails to parse creds
@@ -613,7 +615,10 @@
         newResult.executionTime = data.metrics.executionTime;
         newResult.resultCount = data.metrics.resultCount;
         newResult.resultSize = data.metrics.resultSize;
-        newResult.result = angular.toJson(result, true);
+        if (data.rawJSON)
+          newResult.result = data.rawJSON;
+        else
+          newResult.result = angular.toJson(result, true);
         newResult.data = result;
         newResult.requestID = data.requestID;
         lastResult.copyIn(newResult);
@@ -941,6 +946,71 @@
       });
     };
 
+
+    //
+    // javascript can't handle long ints - any number more than 53 bits cannot be represented
+    // with perfect precision. yet the JSON format allows for long ints. To avoid rounding errors,
+    // we will search returning data for non-quoted long ints, and if they are found,
+    // 1) put the raw bytes of the result into a special field, so that the JSON editor can
+    //    show long ints as they came from the server
+    // 2) convert all long ints into quoted strings, so they appear properly in the table and tree
+    //    views
+    //
+
+    function fixLongInts(rawBytes) {
+      if (!rawBytes)
+        return rawBytes;
+
+      var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*)[,\s}]/ig;
+      var longIntCount = 0;
+      var matchArray = matchNonQuotedLongInts.exec(rawBytes);
+      while (matchArray != null) {
+        if (matchArray[1]) // group 1, a non-quoted long int
+          longIntCount++;
+        matchArray = matchNonQuotedLongInts.exec(rawBytes);
+      }
+
+      //console.log("Got response, longIntcount: " + longIntCount + ", raw bytes: " + rawBytes);
+
+      // if no long ints, just return the original bytes parsed
+
+      if (longIntCount == 0) try {
+        var result = JSON.parse(rawBytes);
+        result.rawJSON = rawBytes;
+      }
+      catch (e) {
+        return(rawBytes);
+      }
+
+      // otherwise copy the raw bytes, replace all long ints in the copy, and add the raw bytes as a new field on the result
+      else {
+        matchNonQuotedLongInts.lastIndex = 0;
+        matchArray = matchNonQuotedLongInts.exec(rawBytes);
+        //console.log("Old raw: " + rawBytes);
+        var result = JSON.parse(rawBytes);
+        var newBytes = "";
+        var curBytes = rawBytes;
+
+        while (matchArray != null) {
+          if (matchArray[1]) { // group 1, a non-quoted long int
+            //console.log("  Got longInt: " + matchArray[1] + " with lastMatch: " + matchNonQuotedLongInts.lastIndex);
+            //console.log("  remainder: " + rawBytes.substring(matchNonQuotedLongInts.lastIndex));
+            var matchLen = matchArray[1].length;
+            newBytes += curBytes.substring(0,matchNonQuotedLongInts.lastIndex - matchLen - 1) + '"' +
+              matchArray[1] + '"';
+            curBytes = curBytes.substring(matchNonQuotedLongInts.lastIndex - 1);
+            matchNonQuotedLongInts.lastIndex = 0;
+          }
+          matchArray = matchNonQuotedLongInts.exec(curBytes);
+        }
+        newBytes += curBytes;
+        //console.log("New raw: " + newBytes);
+        result = JSON.parse(newBytes);
+        result.rawJSON = rawBytes;
+
+      }
+      return result;
+    }
 
     //
     // load state from storage if possible
