@@ -25,13 +25,3 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/query-ui
 # rewrite the config file for running locally (using cluster-run)
 SET (BIN_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/")
 configure_file (pluggable-ui-query.json.in ${_instdir}/../cluster_run_ui_plugins/pluggable-ui-query.cluster_run.json)
-
-
-#
-# We also need to create the 'query-ui' executable, which permits stand-alone execution
-#
-
-SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/tlm/cmake/Modules/")
-SET (GODEPSDIR "${CMAKE_CURRENT_SOURCE_DIR}/godeps")
-
-INCLUDE (FindCouchbaseGo)
