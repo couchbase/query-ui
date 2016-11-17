@@ -14,12 +14,12 @@ ADD_CUSTOM_TARGET (realclean
   
 INCLUDE (FindCouchbaseGo)
 
-SET (CBQ_GUI_PROJ github.com/couchbase/cbq-gui)
+SET (CBQ_GUI_PROJ github.com/couchbase/query-ui)
 SET (CBQ_GUI_SRC "${CMAKE_CURRENT_SOURCE_DIR}/goproj/src/${CBQ_GUI_PROJ}")
 GoInstall (TARGET cbq-gui PACKAGE ${CBQ_GUI_PROJ}
   GOPATH "${CMAKE_CURRENT_SOURCE_DIR}/goproj" "${CMAKE_CURRENT_SOURCE_DIR}/godeps"
   INSTALL_PATH ".")
-INSTALL (DIRECTORY "${CBQ_GUI_SRC}/static" DESTINATION ".")
+INSTALL (DIRECTORY "${CBQ_GUI_SRC}/query-ui" DESTINATION "./static")
 INSTALL (PROGRAMS "${CBQ_GUI_SRC}/LICENSE.txt" DESTINATION ".")
 IF (WIN32)
   INSTALL (PROGRAMS "${CBQ_GUI_SRC}/launch-cbq-gui.bat" DESTINATION ".")
