@@ -19,8 +19,8 @@ set PASS=
 
 rem Check to make sure we are in the same directory as the necessary files
 
-if not exist cbq-gui.exe (
-    echo You must run this script in the same directory as cbq-gui and the static folder.
+if not exist bin/query-ui.exe (
+    echo You must run this script in the same directory as the bin and the static folder.
     goto error
 )
 
@@ -30,7 +30,7 @@ if not exist static (
 )
 
 echo Go to %UI_SEVER_URL%/ui to use the query UI.
-set COMMAND=cbq-gui -datastore=%COUCHBASE_URL% -localPort=%GUI_PORT% -user=%USER% -pass=%PASS%
+set COMMAND=bin/query-ui.exe -datastore=%COUCHBASE_URL% -localPort=%GUI_PORT% -user=%USER% -pass=%PASS%
 echo Running: %COMMAND%
 %COMMAND%
 goto eof

@@ -19,8 +19,8 @@ export PASS=
 #
 # Check to make sure we are in the same directory as the necessary files
 #
-if [ ! -f cbq-gui ]; then
-    echo "You must run this script in the same directory as cbq-gui and the static folder."
+if ([ ! -f bin  ] || [ ! -f bin/query-ui]); then
+    echo "You must run this script in the same directory as bin and the static folder."
     exit 0
 fi
 
@@ -29,7 +29,7 @@ if [ ! -d static ]; then
     exit 0
 fi
 
-export COMMAND="./cbq-gui -datastore=$COUCHBASE_URL -localPort=$GUI_PORT -user=$USER -pass=$PASS"
+export COMMAND="./bin/query-ui -datastore=$COUCHBASE_URL -localPort=$GUI_PORT -user=$USER -pass=$PASS"
 echo Running: $COMMAND 
 $COMMAND
     
