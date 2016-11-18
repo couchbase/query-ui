@@ -11,6 +11,7 @@
   );
   var builtinConstants_array = builtinConstants.split('|');
 
+  // this list of functions should be updated w.r.t. https://github.com/couchbase/query/blob/master/expression/func_registry.go
   var builtinFunctions = (
       "abs|acos|array_agg|array_append|array_avg|array_concat|array_contains|array_count|array_distinct|array_ifnull|array_length|array_max|array_min|array_position|array_prepend|array_put|array_range|array_remove|array_repeat|array_replace|array_reverse|array_sort|array_sum|asin|atan|atan2|avg|base64|ceil|clock_millis|clock_str|contains|cos|count|date_add_millis|date_add_str|date_diff_millis|date_diff_str|date_part_millis|date_part_str|date_trunc_millis|date_trunc_str|decode_json|degrees|encode_json|encoded_size|exp|floor|greatest|ifinf|ifmissing|ifmissingornull|ifnan|ifnanorinf|ifnull|initcap|is_array|is_atom|is_boolean|is_number|is_object|is_string|least|length|ln|log|lower|ltrim|max|meta|millis|millis_to_str|millis_to_utc|millis_to_zone_name|min|missingif|nanif|neginfif|now_millis|now_str|nullif|object_length|object_names|object_pairs|object_remove|object_values|pi|poly_length|posinfif|position|power|radians|random|regexp_contains|regexp_like|regexp_position|regexp_replace|repeat|replace|round|rtrim|sign|sin|split|sqrt|str_to_millis|str_to_utc|str_to_zone_name|substr|sum|tan|title|to_array|to_atom|to_boolean|to_number|to_object|to_string|trim|trunc|type|upper|uuid"
   );

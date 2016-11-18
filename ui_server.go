@@ -24,13 +24,14 @@ var QUERYENGINE = flag.String("queryEngine", "", "Query URL (e.g., http://localh
 var QUERY_PREFIX = flag.String("queryPrefix", "/query", "prefix for URL of query service, e.g. '/query' or '/analytics'")
 
 var LOCALPORT = flag.String("localPort", ":8095", "Port on which the UI runs. E.g., :8095")
-var WEBCONTENT = flag.String("webcontent", "./", "Location of static folder containing web content. E.g., ./")
+var WEBCONTENT = flag.String("webcontent", "./", "Location of static folder containing web content. E.g., ./static")
 var VERBOSE = flag.Bool("verbose", false, "Produce verbose output about program operation.")
 
 func main() {
 	flag.Parse()
 	launchWebService()
 }
+
 
 //
 // Given a CB Server URL, ask it what ports KV and Query are running on
