@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"io/ioutil"
 
 	"github.com/couchbase/go-couchbase"
 	json "github.com/dustin/gojson"
@@ -159,22 +160,20 @@ func launchWebService() {
 		} else {
 			fmt.Printf("    Using mgmt query service on: %s\n", serverHost)
 		}
-		
-		
-	} else if len(*QUERYENGINE) > 0 {// if no DATASTORE, there must be a QUERYENGINE
-	
-    	queryHost = *QUERYENGINE
 
-	    if strings.HasPrefix(queryHost, "http://") {
+	} else if len(*QUERYENGINE) > 0 { // if no DATASTORE, there must be a QUERYENGINE
+
+		queryHost = *QUERYENGINE
+
+		if strings.HasPrefix(queryHost, "http://") {
 			queryHost = queryHost[7:]
 		}
-	    
-    	fmt.Printf("    Using query service on: %s\n", queryHost)
-	    
-	    
+
+		fmt.Printf("    Using query service on: %s\n", queryHost)
+
 	} else { // let the user know that they need either DATASTORE or QUERYENGINE
-	    fmt.Printf("Error: you must specify either -datastore=<couchbase URL> or -queryEngine=<query engine URL>\n")
-        os.Exit(1)
+		fmt.Printf("Error: you must specify either -datastore=<couchbase URL> or -queryEngine=<query engine URL>\n")
+		os.Exit(1)
 	}
 
 	//
@@ -202,12 +201,12 @@ func launchWebService() {
 	imageProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http"})
 	imageProxy.Director = toImage
 
-    if len(serverHost) > 0 {
-    	mgmtProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost})
-    	mgmtProxy.Director = toMgmt
-    	http.Handle("/pools", mgmtProxy)
-    	http.Handle("/pools/", mgmtProxy)
-    }
+	if len(serverHost) > 0 {
+		mgmtProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost})
+		mgmtProxy.Director = toMgmt
+		http.Handle("/pools", mgmtProxy)
+		http.Handle("/pools/", mgmtProxy)
+	}
 
 	// handle queries at the service prefix
 	http.Handle("/_p/query/", queryProxy)
@@ -223,19 +222,73 @@ func launchWebService() {
 	listenAndServe(*LOCALPORT)
 }
 
+
+type Credential struct {
+	User string `json:"user"`
+	Pass string `json:"pass"`
+}
+	
+type QueryParams struct {
+    Statement string `json:"statement"`
+    ClientContextId string `json:"client_context_id"`
+    Creds []Credential `json:"creds"`
+}	
+
 func toQuery(r *http.Request) {
 	r.Host = queryHost
 	r.URL.Host = r.Host
 	r.URL.Scheme = "http"
+	
+	// rewrite the URL to the approriate proxied value
 	//fmt.Printf("Got query path: %s %s\n  form: %v\n", r.Host,r.URL.Path, r.Form)
 	if strings.HasPrefix(strings.ToLower(r.URL.Path), "/_p/query/query") {
 		r.URL.Path = *QUERY_PREFIX + r.URL.Path[15:]
 		//fmt.Printf("  new host %v path: %s\n", r.Host,r.URL.Path)
 	}
+	
+	// if we were given a USER/PASS, we need to insert them into the creds array
+	// to give queries those privileges
+    if USER != nil && PASS != nil {
+        r.SetBasicAuth(*USER, *PASS)
+        // create a credentials array with USER and PASS
+       	var credentials []Credential = make([]Credential,0,0)
+        newCred := new(Credential)
+        newCred.User = *USER
+        newCred.Pass = *PASS
+        credentials = append(credentials,*newCred)
+
+        queryParams := new(QueryParams)
+        err := json.NewDecoder(r.Body).Decode(&queryParams) 
+        if err != nil {
+            log(fmt.Sprintf("Error decoding body: %v\n",err))
+            return
+        } else {
+            log(fmt.Sprintf("Got statement: %s\n",queryParams.Statement))
+            log(fmt.Sprintf("Got client context: %s\n",queryParams.ClientContextId))
+            log(fmt.Sprintf("Got creds: %v\n",queryParams.Creds))
+        }
+        
+        queryParams.Creds = append(queryParams.Creds,credentials...)
+    	
+    	newParamBytes,cerr := json.Marshal(queryParams)
+    	log(fmt.Sprintf("Got new params: %s\n",string(newParamBytes)))
+        if (cerr != nil) {
+            log(fmt.Sprintf("Error marshalling new credentials %v\n",cerr))
+        } else {
+            newBody := string(newParamBytes)
+            r.Body = ioutil.NopCloser(strings.NewReader(newBody))
+            r.ContentLength = int64(len(newBody))
+        }
+        
+
+        
+        log(fmt.Sprintf("Got new request form: %v\n",r.PostForm))
+        //log(fmt.Sprintf("Got new request: %v\n",r))
+    }
 }
 
 func toImage(r *http.Request) {
-    //r.Host = serverHost
+	//r.Host = serverHost
 	r.URL.Host = r.Host
 	r.URL.Scheme = "http"
 	//fmt.Printf("Got image path: %s %s\n  form: %v\n", r.Host,r.URL.Path, r.Form)
@@ -250,9 +303,13 @@ func toMgmt(r *http.Request) {
 	r.Host = serverHost
 	r.URL.Host = r.Host
 	r.URL.Scheme = "http"
+	
+	// if we have a login/password, use it for authorization
+    if USER != nil && PASS != nil {
+        r.SetBasicAuth(*USER, *PASS)
+    }	
 	//fmt.Printf(" post toMgmt, host %v path %v\n",r.Host,r.URL.Path);
 }
-
 
 //
 // This function is used to launch the http server inside a goroutine, accepting a
