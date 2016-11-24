@@ -14,24 +14,38 @@
                       'ui.ace',
                       'ui.bootstrap'])
     .config(function($stateProvider, mnPluggableUiRegistryProvider) {
+
       $stateProvider
-      .state('app.admin.query', {
-        abstract: true,
-        url: '/query',
-        controller: 'qwQueryController',
-        templateUrl: '/_p/ui/query/spock/query_toplevel.spock.html'
-      })
-      .state('app.admin.query.monitoring', {
-        url: '/monitoring',
-        controller: 'qwQueryController',
-        templateUrl: '/_p/ui/query/spock/query_monitoring.spock.html'
-      })
-      .state('app.admin.query.workbench', {
-        url: '/workbench',
-        controller: 'qwQueryController',
-        templateUrl: '/_p/ui/query/spock/query.spock.html'
-      })
-      ;
+        .state('app.admin.query', {
+          abstract: true,
+          url: '/query',
+          views: {
+            "main@app.admin": {
+              controller: 'qwQueryController',
+              templateUrl: '/_p/ui/query/spock/query_toplevel.spock.html'
+            }
+          },
+          data: {
+            title: "Query"
+          }
+        });
+
+      addQueryStates("app.admin.query");
+
+      function addQueryStates(parent) {
+        $stateProvider
+          .state(parent + '.monitoring', {
+            url: '/monitoring',
+            controller: 'qwQueryController',
+            templateUrl: '/_p/ui/query/spock/query_monitoring.spock.html'
+          })
+          .state(parent + '.workbench', {
+            url: '/workbench',
+            controller: 'qwQueryController',
+            templateUrl: '/_p/ui/query/spock/query.spock.html'
+          });
+      }
+
       mnPluggableUiRegistryProvider.registerConfig({
         name: 'Query',
         state: 'app.admin.query.workbench',
