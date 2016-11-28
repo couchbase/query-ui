@@ -114,13 +114,13 @@
       template:
         '<div ng-click="changeExpandBucket(bucket)" class="bucket">' +
         ' <img ng-show="bucket.expanded && showSchemaControls"' +
-        '  style="height: 0.75em" src="/_p/ui/query/images/ArrowDown.png" /> ' +
+        '  style="height: 0.75em" src="../_p/ui/query/images/ArrowDown.png" /> ' +
         '<img ng-hide="bucket.expanded || !showSchemaControls"' +
-        '  style="height: 0.75em" src="/_p/ui/query/images/ArrowRight.png" />' +
+        '  style="height: 0.75em" src="../_p/ui/query/images/ArrowRight.png" />' +
 //        '<span class="icon fa-caret-down" ng-show="bucket.expanded"></span>' +
 //        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded">&nbsp; </span>' +
-        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
-        '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="/_p/ui/query/images/lock_unlock.png" />' +
+        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
+        '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
         '  &nbsp; {{bucket.id}}</div>' +
         '  <ul class="bucket" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
@@ -169,7 +169,7 @@
                   // open the dialog to ask for a password
 
                   var promise = $uibModal.open({
-                    templateUrl: '/_p/ui/query/password_dialog/qw_query_password_dialog.html',
+                    templateUrl: '../_p/ui/query/password_dialog/qw_query_password_dialog.html',
                     scope: scope
                   }).result;
 
@@ -187,7 +187,7 @@
                       bucket.password = null;
                       //console.log("Error authenticating: ");
                       $uibModal.open({
-                        templateUrl: '/_p/ui/query/password_dialog/qw_query_error_dialog.html',
+                        templateUrl: '../_p/ui/query/password_dialog/qw_query_error_dialog.html',
                         scope: scope
                       });
                     }

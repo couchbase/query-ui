@@ -22,7 +22,7 @@
     qwConstantsService.forbidMultipleQueries = false;
 
     // URL to use for running queries
-    qwConstantsService.queryURL = "/_p/query/query/service";
+    qwConstantsService.queryURL = "../_p/query/query/service";
 
     // should we get passwords from the Couchbase server?
     qwConstantsService.getCouchbaseBucketPasswords = false;
@@ -48,17 +48,17 @@
     // the returned schema has 'id' and 'has_prim'.
     qwConstantsService.keyspaceQuery =
       "select BucketName as id, true as has_prim from Metadata.`Bucket` union all " +
-      "select DatasetName as id, true as has_sec from Metadata.`Dataset` where BucketName is not missing;";     
-    
+      "select DatasetName as id, true as has_sec from Metadata.`Dataset` where BucketName is not missing;";
+
     // should we permit schema inquiries in the bucket analysis pane?
     qwConstantsService.showSchemas = false;
-    
+
     // labels for different types of buckets in the analysis pane
     qwConstantsService.fullyQueryableBuckets = "Buckets";
     qwConstantsService.queryOnIndexedBuckets = "Shadow Data Sets";
     qwConstantsService.nonIndexedBuckets = "";
-    
-    
+
+
     //
     //
     //

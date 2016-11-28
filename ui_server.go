@@ -210,9 +210,11 @@ func launchWebService() {
 	}
 
 	// handle queries at the service prefix
+	http.Handle("../_p/query/", queryProxy)
 	http.Handle("/_p/query/", queryProxy)
 	http.Handle("/analytics/service/", queryProxy)
 
+	http.Handle("../_p/ui/query/", imageProxy)
 	http.Handle("/_p/ui/query/", imageProxy)
 
 	// Handle static endpoint for serving the web content
@@ -244,6 +246,10 @@ func toQuery(r *http.Request) {
 	//fmt.Printf("Got query path: %s %s\n  form: %v\n", r.Host,r.URL.Path, r.Form)
 	if strings.HasPrefix(strings.ToLower(r.URL.Path), "/_p/query/query") {
 		r.URL.Path = *QUERY_PREFIX + r.URL.Path[15:]
+		//fmt.Printf("  new host %v path: %s\n", r.Host,r.URL.Path)
+	}
+	if strings.HasPrefix(strings.ToLower(r.URL.Path), "../_p/query/query") {
+		r.URL.Path = *QUERY_PREFIX + r.URL.Path[17:]
 		//fmt.Printf("  new host %v path: %s\n", r.Host,r.URL.Path)
 	}
 	
@@ -295,6 +301,10 @@ func toImage(r *http.Request) {
 	//fmt.Printf("Got image path: %s %s\n  form: %v\n", r.Host,r.URL.Path, r.Form)
 	if strings.HasPrefix(strings.ToLower(r.URL.Path), "/_p/ui/query") {
 		r.URL.Path = r.URL.Path[12:]
+		//fmt.Printf("  new host %v path: %s\n", r.Host,r.URL.Path)
+	}
+	if strings.HasPrefix(strings.ToLower(r.URL.Path), "../_p/ui/query") {
+		r.URL.Path = r.URL.Path[14:]
 		//fmt.Printf("  new host %v path: %s\n", r.Host,r.URL.Path)
 	}
 }

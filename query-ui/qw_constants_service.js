@@ -22,7 +22,7 @@
     qwConstantsService.forbidMultipleQueries = true;
 
     // URL to use for running queries
-    qwConstantsService.queryURL = "/_p/query/query/service";
+    qwConstantsService.queryURL = "../_p/query/query/service";
 
     // should we get passwords from the Couchbase server?
     qwConstantsService.getCouchbaseBucketPasswords = true;
@@ -58,7 +58,7 @@
       "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
     // should we permit schema inquiries in the bucket analysis pane?
-    qwConstantsService.showSchemas = true;    
+    qwConstantsService.showSchemas = true;
 
     // labels for different types of buckets in the analysis pane
     qwConstantsService.fullyQueryableBuckets = "Fully Queryable Buckets";

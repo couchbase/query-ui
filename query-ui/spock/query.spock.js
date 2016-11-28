@@ -22,7 +22,7 @@
           views: {
             "main@app.admin": {
               controller: 'qwQueryController',
-              templateUrl: '/_p/ui/query/spock/query_toplevel.spock.html'
+              templateUrl: '../_p/ui/query/spock/query_toplevel.spock.html'
             }
           },
           data: {
@@ -37,12 +37,12 @@
           .state(parent + '.monitoring', {
             url: '/monitoring',
             controller: 'qwQueryController',
-            templateUrl: '/_p/ui/query/spock/query_monitoring.spock.html'
+            templateUrl: '../_p/ui/query/spock/query_monitoring.spock.html'
           })
           .state(parent + '.workbench', {
             url: '/workbench',
             controller: 'qwQueryController',
-            templateUrl: '/_p/ui/query/spock/query.spock.html'
+            templateUrl: '../_p/ui/query/spock/query.spock.html'
           });
       }
 
@@ -88,7 +88,7 @@
 
       // we can only run on nodes that support our API
       var queryData = {statement: "select \"test\";"};
-      $http.post("/_p/query/query/service",queryData)
+      $http.post("../_p/query/query/service",queryData)
       .success(function(data, status, headers, config) {
         _valid = true; _inProgress = false;
 

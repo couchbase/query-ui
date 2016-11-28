@@ -1184,6 +1184,11 @@
           // now that we have passwords, go get the schemas for each bucket
 
           getSchemaForBucketBackground(qwQueryService.buckets,0);
+        })
+
+        .error(function(data,status,headers,config) {
+          console.log("Error getting pools/default/buckets: " + data);
+
         });
 
 

@@ -668,7 +668,7 @@
       dialogScope.file = dialogScope.data_file;
 
       var promise = $uibModal.open({
-        templateUrl: '/_p/ui/query/file_dialog/qw_query_file_dialog.html',
+        templateUrl: '../_p/ui/query/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -701,7 +701,7 @@
       dialogScope.file = dialogScope.query_file;
 
       var promise = $uibModal.open({
-        templateUrl: '/_p/ui/query/file_dialog/qw_query_file_dialog.html',
+        templateUrl: '../_p/ui/query/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -734,7 +734,7 @@
       dialogScope.selectPrevMatch = selectPrevMatch;
 
       var promise = $uibModal.open({
-        templateUrl: '/_p/ui/query/history_dialog/qw_history_dialog.html',
+        templateUrl: '../_p/ui/query/history_dialog/qw_history_dialog.html',
         scope: dialogScope
       }).result;
 

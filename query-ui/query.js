@@ -19,17 +19,17 @@
         abstract: true,
         url: '/query',
         controller: 'qwQueryController',
-        templateUrl: '/_p/ui/query/query_toplevel.html'
+        templateUrl: '../_p/ui/query/query_toplevel.html'
       })
       .state('app.admin.query.monitoring', {
         url: '/monitoring',
         controller: 'qwQueryController',
-        templateUrl: '/_p/ui/query/query_monitoring.html'
+        templateUrl: '../_p/ui/query/query_monitoring.html'
       })
       .state('app.admin.query.workbench', {
         url: '/workbench',
         controller: 'qwQueryController',
-        templateUrl: '/_p/ui/query/query.html'
+        templateUrl: '../_p/ui/query/query.html'
       })
       ;
       mnPluggableUiRegistryProvider.registerConfig({
@@ -66,10 +66,10 @@
       var perms = mnPermissions.export.cluster;
       if (perms && perms.bucket)
         _.forEach(perms.bucket,function(v,k) {
-          if (v && v.data && (v.data.read || v.data.write)) {
+          // uncomment the following when RBAC is working properly for data access
+          //if (v && v.data && (v.data.read || v.data.write))
             _bucketList.push(k);
             //console.log("Allowed to query: "+ k);
-          }
         });
 
       // we can only run on nodes that support our API
