@@ -1,0 +1,39 @@
+<div id="history_dialog" style="width: 800px; height: 700px">
+	<div class="cbui-row"><label>Query History</label>
+      <span style="margin-right:20px"><label>{{searchInfo.searchLabel}}</label>
+      <input
+        type="text"
+        name="searchTerm"
+        maxlength="256"
+        ng-model="searchInfo.searchText"
+        ng-change="updateSearchResults()"/>
+        <!-- a class="btn_1" ng-click="selectPrevMatch()"><span>&larr;</span></a>
+        <a class="btn_1" ng-click="selectNextMatch()"><span>&rarr;</span></a-->
+    </span></div>  
+    
+	<form class="simple-form">
+		<div id="qw_history_table" style="width: 795px; height: 575px; overflow-x: scroll; overflow-y: scroll" 
+            class="ajtd-root ajtd-type-array" style="margin: 1em">
+			<table class="ajtd-root ajtd-table" style="margin-left:0em">
+                <tr ng-repeat="query in pastQueries"><div ng-if="showRow($index)">
+                    <td ng-if="showRow($index)" ng-class="{'ajtd-row-selected': isRowSelected($index)}" 
+                        ng-click="select($index)" ng-dblclick="select($index);$close('ok')"
+                        ng-attr-id="{{'qw_history_table_' + $index}}"  
+                        class="ajtd-cell ajtd-value" style="min-width:40px">{{$index + 1}}</td>
+                    <td ng-if="showRow($index)" ng-class="{'ajtd-row-selected': isRowSelected($index)}") 
+                        ng-click="select($index)" ng-dblclick="select($index); $close('ok')" 
+                       class="ajtd-cell ajtd-key">{{query.query}}</td>
+                       </div>
+                </tr>
+            </table>
+		</div>
+		<div class="cbui-row save_cancel">
+            <button type="submit" class="save_button cbui-align-left" style="color:#ffaaaa"
+                ng-click="del()">Delete</button>
+            <button type="submit" class="save_button cbui-align-left" style="color:#ffaaaa"
+                ng-click="delAll()">Delete All History</button>
+            <button type="submit" class="save_button cbui-align_right"
+                ng-click="$close('ok')">Done</button>
+		</div>
+	</form>
+</div>
