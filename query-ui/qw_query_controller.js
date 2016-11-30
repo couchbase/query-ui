@@ -525,8 +525,9 @@
         //$('#result_box').height(editor_size+50);
       }
       else {
-        if ($('#query_wrapper').height())
-          $('#sidebar_body').height($('#query_wrapper').height() - sidebarHeaderHeight - 8);
+        var sidebarHeight = windowHeight - pageHeaderHeight - pageFooterHeight -
+          sidebarHeaderHeight - 80;
+        $('#sidebar_body').height(sidebarHeight);
         $('#result_editor').height(editor_size);
         $('#result_table').height(editor_size+25);
         $('#result_tree').height(editor_size+15);
