@@ -1,39 +1,32 @@
-<div id="history_dialog" style="width: 800px; height: 700px">
-	<div class="cbui-row"><label>Query History</label>
-      <span style="margin-right:20px"><label>{{searchInfo.searchLabel}}</label>
-      <input
-        type="text"
-        name="searchTerm"
-        maxlength="256"
-        ng-model="searchInfo.searchText"
-        ng-change="updateSearchResults()"/>
-        <!-- a class="btn_1" ng-click="selectPrevMatch()"><span>&larr;</span></a>
-        <a class="btn_1" ng-click="selectNextMatch()"><span>&rarr;</span></a-->
-    </span></div>  
-    
-	<form class="simple-form">
-		<div id="qw_history_table" style="width: 795px; height: 575px; overflow-x: scroll; overflow-y: scroll" 
-            class="ajtd-root ajtd-type-array" style="margin: 1em">
-			<table class="ajtd-root ajtd-table" style="margin-left:0em">
-                <tr ng-repeat="query in pastQueries"><div ng-if="showRow($index)">
-                    <td ng-if="showRow($index)" ng-class="{'ajtd-row-selected': isRowSelected($index)}" 
-                        ng-click="select($index)" ng-dblclick="select($index);$close('ok')"
-                        ng-attr-id="{{'qw_history_table_' + $index}}"  
-                        class="ajtd-cell ajtd-value" style="min-width:40px">{{$index + 1}}</td>
-                    <td ng-if="showRow($index)" ng-class="{'ajtd-row-selected': isRowSelected($index)}") 
-                        ng-click="select($index)" ng-dblclick="select($index); $close('ok')" 
-                       class="ajtd-cell ajtd-key">{{query.query}}</td>
-                       </div>
-                </tr>
-            </table>
-		</div>
-		<div class="cbui-row save_cancel">
-            <button type="submit" class="save_button cbui-align-left" style="color:#ffaaaa"
-                ng-click="del()">Delete</button>
-            <button type="submit" class="save_button cbui-align-left" style="color:#ffaaaa"
-                ng-click="delAll()">Delete All History</button>
-            <button type="submit" class="save_button cbui-align_right"
-                ng-click="$close('ok')">Done</button>
-		</div>
-	</form>
+<div class="dialog-lg"  id="qw_history_dialog">
+  <div class="panel-header">
+    <h2 class="width-4">Query History</h2>
+  </div>
+
+  <form class="forms">
+    <div class="panel-content">
+      <div class="filter-input-group width-10">
+        <input type="text" name="searchTerm" maxlength="256" class="filter-input width-12"
+          ng-model="searchInfo.searchText"
+          ng-change="updateSearchResults()">
+      </div>
+
+      <div id="qw_history_table">
+        <div ng-repeat="query in pastQueries">
+          <section ng-if="showRow($index)" class="row flex-left flex-top">
+            <span ng-if="showRow($index)" ng-class="{'selected': isRowSelected($index)}" ng-click="select($index)" ng-dblclick="select($index);$close('ok')" class="text-small text-center width-1">{{$index + 1}}</span>
+            <span ng-if="showRow($index)" ng-class="{'selected': isRowSelected($index)}" ng-click="select($index)" ng-dblclick="select($index);$close('ok')" class="text-small width-11"
+              >{{query.query}}</span>
+          </section>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="panel-footer spaced">
+      <button type="submit" class="outline" ng-click="del()">Delete Selected</button>
+      <button type="submit" class="outline" ng-click="delAll()">Delete All</button>
+    <!--  <button type="submit" ng-click="$close('ok')">Close</button> -->
+    </div>
+  </form>
 </div>

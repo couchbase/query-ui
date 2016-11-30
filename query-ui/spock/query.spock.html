@@ -1,71 +1,78 @@
-<main id="spockUI"
+<div id="spockUI"
    ng-controller="qwQueryController as qc"
-   ng-show="qc.validated.valid()">
+   ng-show="qc.validated.valid()"
+   class="row flex-top">
 
 <!-- wrapper for query editor and results -->
-  <div id="query_ui" mn-spinner="queryInProgress" id="query_wrapper" class="width-9">
-
+  <div mn-spinner="queryInProgress" id="query_wrapper" class="width-9">
+<!-- query_box is the query editor -->
     <div id="query_box">
 <!-- Editor "header row" -->
-    <div id="query_header" class="row">
-      <h4>Query Editor</h4>
-      <div class="query-history-controls">
-        <button
-           title="View previous queries/results" ng-click="qc.prev()"
-           qw-long-press="qc.historyMenu"
-           class="outline btn-small"
-           ng-class="{dynamic_disabled: !qc.hasPrev()}">
-          &larr;
-        </button>
-        <span class="query-history-controls-inner">
-          <a class="link-heavy text-small" ng-click="qc.historyMenu()">history</a>
-          <small>({{qc.getCurrentIndex()}})</small>
-        </span>
-        <button
-           title="View subsequent queries/results"
-           ng-click="qc.next()"
-           qw-long-press="qc.historyMenu"
-           class="outline btn-small"
-           ng-class="{dynamic_disabled: !qc.hasNext()}">
-          &rarr;
-        </button>
-      </div>
-      <span>
+      <div id="query_header" class="row">
+        <h4>Query Editor</h4>
+        <div class="query-history-controls">
+          <button
+             title="View previous queries/results" ng-click="qc.prev()"
+             qw-long-press="qc.historyMenu"
+             class="outline btn-small"
+             ng-class="{dynamic_disabled: !qc.hasPrev()}">
+            &larr;
+          </button>
+          <span class="query-history-controls-inner">
+            <a class="link-heavy text-small" ng-click="qc.historyMenu()">history</a>
+            <small>({{qc.getCurrentIndex()}})</small>
+          </span>
+          <button
+             title="View subsequent queries/results"
+             ng-click="qc.next()"
+             qw-long-press="qc.historyMenu"
+             class="outline btn-small"
+             ng-class="{dynamic_disabled: !qc.hasNext()}">
+            &rarr;
+          </button>
+        </div>
         <span>
-        <input type="file" id="loadQuery" name="files" style="display:none">
-        <button
-           ng-if="qc.fileSupport" id="loadQueryButton"
-           ng-click="qc.load_query()"
-           class="outline"
-           onchange="console.log("changed files")">
-          Import Query</button>
+          <span>
+          <input type="file" id="loadQuery" name="files" style="display:none">
+          <button
+             ng-if="qc.fileSupport" id="loadQueryButton"
+             ng-click="qc.load_query()"
+             class="outline"
+             onchange="console.log("changed files")">
+            Import Query</button>
+          </span>
+          <button
+            ng-click="qc.save_query()" class="outline">
+          Export Query
+          </button>
         </span>
-        <button
-          ng-click="qc.save_query()" class="outline">
-        Export Query
-        </button>
-      </span>
-    </div>
-  <!-- Ace editor -->
-    <div id="query_editor" ui-ace="qc.aceInputOptions"
-      ng-class="{dynamic_disabled: qc.executingQuery.busy}"
-      ng-model="qc.lastResult.query">Ace</div>
-    {{qc.renderPage()}}
+      </div>
+    <!-- Ace editor -->
+      <div id="query_editor" ui-ace="qc.aceInputOptions"
+        ng-class="{dynamic_disabled: qc.executingQuery.busy}"
+        ng-model="qc.lastResult.query">{{qc.renderPage()}}</div>
 
-</div>
+    </div>
+
+<!-- wrapper under query editor for button and stats -->
+    <div id="query_footer" class="row flex-left">
+      <button ng-if="!somethingTrue" ng-click="qc.somefunction()">Execute Query</button>
+      <button ng-if="somethingTrue" class="icon-button">Cancel Query <span class="icon fa-spinner fa-spin"></span></button>
+
 <!-- query results stats -->
-    <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">
-      <span
-        ng-class="{cbui_color_success: qc.status_success(), cbui_color_fail: qc.status_fail()}">
-        Status: {{qc.lastResult.status}}</span>
-      |
-      <span>Elapsed: {{qc.lastResult.elapsedTime}}</span>
-      |
-      <span>Execution: {{qc.lastResult.executionTime}}</span>
-      |
-      <span>Result Count: {{qc.lastResult.resultCount}}</span>
-      |
-      <span>Result Size: {{qc.lastResult.resultSize}}</span>
+      <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">
+        <span
+          ng-class="{success: qc.status_success(), error: qc.status_fail()}">
+          Status: {{qc.lastResult.status}}</span>
+        |
+        <span>Elapsed: {{qc.lastResult.elapsedTime}}</span>
+        |
+        <span>Execution: {{qc.lastResult.executionTime}}</span>
+        |
+        <span>Result Count: {{qc.lastResult.resultCount}}</span>
+        |
+        <span>Result Size: {{qc.lastResult.resultSize}}</span>
+      </div>
     </div>
 
 <!-- query results -->
@@ -152,4 +159,4 @@
       </section>
     </div>
   </div>
-</main>
+</div>

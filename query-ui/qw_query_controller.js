@@ -544,7 +544,7 @@
       // doesn't have fewer than 5 lines or more than ~50% of the window
 
       if (qc.inputEditor) {
-        var queryAreaHeight = Math.max($('#query_ui').height(),240);
+        var queryAreaHeight = Math.max($('#query_wrapper').height(),240);
         var queryHeaderHeight = $('#query_header').height();
         var curSession = qc.inputEditor.getSession();
         var lines = curSession.getLength();
@@ -666,11 +666,9 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'json ';
       dialogScope.file = dialogScope.data_file;
-      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
 
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory +
-                    '/file_dialog/qw_query_file_dialog.html',
+        templateUrl: '../_p/ui/query/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -701,11 +699,9 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query ';
       dialogScope.file = dialogScope.query_file;
-      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
 
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory +
-          '/file_dialog/qw_query_file_dialog.html',
+        templateUrl: '../_p/ui/query/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -737,11 +733,8 @@
       dialogScope.selectNextMatch = selectNextMatch;
       dialogScope.selectPrevMatch = selectPrevMatch;
 
-      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
-
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory +
-          '/history_dialog/qw_history_dialog.html',
+        templateUrl: '../_p/ui/query/history_dialog/qw_history_dialog.html',
         scope: dialogScope
       }).result;
 
