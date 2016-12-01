@@ -14,7 +14,7 @@
     // current UI version number
     //
 
-    qc.version = "1.0.5 (DP 5)";
+    qc.version = "1.0.6 (DP 6)";
 
     //
     // alot of state is provided by the qwQueryService

@@ -20,8 +20,8 @@ set STATIC=./static/
 
 rem Check to make sure we are in the same directory as the necessary files
 
-if not exist bin/query-ui.exe (
-    echo You must run this script in the same directory as the bin and the static folder.
+if not exist query-ui.exe (
+    echo You must run this script in the same directory as query-ui.exe.
     goto error
 )
 
@@ -31,7 +31,7 @@ if not exist static (
 )
 
 echo Go to %UI_SEVER_URL%/ui to use the query UI.
-set COMMAND=bin/query-ui.exe -datastore=%COUCHBASE_URL% -localPort=%GUI_PORT% -user=%USER% -pass=%PASS% -webcontent=%STATIC%
+set COMMAND=query-ui.exe -datastore=%COUCHBASE_URL% -localPort=%GUI_PORT% -user=%USER% -pass=%PASS% -webcontent=%STATIC%
 echo Running: %COMMAND%
 %COMMAND%
 goto eof

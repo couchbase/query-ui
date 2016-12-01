@@ -20,17 +20,12 @@ export STATIC=./static/
 #
 # Check to make sure we are in the same directory as the necessary files
 #
-if ([ ! -d bin  ] || [ ! -f bin/query-ui]); then
-    echo "You must run this script in the same directory as bin and the static folder."
+if ([ ! -f query-ui  ] || [ ! -d static]); then
+    echo "You must run this script in the same directory as query-ui and the static folder."
     exit 0
 fi
 
-if [ ! -d static ]; then
-    echo "You must run this script in the same directory as the static folder."
-    exit 0
-fi
-
-export COMMAND="./bin/query-ui -datastore=$COUCHBASE_URL -localPort=$GUI_PORT -user=$USER -pass=$PASS -webcontent=$STATIC"
+export COMMAND="./query-ui -datastore=$COUCHBASE_URL -localPort=$GUI_PORT -user=$USER -pass=$PASS -webcontent=$STATIC"
 echo Running: $COMMAND 
 $COMMAND
     
