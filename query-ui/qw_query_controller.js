@@ -667,9 +667,11 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'json ';
       dialogScope.file = dialogScope.data_file;
+      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
 
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query/file_dialog/qw_query_file_dialog.html',
+        templateUrl: '../_p/ui/query' + subdirectory +
+                     '/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -700,9 +702,11 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query ';
       dialogScope.file = dialogScope.query_file;
+      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
 
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query/file_dialog/qw_query_file_dialog.html',
+        templateUrl: '../_p/ui/query' + subdirectory +
+                     '/file_dialog/qw_query_file_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -734,8 +738,11 @@
       dialogScope.selectNextMatch = selectNextMatch;
       dialogScope.selectPrevMatch = selectPrevMatch;
 
+      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
+
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query/history_dialog/qw_history_dialog.html',
+        templateUrl: '../_p/ui/query' + subdirectory +
+                     '/history_dialog/qw_history_dialog.html',
         scope: dialogScope
       }).result;
 
