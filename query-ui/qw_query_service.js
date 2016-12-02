@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService'];
+  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService'];
 
-  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService) {
+  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService) {
 
     var qwQueryService = {};
 
@@ -734,11 +734,14 @@
         executeQueryUtil("explain " + queryText, false)
         .success(function(data, status, headers, config) {
           if (data && data.status == "success") {
-            var lists = analyzePlan(data.results[0].plan,null);
-            newResult.explainResult = {explain: data.results[0], analysis: lists,
-                buckets: qwQueryService.buckets, tokens: qwQueryService.autoCompleteTokens};
-            //console.log("Got plan analysis: " + JSON.stringify(lists,null,true));
+            newResult.explainResult =
+               {explain: data.results[0],
+                 analysis: qwQueryPlanService.analyzePlan(data.results[0].plan,null),
+                 plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan),
+                 buckets: qwQueryService.buckets,
+                 tokens: qwQueryService.autoCompleteTokens};
           }
+
           else
             newResult.explainResult = data.errors;
 
@@ -863,9 +866,12 @@
         // explain plan
 
         if (queryIsExplain && qwConstantsService.autoExplain) {
-          var lists = analyzePlan(data.results[0].plan,null);
-          newResult.explainResult = {explain: data.results[0], analysis: lists,
-              buckets: qwQueryService.buckets, tokens: qwQueryService.autoCompleteTokens};
+          newResult.explainResult =
+          {explain: data.results[0],
+              analysis: qwQueryPlanService.analyzePlan(data.results[0].plan,null),
+              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan),
+              buckets: qwQueryService.buckets,
+              tokens: qwQueryService.autoCompleteTokens};
           newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           qwQueryService.selectTab(4); // make the explain visible
         }
@@ -1407,266 +1413,6 @@
       });
     };
 
-
-    //
-    // When we get a query plan, we want to create a list of buckets and fields referenced
-    // by the query, so we can point out possible misspelled names
-    //
-    //   Sequence has '~children'
-    //   Parallel has '~child'
-    //   UnionAll has 'children'
-    //   UnionScan/IntersectScan have 'scans'
-    //   ExceptAll/IntersetAll have 'first' and 'second'
-    //   DistinctScan has 'scan'
-    //   Authorize has 'child'
-    //   Merge has 'as', 'key', 'keyspace', 'delete' and 'update'
-
-
-    function analyzePlan(plan, lists) {
-
-      if (!lists)
-        lists = {buckets : {}, fields : {}, indexes: {}, aliases: []};
-
-      // make
-
-      if (!plan || _.isString(plan))
-        return(null);
-
-      // special case: prepared queries are marked by an "operator" field
-
-      if (plan.operator)
-        return(analyzePlan(plan.operator,null));
-
-      //console.log("Inside analyzePlan: " + JSON.stringify(plan,null,true));
-
-      // iterate over fields, look for "#operator" field
-      var operatorName;
-      var fields = [];
-
-      _.forIn(plan,function(value,key) {
-        if (key === '#operator')
-          operatorName = value;
-
-        var type;
-        if (_.isString(value)) type = 'string';
-        else if (_.isArray(value)) type = 'array';
-        else if (_.isObject(value)) type = 'object';
-        else if (_.isNumber(value)) type = 'number';
-        else if (_.isNull(value)) type = 'null';
-        else type = 'unknown';
-
-        var field = {};
-        field[key] = type;
-        fields.push(field);
-      });
-
-      // at this point we should have an operation name and a field array
-      //console.log("  after analyze, got op name: " + operatorName);
-      // we had better have an operator name at this point
-
-      if (!operatorName) {
-        console.log("Error, no operator found for item: " + JSON.stringify(plan));
-        return(lists);
-      }
-
-      // if we have a sequence, we analyze the children in order
-      if (operatorName === "Sequence" && plan['~children']) {
-        // a sequence may have aliases that rename buckets, but those aliases become invalid after
-        // the sequence. Remember how long the sequence was at the beginning.
-        var initialAliasLen = lists.aliases.length;
-
-        for (var i = 0; i < plan['~children'].length; i++) {
-          // if we see a fetch, remember the keyspace for subsequent projects
-          if (plan['~children'][i]['#operator'] == "Fetch")
-            lists.currentKeyspace = plan['~children'][i].keyspace;
-          analyzePlan(plan['~children'][i], lists);
-        }
-
-        // remove any new aliases
-        lists.aliases.length = initialAliasLen;
-        return(lists);
-      }
-
-      // parallel groups are like sequences, but with only one child
-      else if (operatorName === "Parallel" && plan['~child']) {
-        analyzePlan(plan['~child'],lists);
-        return(lists);
-      }
-
-
-
-
-
-      // Prepare operators have their plan inside prepared.operator
-      else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
-        analyzePlan(plan.prepared.operator,lists);
-        return(lists);
-      }
-
-      // ExceptAll and InterceptAll have 'first' and 'second' subqueries
-      else if (operatorName === "ExceptAll" || operatorName === "InterceptAll") {
-        if (plan['first'])
-          analyzePlan(plan['first'],lists);
-
-        if (plan['second'])
-          analyzePlan(plan['second'],lists);
-
-        return(lists);
-      }
-
-      // Merge has two children: 'delete' and 'update'
-      else if (operatorName === "Merge") {
-        if (plan.as)
-          lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
-
-        if (plan['delete'])
-          analyzePlan(plan['delete'],lists);
-
-        if (plan['update'])
-          analyzePlan(plan['update'],lists);
-
-        if (plan.keyspace)
-          getFieldsFromExpression(plan.keyspace,lists);
-
-        if (plan.key)
-          getFieldsFromExpression(plan.key,lists);
-
-        return(lists);
-      }
-
-      // Authorize operators have a single child called 'child'
-      else if (operatorName === "Authorize" && plan['child']) {
-        analyzePlan(plan['child'],lists);
-        return(lists);
-      }
-
-      // DistinctScan operators have a single child called 'scan'
-      else if (operatorName === "DistinctScan" && plan['scan']) {
-        analyzePlan(plan['scan'],lists);
-        return(lists);
-      }
-
-      // Similar to UNIONs, IntersectScan, UnionScan group a number of different scans
-      // have an array of 'scan' that are merged together
-
-      else if ((operatorName == "UnionScan") || (operatorName == "IntersectScan")) {
-        for (var i = 0; i < plan['scans'].length; i++)
-          analyzePlan(plan['scans'][i],lists);
-
-        return(lists);
-      }
-
-
-
-
-
-
-
-      // UNION operators will have an array of predecessors drawn from their "children".
-      // we expect predecessor to be null if we see a UNION
-      else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['children']) {
-        for (var i = 0; i < plan['children'].length; i++)
-         analyzePlan(plan['children'][i],lists);
-
-        return(lists);
-      }
-
-      // for all other operators, certain fields will tell us stuff:
-      //  - keyspace is a bucket name
-      //  - index is an index name
-      //  - condition is a string containing an expression, fields there are of the form (`keyspace`.`field`)
-      //  - expr is the same as condition
-      //  - on_keys is an expression
-      //  - group_keys is an array of fields
-
-      if (plan.keyspace)
-        lists.buckets[plan.keyspace] = true;
-      if (plan.index && plan.keyspace)
-        lists.indexes[plan.keyspace + "." + plan.index] = true;
-      else if (plan.index)
-        lists.indexes[plan.index] = true;
-      if (plan.group_keys) for (var i=0; i < plan.group_keys.length; i++)
-        lists.fields[plan.group_keys[i]] = true;
-      if (plan.condition)
-        getFieldsFromExpression(plan.condition,lists);
-      if (plan.expr)
-        getFieldsFromExpression(plan.expr,lists);
-      if (plan.on_keys)
-        getFieldsFromExpression(plan.on_keys,lists);
-      if (plan.as && plan.keyspace)
-        lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
-      if (plan.result_terms && _.isArray(plan.result_terms))
-        for (var i=0; i< plan.result_terms.length; i++) if (plan.result_terms[i].expr )
-          if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
-              lists.currentKeyspace)
-            lists.fields[lists.currentKeyspace + '.*'] = true;
-          else
-            getFieldsFromExpression(plan.result_terms[i].expr,lists);
-
-      return(lists);
-    }
-
-    //
-    // pull bucket and field names out of arbitrary expressions
-    //
-    // field names are expressed in nested parents, the simplest case is:
-    //    (`bucket`.`field`)
-    // but if there is a subfield, it looks like:
-    //    ((`bucket`.`field`).`subfield`)
-    // and array references are of the form:
-    //    (((`bucket`.`field`)[5]).`subfield`)
-    //
-    // we need to work inside out, pulling out the bucket name and initial
-    // field, then building as we go out.
-    //
-
-    function getFieldsFromExpression(expression,lists) {
-
-      //console.log("Got field expr: " + expression);
-
-      var quotation = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/ig;
-      var coreFieldRef = /\(`((?:[^`\\]|\\.)+)`\.`((?:[^`\\]|\\.)+)`\)/i;
-      var innerFieldRef = /\(inner(?:\.`((?:[^`\\]|\\.)+)`|(\[[^\]]*\]))\)/i;
-
-      // remove anything in quotes, since we want to ignore user strings
-      var expr = expression.replace(quotation,"");
-
-      // now look for core field references, record the bucket name, and look
-      // for subfield or array references
-      var match;
-      while ((match = expr.match(coreFieldRef)) != null) {
-
-        // get the bucket name, and see if there is an alias for it
-        var bucket = match[1];
-        for (var i=0; i < lists.aliases.length; i++)
-          if (lists.aliases[i].as == bucket) {
-            bucket = lists.aliases[i].keyspace;
-            break;
-          }
-        lists.buckets[bucket] = true;
-
-        // get the first field name
-        var field = match[2];
-
-        if (field.indexOf(' ') >= 0 || field.indexOf('-') >= 0)
-          field = '`' + field + '`';
-
-        expr = expr.replace(coreFieldRef,"inner");
-        while (match = expr.match(innerFieldRef)) {
-          if (match[1]) {
-            if (match[1].indexOf(' ') >= 0 || match[1].indexOf('-') >= 0)
-              field = field + '.`' + match[1] + '`';
-            else
-              field = field + '.' + match[1];
-          }
-          else if (match[2]) field = field + "[0]";
-          expr = expr.replace(innerFieldRef,"inner");
-        }
-        lists.fields[bucket + "." + field] = true;
-        //console.log("got field: " + bucket + "." + field);
-      }
-
-    }
 
     //
     // javascript can't handle long ints - any number more than 53 bits cannot be represented
