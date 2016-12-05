@@ -483,7 +483,7 @@
       var resultHeaderHeight =  $('#result_header').height();
       var sidebarHeaderHeight =  $('#sidebar_header').height();
       var resultSummaryHeight = $('#result_summary').height();
-      var spock_ui = $('#spockUI').height() != null;
+      var current_ui = $('#currentUI').height() != null;
 
       var otherStuff = pageHeaderHeight + pageFooterHeight +
         headerNavHeight + queryBoxHeight;
@@ -496,7 +496,7 @@
       var editor_size = windowHeight - otherStuff - margins - resultHeaderHeight;
       if (editor_size > 1000)
         editor_size = 1000;
-      if (spock_ui)
+      if (current_ui)
         editor_size += 70;
       else
         editor_size += 140;
@@ -510,12 +510,12 @@
 //      console.log("windowHeight: " + windowHeight);
 //      console.log("resultHeaderHeight: " + resultHeaderHeight);
 //      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
-//      console.log(" spock_ui: " + spock_ui);
+//      console.log(" current_ui: " + current_ui);
 //      console.log(" editor_size: " + editor_size);
 //      console.log("  result is now: " + $('#result_editor').height() + ", setting to " + (editor_size + 10) + "\n\n");
 
 
-      if (!spock_ui) { // classic UI
+      if (!current_ui) { // classic UI
         $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
         $('#result_editor').height(editor_size + 9);
         $('#result_table').height(editor_size+25);
@@ -667,7 +667,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'json ';
       dialogScope.file = dialogScope.data_file;
-      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -702,7 +702,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query ';
       dialogScope.file = dialogScope.query_file;
-      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -738,7 +738,7 @@
       dialogScope.selectNextMatch = selectNextMatch;
       dialogScope.selectPrevMatch = selectPrevMatch;
 
-      var subdirectory = ($('#spockUI').height() != null) ? '/spock' : '';
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +

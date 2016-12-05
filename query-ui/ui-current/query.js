@@ -22,7 +22,7 @@
           views: {
             "main@app.admin": {
               controller: 'qwQueryController',
-              templateUrl: '../_p/ui/query/spock/query_toplevel.spock.html'
+              templateUrl: '../_p/ui/query/ui-current/query_toplevel.html'
             }
           },
           data: {
@@ -37,12 +37,12 @@
           .state(parent + '.monitoring', {
             url: '/monitoring',
             controller: 'qwQueryController',
-            templateUrl: '../_p/ui/query/spock/query_monitoring.spock.html'
+            templateUrl: '../_p/ui/query/ui-current/query_monitoring.html'
           })
           .state(parent + '.workbench', {
             url: '/workbench',
             controller: 'qwQueryController',
-            templateUrl: '../_p/ui/query/spock/query.spock.html'
+            templateUrl: '../_p/ui/query/ui-current/query.html'
           });
       }
 

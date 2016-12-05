@@ -19,17 +19,17 @@
         abstract: true,
         url: '/query',
         controller: 'qwQueryController',
-        templateUrl: '../_p/ui/query/query_toplevel.html'
+        templateUrl: '../_p/ui/query/ui-classic/query_toplevel.html'
       })
       .state('app.admin.query.monitoring', {
         url: '/monitoring',
         controller: 'qwQueryController',
-        templateUrl: '../_p/ui/query/query_monitoring.html'
+        templateUrl: '../_p/ui/query/ui-classic/query_monitoring.html'
       })
       .state('app.admin.query.workbench', {
         url: '/workbench',
         controller: 'qwQueryController',
-        templateUrl: '../_p/ui/query/query.html'
+        templateUrl: '../_p/ui/query/ui-classic/query.html'
       })
       ;
       mnPluggableUiRegistryProvider.registerConfig({

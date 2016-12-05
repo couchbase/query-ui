@@ -169,7 +169,7 @@
                   // open the dialog to ask for a password
 
                   var promise = $uibModal.open({
-                    templateUrl: '../_p/ui/query/spock/password_dialog/qw_query_password_dialog.html',
+                    templateUrl: '../_p/ui/query/ui-classic/password_dialog/qw_query_password_dialog.html',
                     scope: scope
                   }).result;
 
@@ -187,7 +187,7 @@
                       bucket.password = null;
                       //console.log("Error authenticating: ");
                       $uibModal.open({
-                        templateUrl: '../_p/ui/query/spock/password_dialog/qw_query_error_dialog.html',
+                        templateUrl: '../_p/ui/query/ui-classic/password_dialog/qw_query_error_dialog.html',
                         scope: scope
                       });
                     }
