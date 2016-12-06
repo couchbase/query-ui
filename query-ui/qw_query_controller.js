@@ -554,7 +554,8 @@
         if (halfScreen > 75 && height > halfScreen)
           height = halfScreen;
 
-        //console.log("Area height: " + queryAreaHeight + ", header: " + queryHeaderHeight + ", setting height to: " + height);
+        //console.log("QueryAreaHeight: " + queryAreaHeight + ", queryHeaderHeight: " + queryHeaderHeight);
+        //console.log("Half screen: " + halfScreen + ", Area height: " + queryAreaHeight + ", header: " + queryHeaderHeight + ", setting height to: " + height);
 
         $("#query_editor").height(height);
       }
@@ -851,6 +852,21 @@
       }
       qc.analysisExpanded = !qc.analysisExpanded;
     }
+
+
+    //
+    // show an error dialog
+    //
+
+    function showErrorMessage(message) {
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+
+      $uibModal.open({
+        templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
+        scope: {error_title: "Error", error_detail: message}
+      });
+    }
+
     //
     // let's start off with a list of the buckets
     //

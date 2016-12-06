@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$q', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService'];
+  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService'];
 
-  function getQwQueryService($q, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService) {
+  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService) {
 
     var qwQueryService = {};
 
@@ -281,7 +281,17 @@
         savedState.pastQueries.push(qcopy);
       });
 
-      localStorage[localStorageKey] = JSON.stringify(savedState);
+      //console.log("saving state, len: " + JSON.stringify(savedState).length);
+
+      // there is no cross browser means to determine how much local
+      // storage space is available. When we get an exception, warn the user
+      // and let them figure out what to do
+      try {
+        localStorage[localStorageKey] = JSON.stringify(savedState);
+      } catch (e) {
+        // if the save failed, notify the user
+        showWarningDialog("Browser storage exhausted, unable to save query history. Try removing large queries from history.")
+      }
       //
       //console.log("Saving state to storage: " + JSON.stringify(savedState));
     }
@@ -885,10 +895,10 @@
         }
       })
       .error(function(data, status, headers, config) {
-//      console.log("Error Data: " + JSON.stringify(data));
-//      console.log("Error Status: " + JSON.stringify(status));
-//      console.log("Error Headers: " + JSON.stringify(headers));
-//      console.log("Error Config: " + JSON.stringify(config));
+      console.log("Error Data: " + JSON.stringify(data));
+      console.log("Error Status: " + JSON.stringify(status));
+      console.log("Error Headers: " + JSON.stringify(headers));
+      //console.log("Error Config: " + JSON.stringify(config));
 
         // if we don't get query metrics, estimate elapsed time
         if (!data || !data.metrics) {
@@ -1477,6 +1487,37 @@
 
       }
       return result;
+    }
+
+
+    //
+    // show an error dialog
+    //
+
+    function showErrorDialog(message) {
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+
+      var dialogScope = $rootScope.$new(true);
+      dialogScope.error_title = "Error";
+      dialogScope.error_detail = message;
+
+      $uibModal.open({
+        templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
+        scope: dialogScope
+      });
+    }
+
+    function showWarningDialog(message) {
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+
+      var dialogScope = $rootScope.$new(true);
+      dialogScope.error_title = "Warning";
+      dialogScope.error_detail = message;
+
+      $uibModal.open({
+        templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
+        scope: dialogScope
+      });
     }
 
     //

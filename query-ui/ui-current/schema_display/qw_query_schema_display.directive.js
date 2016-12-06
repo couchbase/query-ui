@@ -185,6 +185,8 @@
                     },function error(data, status, headers, config) {
                       bucket.validated = false;
                       bucket.password = null;
+                      scope.error_title = "Bucket Password Failure";
+                      scope.error_detail = "Incorrect password for bucket '" + bucket.id + "'.";
                       //console.log("Error authenticating: ");
                       $uibModal.open({
                         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
