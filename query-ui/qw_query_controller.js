@@ -512,17 +512,20 @@
 //      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
 //      console.log(" current_ui: " + current_ui);
 //      console.log(" editor_size: " + editor_size);
-//      console.log("  result is now: " + $('#result_editor').height() + ", setting to " + (editor_size + 10) + "\n\n");
 
 
       if (!current_ui) { // classic UI
-        $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
-        $('#result_editor').height(editor_size + 9);
-        $('#result_table').height(editor_size+25);
-        $('#result_tree').height(editor_size+ 24);
-        $('#query_plan').height(editor_size + 15);
-        $('#query_plan_text').height(editor_size + 25);
+        // ignore small changes less than 1% of size
+        var change = $('#result_editor').height()/(editor_size + 9);
+        if (change < 0.99 || change > 1.01) {
+          $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
+          $('#result_editor').height(editor_size + 9);
+          $('#result_table').height(editor_size+25);
+          $('#result_tree').height(editor_size+ 24);
+          $('#query_plan').height(editor_size + 15);
+          $('#query_plan_text').height(editor_size + 25);
         //$('#result_box').height(editor_size+50);
+        }
       }
       else {
         var sidebarHeight = windowHeight - pageHeaderHeight - pageFooterHeight -

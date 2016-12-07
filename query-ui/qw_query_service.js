@@ -290,7 +290,7 @@
         localStorage[localStorageKey] = JSON.stringify(savedState);
       } catch (e) {
         // if the save failed, notify the user
-        showWarningDialog("Browser storage exhausted, unable to save query history. Try removing large queries from history.")
+        showWarningDialog("Warning: Unable to save query history, browser local storage exhausted. You can still run queries, but they won't be saved for future sessions. Try removing large queries from history.")
       }
       //
       //console.log("Saving state to storage: " + JSON.stringify(savedState));
@@ -563,6 +563,25 @@
     //
 
     function executeQueryUtil(queryText, is_user_query) {
+      var request = buildQueryRequest(queryText,is_user_query);
+
+      // if the request can't be built because the query is too big, return a dummy
+      // promise that resolves immediately. This needs to follow the angular $http
+      // promise, which supports .success and .error as well as .then
+
+      if (!request) {
+        var dummy = Promise.resolve({errors: "Query too long"});
+        dummy.success = function(fn) {/*nop*/ return(dummy);};
+        dummy.error = function(fn) {dummy.then(fn); return(dummy);};
+        dummy.origThen = dummy.then;
+        dummy.then = function(fn1,fn2) {dummy.origThen(fn1,fn2); return(dummy);};
+        return(dummy);
+      }
+
+      return($http(request));
+    }
+
+    function buildQueryRequest(queryText, is_user_query) {
 
       //console.log("Running query: " + queryText);
       //
@@ -628,10 +647,16 @@
       }
 
       //
-      // send the query off via REST API
+      // check the queryRequest to make sure it's not too big
       //
 
-      return($http(queryRequest));
+      if (qwConstantsService.maxRequestSize &&
+          JSON.stringify(queryRequest).length >= qwConstantsService.maxRequestSize) {
+        showErrorDialog("Query too large for GUI, try using CLI or REST API directly.")
+        return(null);
+      }
+
+      return(queryRequest);
     }
 
 
@@ -741,7 +766,21 @@
 
         newResult.explainDone = false;
 
-        executeQueryUtil("explain " + queryText, false)
+        var request = buildQueryRequest("explain " + queryText, false);
+        if (!request) {
+          newResult.result = '{"status": "Query Failed."}';
+          newResult.data = {status: "Query Failed."};
+          newResult.status = "errors";
+          newResult.resultCount = 0;
+          newResult.resultSize = 0;
+          newResult.queryDone = true;
+
+          // make sure to only finish if the explain query is also done
+          lastResult.copyIn(newResult);
+          finishQuery();
+          return;
+        }
+        $http(request)
         .success(function(data, status, headers, config) {
           if (data && data.status == "success") {
             newResult.explainResult =
@@ -767,6 +806,10 @@
 
         })
         .error(function(data, status, headers, config) {
+//          console.log("Explain error Data: " + JSON.stringify(data));
+//          console.log("Explain error Status: " + JSON.stringify(status));
+//          console.log("Explain error Headers: " + JSON.stringify(headers));
+
           if (data && _.isString(data))
             newResult.explainResult = {errors: data};
           else if (data && data.errors)
@@ -807,13 +850,28 @@
 
       newResult.queryDone = false;
 
-      var promise = executeQueryUtil(queryText, true)
+      var request = buildQueryRequest(queryText, true);
+
+      if (!request) {
+        newResult.result = '{"status": "Query Failed."}';
+        newResult.data = {status: "Query Failed."};
+        newResult.status = "errors";
+        newResult.resultCount = 0;
+        newResult.resultSize = 0;
+        newResult.queryDone = true;
+
+        // make sure to only finish if the explain query is also done
+        lastResult.copyIn(newResult);
+        finishQuery();
+        return;
+      }
+      var promise = $http(request)
       // SUCCESS!
       .success(function(data, status, headers, config) {
-      //console.log("Success Data: " + JSON.stringify(data));
-      //console.log("Success Status: " + JSON.stringify(status));
-      //console.log("Success Headers: " + JSON.stringify(headers));
-      //console.log("Success Config: " + JSON.stringify(config));
+//      console.log("Success Data: " + JSON.stringify(data));
+//      console.log("Success Status: " + JSON.stringify(status));
+//      console.log("Success Headers: " + JSON.stringify(headers));
+//      console.log("Success Config: " + JSON.stringify(config));
 
         var result;
 
@@ -895,9 +953,9 @@
         }
       })
       .error(function(data, status, headers, config) {
-      console.log("Error Data: " + JSON.stringify(data));
-      console.log("Error Status: " + JSON.stringify(status));
-      console.log("Error Headers: " + JSON.stringify(headers));
+//      console.log("Error Data: " + JSON.stringify(data));
+//      console.log("Error Status: " + JSON.stringify(status));
+//      console.log("Error Headers: " + JSON.stringify(headers));
       //console.log("Error Config: " + JSON.stringify(config));
 
         // if we don't get query metrics, estimate elapsed time
@@ -1052,7 +1110,7 @@
 //      var config = {headers: {'Content-Type':'application/json','ns-server-proxy-timeout':20000}};
      // console.log("Running monitoring cat: " + category + ", query: " + payload.statement);
 
-      return(executeQueryUtil(query, false))
+      return(executeQueryUtil(query,false))
       .then(function success(response) {
         var data = response.data;
         var status = response.status;
@@ -1131,6 +1189,7 @@
 
       qwQueryService.gettingBuckets.busy = true;
       qwQueryService.buckets.length = 0;
+      qwQueryService.autoCompleteTokens = {};
 
       // use a query to get buckets with a primary index
       //var queryText = "select distinct indexes.keyspace_id from system:indexes where is_primary = true order by indexes.keyspace_id ;";

@@ -66,6 +66,9 @@
     qwConstantsService.nonIndexedBuckets = "Non-Indexed Buckets";
 
     //
+    // the nsserver proxy has a maximum request size
+    qwConstantsService.maxRequestSize = 1048500;
+
     //
     //
     // all done creating the service, now return it
