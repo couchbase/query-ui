@@ -840,18 +840,18 @@
       if (!qc.analysisExpanded) {
         $("#metadata").removeClass("width-3");
         $("#metadata").addClass("width-6");
-        if ($('#result_box').hasClass('classic-ui')) {
-          $("#result_box").removeClass("width-9");
-          $("#result_box").addClass("width-6")
-        }
+      //  if ($('#result_box').hasClass('classic-ui')) {
+          $("#query_wrapper").removeClass("width-9");
+          $("#query_wrapper").addClass("width-6")
+      //  }
       }
       else {
         $("#metadata").removeClass("width-6");
         $("#metadata").addClass("width-3");
-        if ($('#result_box').hasClass('classic-ui')) {
-          $("#result_box").removeClass("width-6");
-          $("#result_box").addClass("width-9");
-        }
+      //  if ($('#result_box').hasClass('classic-ui')) {
+          $("#query_wrapper").removeClass("width-6");
+          $("#query_wrapper").addClass("width-9");
+      //  }
       }
       qc.analysisExpanded = !qc.analysisExpanded;
     }
