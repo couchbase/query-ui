@@ -41,44 +41,44 @@
 
             // summarize plan
             if (data.analysis) {
-              content += "<h3>Query Plan Summary:</h3>";
+              //content += "<h3>Query Plan Summary:</h3>";
               content += "<div class='row qw-planviz-summary width-8 flex-left text-small'>";
               content += "<div class='column'>";
               content += "<div class='semi-bold'>Indexes</div>";
 //              content += "<li>Indexes used: <ul>";
               for (var f in data.analysis.indexes)
                 if (f.indexOf("#primary") >= 0)
-                  content += "<em class='qw-field cbui-plan-expensive'>" + f + "</em>";
+                  content += "<em class='cbui-plan-expensive'>" + f + "</em>";
                 else
-                  content += "<em class='qw-field'>" + f + "</em>";
+                  content += "<em>" + f + "</em>";
               content += "</div>";
 
               content += "<div class='column'>";
               content += "<div class='semi-bold'>Buckets</div>";
               for (var b in data.analysis.buckets)
-                content += "<em class='qw-field'>" + b + "</em>";
+                content += "<em>" + b + "</em>";
               content += "</div>";
 
               content += "<div class='column'>";
               content += "<div class='semi-bold'>Fields</div>";
               for (var f in data.analysis.fields)
-                content += "<em class='qw-field'>" + f + "</em>";
+                content += "<em>" + f + "</em>";
               content += "</div>";
               content += "</div>";
             }
 
             // Tabular plan
             if (data.plan_nodes) {
-              content += "<br><h3>Query Operator Data Flows (bottom to top):</h3><br>";
-              content += '<div class="ajtd-root ajtd-type-array">' +
-              makeHTMLtable(data.plan_nodes,"") + "</div>";
+              //content += "<br><h3>Query Operator Data Flows (bottom to top):</h3><br>";
+              //content += '<div class="ajtd-root ajtd-type-array">' +
+              //makeHTMLtable(data.plan_nodes,"") + "</div>";
 
               // graphical plan
               //
               // map the plan to a data structure, the walk the structure, turning it into
               //
 
-              content += '<br><br><h3>Visual Plan</h3><br>'
+            //  content += '<br><br><h3>Visual Plan</h3><br>'
               content += '<div class="row qw-explain-wrapper"><div class="qw-node-wrapper qw-sequence flex-left qw-first-node">';
               content += makeTreeFromPlanNodes(data.plan_nodes);
               content += '</div></div>';
@@ -120,13 +120,13 @@
 
     if (plan.predecessor)
      if (_.isArray(plan.predecessor)) {
-        result += '</div><div class="cbui-row cbui-padding0 qw-combi-wrapper">';
+        result += '</div><div class="row cbui-padding0 qw-combi-wrapper">';
         result += '<div class="qw-node qw-combinor">' + opName + "</div>";
         result += '<div class="qw-combinor-border"></div>';
         result += '<div class="qw-rows-wrapper">';
 
         for (var i = 0; i < plan.predecessor.length; i++) {
-          result += '<div class="cbui-row cbui-padding0"><div class="qw-node-wrapper qw-sequence"><div class="qw-arrow-tip"></div>';
+          result += '<div class="row cbui-padding0"><div class="qw-node-wrapper qw-sequence"><div class="qw-arrow-tip"></div>';
           result += makeTreeFromPlanNodes(plan.predecessor[i],hasSuccessor);
           result += '</div></div>';
         }

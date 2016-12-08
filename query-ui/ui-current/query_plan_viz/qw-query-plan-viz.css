@@ -1,6 +1,6 @@
 .qw-parallel {
-  border: solid 0 #060; 
-  border-left-width:2px; 
+  border: solid 0 #060;
+  border-left-width:2px;
   padding-left:0.5ex;
   padding-right:0.5ex;
 }
@@ -14,13 +14,13 @@
 }
 
 .qw-union {
-  border: solid 0 #007; 
+  border: solid 0 #007;
   border-top-width:1px;
   margin-top: 10px;
 }
 
 .qw-union-text {
-  color: #007; 
+  color: #007;
   border-left-width:1px;
 }
 
@@ -30,33 +30,44 @@
 
 .qw-field {
    font-style: italic;
-   color: #839B00;
+   color: #333;
 }
 
-.cbui-plan-summary {
-  font-size: 12px;
-  font-weight: normal;
+.qw-planviz-summary {
+  font-size: .875rem;
+  margin-bottom:1rem;
 }
+
+.qw-planviz-summary .column {width:auto;margin:0 2rem 0 0;padding:0;}
 
 .cbui-plan-expensive {
-  background-color: #ffe6de;
+  color: #cc2a2e;
 }
 
 .cbui-explain-table {
   padding-bottom: 1px; /* needed to prevent expensive background from overlapping union border */
 }
 
-.qw-explain-wrapper {white-space: nowrap;overflow: auto; position:relative}
+.qw-explain-wrapper {
+  white-space: nowrap;
+  overflow: auto;
+  position:relative;
+  background-color: #fff;
+  border-radius: 9px;
+  padding:.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ececec;
+}
 .qw-combi-wrapper {}
 .qw-rows-wrapper {position:relative}
 .qw-node-wrapper {width:100%;}
-.qw-explain-summary {
+/* .qw-explain-summary {
   background-color: #f5f5f5;
   padding:.5rem 1rem;
   border-radius: 3px;
   border: 1px solid #d8d8d8;
   width:100%;
-}
+} */
 .qw-explain-summary .column,
 .qw-explain-summary p,
 .qw-explain-summary h5 {
@@ -109,6 +120,7 @@
   position: relative;
   box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.35);
   white-space: nowrap;
+  cursor: pointer;
 }
 .qw-node.end-of-line {
   margin-right: 0;
