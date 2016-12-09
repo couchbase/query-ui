@@ -56,8 +56,8 @@
 
 <!-- wrapper under query editor for button and stats -->
     <div id="query_footer" class="row flex-left">
-      <button ng-if="!somethingTrue" ng-click="qc.somefunction()">Execute Query</button>
-      <button ng-if="somethingTrue" class="icon-button">Cancel Query <span class="icon fa-spinner fa-spin"></span></button>
+      <button ng-if="!qc.executingQuery.busy"" ng-click="qc.query()">Execute Query</button>
+      <button ng-if="qc.executingQuery.busy"" ng-click="qc.query()" class="icon-button">Cancel Query <span class="icon fa-spinner fa-spin"></span></button>
 
 <!-- query results stats -->
       <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">
@@ -131,8 +131,8 @@
       <div class="row gray-6">
         <h5>&nbsp; Data Bucket Insights</h5>
         <a href="" title="refresh" ng-hide="qc.gettingBuckets.busy"
-          ng-click="qc.updateBuckets()" class="icon fa-refresh text-small">&nbsp;</a>
-          <span ng-show="qc.gettingBuckets.busy" class="icon fa-refresh fa-spin text-small">&nbsp;</span>
+          ng-click="qc.updateBuckets()" class="icon fa-refresh text-small">test</a>
+          <span ng-show="qc.gettingBuckets.busy" class="icon fa-refresh fa-spin text-small"></span>
       </div>
       <section class="indent-1">
         <h5 title="Buckets with a primary index support all queries.">Fully Queryable Buckets</h5>

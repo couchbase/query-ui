@@ -1,216 +1,7 @@
-html {
-  box-sizing: border-box;
-}
-/*
-*,
-*:before,
-*:after {
-  box-sizing: inherit;
-}
-*/
-
-
-/*
-.cbui-overflow {
-  overflow: auto;
-}
-
-.cbui-row {
-  position:relative;
-  padding: 6px 8px;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  min-height: 32px;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-  -ms-flex-align: center;
-      align-items: center;
-  -webkit-flex-wrap: no-wrap;
-  -ms-flex-wrap: no-wrap;
-      flex-wrap: no-wrap;
-  -webkit-justify-content: space-between;
-  -webkit-box-pack: justify;
-      -ms-flex-pack: justify;
-          justify-content: space-between;
-}
-
-.cbui-row.cbui-rounded-top {
-  border-radius: 4px 4px 0px 0px;
-}
-
-.cbui-row.cbui-align-right {
-  -webkit-justify-content: flex-end;
-  -webkit-box-pack: end;
-      -ms-flex-pack: end;
-          justify-content: flex-end;
-}
-
-.cbui-row.cbui-align-top {
-  -webkit-align-items: flex-start;
-  -webkit-box-align: start;
-      -ms-flex-align: start;
-          align-items: flex-start;
-}
-
-.cbui-row.cbui-padding0 {
+#currentUI {
+  margin: 0;
   padding: 0;
 }
-
-.cbui-row.cbui-margin-top8 {
-  margin: 8px 0 0 0;
-}
-
-.cbui-row.cbui-margin-top20 {
-  margin: 20px 0 0 0;
-}
-
-.cbui-row.cbui-align-left {
-  -webkit-align-items: flex-start;
-  -webkit-box-align: start;
-      -ms-flex-align: start;
-          align-items: flex-start;
-}
-
-.cbui-column50 {
-  -webkit-flex: 1 0 50%;
-  -webkit-box-flex: 1;
-      -ms-flex: 1 0 50%;
-          flex: 1 0 50%;
-  min-width: 0;
-}
-
-.cbui-column25 {
-  -webkit-flex: 1 0 25%;
-  -webkit-box-flex: 1;
-      -ms-flex: 1 0 25%;
-          flex: 1 0 25%;
-  min-width: 0;
-}
-
-.cbui-column33 {
-  -webkit-flex: 1 0 33%;
-  -webkit-box-flex: 1;
-      -ms-flex: 1 0 33%;
-          flex: 1 0 33%;
-  min-width: 0;
-}
-
-.cbui-column66 {
-  -webkit-flex: 1 0 66%;
-  -webkit-box-flex: 1;
-      -ms-flex: 1 0 66%;
-          flex: 1 0 66%;
-  min-width: 0;
-}
-
-.cbui-column75 {
-  -webkit-flex: 1 0 74%;
-  -webkit-box-flex: 1;
-      -ms-flex: 1 0 74%;
-          flex: 1 0 74%;
-  min-width: 0;
-}
-
-.cbui-centered {
-  text-align: center;
-}
-
-.cbui-right {
-  text-align: right;
-}
-
-a.cbui-rightmargin {
-  margin: 0 12px 0 0;
-}
-
-span.cbui_color_success {
-  color: #2ca01c !important;
-  font-weight: 600;
-}
-
-span.cbui_color_fail {
-  color: #fc7d83 !important;
-  font-weight: 600;
-}
-
-.cbui-query-resultsnumber input {
-  width: 68px;
-  padding: 4px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-}
-
-.cbui-error-message {
-  font-size: 14px;
-  color: #616062;
-}
-
-.cbui-nodelist {
-  font-size: 14px;
-  font-weight: normal;
-  padding: 0 0 15px 9px;
-}
-
-.cbui-biglink {
-  font-size: 16px;
-  font-weight: normal;
-}
-
-#query_ui h2 {
-  margin-left: 8px;
-  font-size: 19px;
-  font-weight: 500;
-  color: #333;
-}
-
-#query_ui h4 {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #444;
-}
-
-#query_ui h5 {
-  display: inline-block;
-  margin: 0 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #444;
-}
-
-.cbui-refreshicon {
-  height: 20px;
-  width: auto;
-  cursor: pointer;
-}
-
-.cbui-busyicon {
-  height: 20px;
-  width: auto;
-  cursor: none;
-}
-
-.cbui-viewslist {
-  overflow: auto;
-  width: 100%
-}
-
-
-.cbui-query-results-wrapper {
-  border-radius: 4px 4px 0px 0px;
-  margin: 1px 0 0 0;
-  padding: 0;
-  -webkit-box-align: start;
-  -webkit-align-items: flex-start;
-      -ms-flex-align: start;
-          align-items: flex-start;
-  border: 1px solid #cdced0;
-  border-width: 0 1px 1px 1px;
-}
-*/
 
 #query_header {
   min-height: 2rem;
@@ -284,8 +75,13 @@ margin-top: 1.5rem;
 background-color: #f6f7f9;
 margin-top: .5rem;
 }
-/* the wrappers around the TREE, PLAN, and PLAN TEXT views */
-#result_tree, #query_plan, #query_plan_text, #sidebar_body {
+/* the wrappers around the various results views + analysis sidebar */
+#result_editor,
+#result_table,
+#result_tree,
+#query_plan,
+#query_plan_text,
+#sidebar_body {
   overflow: auto;
 }
 #result_tree {padding:.5rem .5rem .5rem 0;}
@@ -293,7 +89,6 @@ margin-top: .5rem;
 
 /* the wrapper around the JSON view */
 #result_editor {
-  overflow: auto;
   background-color: #f6f7f9;
   font-size: 14px;
   font-weight: 400;
@@ -303,34 +98,30 @@ margin-top: .5rem;
 #result_editor * {
   line-height: 1.5rem !important;
 }
-/* the wrapper around the HTML Table view */
-#result_table {
-  overflow: auto;
-  padding: 0;
+
+#metadata {
+  padding-left: 1.5rem;
 }
 
 #sidebar_header {
   min-height: 2rem;
-  border-left: 1px solid #d8d8d8;
-  margin-left: 1.5rem;
+  border-left: 1px solid #d1d1d1;
   padding-left: .5rem;
   }
 #sidebar_body {
   border-left: 1px solid #d1d1d1;
-  margin-left: 1.5rem;
-  margin-right: -1rem;
-  padding: .5rem .5rem 0 .5rem;
+  padding: .5rem 0 0 .5rem;
   overflow: auto;
 }
 #sidebar_body h5 {
   line-height: 2rem;
   font-weight: 600;
   color: #000;
-  }
+}
 #sidebar_body .row {
-    line-height: 2rem;
-      margin-bottom:.5rem;
-      padding-right: 4px;
+line-height: 2rem;
+margin-bottom:.5rem;
+padding-right: .5rem;
 }
 
 #sidebar_body .icon {
@@ -387,7 +178,20 @@ margin-top: .5rem;
   background-color: #ececec;
 }
 
-/* to be added to core css files when appropriate -------------------- */
+/* to be added to cbui-layout.css  when appropriate -------------------- */
+.main-content {
+  width: calc(100% - 160px);
+}
+/* to be added to base css files when appropriate -------------------- */
+
+.fa-caret-down:before {
+  content: "\f0d7";
+}
+
+.fa-caret-right:before {
+  content: "\f0da";
+}
+
 .fa-spin {
   -webkit-animation: fa-spin .5s infinite linear;
   animation: fa-spin 1s infinite linear;
@@ -395,7 +199,26 @@ margin-top: .5rem;
 .fa-spinner:before {
   content: "\f110";
 }
-
+@-webkit-keyframes fa-spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@keyframes fa-spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
 .hidden {display:none;}
 
 .panel-footer.spaced {

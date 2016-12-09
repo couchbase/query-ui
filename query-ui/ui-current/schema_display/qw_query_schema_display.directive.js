@@ -1,6 +1,6 @@
 /**
  * Angular directive to recursively display buckets and their schemas (and, when
- * there are object-valued fields, subschemas, and subsubschemas...) in the left
+ * there are object-valued fields, subschemas, and subsubschemas...) in the Data Analysis
  * panel of the QueryUI.
  */
 /* global _, angular */
@@ -112,33 +112,28 @@
       scope: { bucket: '=bucketDisplay' },
       //templateUrl: 'template/bucket-display.tmpl',
       template:
-        '<div ng-click="changeExpandBucket(bucket)" class="bucket">' +
-        ' <img ng-show="bucket.expanded && showSchemaControls"' +
-        '  style="height: 0.75em" src="../_p/ui/query/images/ArrowDown.png" /> ' +
-        '<img ng-hide="bucket.expanded || !showSchemaControls"' +
-        '  style="height: 0.75em" src="../_p/ui/query/images/ArrowRight.png" />' +
-//        '<span class="icon fa-caret-down" ng-show="bucket.expanded"></span>' +
-//        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded">&nbsp; </span>' +
+        '<a href="" ng-click="changeExpandBucket(bucket)" class="bucket">' +
+        '<span class="icon fa-caret-down" ng-show="bucket.expanded"></span>' +
+        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded">&nbsp; </span>' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
-        '  &nbsp; {{bucket.id}}</div>' +
+        '&nbsp; {{bucket.id}}</a>' +
         '  <ul class="bucket" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         '    <li class="schema" ng-repeat="flavor in bucket.schema">' +
 
+        '      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
 
-        '      <div ng-show="flavor.Summary" class="semi-bold margin-bottom-half">>{{flavor.Summary}}</div>' + //  if a summary line, show it
-
-        '      <div ng-hide="flavor.Summary"><span ng-show="flavor[\'%docs\']">Flavor {{$index + " ("}}' +
-        '        {{flavor[\'%docs\'] | number:1}}{{"%)"}}</span>' +
-        '        <span ng-show="flavor.Flavor">{{", in-common: " + flavor.Flavor}}</span></div>' +
+        '      <div ng-hide="flavor.Summary" class="semi-bold"><span ng-show="flavor[\'%docs\']">Flavor {{$index}}' +
+        '        ({{flavor[\'%docs\'] | number:1}}{{"%)"}}</span>' +
+        '        <span ng-show="flavor.Flavor">{{"&nbsp;Common: " + flavor.Flavor}}</span></div>' +
         '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
 
         '      <schema-display ng-hide="flavor.Summary" schema="flavor" path=""></schema-display>' +
 
         '      <li ng-show="bucket.indexes.length > 0"><span class="semi-bold">Indexes</span> <ul class="bucket">' +
         '        <li class="index" ng-repeat="index in bucket.indexes">' +
-        '        \'{{index.name}}\' <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
+        '        <em>{{index.name}}</em> <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
         '         <span ng-if="index.condition"> where {{index.condition}}</span>' +
         '        </li>' +
         '      </ul></li>' +
@@ -233,7 +228,7 @@
       scope: { schema: '=schema', path:"=path"},
       template:
         '<ul class="schema">' +
-        '  <li style="white-space: nowrap" ng-repeat="(name,  field) in schema.properties">' +
+        '  <li ng-repeat="(name,  field) in schema.properties">' +
         '    <div class="indexed" ng-if="field.type!=\'object\' && field.indexed"' +
         '     ng-attr-title="{{showSamples(field)}}"> {{name}}' +
         '      {{" ("+ field.type + ", indexed)"}}</div>' +
@@ -252,5 +247,3 @@
   };
 
 })();
-
-

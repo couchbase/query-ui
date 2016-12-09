@@ -22,17 +22,32 @@
   </div>
 
   <div id="active_table" ng-if="qmc.isSelected(1)">
-  <table class="ajtd-root ajtd-table sortable">
+  <table class="ajtd-root ajtd-table">
     <thead>
-        <th class="ajtd-column-header">Query</th>
-        <th class="ajtd-column-header">Node</th>        
-        <th class="ajtd-column-header">Duration</th>
-        <th class="ajtd-column-header">Request ID</th>
-        <th class="ajtd-column-header">State</th>
+        <th class="ajtd-column-header" ng-click="qmc.update_active_sort('statement')">Query
+          <span ng-if="qmc.show_up_caret_active('statement')">&and;</span>
+          <span ng-if="qmc.show_down_caret_active('statement')">&or;</span>
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_active_sort('node')">Node
+          <span ng-if="qmc.show_up_caret_active('node')">&and;</span>
+          <span ng-if="qmc.show_down_caret_active('node')">&or;</span>
+        </th>        
+        <th class="ajtd-column-header" ng-click="qmc.update_active_sort('elapsedTime')">Duration
+          <span ng-if="qmc.show_up_caret_active('elapsedTime')">&and;</span>
+          <span ng-if="qmc.show_down_caret_active('elapsedTime')">&or;</span>
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_active_sort('requestId')">Request ID
+          <span ng-if="qmc.show_up_caret_active('requestId')">&and;</span>
+          <span ng-if="qmc.show_down_caret_active('requestId')">&or;</span>
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_active_sort('state')">State
+          <span ng-if="qmc.show_up_caret_active('state')">&and;</span>
+          <span ng-if="qmc.show_down_caret_active('state')">&or;</span>
+        </th>
         <th class="ajtd-column-header"></th>
     </thead>
     <tbody>
-    <tr ng-repeat="result in qmc.monitoring.active_requests">
+    <tr ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
     <td class="ajtd-cell" style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
     <td class="ajtd-cell">{{result.node}}</td>
     <td class="ajtd-cell">{{result.elapsedTime}}</td>
@@ -52,16 +67,38 @@
   
   <div id="completed_table" ng-if="qmc.isSelected(2)" class="cbui-overflow">
   <table class="ajtd-root ajtd-table sortable" style="width:100%">
-    <thead>
-        <th class="ajtd-column-header">Query</th>
-        <th class="ajtd-column-header">Node</th>        
-        <th class="ajtd-column-header">Duration</th>
-        <th class="ajtd-column-header">Result Count</th>
-        <th class="ajtd-column-header">State</th>
-        <th class="ajtd-column-header">Run at</th>
-    </thead>
-    <tbody>
-    <tr ng-repeat="result in qmc.monitoring.completed_requests">
+      <thead>
+        <th class="ajtd-column-header"
+          ng-click="qmc.update_completed_sort('statement')">Query 
+          <span ng-if="qmc.show_up_caret_completed('statement')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('statement')">&or;</span>
+        </th>
+        <th class="ajtd-column-header"
+          ng-click="qmc.update_completed_sort('node')">Node 
+          <span ng-if="qmc.show_up_caret_completed('node')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('node')">&or;</span>
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_completed_sort('elapsedTime')">Duration
+          <span ng-if="qmc.show_up_caret_completed('elapsedTime')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('elapsedTime')">&or;</span>
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_completed_sort('resultCount')">Result
+          Count <span ng-if="qmc.show_up_caret_completed('resultCount')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('resultCount')">&or;</span>
+        </th>
+        <th class="ajtd-column-header"
+          ng-click="qmc.update_completed_sort('state')">State <span
+          ng-if="qmc.show_up_caret_completed('state')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('state')">&or;</span>
+        </th>
+        <th class="ajtd-column-header"
+          ng-click="qmc.update_completed_sort('time')">Run at <span
+          ng-if="qmc.show_up_caret_completed('time')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('time')">&or;</span>
+        </th>
+      </thead>
+      <tbody>
+    <tr ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
     <td class="ajtd-cell" style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
     <td class="ajtd-cell">{{result.node}}</td>
     <td class="ajtd-cell">{{result.elapsedTime}}</td>
@@ -76,13 +113,25 @@
   <div id="prepareds_table" ng-if="qmc.isSelected(3)">
   <table class="ajtd-root ajtd-table sortable">
     <thead>
-        <th class="ajtd-column-header">Query</th>
-        <th class="ajtd-column-header">Avg Elapsed</th>
-        <th class="ajtd-column-header">#Uses</th>
-        <th class="ajtd-column-header">Node</th>
+        <th class="ajtd-column-header"  ng-click="qmc.update_prepared_sort('statement')">Query
+          <span ng-if="qmc.show_up_caret_prepared('statement')">&and;</span>
+          <span ng-if="qmc.show_down_caret_prepared('statement')">&or;</span>       
+        </th>
+        <th class="ajtd-column-header"  ng-click="qmc.update_prepared_sort('avgElapsedTime')">Avg Elapsed
+          <span ng-if="qmc.show_up_caret_prepared('avgElapsedTime')">&and;</span>
+          <span ng-if="qmc.show_down_caret_prepared('avgElapsedTime')">&or;</span>       
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_prepared_sort('uses')">#Uses
+          <span ng-if="qmc.show_up_caret_prepared('uses')">&and;</span>
+          <span ng-if="qmc.show_down_caret_prepared('uses')">&or;</span>       
+        </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_prepared_sort('node')">Node
+          <span ng-if="qmc.show_up_caret_prepared('node')">&and;</span>
+          <span ng-if="qmc.show_down_caret_prepared('node')">&or;</span>       
+        </th>
     </thead>
     <tbody>
-    <tr ng-repeat="result in qmc.monitoring.prepareds">
+    <tr ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
     <td class="ajtd-cell" style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
     <td class="ajtd-cell">{{result.avgElapsedTime}}</td>
     <td class="ajtd-cell">{{result.uses}}</td>

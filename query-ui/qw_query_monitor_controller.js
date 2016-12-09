@@ -7,30 +7,79 @@
 
   function queryMonController ($rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService) {
 
-    var qc = this;
+    var qmc = this;
 
     //
     // Do we have a REST API to work with?
     //
 
-    qc.validated = validateQueryService;
+    qmc.validated = validateQueryService;
 
     // should we show active, completed, or prepared queries?
 
-    qc.selectTab = qwQueryService.selectMonitoringTab;
-    qc.isSelected = qwQueryService.isMonitoringSelected;
-    qc.cancelQueryById = qwQueryService.cancelQueryById;
+    qmc.selectTab = qwQueryService.selectMonitoringTab;
+    qmc.isSelected = qwQueryService.isMonitoringSelected;
+    qmc.cancelQueryById = qwQueryService.cancelQueryById;
 
     //
     // keep track of results from the server
     //
 
-    qc.monitoring = qwQueryService.monitoring;
+    qmc.monitoring = qwQueryService.monitoring;
 
-    qc.updatedTime = updatedTime;
-    qc.toggle_update = toggle_update;
-    qc.get_toggle_label = get_toggle_label;
-    qc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
+    qmc.updatedTime = updatedTime;
+    qmc.toggle_update = toggle_update;
+    qmc.get_toggle_label = get_toggle_label;
+    qmc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
+
+    //
+    // sorting for each of the three result tables
+    //
+
+    qmc.active_sort_by = 'elapsedTime';
+    qmc.active_sort_reverse = true;
+    qmc.update_active_sort = function(field) {
+      if (qmc.active_sort_by == field)
+        qmc.active_sort_reverse = !qmc.active_sort_reverse;
+      else
+        qmc.active_sort_by = field;
+    };
+    qmc.show_up_caret_active = function(field) {
+      return(qmc.active_sort_by == field && qmc.active_sort_reverse);
+    };
+    qmc.show_down_caret_active = function(field) {
+      return(qmc.active_sort_by == field && !qmc.active_sort_reverse);
+    };
+
+    qmc.completed_sort_by = 'elapsedTime';
+    qmc.completed_sort_reverse = true;
+    qmc.update_completed_sort = function(field) {
+      if (qmc.completed_sort_by == field)
+        qmc.completed_sort_reverse = !qmc.completed_sort_reverse;
+      else
+        qmc.completed_sort_by = field;
+    };
+    qmc.show_up_caret_completed = function(field) {
+      return(qmc.completed_sort_by == field && qmc.completed_sort_reverse);
+    };
+    qmc.show_down_caret_completed = function(field) {
+      return(qmc.completed_sort_by == field && !qmc.completed_sort_reverse);
+    };
+
+    qmc.prepared_sort_by = 'uses';
+    qmc.prepared_sort_reverse = true;
+    qmc.update_prepared_sort = function(field) {
+      if (qmc.prepared_sort_by == field)
+        qmc.prepared_sort_reverse = !qmc.prepared_sort_reverse;
+      else
+        qmc.prepared_sort_by = field;
+    };
+    qmc.show_up_caret_prepared = function(field) {
+      return(qmc.completed_sort_by == field && qmc.prepared_sort_reverse);
+    };
+    qmc.show_down_caret_prepared = function(field) {
+      return(qmc.prepared_sort_by == field && !qmc.prepared_sort_reverse);
+    };
 
     //
     // when was the data last updated?
@@ -39,9 +88,9 @@
     function updatedTime() {
       var result;
       switch (qwQueryService.monitoringTab) {
-      case 1: result = qc.monitoring.active_updated; break
-      case 2: result = qc.monitoring.completed_updated; break;
-      case 3: result = qc.monitoring.prepareds_updated; break;
+      case 1: result = qmc.monitoring.active_updated; break
+      case 2: result = qmc.monitoring.completed_updated; break;
+      case 3: result = qmc.monitoring.prepareds_updated; break;
       }
 
       if (_.isDate(result))
@@ -63,7 +112,7 @@
     function activate() {
       // if we haven't been here before, initialize the monitoring data
       if (qwQueryService.monitoringTab == 0) {
-        qc.selectTab(1); // default is 1st tab
+        qmc.selectTab(1); // default is 1st tab
         update();     // start updating
         qwQueryService.updateQueryMonitoring(2); // but also get data for other two tabs
         qwQueryService.updateQueryMonitoring(3);
@@ -106,8 +155,8 @@
 
     function toggle_update() {
       if (qwQueryService.monitoringAutoUpdate) {
-        if (qc.timer) // stop any timers
-          $timeout.cancel(qc.timer);
+        if (qmc.timer) // stop any timers
+          $timeout.cancel(qmc.timer);
         qwQueryService.monitoringAutoUpdate = false;
       }
       else {
@@ -133,23 +182,23 @@
       qwQueryService.updateQueryMonitoring(qwQueryService.monitoringTab);
 
       // do it again in 5 seconds
-      if (!qc.stop_updating && qwQueryService.monitoringAutoUpdate)
-        qc.timer = $timeout(function(){update();},5000);
+      if (!qmc.stop_updating && qwQueryService.monitoringAutoUpdate)
+        qmc.timer = $timeout(function(){update();},5000);
 
     }
 
     // when the controller is destroyed, stop the updates
     $scope.$on('$destroy',function(){
-      qc.stop_updating = true;
-      if (qc.timer)
-         $timeout.cancel(qc.timer);
+      qmc.stop_updating = true;
+      if (qmc.timer)
+         $timeout.cancel(qmc.timer);
     });
 
     //
     // all done, return the controller
     //
 
-    return qc;
+    return qmc;
   }
 
 
