@@ -378,6 +378,10 @@
         break;
       }
 
+      // if we get operator timings, put them at the end of the details
+      if (op['#time'])
+        result.push('Time: ' + op['#time']);
+
       return(result);
     }
 

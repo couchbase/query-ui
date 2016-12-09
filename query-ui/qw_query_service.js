@@ -928,6 +928,17 @@
         newResult.data = result;
         newResult.requestID = data.requestID;
 
+        // did we get query timings in the result? If so, update the plan
+
+        if (data.metrics && data.metrics.executionTimings) {
+          newResult.explainResult =
+          {explain: data.metrics.executionTimings,
+              analysis: qwQueryPlanService.analyzePlan(data.metrics.executionTimings,null),
+              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.metrics.executionTimings),
+              buckets: qwQueryService.buckets,
+              tokens: qwQueryService.autoCompleteTokens};
+        }
+
         newResult.queryDone = true;
 
         // if this was an explain query, change the result to show the
