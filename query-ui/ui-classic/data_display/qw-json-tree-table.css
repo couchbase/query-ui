@@ -44,6 +44,7 @@
   border-left: 1px solid #ddd;
   border-right: 1px solid #ddd;
   padding-right: 1em;
+  word-wrap:break-word;
 }
 
 .ajtd-type-bool,

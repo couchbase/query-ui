@@ -128,7 +128,7 @@ td.ajtd-type-array {
 /*  unused leftover classes  ----------- */
 .ajtd-root {}
 .ajtd-scrollable {}
-.ajtd-cell {}
+.ajtd-cell {word-wrap:break-word;}
 .ajtd-object-key,
 .ajtd-array-key {}
 .ajtd-column-header {}

@@ -39,7 +39,7 @@
       </thead>
       <tbody>
       <tr ng-repeat="result in qmc.monitoring.active_requests">
-      <td class="width-6"><h3>{{result.statement}}</h3></td>
+      <td style="max-width:600px;word-wrap:break-word"><h3>{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</h3></td>
       <td>{{result.node}}</td>
       <td>{{result.elapsedTime}}</td>
       <td>{{result.requestId}}</td>
@@ -61,7 +61,7 @@
       </thead>
       <tbody>
       <tr ng-repeat="result in qmc.monitoring.completed_requests">
-      <td class="width-6"><h3>{{result.statement}}</h3></td>
+      <td style="max-width:600px;word-wrap:break-word"><h3>{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</h3></td>
       <td>{{result.node}}</td>
       <td>{{result.elapsedTime}}</td>
       <td>{{result.resultCount}}</td>
@@ -82,7 +82,7 @@
       </thead>
       <tbody>
       <tr ng-repeat="result in qmc.monitoring.prepareds">
-      <td class="width-6"><h3>{{result.statement}}</h3></td>
+      <td style="max-width:600px;word-wrap:break-word"><h3>{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</h3></td>
       <td>{{result.avgElapsedTime}}</td>
       <td>{{result.uses}}</td>
       <td>{{result.node}}</td>

@@ -33,7 +33,7 @@
     </thead>
     <tbody>
     <tr ng-repeat="result in qmc.monitoring.active_requests">
-    <td class="ajtd-cell">{{result.statement}}</td>
+    <td class="ajtd-cell" style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
     <td class="ajtd-cell">{{result.node}}</td>
     <td class="ajtd-cell">{{result.elapsedTime}}</td>
     <td class="ajtd-cell">{{result.requestId}}</td>
@@ -50,8 +50,8 @@
 
   </div>
   
-  <div id="completed_table" ng-if="qmc.isSelected(2)">
-  <table class="ajtd-root ajtd-table sortable">
+  <div id="completed_table" ng-if="qmc.isSelected(2)" class="cbui-overflow">
+  <table class="ajtd-root ajtd-table sortable" style="width:100%">
     <thead>
         <th class="ajtd-column-header">Query</th>
         <th class="ajtd-column-header">Node</th>        
@@ -62,7 +62,7 @@
     </thead>
     <tbody>
     <tr ng-repeat="result in qmc.monitoring.completed_requests">
-    <td class="ajtd-cell">{{result.statement}}</td>
+    <td class="ajtd-cell" style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
     <td class="ajtd-cell">{{result.node}}</td>
     <td class="ajtd-cell">{{result.elapsedTime}}</td>
     <td class="ajtd-cell">{{result.resultCount}}</td>
@@ -83,7 +83,7 @@
     </thead>
     <tbody>
     <tr ng-repeat="result in qmc.monitoring.prepareds">
-    <td class="ajtd-cell">{{result.statement}}</td>
+    <td class="ajtd-cell" style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
     <td class="ajtd-cell">{{result.avgElapsedTime}}</td>
     <td class="ajtd-cell">{{result.uses}}</td>
     <td class="ajtd-cell">{{result.node}}</td>
