@@ -66,7 +66,7 @@
   </div>
   
   <div id="completed_table" ng-if="qmc.isSelected(2)" class="cbui-overflow">
-  <table class="ajtd-root ajtd-table sortable" style="width:100%">
+  <table class="ajtd-root ajtd-table">
       <thead>
         <th class="ajtd-column-header"
           ng-click="qmc.update_completed_sort('statement')">Query 
@@ -111,7 +111,7 @@
   </div>
   
   <div id="prepareds_table" ng-if="qmc.isSelected(3)">
-  <table class="ajtd-root ajtd-table sortable">
+  <table class="ajtd-root ajtd-table">
     <thead>
         <th class="ajtd-column-header"  ng-click="qmc.update_prepared_sort('statement')">Query
           <span ng-if="qmc.show_up_caret_prepared('statement')">&and;</span>
