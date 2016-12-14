@@ -303,9 +303,15 @@
     function addToken(token, type) {
       // see if the token needs to be quoted
       if (token.indexOf(' ') >= 0 || token.indexOf('-') >= 0)
-        qwQueryService.autoCompleteTokens['`' + token + '`'] = type;
-      else
+        token = '`' + token + '`';
+
+      // if the token isn't already there, add it
+      if (!qwQueryService.autoCompleteTokens[token])
         qwQueryService.autoCompleteTokens[token] = type;
+
+      // if the token is already known, but the type is new, add it to the list
+      else if (qwQueryService.autoCompleteTokens[token].indexOf(type) == -1)
+        qwQueryService.autoCompleteTokens[token] += ", " + type;
     };
 
 
@@ -350,6 +356,46 @@
               getFieldNamesFromSchema([field['items'][i].subtype],prefix + field_name + "[0].");
             }
         });
+    }
+
+    //
+    // for error checking, it would be nice highlight when a specified field is not found
+    // in a given schema
+    //
+
+    function isFieldNameInSchema(schema,fieldName) {
+      // the field name might be a plain string, it might be suffixed with "[]", and it might
+      // have a subfield expression starting with a "."
+      var firstDot = fieldName.indexOf(".");
+      var fieldPrefix = fieldName.substring(0,(firstDot >= 0 ? firstDot : fieldName.length));
+      var fieldSuffix = (firstDot >= 0 ? fieldName.substring(firstDot+1) : "");
+      var arrayIndex = fieldPrefix.indexOf("[");
+      if (arrayIndex >= 0)
+        fieldPrefix = fieldPrefix.substring(0,fieldPrefix.indexOf("["));
+
+      //console.log("fieldPrefix: *" + fieldPrefix + "* suffix: *" + fieldSuffix + "*");
+
+      for (var i=0; i< schema.length; i++) // for each flavor
+        for (var field_name in schema[i]['properties']) {
+          if (field_name == fieldPrefix) { // found a possible match
+            if (fieldSuffix.length == 0)  // no subfields? we're done, yay!
+              return true;
+
+            var field = schema[i]['properties'][field_name];
+            // if we had an array expr, check subfields against the array schema
+            if (arrayIndex > -1 && field['items'] && field['items'].subtype &&
+                isFieldNameInSchema(field['items'].subtype,fieldSuffix))
+              return true;
+
+            // if we have a non-array, check the subschema
+            if (arrayIndex == -1 && field['properties'] &&
+                isFieldNameInSchema([field],fieldSuffix))
+              return true;
+          }
+        }
+
+      // if we get this far without finding it, return false
+      return false;
     }
 
     //
@@ -789,6 +835,18 @@
                  plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan),
                  buckets: qwQueryService.buckets,
                  tokens: qwQueryService.autoCompleteTokens};
+
+            // let's check all the fields to make sure they are all valid
+            for (var f in newResult.explainResult.analysis.fields) {
+              var firstDot = f.indexOf(".");
+              var bucketName = f.substring(0,firstDot);
+              var fieldName = f.substring(firstDot + 1);
+              var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
+              console.log("Checking field: " + f + ", bucket: " + bucketName +
+                  ", bucket: " + bucket + ", bucket schema: " + bucket.schema);
+              if (bucket && bucket.schema.length > 0)
+                console.log("Field: " + fieldName + " o.k.: " + isFieldNameInSchema(bucket.schema,fieldName));
+            }
           }
 
           else
@@ -1201,6 +1259,7 @@
       qwQueryService.gettingBuckets.busy = true;
       qwQueryService.buckets.length = 0;
       qwQueryService.autoCompleteTokens = {};
+      validateQueryService.updateValidBuckets();
 
       // use a query to get buckets with a primary index
       //var queryText = "select distinct indexes.keyspace_id from system:indexes where is_primary = true order by indexes.keyspace_id ;";
@@ -1222,18 +1281,18 @@
       res1 = executeQueryUtil(queryText, false)
       .success(function(data, status, headers, config) {
 
-        var bucket_names = [];
-        var passwords = [];
+        //var bucket_names = [];
+        //var passwords = [];
 
         if (data && data.results) for (var i=0; i< data.results.length; i++) {
           var bucket = data.results[i];
           bucket.expanded = false;
           bucket.schema = [];
-          bucket_names.push(bucket.id);
+          //bucket_names.push(bucket.id);
           bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
           bucket.indexes = [];
           bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
-          passwords.push(""); // assume no password for now
+          //passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
           if (bucket.validated)
             qwQueryService.buckets.push(bucket); // only include buckets we have access to

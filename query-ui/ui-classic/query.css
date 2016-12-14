@@ -19,7 +19,7 @@ html {
 }
 
 .cbui-row {
-  position:relative;
+  position: relative;
   padding: 6px 8px;
   display: -webkit-box;
   display: -webkit-flex;
@@ -172,14 +172,14 @@ a.cbui-rightmargin {
   font-weight: normal;
 }
 
-#query_ui h2 {
+#query_wrapper h2 {
   margin-left: 8px;
   font-size: 19px;
   font-weight: 500;
   color: #333;
 }
 
-#query_ui h4 {
+#query_wrapper h4 {
   display: inline-block;
   margin-right: 8px;
   font-size: 16px;
@@ -187,7 +187,7 @@ a.cbui-rightmargin {
   color: #444;
 }
 
-#query_ui h5 {
+#query_wrapper h5 {
   display: inline-block;
   margin: 0 8px;
   font-size: 14px;
