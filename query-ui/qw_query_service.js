@@ -837,16 +837,18 @@
                  tokens: qwQueryService.autoCompleteTokens};
 
             // let's check all the fields to make sure they are all valid
-            for (var f in newResult.explainResult.analysis.fields) {
-              var firstDot = f.indexOf(".");
-              var bucketName = f.substring(0,firstDot);
-              var fieldName = f.substring(firstDot + 1);
-              var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
-              console.log("Checking field: " + f + ", bucket: " + bucketName +
-                  ", bucket: " + bucket + ", bucket schema: " + bucket.schema);
-              if (bucket && bucket.schema.length > 0)
-                console.log("Field: " + fieldName + " o.k.: " + isFieldNameInSchema(bucket.schema,fieldName));
-            }
+//            for (var f in newResult.explainResult.analysis.fields) {
+//              var firstDot = f.indexOf(".");
+//              var bucketName = f.substring(0,firstDot);
+//              var fieldName = f.substring(firstDot + 1);
+//              var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
+//              if (bucket) {
+//                console.log("Checking field: " + f + ", bucket: " + bucketName +
+//                    ", bucket: " + bucket + ", bucket schema: " + bucket.schema);
+//                if (bucket && bucket.schema.length > 0)
+//                  console.log("Field: " + fieldName + " o.k.: " + isFieldNameInSchema(bucket.schema,fieldName));
+//              }
+//            }
           }
 
           else
@@ -941,7 +943,7 @@
           if (_.isArray(data.results) && data.results.length == 0) {
             result = {};
             result.results = data.results;
-            result.metrics = data.metrics;
+            //result.metrics = data.metrics;
           }
           // otherwise, use the results
           else
@@ -1160,7 +1162,7 @@
 
     function updateQueryMonitoring(category) {
 
-      var query1 = "select active_requests.* from system:active_requests order by elapsedTime desc";
+      var query1 = "select active_requests.* from system:active_requests";
       var query2 = "select completed_requests.* from system:completed_requests";
       var query3 = "select prepareds.* from system:prepareds";
       var query = "foo";
@@ -1219,12 +1221,14 @@
 
         console.log("Mon Error Data: " + JSON.stringify(data));
         console.log("Mon Error Status: " + JSON.stringify(status));
-        console.log("Mon Error Headers: " + JSON.stringify(headers));
-        console.log("Mon Error Config: " + JSON.stringify(config));
+        //console.log("Mon Error Headers: " + JSON.stringify(headers));
+        //console.log("Mon Error Config: " + JSON.stringify(config));
         var error = "Error with query monitoring";
 
         if (data && data.errors)
           error = error + ": " + JSON.stringify(data.errors);
+        else if (status && _.isString(data))
+          error = error + ", query service returned status: " + status + ", " + data;
         else if (status)
           error = error + ", query service returned status: " + status;
 
@@ -1453,11 +1457,22 @@
       return executeQueryUtil("infer `" + bucket.id + "`;", false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
-        bucket.schema.length = 0;
         //console.log("Schema status: " + status);
-        //console.log("Schema results: " + JSON.stringify(response.daa.results));
-        if (response.data.errors && response.data.errors[0] && response.data.errors[0].msg)
-          bucket.schema_error = response.data.errors[0].msg;
+        //console.log("Schema data: " + JSON.stringify(response.data));
+
+        bucket.schema.length = 0;
+
+        if (!response || !response.data)
+          bucket.schema_error = "Empty or invalid server response: ";
+        else if (response.data.errors) {
+          bucket.schema_error = "Unable to get schema: " + JSON.stringify(response.data.errors);
+        }
+        else if (response.data.status == "stopped") {
+          bucket.schema_error = "Unable to get schema, query stopped on server.";
+        }
+        else if (response.data.status != "success") {
+          bucket.schema_error = "Unable to get schema: " + response.data.status;
+        }
         else if (_.isString(response.data.results))
           bucket.schema_error = response.data.results;
         else {

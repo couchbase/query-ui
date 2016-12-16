@@ -73,46 +73,54 @@
           validBuckets: function()     {return _bucketList;},
           otherNodes: function()       {return _validNodes;},
           otherStatus: function()      {return _otherStatus;},
-          otherError: function()       {return _otherError;}
+          otherError: function()       {return _otherError;},
+          updateValidBuckets: updateValidBuckets
       }
 
-      // see what buckets we have permission to access
-      var perms = mnPermissions.export.cluster;
-      if (perms && perms.bucket)
-        _.forEach(perms.bucket,function(v,k) {
-          if (v && v.data && (v.data.read || v.data.write)) {
-            _bucketList.push(k);
-            //console.log("Allowed to query: "+ k);
+
+      function updateValidBuckets() {
+        // see what buckets we have permission to access
+        var perms = mnPermissions.export.cluster;
+        if (perms && perms.bucket)
+          _.forEach(perms.bucket,function(v,k) {
+            // uncomment the following when RBAC is working properly for data access
+            //if (v && v.data && (v.data.read || v.data.write))
+              _bucketList.push(k);
+              //console.log("Allowed to query: "+ k);
+          });
+
+        // we can only run on nodes that support our API
+        var queryData = {statement: "select \"test\";"};
+        $http.post("/_p/query/query/service",queryData)
+        .success(function(data, status, headers, config) {
+          _valid = true; _inProgress = false;
+
+        })
+        .error(function(data, status, headers, config) {
+          _valid = false; _inProgress = false;
+
+          // if we got a 404, there is no query service on this node.
+          // let's go through the list of nodes
+          // and see which ones have a query service
+
+          if (status == 404) mnServersService.getNodes().then(function (resp) {
+            var nodes = resp.allNodes;
+            for (var i = 0; i < nodes.length; i++)
+              if (_.contains(nodes[i].services,"n1ql"))
+                _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/query/workbench");
+          });
+          // some other error to show
+          else {
+            _otherStatus = status;
+            _otherError = data;
           }
         });
+      }
 
-      // we can only run on nodes that support our API
-      var queryData = {statement: "select \"test\";"};
-      $http.post("../_p/query/query/service",queryData)
-      .success(function(data, status, headers, config) {
-        _valid = true; _inProgress = false;
+      // we need to initialize the valid buckets
+      updateValidBuckets();
 
-      })
-      .error(function(data, status, headers, config) {
-        _valid = false; _inProgress = false;
-
-        // if we got a 404, there is no query service on this node.
-        // let's go through the list of nodes
-        // and see which ones have a query service
-
-        if (status == 404) mnServersService.getNodes().then(function (resp) {
-          var nodes = resp.allNodes;
-          for (var i = 0; i < nodes.length; i++)
-            if (_.contains(nodes[i].services,"n1ql"))
-              _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/query/workbench");
-        });
-        // some other error to show
-        else {
-          _otherStatus = status;
-          _otherError = data;
-        }
-      });
-
+      // now return the service
       return service;
     });
 

@@ -114,10 +114,10 @@
       template:
         '<a href="" ng-click="changeExpandBucket(bucket)" class="bucket">' +
         '<span class="icon fa-caret-down" ng-show="bucket.expanded"></span>' +
-        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded">&nbsp; </span>' +
+        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded"></span>' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
-        '&nbsp; {{bucket.id}}</a>' +
+        ' {{bucket.id}}</a>' +
         '  <ul class="bucket" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         '    <li class="schema" ng-repeat="flavor in bucket.schema">' +

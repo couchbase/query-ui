@@ -153,6 +153,10 @@ padding-right: .5rem;
   width:100%;
   text-align:right;
 }
+#qw_history_table {
+  max-height: 460px;
+  overflow: auto;
+}
 #qw_history_dialog .panel-content .filter-input-group {
   margin: -.5rem auto 1rem auto;
 }
@@ -184,12 +188,37 @@ padding-right: .5rem;
 }
 /* to be added to base css files when appropriate -------------------- */
 
+thead.sortable th {cursor:pointer;}
+
+thead.sortable th .icon {color:#555;}
+
+
+.icon.margin-left {
+  margin-left: .25rem;
+}
+
+.icon.margin-right {
+  margin-right: .25rem;
+}
+
+.fa-caret-up:before {
+  content: "\f0d8";
+}
+
 .fa-caret-down:before {
   content: "\f0d7";
 }
 
 .fa-caret-right:before {
   content: "\f0da";
+}
+
+.fa-pause:before {
+  content: "\f04c";
+}
+
+.fa-play-circle:before {
+  content: "\f144";
 }
 
 .fa-spin {
@@ -219,6 +248,39 @@ padding-right: .5rem;
     transform: rotate(359deg);
   }
 }
+
+.loading {
+  display:inline-block;
+  width:1rem;
+}
+
+.loading-placeholder {
+  display:inline-block;
+  width:1rem;
+}
+
+.loading:after {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  -webkit-animation: ellipsis steps(4,end) 900ms infinite;
+  animation: ellipsis steps(4,end) 900ms infinite;
+  content: "\2026"; /* ascii code for the ellipsis character */
+  width: 0px;
+}
+
+@keyframes ellipsis {
+  to {
+    width: 1rem;
+  }
+}
+
+@-webkit-keyframes ellipsis {
+  to {
+    width: 1rem;
+  }
+}
+
 .hidden {display:none;}
 
 .panel-footer.spaced {
@@ -239,12 +301,6 @@ padding-right: .5rem;
 
 .dialog-lg {
   width: 640px;
-}
-
-.icon {
-  font-family: FontAwesome;
-  display: inline-block;
-  line-height: 1;
 }
 
 /* redundant with proposed changes to cbui-components.css */

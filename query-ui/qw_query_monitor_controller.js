@@ -93,8 +93,11 @@
       case 3: result = qmc.monitoring.prepareds_updated; break;
       }
 
-      if (_.isDate(result))
-        result = result.toTimeString();
+      if (_.isDate(result)) {
+        var minutes = result.getMinutes() > 9 ? result.getMinutes() : "0" + result.getMinutes();
+        var seconds = result.getSeconds() > 9 ? result.getSeconds() : "0" + result.getSeconds();
+        result = " " + result.getHours() + ":" + minutes + ":" + seconds;
+      }
 
       return result;
     }
@@ -169,7 +172,7 @@
       if (qwQueryService.monitoringAutoUpdate)
         return("pause");
       else
-        return("refresh");
+        return("run");
     }
 
     //
