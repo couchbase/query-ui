@@ -42,27 +42,27 @@
             // summarize plan
             if (data.analysis) {
               //content += "<h3>Query Plan Summary:</h3>";
-              content += "<div class='row qw-planviz-summary width-8 flex-left text-small'>";
+              content += "<div class='row qw-planviz-summary flex-left text-small'>";
               content += "<div class='column'>";
               content += "<div class='semi-bold'>Indexes</div>";
 //              content += "<li>Indexes used: <ul>";
               for (var f in data.analysis.indexes)
                 if (f.indexOf("#primary") >= 0)
-                  content += "<em class='cbui-plan-expensive'>" + f + "</em>";
+                  content += "<em class='cbui-plan-expensive'>" + f + "</em>&nbsp;&nbsp; ";
                 else
-                  content += "<em>" + f + "</em>";
+                  content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
               content += "<div class='column'>";
               content += "<div class='semi-bold'>Buckets</div>";
               for (var b in data.analysis.buckets)
-                content += "<em>" + b + "</em>";
+                content += "<em>" + b + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
               content += "<div class='column'>";
               content += "<div class='semi-bold'>Fields</div>";
               for (var f in data.analysis.fields)
-                content += "<em>" + f + "</em>";
+                content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
               content += "</div>";
             }
