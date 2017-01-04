@@ -261,6 +261,7 @@
 
     function aceInputChanged(e) {
       //console.log("input changed, action: " + JSON.stringify(e[0]));
+      //console.log("current session : " + JSON.stringify(qc.inputEditor.getSession()));
       // show a placeholder when nothing has been typed
       var curSession = qc.inputEditor.getSession();
       var noText = curSession.getValue().length == 0;
@@ -287,17 +288,25 @@
         updateEditorSizes();
         qc.inputEditor.moveCursorToPosition(e[0].end);
         qc.inputEditor.focus();
-      }
 
-     // if they hit enter and the query ends with a semicolon, run the query
-      if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
-          e[0].action === 'insert' && // they typed something
-          e[0].end.column === 0 &&    // and ended up on a new line
-          e[0].start.row+1 == e[0].end.row && // and added one line
-          e[0].start.column > 0 && // and the previous line wasn't blank
-          curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
-          endsWithSemi.test(qc.lastResult.query))
-        qc.query();
+        // if they pasted more than one line, and we're at the end of the editor, trim
+        var pos = qc.inputEditor.getCursorPosition();
+        var line = qc.inputEditor.getSession().getLine(pos.row);
+        if (e[0].lines && e[0].lines.length > 1 && e[0].lines[0].length > 0 &&
+            pos.row == (qc.inputEditor.getSession().getLength()-1) &&
+            pos.column == line.length)
+          qc.lastResult.query = qc.lastResult.query.trim();
+
+        // if they hit enter and the query ends with a semicolon, run the query
+        if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
+            e[0].lines && e[0].lines.length == 2 && // <cr> marked by two empty lines
+            e[0].lines[0].length == 0 &&
+            e[0].lines[1].length == 0 &&
+            e[0].start.column > 0 && // and the previous line wasn't blank
+            curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
+            endsWithSemi.test(qc.lastResult.query))
+          qc.query();
+      }
 
     };
 
