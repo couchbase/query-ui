@@ -159,7 +159,6 @@
 
     activate();
 
-
     //
     // Is the data too big to display for the selected results pane?
     //
@@ -884,6 +883,8 @@
     //
 
     function activate() {
+      qc.validated.updateValidBuckets();
+
       // Prevent the backspace key from navigating back. Thanks StackOverflow!
       $(document).unbind('keydown').bind('keydown', function (event) {
         var doPrevent = false;
