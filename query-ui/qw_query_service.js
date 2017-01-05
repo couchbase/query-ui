@@ -1176,6 +1176,9 @@
 
       var result = [];
 
+      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
+      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
+      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?/;
       //console.log("Got query: " + query);
 
 //      var config = {headers: {'Content-Type':'application/json','ns-server-proxy-timeout':20000}};
@@ -1190,7 +1193,53 @@
 
         if (data.status == "success") {
           result = data.results;
-          //console.log(" monitor success: " + JSON.stringify(result));
+
+          // we need to reformat the duration values coming back
+          // since they are in the most useless format ever.
+
+          for (var i=0; i< result.length; i++) if (result[i].elapsedTime) {
+            var m = result[i].elapsedTime.match(durationExpr);
+            //console.log(m[0]);
+
+            if (m) {
+              var minutes = "00";
+              if (m[1]) // minutes value, should be an int
+                if (m[1].length > 1)
+                  minutes = m[1];
+                else
+                  minutes = '0' + m[1];
+
+              var seconds = "00";
+              if (m[2])
+                if (m[2].length > 1)
+                  seconds = m[2];
+                else
+                  seconds = '0' + m[2];
+
+              var millis = "0000";
+              if (m[3])
+                if (m[3].length > 4)
+                  millis = m[3].substring(0,4);
+                else
+                  millis = m[3];
+
+              if (m[4] && m[5]) {
+                // pad millis if necessary
+                millis = m[4];
+                while (millis.length < 3)
+                  millis = '0' + millis;
+
+                // add remaining digits and trim
+                millis = millis + m[5];
+                millis = millis.substring(0,4);
+              }
+
+              result[i].elapsedTime = minutes + ":" + seconds + "." + millis;
+
+              //for (var j=0; j < m.length; j++)
+               // console.log("  m[" + j + "] = " + m[j]);
+            }
+          }
         }
         else {
           result = [data.errors];
