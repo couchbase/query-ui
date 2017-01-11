@@ -46,7 +46,7 @@
     // we can only work if we have a query node. This service checks for
     // a query node a reports back whether it is present.
 
-    .factory('validateQueryService', function($http,mnServersService,mnPermissions) {
+    .factory('validateQueryService', function($http,mnServersService,mnPermissions,mnPoolDefault) {
       var _valid = false;
       var _inProgress = true;
       var _validNodes = [];
@@ -92,12 +92,11 @@
           // let's go through the list of nodes
           // and see which ones have a query service
 
-          if (status == 404) mnServersService.getNodes().then(function (resp) {
-            var nodes = resp.allNodes;
-            for (var i = 0; i < nodes.length; i++)
-              if (_.contains(nodes[i].services,"n1ql"))
-                _validNodes.push("http://" + nodes[i].hostname + "/ui/index.html#/query/workbench");
-          });
+          if (status == 404) {
+            mnPoolDefault.get().then(function(value){
+              _validNodes = mnPoolDefault.getUrlsRunningService(value.nodes, "n1ql");
+            });
+          }
           // some other error to show
           else {
             _otherStatus = status;
