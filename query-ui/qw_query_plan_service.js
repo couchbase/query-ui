@@ -16,6 +16,7 @@
     //
     qwQueryPlanService.convertPlanJSONToPlanNodes = convertPlanJSONToPlanNodes;
     qwQueryPlanService.analyzePlan = analyzePlan;
+    qwQueryPlanService.convertTimeToNormalizedString = convertTimeToNormalizedString;
 
     //
     // convertPlanJSONToPlanNodes
@@ -43,7 +44,7 @@
     //             'unset_terms' (array of {"path":"..."})
     //  Let?
 
-    function convertPlanJSONToPlanNodes(plan, predecessor) {
+    function convertPlanJSONToPlanNodes(plan, predecessor, lists) {
 
       // sanity check
       if (_.isString(plan))
@@ -52,7 +53,7 @@
       // special case: prepared queries
 
       if (plan.operator)
-        return(convertPlanJSONToPlanNodes(plan.operator,null));
+        return(convertPlanJSONToPlanNodes(plan.operator,null,lists));
 
       //console.log("Inside analyzePlan");
 
@@ -95,14 +96,14 @@
       // if we have a sequence, we analyze the children and append them to the predecessor
       if (operatorName === "Sequence" && plan['~children']) {
         for (var i = 0; i < plan['~children'].length; i++)
-          predecessor = convertPlanJSONToPlanNodes(plan['~children'][i],predecessor);
+          predecessor = convertPlanJSONToPlanNodes(plan['~children'][i],predecessor,lists);
 
         return(predecessor);
       }
 
       // parallel groups are like sequences, but they need to wrap their child to mark it as parallel
       else if (operatorName === "Parallel" && plan['~child']) {
-        var subsequence = convertPlanJSONToPlanNodes(plan['~child'],null);
+        var subsequence = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
         // mark the elements of a parallel subsequence for later annotation
         for (var subNode = subsequence; subNode != null; subNode = subNode.predecessor) {
           if (subNode == subsequence)
@@ -111,12 +112,12 @@
             subNode.parallelEnd = true;
           subNode.parallel = true;
         }
-        return(new PlanNode(predecessor,plan,subsequence));
+        return(new PlanNode(predecessor,plan,subsequence,lists.total_time));
       }
 
       // Prepare operators have their plan inside prepared.operator
       else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
-        return(convertPlanJSONToPlanNodes(plan.prepared.operator,null));
+        return(convertPlanJSONToPlanNodes(plan.prepared.operator,null,lists));
       }
 
       // ExceptAll and InterceptAll have 'first' and 'second' subqueries
@@ -124,13 +125,13 @@
         var children = [];
 
         if (plan['first'])
-          children.push(convertPlanJSONToPlanNodes(plan['first'],null));
+          children.push(convertPlanJSONToPlanNodes(plan['first'],null,lists));
 
         if (plan['second'])
-          children.push(convertPlanJSONToPlanNodes(plan['second'],null));
+          children.push(convertPlanJSONToPlanNodes(plan['second'],null,lists));
 
         if (children.length > 0)
-          return(new PlanNode(children,plan));
+          return(new PlanNode(children,plan,null,lists.total_time));
         else
           return(null);
       }
@@ -140,25 +141,25 @@
         var children = [];
 
         if (plan['delete'])
-          children.push(convertPlanJSONToPlanNodes(plan['delete'],null));
+          children.push(convertPlanJSONToPlanNodes(plan['delete'],null,lists));
 
         if (plan['update'])
-          children.push(convertPlanJSONToPlanNodes(plan['update'],null));
+          children.push(convertPlanJSONToPlanNodes(plan['update'],null,lists));
 
         if (children.length > 0)
-          return(new PlanNode(children,plan));
+          return(new PlanNode(children,plan,null,lists.total_time));
         else
           return(null);
       }
 
       // Authorize operators have a single child called 'child'
       else if (operatorName === "Authorize" && plan['child']) {
-        return(new PlanNode(convertPlanJSONToPlanNodes(plan['child'],null),plan));
+        return(new PlanNode(convertPlanJSONToPlanNodes(plan['child'],null,lists),plan,null,lists.total_time));
       }
 
       // DistinctScan operators have a single child called 'scan'
       else if (operatorName === "DistinctScan" && plan['scan']) {
-        return(new PlanNode(convertPlanJSONToPlanNodes(plan['scan'],null),plan));
+        return(new PlanNode(convertPlanJSONToPlanNodes(plan['scan'],null,lists),plan),null,lists.total_time);
       }
 
       // UNION operators will have an array of predecessors drawn from their "children".
@@ -170,9 +171,9 @@
         var unionChildren = [];
 
         for (var i = 0; i < plan['children'].length; i++)
-          unionChildren.push(convertPlanJSONToPlanNodes(plan['children'][i],null));
+          unionChildren.push(convertPlanJSONToPlanNodes(plan['children'][i],null,lists));
 
-        return(new PlanNode(unionChildren,plan));
+        return(new PlanNode(unionChildren,plan,null,lists.total_time));
       }
 
       // Similar to UNIONs, IntersectScan, UnionScan group a number of different scans
@@ -182,9 +183,9 @@
         var scanChildren = [];
 
         for (var i = 0; i < plan['scans'].length; i++)
-          scanChildren.push(convertPlanJSONToPlanNodes(plan['scans'][i],null));
+          scanChildren.push(convertPlanJSONToPlanNodes(plan['scans'][i],null,lists));
 
-        return(new PlanNode(scanChildren,plan));
+        return(new PlanNode(scanChildren,plan,null,lists.total_time));
       }
 
       // ignore FinalProject, IntermediateGroup, and FinalGRoup, which don't add anything
@@ -197,7 +198,7 @@
 
       // for all other operators, create a plan node
       else {
-        return(new PlanNode(predecessor,plan));
+        return(new PlanNode(predecessor,plan,null,lists.total_time));
       }
 
     }
@@ -208,10 +209,12 @@
     // other fields depending on the operator, some of the fields may indicate child operators
     //
 
-    function PlanNode(predecessor, operator, subsequence) {
+    function PlanNode(predecessor, operator, subsequence, total_query_time) {
       this.predecessor = predecessor; // might be an array if this is a Union node
       this.operator = operator;       // object from the actual plan
       this.subsequence = subsequence; // for parallel ops, arrays of plan nodes done in parallel
+      if (total_query_time && operator['#time_absolute'])
+        this.time_percent = Math.round(operator['#time_absolute']*1000/total_query_time)/10;
     }
 
     // how 'wide' is our plan tree?
@@ -379,8 +382,11 @@
       }
 
       // if we get operator timings, put them at the end of the details
-      if (op['#time'])
-        result.push('Time: ' + op['#time']);
+      if (op['#time_normal']) {
+        result.push('Time: ' + op['#time_normal']);
+      }
+      if (this.time_percent && this.time_percent > 0)
+        result.push('(' + this.time_percent + '%)');
 
       return(result);
     }
@@ -431,7 +437,7 @@
     function analyzePlan(plan, lists) {
 
       if (!lists)
-        lists = {buckets : {}, fields : {}, indexes: {}, aliases: []};
+        lists = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0};
 
       // make
 
@@ -473,6 +479,15 @@
       if (!operatorName) {
         console.log("Error, no operator found for item: " + JSON.stringify(plan));
         return(lists);
+      }
+
+      // if the operator has timing information, convert to readable and analyzable forms:
+      if (plan['#time']) {
+        var parsedTime = convertTimeToNormalizedString(plan['#time']);
+        plan['#time_normal'] = parsedTime;
+        plan['#time_absolute'] = parseInt(parsedTime.substr(1,2))*60 + parseFloat(parsedTime.substr(3));
+        lists.total_time += plan['#time_absolute'];
+        //console.log("Got time:" + plan['#time'] + ", parsed: " + plan['#time_normal'] + ', abs: ' + plan['#time_absolute']);
       }
 
       // if we have a sequence, we analyze the children in order
@@ -672,6 +687,68 @@
         //console.log("got field: " + bucket + "." + field);
       }
 
+    }
+
+    //
+    // convert a duration expression, which might be 3m23.7777s or 234.9999ms or 3.8888s
+    // or even 44.999us, to a real time value
+    //
+
+    function convertTimeToNormalizedString(timeValue)
+    {
+      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
+      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
+      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?(?:(\d+)\.(\d+)µs)?/;
+
+      var m = timeValue.match(durationExpr);
+      //console.log(m[0]);
+
+      if (m) {
+        // minutes
+        var minutes = "00";
+        if (m[1]) // minutes value, should be an int
+          if (m[1].length > 1)
+            minutes = m[1];
+          else
+            minutes = '0' + m[1];
+
+        // seconds
+        var seconds = "00";
+        if (m[2])
+          if (m[2].length > 1)
+            seconds = m[2];
+          else
+            seconds = '0' + m[2];
+
+        // milliseconds
+        var millis = "0000";
+        if (m[3])
+          if (m[3].length > 4)
+            millis = m[3].substring(0,4);
+          else
+            millis = m[3];
+
+        if (m[4] && m[5]) {
+          // pad millis if necessary
+          millis = m[4];
+          while (millis.length < 3)
+            millis = '0' + millis;
+
+          // add remaining digits and trim
+          millis = millis + m[5];
+          millis = millis.substring(0,4);
+        }
+
+        // ooh, microseconds!
+        if (m[6] && m[7]) {
+          millis = "000" + m[6];
+        }
+
+        return(minutes + ":" + seconds + "." + millis);
+
+        //for (var j=0; j < m.length; j++)
+        // console.log("  m[" + j + "] = " + m[j]);
+      }
     }
 
 

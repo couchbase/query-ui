@@ -65,6 +65,9 @@
 
 
       function updateValidBuckets() {
+        _inProgress = true;
+        _validNodes = [];
+        _bucketList = [];
         // see what buckets we have permission to access
         var perms = mnPermissions.export.cluster;
         if (perms && perms.bucket)

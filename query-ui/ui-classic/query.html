@@ -5,13 +5,20 @@
     <div id="query_box" class="query_box">
       <div id="query_header"
         class="cbui-row cbui-header-oldgray cbui-rounded-top">
-        <span class="width-3"> <a ng-click="qc.query()"
-          class="btn_1"><span title="(or hit enter after a semicolon)" ng-if="!qc.executingQuery.busy">Execute</span>
-          <span title="Stop the running query" ng-if="qc.executingQuery.busy">Cancel</span></a>
-        </span> <span class="cbui-column cbui-centered"> <a
-          title="View previous queries/results" ng-click="qc.prev()"
-          qw-long-press="qc.historyMenu"
-          class="btn_1" ng-class="{dynamic_disabled: !qc.hasPrev()}">
+        <span class="width-3"> 
+          <a ng-click="qc.query()" class="btn_1">
+            <span title="(or hit enter after a semicolon)" ng-if="!qc.executingQuery.busy">Execute</span>
+            <span title="Stop the running query" ng-if="qc.executingQuery.busy">Cancel</span>
+          </a>
+          <a ng-if="qc.showOptions" ng-click="qc.options()" class="btn_1">
+            <span><img src="../_p/ui/query/images/gear.png" height="16"/></span>
+          </a>
+        </span>
+         
+        <span class="cbui-column cbui-centered"> 
+          <a title="View previous queries/results" ng-click="qc.prev()"
+            qw-long-press="qc.historyMenu" class="btn_1" 
+            ng-class="{dynamic_disabled: !qc.hasPrev()}">
             <span>&larr;</span>
         </a>
 
@@ -27,7 +34,8 @@
         </span>
         <span class="width-3 cbui-right">
           <input type="file" id="loadQuery" name="files" style="display:none"/>
-          <a ng-if="qc.fileSupport" id="loadQueryButton" ng-click="qc.load_query()" class="btn_1" onchange="console.log("changed files")"> 
+          <a ng-if="qc.fileSupport" id="loadQueryButton" ng-click="qc.load_query()" 
+          class="btn_1" onchange="console.log("changed files")"> 
             <span>Load Query</span></a>
           <a ng-click="qc.save_query()" class="btn_1"> <span>Save Query</span></a>
         </span>

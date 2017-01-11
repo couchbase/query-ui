@@ -104,6 +104,18 @@
         lastResult.status == 'stopped');}
 
     //
+    // here are some options we use while querying
+    //
+
+    qwQueryService.options = {
+        timings: true,
+        max_parallelism: "",
+        scan_consistency: "not_bounded",
+        positional_parameters: [],
+        named_parameters: []
+    };
+
+    //
     // this structure holds the current query text, the current query result,
     // and defines the object for holding the query history
     //
@@ -253,6 +265,8 @@
           currentQueryIndex = savedState.currentQueryIndex;
           pastQueries = savedState.pastQueries;
           qwQueryService.outputTab = savedState.outputTab;
+          if (savedState.options)
+            qwQueryService.options = savedState.options;
         }
         else
           console.log("No last result");
@@ -275,6 +289,7 @@
       savedState.currentQueryIndex = currentQueryIndex;
       savedState.lastResult = savedResultTemplate.clone();
       savedState.lastResult.query = lastResult.query;
+      savedState.options = qwQueryService.options;
       _.forEach(pastQueries,function(queryRes,index) {
         var qcopy = savedResultTemplate.clone();
         qcopy.query = queryRes.query;
@@ -627,7 +642,7 @@
       return($http(request));
     }
 
-    function buildQueryRequest(queryText, is_user_query) {
+    function buildQueryRequest(queryText, is_user_query, queryOptions) {
 
       //console.log("Running query: " + queryText);
       //
@@ -646,6 +661,28 @@
         }
 
         queryData.creds = credArray;
+      }
+
+      // are there options we need to add to the query request?
+
+      if (queryOptions) {
+        if (queryOptions.timings) // keep track of timings for each op?
+          queryData.profile = "timings";
+
+        if (queryOptions.max_parallelism && queryOptions.max_parallelism.length > 0)
+          queryData.max_parallelism = queryOptions.max_parallelism;
+
+        if (queryOptions.scan_consistency)
+          queryData.scan_consistency = queryOptions.scan_consistency;
+
+        if (queryOptions.positional_parameters && queryOptions.positional_parameters.length > 0)
+          queryData.args = queryOptions.positional_parameters;
+
+        if (queryOptions.named_parameters)
+          for (var i=0; i < queryOptions.named_parameters.length; i++)
+            queryData['$' + queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
+
+        //console.log("Running query: " + JSON.stringify(queryData));
       }
 
       // if the user might want to cancel it, give it an ID
@@ -687,6 +724,9 @@
           }
       };
 
+      // if it's a userQuery, make sure to handle really long ints, and remember the
+      // request in case we need to cancel
+
       if (is_user_query) {
         queryRequest.transformResponse = fixLongInts;
         qwQueryService.currentQueryRequest = queryRequest;
@@ -712,7 +752,7 @@
 
     var timeout = 600; // query timeout in seconds
 
-    function executeQuery(queryText, userQuery) {
+    function executeQuery(queryText, userQuery, queryOptions) {
       var newResult;
 
       //console.log("Got query to execute: " + queryText);
@@ -829,12 +869,14 @@
         $http(request)
         .success(function(data, status, headers, config) {
           if (data && data.status == "success") {
+            var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
             newResult.explainResult =
                {explain: data.results[0],
-                 analysis: qwQueryPlanService.analyzePlan(data.results[0].plan,null),
-                 plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan),
+                 analysis: lists,
+                 plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan, null, lists)
+                 /*,
                  buckets: qwQueryService.buckets,
-                 tokens: qwQueryService.autoCompleteTokens};
+                 tokens: qwQueryService.autoCompleteTokens*/};
 
             // let's check all the fields to make sure they are all valid
 //            for (var f in newResult.explainResult.analysis.fields) {
@@ -910,7 +952,7 @@
 
       newResult.queryDone = false;
 
-      var request = buildQueryRequest(queryText, true);
+      var request = buildQueryRequest(queryText, true, queryOptions);
 
       if (!request) {
         newResult.result = '{"status": "Query Failed."}';
@@ -990,13 +1032,16 @@
 
         // did we get query timings in the result? If so, update the plan
 
-        if (data.metrics && data.metrics.executionTimings) {
+        if (data.profile && data.profile.executionTimings) {
+          var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings,null);
           newResult.explainResult =
-          {explain: data.metrics.executionTimings,
-              analysis: qwQueryPlanService.analyzePlan(data.metrics.executionTimings,null),
-              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.metrics.executionTimings),
+          {explain: data.profile.executionTimings,
+              analysis: lists,
+              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.profile.executionTimings,null,lists)
+              /*,
               buckets: qwQueryService.buckets,
-              tokens: qwQueryService.autoCompleteTokens};
+              tokens: qwQueryService.autoCompleteTokens*/};
+          newResult.explainResultText = JSON.stringify(newResult.explainResult,null,'  ');
         }
 
         newResult.queryDone = true;
@@ -1005,12 +1050,14 @@
         // explain plan
 
         if (queryIsExplain && qwConstantsService.autoExplain) {
+          var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
           newResult.explainResult =
           {explain: data.results[0],
-              analysis: qwQueryPlanService.analyzePlan(data.results[0].plan,null),
-              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan),
+              analysis: lists,
+              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan,null,lists)
+              /*,
               buckets: qwQueryService.buckets,
-              tokens: qwQueryService.autoCompleteTokens};
+              tokens: qwQueryService.autoCompleteTokens*/};
           newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           qwQueryService.selectTab(4); // make the explain visible
         }
@@ -1157,6 +1204,67 @@
     }
 
     //
+    // convert a duration expression, which might be 3m23.7777s or 234.9999ms or 3.8888s
+    // or even 44.999us, to a real time value
+    //
+
+//    function convertTimeToNormalizedString(timeValue)
+//    {
+//      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
+//      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
+//      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?(?:(\d+)\.(\d+)µs)?/;
+//
+//      var m = timeValue.match(durationExpr);
+//      //console.log(m[0]);
+//
+//      if (m) {
+//        // minutes
+//        var minutes = "00";
+//        if (m[1]) // minutes value, should be an int
+//          if (m[1].length > 1)
+//            minutes = m[1];
+//          else
+//            minutes = '0' + m[1];
+//
+//        // seconds
+//        var seconds = "00";
+//        if (m[2])
+//          if (m[2].length > 1)
+//            seconds = m[2];
+//          else
+//            seconds = '0' + m[2];
+//
+//        // milliseconds
+//        var millis = "0000";
+//        if (m[3])
+//          if (m[3].length > 4)
+//            millis = m[3].substring(0,4);
+//          else
+//            millis = m[3];
+//
+//        if (m[4] && m[5]) {
+//          // pad millis if necessary
+//          millis = m[4];
+//          while (millis.length < 3)
+//            millis = '0' + millis;
+//
+//          // add remaining digits and trim
+//          millis = millis + m[5];
+//          millis = millis.substring(0,4);
+//        }
+//
+//        // ooh, microseconds!
+//        if (m[6] && m[7]) {
+//          millis = "000" + m[6];
+//        }
+//
+//        return(minutes + ":" + seconds + "." + millis);
+//
+//        //for (var j=0; j < m.length; j++)
+//        // console.log("  m[" + j + "] = " + m[j]);
+//      }
+//    }
+    //
     // manage metadata, including buckets, fields, and field descriptions
     //
 
@@ -1176,9 +1284,6 @@
 
       var result = [];
 
-      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
-      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
-      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?/;
       //console.log("Got query: " + query);
 
 //      var config = {headers: {'Content-Type':'application/json','ns-server-proxy-timeout':20000}};
@@ -1198,47 +1303,7 @@
           // since they are in the most useless format ever.
 
           for (var i=0; i< result.length; i++) if (result[i].elapsedTime) {
-            var m = result[i].elapsedTime.match(durationExpr);
-            //console.log(m[0]);
-
-            if (m) {
-              var minutes = "00";
-              if (m[1]) // minutes value, should be an int
-                if (m[1].length > 1)
-                  minutes = m[1];
-                else
-                  minutes = '0' + m[1];
-
-              var seconds = "00";
-              if (m[2])
-                if (m[2].length > 1)
-                  seconds = m[2];
-                else
-                  seconds = '0' + m[2];
-
-              var millis = "0000";
-              if (m[3])
-                if (m[3].length > 4)
-                  millis = m[3].substring(0,4);
-                else
-                  millis = m[3];
-
-              if (m[4] && m[5]) {
-                // pad millis if necessary
-                millis = m[4];
-                while (millis.length < 3)
-                  millis = '0' + millis;
-
-                // add remaining digits and trim
-                millis = millis + m[5];
-                millis = millis.substring(0,4);
-              }
-
-              result[i].elapsedTime = minutes + ":" + seconds + "." + millis;
-
-              //for (var j=0; j < m.length; j++)
-               // console.log("  m[" + j + "] = " + m[j]);
-            }
+            result[i].elapsedTime = qwQueryPlanService.convertTimeToNormalizedString(result[i].elapsedTime);
           }
         }
         else {
@@ -1359,7 +1424,7 @@
         //
 
         if (qwConstantsService.getCouchbaseBucketPasswords)
-            $http.get("/pools/default/buckets")
+            $http.get("../pools/default/buckets")
         .success(function(data) {
           //
           // bucket data should be an array of objects, where each object has
@@ -1645,8 +1710,7 @@
       // if no long ints, just return the original bytes parsed
 
       if (longIntCount == 0) try {
-        var result = JSON.parse(rawBytes);
-        result.rawJSON = rawBytes;
+        return(JSON.parse(rawBytes));
       }
       catch (e) {
         return(rawBytes);
@@ -1676,12 +1740,122 @@
         newBytes += curBytes;
         //console.log("New raw: " + newBytes);
         result = JSON.parse(newBytes);
-        result.rawJSON = rawBytes;
 
+        // see if we can pull just the result out of the rawBytes
+        var rawResult = null;//findResult(rawBytes);
+
+        if (rawResult)
+          result.rawJSON = rawResult;
+        else
+          result.rawJSON = rawBytes;
+
+        return result;
       }
-      return result;
     }
 
+    //
+    // getRawResultsFromBytes
+    //
+    // there's a lot of stuff coming back with query results, but we want only the
+    // results themselves. With long numbers, we have to pull those results out of
+    // the raw bytes without parsing them.
+    //
+
+    function findResult(buffer) {
+      // the stuff coming back from the server is a JSON object: "{" followed by
+      // quoted field names, ":", and a JSON value (which is recursive). Since we want
+      // to find the results without parsing, find the "results: " key, then figure
+      // out where it ends.
+
+      var curLoc = 0;
+      var whitespace = /\s/;
+      var len = buffer.length;
+
+      while (curLoc < len && whitespace.test(buffer.charAt(curLoc))) curLoc++; // ignore whitespace
+
+      if (curLoc >= len && buffer.charAt(curLoc) != '{')
+        return null; // expect object start
+      else
+        curLoc++;
+
+      // loop through each field/value until we see a close brace
+
+      while (curLoc < len) {
+        // past the opening of the object, now look for quoted field names followed by ":"
+        while (curLoc < len && whitespace.test(buffer.charAt(curLoc))) curLoc++; // ignore whitespace
+
+        if (curLoc >= len || buffer.charAt(curLoc) != '"') // expect open quote
+          return null; // expect field name start, otherwise we are done
+        else
+          curLoc++;
+
+        var fieldStart = curLoc++;
+        curLoc = moveToEndOfString(buffer,curLoc);
+        if (curLoc >= len) return(null); //make sure we didn't go off the end
+
+        var fieldName = buffer.substring(fieldStart,curLoc);
+        //console.log("Got field: " + fieldName);
+
+        var valueStart = curLoc + 2;
+        curLoc = moveToEndOfValue(buffer,curLoc + 1); // start after close quote
+
+        //console.log("raw: " + buffer.substring(fieldStart-1,curLoc-1));
+
+        if (curLoc < len && fieldName == "results")
+          return(buffer.substring(valueStart,curLoc-1));
+      }
+    }
+
+    //
+    // utility function to traverse strings, finding the end
+    //
+
+    function moveToEndOfString(buffer,curLoc) {
+      while (curLoc < buffer.length) {     // loop until close quote
+        var cur = buffer.charAt(curLoc);
+        if (cur == '\\')
+          curLoc += 2; // skip quoted characters
+        else if (cur != '"')
+          curLoc ++;
+        else
+          break;
+      }
+      return curLoc;
+    }
+
+    // utility function to find the end of a value, which might be an number, string,
+    // object, or array, whose value ends with a comma or a close brace (marking
+    // the end of everything)
+
+    function moveToEndOfValue(buffer,curLoc) {
+      // now parse the value, which might be an number, string, object, or array,
+      // whose value ends with a comma or a close brace (marking the end of everything)
+
+      var braceCount = 0;
+      var bracketCount = 0;
+
+      while (curLoc < buffer.length) {
+        //console.log(curLoc + ": " + buffer.charAt(curLoc) + ", braces: " + braceCount + ", brackets: " + bracketCount);
+        switch (buffer.charAt(curLoc++)){
+        case '{': braceCount++; break;
+        case '}': // if we're not inside an array or object, we're done
+          if (braceCount == 0 && bracketCount == 0)
+            return(curLoc);
+          else
+            braceCount--;
+          break;
+        case '[': bracketCount++; break;
+        case ']': bracketCount--; break;
+        case '"': curLoc = moveToEndOfString(buffer,curLoc) + 1; break;
+        case ',':
+          if (braceCount == 0 && bracketCount == 0)
+            return(curLoc);
+          break;
+        default: // ignore other characters
+        }
+      }
+      return(curLoc);
+    }
 
     //
     // show an error dialog

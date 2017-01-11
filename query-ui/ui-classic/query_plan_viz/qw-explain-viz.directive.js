@@ -64,9 +64,9 @@
 
             // Tabular plan
             if (data.plan_nodes) {
-              content += "<br><h3>Query Operator Data Flows (bottom to top):</h3><br>";
-              content += '<div class="ajtd-root ajtd-type-array">' +
-              makeHTMLtable(data.plan_nodes,"") + "</div>";
+              //content += "<br><h3>Query Operator Data Flows (bottom to top):</h3><br>";
+              //content += '<div class="ajtd-root ajtd-type-array">' +
+              //makeHTMLtable(data.plan_nodes,"") + "</div>";
 
               // graphical plan
               //

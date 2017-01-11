@@ -77,6 +77,7 @@
     qc.query = query;
     qc.save = save;
     qc.save_query = save_query;
+    qc.options = options;
 
     qc.load_query = load_query;
 
@@ -140,6 +141,8 @@
     qc.autoExplain = qwConstantsService.autoExplain;
 
     qc.showBucketAnalysis = qwConstantsService.showBucketAnalysis;
+
+    qc.showOptions = qwConstantsService.showOptions;
 
     //
     // does the browser support file choosing?
@@ -606,34 +609,11 @@
         qc.lastResult.query = qc.lastResult.query.trim();
 
       var queryStr = qc.lastResult.query;
-      //var hasLimitExpr = /limit\s+\d+\s*;\s*$/gmi;
-      //var startsWithSelectExpr = /^\s*select/gmi;
-      //var hasElement = /^\s*select\s*(distinct)?\s*(raw|element|value)\s*/gmi;
-
-      //console.log("HasElement: " + hasElement.test(queryStr));
-
-      //var hasLimit = hasLimitExpr.test(queryStr);
-      //var startsWithSelect = startsWithSelectExpr.test(queryStr);
-
-      // add a limit to all "select" statements by wrapping
-//      if (startsWithSelect && !hasLimit && !hasElement.test(queryStr)) {
-//        // handle garbage in the limit dialog
-//        if (isNaN(Number(qwQueryService.limit.max)) ||
-//            qwQueryService.limit.max < 1)
-//          qwQueryService.limit.max = qwQueryService.defaultLimit;
-//
-//        // remove ;
-//        if (endsWithSemi.test(queryStr))
-//          queryStr = queryStr.replace(endsWithSemi,"");
-//
-//        // wrap the query in a new query with a limit
-//        queryStr = "select cbq_query_workbench_limit.* from (" + queryStr + ") cbq_query_workbench_limit limit " + qwQueryService.limit.max + ";";
-//      }
 
       //console.log("Running query: " + queryStr);
       // run the query and show a spinner
 
-      var promise = qwQueryService.executeQuery(queryStr,qc.lastResult.query);
+      var promise = qwQueryService.executeQuery(queryStr,qc.lastResult.query,dialogScope.options);
 
       if (promise) {
         // also have the input grab focus at the end
@@ -665,6 +645,22 @@
     // default names for save and save_query
     dialogScope.data_file = {name: "data.json"};
     dialogScope.query_file = {name: "n1ql_query.txt"};
+    dialogScope.options = qwQueryService.options;
+
+    function options() {
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query' + subdirectory +
+                     '/prefs_dialog/qw_prefs_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      // now save it
+//      promise.then(function (res) {
+//      });
+
+    }
 
     function save() {
       var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);

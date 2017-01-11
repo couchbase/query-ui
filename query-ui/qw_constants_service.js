@@ -70,6 +70,10 @@
     qwConstantsService.maxRequestSize = 1048500;
 
     //
+    // should we show the query options button?
+    qwConstantsService.showOptions = true;
+
+    //
     //
     // all done creating the service, now return it
     //
