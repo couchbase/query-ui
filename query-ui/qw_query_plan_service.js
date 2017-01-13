@@ -121,7 +121,7 @@
       }
 
       // ExceptAll and InterceptAll have 'first' and 'second' subqueries
-      else if (operatorName === "ExceptAll" || operatorName === "InterceptAll") {
+      else if (operatorName === "ExceptAll" || operatorName === "IntersectAll") {
         var children = [];
 
         if (plan['first'])
@@ -153,8 +153,8 @@
       }
 
       // Authorize operators have a single child called 'child'
-      else if (operatorName === "Authorize" && plan['child']) {
-        return(new PlanNode(convertPlanJSONToPlanNodes(plan['child'],null,lists),plan,null,lists.total_time));
+      else if (operatorName === "Authorize" && plan['~child']) {
+        return(new PlanNode(convertPlanJSONToPlanNodes(plan['~child'],null,lists),plan,null,lists.total_time));
       }
 
       // DistinctScan operators have a single child called 'scan'
@@ -164,6 +164,17 @@
 
       // UNION operators will have an array of predecessors drawn from their "children".
       // we expect predecessor to be null if we see a UNION
+      else if (operatorName === "UnionAll" && plan['~children']) {
+        if (predecessor != null)
+          console.log("ERROR: Union with unexpected predecessor: " + JSON.stringify(predecessor));
+
+        var unionChildren = [];
+
+        for (var i = 0; i < plan['~children'].length; i++)
+          unionChildren.push(convertPlanJSONToPlanNodes(plan['~children'][i],null,lists));
+
+        return(new PlanNode(unionChildren,plan,null,lists.total_time));
+      }
       else if (operatorName === "UnionAll" && plan['children']) {
         if (predecessor != null)
           console.log("ERROR: Union with unexpected predecessor: " + JSON.stringify(predecessor));
@@ -383,10 +394,20 @@
 
       // if we get operator timings, put them at the end of the details
       if (op['#time_normal']) {
+
         result.push('Time: ' + op['#time_normal']);
       }
       if (this.time_percent && this.time_percent > 0)
         result.push('(' + this.time_percent + '%)');
+
+      // if we have items in/out, add those as well
+      if (op['#stats'])
+      if (op['#stats']['#itemsIn'] && op['#stats']['#itemsOut'])
+        result.push(op['#stats']['#itemsIn'] + ' in / ' + op['#stats']['#itemsOut'] + ' out');
+      else if (op['#stats']['#itemsIn'])
+        result.push(op['#stats']['#itemsIn'] + ' in');
+      else if (op['#stats']['#itemsOut'])
+        result.push(op['#stats']['#itemsOut'] + ' out');
 
       return(result);
     }
@@ -480,16 +501,20 @@
         console.log("Error, no operator found for item: " + JSON.stringify(plan));
         return(lists);
       }
+      //else
+      //  console.log("Got operator: " + operatorName + ", stats: " + plan['#stats']);
 
       // if the operator has timing information, convert to readable and analyzable forms:
       if (plan['#time'] ||
-          (plan['#stats'] && plan['#stats'].execTime && plan['#stats'].servTime)) {
+          (plan['#stats'] && (plan['#stats'].execTime || plan['#stats'].servTime))) {
         var parsedValue = 0.0;
         if (plan['#time'])
           parsedValue = convertTimeStringToFloat(plan['#time']);
         else if (plan['#stats']) {
-          parsedValue = convertTimeStringToFloat(plan['#stats'].execTime) +
-            convertTimeStringToFloat(plan['#stats'].servTime);
+          if (plan['#stats'].execTime)
+            parsedValue += convertTimeStringToFloat(plan['#stats'].execTime);
+          if (plan['#stats'].servTime)
+            parsedValue += convertTimeStringToFloat(plan['#stats'].servTime);
         }
 
         plan['#time_normal'] = convertTimeFloatToFormattedString(parsedValue);
@@ -533,8 +558,8 @@
         return(lists);
       }
 
-      // ExceptAll and InterceptAll have 'first' and 'second' subqueries
-      else if (operatorName === "ExceptAll" || operatorName === "InterceptAll") {
+      // ExceptAll and IntersectAll have 'first' and 'second' subqueries
+      else if (operatorName === "ExceptAll" || operatorName === "IntersectAll") {
         if (plan['first'])
           analyzePlan(plan['first'],lists);
 
@@ -565,8 +590,8 @@
       }
 
       // Authorize operators have a single child called 'child'
-      else if (operatorName === "Authorize" && plan['child']) {
-        analyzePlan(plan['child'],lists);
+      else if (operatorName === "Authorize" && plan['~child']) {
+        analyzePlan(plan['~child'],lists);
         return(lists);
       }
 
@@ -594,6 +619,12 @@
 
       // UNION operators will have an array of predecessors drawn from their "children".
       // we expect predecessor to be null if we see a UNION
+      else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['~children']) {
+        for (var i = 0; i < plan['~children'].length; i++)
+          analyzePlan(plan['~children'][i],lists);
+
+        return(lists);
+      }
       else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['children']) {
         for (var i = 0; i < plan['children'].length; i++)
           analyzePlan(plan['children'][i],lists);
