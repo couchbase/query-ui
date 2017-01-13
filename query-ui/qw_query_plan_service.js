@@ -482,13 +482,22 @@
       }
 
       // if the operator has timing information, convert to readable and analyzable forms:
-      if (plan['#time']) {
-        var parsedTime = convertTimeToNormalizedString(plan['#time']);
-        plan['#time_normal'] = parsedTime;
-        plan['#time_absolute'] = parseInt(parsedTime.substr(1,2))*60 + parseFloat(parsedTime.substr(3));
-        lists.total_time += plan['#time_absolute'];
+      if (plan['#time'] ||
+          (plan['#stats'] && plan['#stats'].execTime && plan['#stats'].servTime)) {
+        var parsedValue = 0.0;
+        if (plan['#time'])
+          parsedValue = convertTimeStringToFloat(plan['#time']);
+        else if (plan['#stats']) {
+          parsedValue = convertTimeStringToFloat(plan['#stats'].execTime) +
+            convertTimeStringToFloat(plan['#stats'].servTime);
+        }
+
+        plan['#time_normal'] = convertTimeFloatToFormattedString(parsedValue);
+        plan['#time_absolute'] = parsedValue;
+        lists.total_time += parsedValue;
         //console.log("Got time:" + plan['#time'] + ", parsed: " + plan['#time_normal'] + ', abs: ' + plan['#time_absolute']);
       }
+
 
       // if we have a sequence, we analyze the children in order
       if (operatorName === "Sequence" && plan['~children']) {
@@ -696,59 +705,120 @@
 
     function convertTimeToNormalizedString(timeValue)
     {
+      var timeNumber = convertTimeStringToFloat(timeValue);
+      return(convertTimeFloatToFormattedString(timeNumber));
+
+//      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
+//      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
+//      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?(?:(\d+)\.(\d+)µs)?/;
+//
+//      var m = timeValue.match(durationExpr);
+//      //console.log(m[0]);
+//
+//      if (m) {
+//        // minutes
+//        var minutes = "00";
+//        if (m[1]) // minutes value, should be an int
+//          if (m[1].length > 1)
+//            minutes = m[1];
+//          else
+//            minutes = '0' + m[1];
+//
+//        // seconds
+//        var seconds = "00";
+//        if (m[2])
+//          if (m[2].length > 1)
+//            seconds = m[2];
+//          else
+//            seconds = '0' + m[2];
+//
+//        // milliseconds
+//        var millis = "0000";
+//        if (m[3])
+//          if (m[3].length > 4)
+//            millis = m[3].substring(0,4);
+//          else
+//            millis = m[3];
+//
+//        if (m[4] && m[5]) {
+//          // pad millis if necessary
+//          millis = m[4];
+//          while (millis.length < 3)
+//            millis = '0' + millis;
+//
+//          // add remaining digits and trim
+//          millis = millis + m[5];
+//          millis = millis.substring(0,4);
+//        }
+//
+//        // ooh, microseconds!
+//        if (m[6] && m[7]) {
+//          millis = "000" + m[6];
+//        }
+//
+//        return(minutes + ":" + seconds + "." + millis);
+
+        //for (var j=0; j < m.length; j++)
+        // console.log("  m[" + j + "] = " + m[j]);
+//      }
+    }
+
+    //
+    // convert a duration expression, which might be 3m23.7777s or 234.9999ms or 3.8888s
+    // or even 44.999us, to a real floating point value in seconds
+    //
+
+    function convertTimeStringToFloat(timeValue)
+    {
       // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
-      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
-      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?(?:(\d+)\.(\d+)µs)?/;
+      // groups: 1: minutes, 2: secs, 3: millis, 4: microseconds
+      var durationExpr = /(?:(\d+)m)?(?:(\d+\.\d+)s)?(?:(\d+\.\d+)ms)?(?:(\d+\.\d+)µs)?/;
+      var result = 0.0;
 
       var m = timeValue.match(durationExpr);
       //console.log(m[0]);
 
       if (m) {
         // minutes
-        var minutes = "00";
         if (m[1]) // minutes value, should be an int
-          if (m[1].length > 1)
-            minutes = m[1];
-          else
-            minutes = '0' + m[1];
+          result += parseInt(m[1])*60;
 
         // seconds
-        var seconds = "00";
         if (m[2])
-          if (m[2].length > 1)
-            seconds = m[2];
-          else
-            seconds = '0' + m[2];
+          result += parseFloat(m[2]);
 
         // milliseconds
-        var millis = "0000";
         if (m[3])
-          if (m[3].length > 4)
-            millis = m[3].substring(0,4);
-          else
-            millis = m[3];
-
-        if (m[4] && m[5]) {
-          // pad millis if necessary
-          millis = m[4];
-          while (millis.length < 3)
-            millis = '0' + millis;
-
-          // add remaining digits and trim
-          millis = millis + m[5];
-          millis = millis.substring(0,4);
-        }
+          result += parseFloat(m[3])/1000;
 
         // ooh, microseconds!
-        if (m[6] && m[7]) {
-          millis = "000" + m[6];
-        }
-
-        return(minutes + ":" + seconds + "." + millis);
-
-        //for (var j=0; j < m.length; j++)
-        // console.log("  m[" + j + "] = " + m[j]);
+        if (m[4])
+          result += parseFloat(m[4])/1000000;
       }
+
+      return(result);
+    }
+
+    //
+    // take a floating point number of seconds and convert it to
+    // 00:00.00000
+    //
+
+    function convertTimeFloatToFormattedString(timeValue) {
+      var minutes = 0;
+      if (timeValue > 60)
+        minutes = Math.floor(timeValue/60);
+      var seconds = timeValue - (minutes*60);
+
+      var minutesStr = minutes.toString();
+      if (minutesStr.length < 2)
+        minutesStr = '0' + minutesStr;
+
+      var secondsStr = (seconds < 10 ? '0' : '') + seconds.toString();
+      if (secondsStr.length > 7)
+        secondsStr = secondsStr.substring(0,7);
+
+      return(minutesStr + ":" + secondsStr);
     }
 
 

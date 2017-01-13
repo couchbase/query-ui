@@ -1204,67 +1204,6 @@
     }
 
     //
-    // convert a duration expression, which might be 3m23.7777s or 234.9999ms or 3.8888s
-    // or even 44.999us, to a real time value
-    //
-
-//    function convertTimeToNormalizedString(timeValue)
-//    {
-//      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
-//      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
-//      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?(?:(\d+)\.(\d+)µs)?/;
-//
-//      var m = timeValue.match(durationExpr);
-//      //console.log(m[0]);
-//
-//      if (m) {
-//        // minutes
-//        var minutes = "00";
-//        if (m[1]) // minutes value, should be an int
-//          if (m[1].length > 1)
-//            minutes = m[1];
-//          else
-//            minutes = '0' + m[1];
-//
-//        // seconds
-//        var seconds = "00";
-//        if (m[2])
-//          if (m[2].length > 1)
-//            seconds = m[2];
-//          else
-//            seconds = '0' + m[2];
-//
-//        // milliseconds
-//        var millis = "0000";
-//        if (m[3])
-//          if (m[3].length > 4)
-//            millis = m[3].substring(0,4);
-//          else
-//            millis = m[3];
-//
-//        if (m[4] && m[5]) {
-//          // pad millis if necessary
-//          millis = m[4];
-//          while (millis.length < 3)
-//            millis = '0' + millis;
-//
-//          // add remaining digits and trim
-//          millis = millis + m[5];
-//          millis = millis.substring(0,4);
-//        }
-//
-//        // ooh, microseconds!
-//        if (m[6] && m[7]) {
-//          millis = "000" + m[6];
-//        }
-//
-//        return(minutes + ":" + seconds + "." + millis);
-//
-//        //for (var j=0; j < m.length; j++)
-//        // console.log("  m[" + j + "] = " + m[j]);
-//      }
-//    }
-    //
     // manage metadata, including buckets, fields, and field descriptions
     //
 
