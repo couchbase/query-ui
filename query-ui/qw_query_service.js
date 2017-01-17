@@ -1681,10 +1681,10 @@
         result = JSON.parse(newBytes);
 
         // see if we can pull just the result out of the rawBytes
-        var rawResult = null;//findResult(rawBytes);
+        var rawResult = findResult(rawBytes);
 
         if (rawResult)
-          result.rawJSON = rawResult;
+          result.rawJSON = '\t' + rawResult;
         else
           result.rawJSON = rawBytes;
 
@@ -1735,7 +1735,7 @@
         var fieldName = buffer.substring(fieldStart,curLoc);
         //console.log("Got field: " + fieldName);
 
-        var valueStart = curLoc + 2;
+        var valueStart = curLoc + 3;
         curLoc = moveToEndOfValue(buffer,curLoc + 1); // start after close quote
 
         //console.log("raw: " + buffer.substring(fieldStart-1,curLoc-1));

@@ -74,7 +74,12 @@
         |
         <span>Execution: {{qc.lastResult.executionTime}}</span>
         |
-        <span>Result Count: {{qc.lastResult.resultCount}}</span>
+        <span ng-if="qc.lastResult.mutationCount">
+            Mutation Count: {{qc.lastResult.mutationCount}}
+        </span>
+        <span ng-if="!qc.lastResult.mutationCount">
+            Result Count: {{qc.lastResult.resultCount}}
+        </span>
         |
         <span>Result Size: {{qc.lastResult.resultSize}}</span>
       </div>
