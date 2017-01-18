@@ -33,11 +33,11 @@
     // Some nodes have children that must be traversed:
     //   Sequence has '~children'
     //   Parallel has '~child'
-    //   UnionAll has 'children'
+    //   UnionAll has '~children'
     //   UnionScan/IntersectScan have 'scans'
     //   ExceptAll/IntersetAll have 'first' and 'second'
     //   DistinctScan has 'scan'
-    //   Authorize has 'child'
+    //   Authorize has '~child'
     //   Merge has 'as', 'key', 'keyspace', 'delete' and 'update'
     //
     //  Update has 'set_terms' (array of {"path":"...","value":"..."}),
@@ -152,7 +152,7 @@
           return(null);
       }
 
-      // Authorize operators have a single child called 'child'
+      // Authorize operators have a single child called '~child'
       else if (operatorName === "Authorize" && plan['~child']) {
         return(new PlanNode(convertPlanJSONToPlanNodes(plan['~child'],null,lists),plan,null,lists.total_time));
       }
@@ -172,17 +172,6 @@
 
         for (var i = 0; i < plan['~children'].length; i++)
           unionChildren.push(convertPlanJSONToPlanNodes(plan['~children'][i],null,lists));
-
-        return(new PlanNode(unionChildren,plan,null,lists.total_time));
-      }
-      else if (operatorName === "UnionAll" && plan['children']) {
-        if (predecessor != null)
-          console.log("ERROR: Union with unexpected predecessor: " + JSON.stringify(predecessor));
-
-        var unionChildren = [];
-
-        for (var i = 0; i < plan['children'].length; i++)
-          unionChildren.push(convertPlanJSONToPlanNodes(plan['children'][i],null,lists));
 
         return(new PlanNode(unionChildren,plan,null,lists.total_time));
       }
@@ -395,19 +384,28 @@
       // if we get operator timings, put them at the end of the details
       if (op['#time_normal']) {
 
-        result.push('Time: ' + op['#time_normal']);
+        result.push(op['#time_normal'] +
+            ((this.time_percent && this.time_percent > 0) ?
+                ' (' + this.time_percent + '%)' : ''));
       }
-      if (this.time_percent && this.time_percent > 0)
-        result.push('(' + this.time_percent + '%)');
 
       // if we have items in/out, add those as well
-      if (op['#stats'])
-      if (op['#stats']['#itemsIn'] && op['#stats']['#itemsOut'])
-        result.push(op['#stats']['#itemsIn'] + ' in / ' + op['#stats']['#itemsOut'] + ' out');
-      else if (op['#stats']['#itemsIn'])
-        result.push(op['#stats']['#itemsIn'] + ' in');
-      else if (op['#stats']['#itemsOut'])
-        result.push(op['#stats']['#itemsOut'] + ' out');
+      if (op['#stats']) {
+        var inStr = '';
+        var outStr = '';
+
+        // itemsIn is a number
+        if (op['#stats']['#itemsIn'] || op['#stats']['#itemsIn'] === 0)
+          inStr = op['#stats']['#itemsIn'].toString();
+        if (op['#stats']['#itemsOut'] || op['#stats']['#itemsOut'] === 0)
+          outStr = op['#stats']['#itemsOut'].toString();
+
+        // if we have both inStr and outStr, put a slash between them
+        var inOutStr = ((inStr.length > 0) ? inStr + ' in' : '') +
+            ((inStr.length > 0 && outStr.length > 0) ? ' / ' : '') +
+            ((outStr.length > 0) ? outStr + ' out' : '');
+        result.push(inOutStr);
+      }
 
       return(result);
     }
@@ -447,11 +445,11 @@
     //
     //   Sequence has '~children'
     //   Parallel has '~child'
-    //   UnionAll has 'children'
+    //   UnionAll has '~children'
     //   UnionScan/IntersectScan have 'scans'
     //   ExceptAll/IntersetAll have 'first' and 'second'
     //   DistinctScan has 'scan'
-    //   Authorize has 'child'
+    //   Authorize has '~child'
     //   Merge has 'as', 'key', 'keyspace', 'delete' and 'update'
 
 
@@ -589,7 +587,7 @@
         return(lists);
       }
 
-      // Authorize operators have a single child called 'child'
+      // Authorize operators have a single child called '~child'
       else if (operatorName === "Authorize" && plan['~child']) {
         analyzePlan(plan['~child'],lists);
         return(lists);
@@ -622,12 +620,6 @@
       else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['~children']) {
         for (var i = 0; i < plan['~children'].length; i++)
           analyzePlan(plan['~children'][i],lists);
-
-        return(lists);
-      }
-      else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['children']) {
-        for (var i = 0; i < plan['children'].length; i++)
-          analyzePlan(plan['children'][i],lists);
 
         return(lists);
       }
