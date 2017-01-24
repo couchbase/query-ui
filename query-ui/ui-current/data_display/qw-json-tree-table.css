@@ -121,6 +121,11 @@ td.ajtd-type-array {
   height: 2.5rem;
 }
 
+.ajtd-editor {
+    font-size: small;
+    min-width: 200px;
+}
+
 .ajtd-showContent {
   height: auto;
 }

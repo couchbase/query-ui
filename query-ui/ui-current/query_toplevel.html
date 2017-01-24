@@ -19,24 +19,16 @@
       No query nodes were found on this cluster, so N1QL querying is not possible.
     </div>
   </div>
-  <!-- <ul ng-if="qc.validated.valid()" class="second-level-nav">
-    <li><a ui-sref="app.admin.query.workbench"
-      ui-sref-active="selected">Workbench</a></li>
-    <li>
-      <a
-        ui-sref="app.admin.query.monitoring"
-        ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">Monitoring</a>
-    </li>
-  </ul> -->
   <mn-element-cargo depot="subnav">
     <nav ng-if="qc.validated.valid()" class="sub-nav">
-      <a
-         ui-sref="app.admin.query.workbench"
-         ui-sref-active="selected">
+      <a ui-sref="app.admin.query.workbench" ui-sref-active="selected">
         Query Workbench</a>
-      <a
-         ui-sref="app.admin.query.monitoring"
-         ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">Query Monitor</a>
+      <a ui-sref="app.admin.query.monitoring"
+       ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">
+        Query Monitor</a>
+        <!-- 
+      <a ui-sref="app.admin.query.doc_editor" ui-sref-active="selected">
+        Document Editor</a> -->
     </nav>
   </mn-element-cargo>
 

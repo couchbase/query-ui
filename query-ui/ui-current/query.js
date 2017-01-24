@@ -5,6 +5,7 @@
     .module('qwQuery', ["ui.router", "mnPluggableUiRegistry", "mnJquery",
                       'qwJsonTree',
                       'qwJsonTable',
+                      'qwJsonTableEditor',
                       'qwExplainViz',
                       'qwLongPress',
                       'mnPendingQueryKeeper',
@@ -36,14 +37,20 @@
         $stateProvider
           .state(parent + '.monitoring', {
             url: '/monitoring',
-            controller: 'qwQueryController',
+            controller: 'qwQueryMonitorController',
             templateUrl: '../_p/ui/query/ui-current/query_monitoring.html'
           })
           .state(parent + '.workbench', {
             url: '/workbench',
             controller: 'qwQueryController',
             templateUrl: '../_p/ui/query/ui-current/query.html'
-          });
+          })
+          .state(parent + '.doc_editor', {
+            url: '/doc_editor',
+            controller: 'qwDocEditorController',
+            templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
+          })
+          ;
       }
 
       mnPluggableUiRegistryProvider.registerConfig({

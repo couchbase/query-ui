@@ -1,6 +1,6 @@
 <div
    ng-controller="qwQueryMonitorController as qmc"
-   ng-show="qc.validated.valid()"
+   ng-show="qmc.validated.valid()"
    class="interim main-content">
 
   <div class="row margin-bottom-half">
@@ -97,7 +97,7 @@
         </th>
       </thead>
       <tbody>
-        <tr
+        <tr 
           ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
           <td style="max-width: 600px">{{result.statement |
             limitTo: 1024}}{{result.statement.length > 1024 ? '...' :

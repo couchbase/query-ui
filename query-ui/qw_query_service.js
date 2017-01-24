@@ -56,6 +56,8 @@
     qwQueryService.cancelQuery = cancelQuery;
     qwQueryService.cancelQueryById = cancelQueryById;
 
+    qwQueryService.executeQueryUtil = executeQueryUtil;
+
     // update store the metadata about buckets
 
     qwQueryService.buckets = [];
@@ -113,6 +115,20 @@
         scan_consistency: "not_bounded",
         positional_parameters: [],
         named_parameters: []
+    };
+
+    //
+    // a few variables for keeping track of the doc editor
+    //
+
+    qwQueryService.doc_editor_options = {
+        selected_bucket: null,
+        query_busy: false,
+        limit: 10,
+        offset: 0,
+        where_clause: '',
+        current_query: '',
+        current_result: []
     };
 
     //
@@ -604,6 +620,12 @@
         requestId + '";';
 
       executeQueryUtil(query,false)
+
+//        .success(function(data, status, headers, config) {
+//          console.log("Success cancelling query.");
+//          console.log("    Data: " + JSON.stringify(data));
+//          console.log("    Status: " + JSON.stringify(status));
+//        })
 
       // sanity check - if there was an error put a message in the console.
       .error(function(data, status, headers, config) {

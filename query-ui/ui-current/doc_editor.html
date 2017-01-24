@@ -1,0 +1,53 @@
+<div ng-controller="qwDocEditorController as dec"
+  ng-show="dec.validated.valid()" class="interim main-content">
+
+  <div id="query_header" class="row">
+    <h4>Document Editor</h4>
+  </div>
+
+  <!-- Bucket menu -->
+
+  <div class="row" style="margin-bottom: 0.5rem">
+    <label>Bucket: </label>
+     <select
+      ng-model="dec.options.selected_bucket"
+      ng-options="bucket.id for bucket in dec.buckets">
+    </select>
+
+    <!-- Query using limit or where clause -->
+
+    <label for="query_mode_limit""> Limit:</label>  
+    <input type="text" ng-model="dec.options.limit">
+    <label for="query_mode_limit"> Offset: </label>
+    <input type="text" ng-model="dec.options.offset">
+    <label for="storage_memory_optimized"> Where: </label>
+    <input type="text" ng-model="dec.options.where_clause">
+  </div>
+
+  <!-- Button to get the documents -->
+
+  <div class="row flex-left">
+    <button ng-click="dec.retrieveDocs()" style="margin-bottom: 0.5rem">
+      <div ng-if="!dec.options.queryBusy">Retrieve Docs</div>
+      <div ng-if="dec.options.queryBusy" class="icon-button">
+        Cancel Retrieve</div>
+    </button>
+  </div>
+
+  <!-- Guidance Messages -->
+
+  <div class="ajtd-key" ng-if="!dec.options.selected_bucket">Select a bucket, options, and click Retrieve Docs to continue</div>
+
+  <div class="ajtd-key" ng-if="dec.options.selected_bucket && dec.options.current_query.length == 0">
+  Click Retrieve Docs to continue</div>
+
+  <!-- results -->
+
+  <div ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0" style="margin-bottom: 0.5rem">
+    Current results for: <span class="ajtd-key">"{{dec.options.current_query}}"</span>
+  </div>
+
+  <div ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0" id="result_table"
+    qw-json-table-editor="dec.options.current_result"></div>
+
+</div>
