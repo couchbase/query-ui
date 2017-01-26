@@ -18,7 +18,7 @@
              title="View previous queries/results" ng-click="qc.prev()"
              qw-long-press="qc.historyMenu"
              class="outline btn-small"
-             ng-class="{dynamic_disabled: !qc.hasPrev()}">
+             ng-disabled="!qc.hasPrev()">
             &larr;
           </button>
           <span class="query-history-controls-inner">
@@ -30,7 +30,7 @@
              ng-click="qc.next()"
              qw-long-press="qc.historyMenu"
              class="outline btn-small"
-             ng-class="{dynamic_disabled: !qc.hasNext()}">
+             ng-disabled="!qc.hasNext()">
             &rarr;
           </button>
         </div>
@@ -45,14 +45,14 @@
             Import Query</button>
           </span>
           <button ng-click="qc.save_query()" class="outline"  
-                  ng-class="{dynamic_disabled: qc.emptyQuery()}">
+                  ng-disabled="qc.emptyQuery()">
           Export Query
           </button>
         </span>
       </div>
     <!-- Ace editor -->
       <div id="query_editor" ui-ace="qc.aceInputOptions"
-        ng-class="{dynamic_disabled: qc.executingQuery.busy}"
+        ng-disabled="qc.executingQuery.busy"
         ng-model="qc.lastResult.query">{{qc.renderPage()}}</div>
 
     </div>
@@ -101,7 +101,7 @@
            ng-class="{selected: qc.isSelected(5)}">Plan Text</a>
       </span>
       <button ng-click="qc.save()" class="outline" 
-        ng-class="{dynamic_disabled: qc.emptyResult()}">
+        ng-disabled="qc.emptyResult()">
         Export as JSON
       </button>
     </div>
@@ -132,7 +132,7 @@
     <div id="sidebar_header" class="row">
       <h4>&nbsp;Data Analysis</h4>
         <a title="resize" ng-click="qc.toggleAnalysisSize()"
-           ng-class="{dynamic_disabled: !qc.hasPrev()}">
+           ng-disabled="!qc.hasPrev()">
           <span ng-if="!qc.analysisExpanded" class="icon fa-expand"></span>
           <span ng-if="qc.analysisExpanded" class="icon fa-compress"></span>
         </a>

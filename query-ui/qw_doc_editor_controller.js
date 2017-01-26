@@ -48,9 +48,10 @@
 
     function updateDoc(row) {
       console.log("updating row: " + row);
-      console.log("current id: " + dec.options.current_result[row].id);
-      console.log("current data: " + JSON.stringify(dec.options.current_result[row].data));
-
+      var query = "UPSERT INTO " + dec.options.current_bucket + ' (KEY, VALUE) VALUES ("' +
+        dec.options.current_result[row].id + '", ' +
+        JSON.stringify(dec.options.current_result[row].data) + ')';
+      console.log("Query: " + query);
     }
 
     //
@@ -76,6 +77,7 @@
       }
 
       dec.options.current_query = query;
+      dec.options.current_bucket = dec.options.selected_bucket.id;
       dec.options.current_result = [];
 
       qwQueryService.executeQueryUtil(query,false)

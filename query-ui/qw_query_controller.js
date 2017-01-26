@@ -757,7 +757,9 @@
       dialogScope.isRowSelected = function(row) {return(row == qwQueryService.getCurrentIndexNumber());};
       dialogScope.isRowMatched = function(row) {return(_.indexOf(historySearchResults,row) > -1);};
       dialogScope.showRow = function(row) {return(historySearchResults.length == 0 || dialogScope.isRowMatched(row));};
-      dialogScope.del = qwQueryService.clearCurrentQuery;
+      dialogScope.del = function() {qwQueryService.clearCurrentQuery(); updateSearchResults();};
+      // disable delete button if search results don't include selected query
+      dialogScope.disableDel = function() {return searchInfo.searchText.length > 0 && !dialogScope.isRowMatched(qwQueryService.getCurrentIndexNumber());};
       dialogScope.delAll = qwQueryService.clearHistory;
       dialogScope.searchInfo = searchInfo;
       dialogScope.updateSearchResults = updateSearchResults;

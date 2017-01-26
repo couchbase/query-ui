@@ -132,6 +132,7 @@
         offset: 0,
         where_clause: '',
         current_query: '',
+        current_bucket: '',
         current_result: []
     };
 
