@@ -22,12 +22,15 @@
 
   function getTableEditor($compile) {
     return {
-      restrict: 'A',
-      scope: { data: '=qwJsonTableEditor' },
+      restrict: 'E',
+//      scope: { data: '=qwJsonTableEditor' },
+      scope: { data: '=data', controller: '=controller' },
       template: '<div></div>',
       link: function (scope, element) {
 
         scope.$watch('data', function (json) {
+          //console.log("Got controller: " + scope.controller);
+          //var json = controller.options.current_result;
 //          if (typeof json === 'string') {
 //            try {
 //              scope.json_length = json.length;
@@ -40,6 +43,7 @@
           var content = "<div>{}</div>";
           if (json) {
             scope.results = json;
+            scope.dec = scope.controller;
             //console.log("Results: " + JSON.stringify(json));
             content = '<div class="object_editor">' +
             makeHTMLTopLevel(json) + "</div>";
@@ -123,8 +127,8 @@
         // button to update record in the first column
         result += '<td><button ng-click="dec.updateDoc(' + row + ')" style="margin-bottom: 0.5rem">' +
           '<div ng-if="!dec.options.queryBusy">Update</div>' +
-          '<div ng-if="dec.options.queryBusy" class="icon-button">' +
-          'Updating</div> </button></td>';
+          '<div ng-if="dec.options.queryBusy">Updating</div>' +
+          '</button></td>';
 
         // put the meta().id in the next column
         result += '<td>' + object[row].id + '</td>';
@@ -329,8 +333,13 @@
     //it's also possible we were passed a primitive value, in which case just put it in a div
 
     else {
+      var model = ' ng-model="results' + prefix + '" ';
       //console.log("Got prefix: " + prefix + ", value: " + object);
-      result += '<textarea class="ajtd-editor" ng-model="results' + prefix + '"></textarea>';
+
+      if (_.isNumber(object))
+        result += '<input type="number" ' + model + '>';
+      else
+        result += '<textarea class="ajtd-editor"' + model + '></textarea>';
     }
 
     return(result);

@@ -47,7 +47,7 @@
     Current results for: <span class="ajtd-key">"{{dec.options.current_query}}"</span>
   </div>
 
-  <div ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0" id="result_table"
-    qw-json-table-editor="dec.options.current_result"></div>
+  <div class="ajtd-editor-table" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
+    <qw-json-table-editor data="dec.options.current_result" controller="dec"></div>
 
 </div>

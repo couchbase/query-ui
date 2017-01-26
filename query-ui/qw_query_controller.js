@@ -26,6 +26,8 @@
     qc.lastResult = qwQueryService.getResult(); // holds the current query and result
     //qc.limit = qwQueryService.limit;            // automatic result limiter
     qc.executingQuery = qwQueryService.executingQuery;
+    qc.emptyQuery = function() {return(qwQueryService.getResult().query.length == 0);}
+    qc.emptyResult = qwQueryService.emptyResult;
 
     // some functions for handling query history, going backward and forward
 
@@ -404,7 +406,7 @@
       // files is a FileList of File objects. load the first one into the editor, if any.
       if (files.length >= 1) {
         var reader = new FileReader();
-        reader.addEventListener("loadend",function() {qc.inputEditor.getSession().setValue(reader.result);});
+        reader.addEventListener("loadend",function() {addNewQueryContents(reader.result);});
         reader.readAsText(files[0]);
       }
     }
@@ -413,6 +415,14 @@
 
     function load_query() {
       $("#loadQuery")[0].click();
+    }
+
+    // bring the contents of a file into the query editor and history
+
+    function addNewQueryContents(contents) {
+      // move to the end of history
+      qwQueryService.addNewQueryAtEndOfHistory(contents);
+      qc.inputEditor.getSession().setValue(contents);
     }
 
     //
@@ -663,6 +673,10 @@
     }
 
     function save() {
+      // can't save empty query
+      if (qc.emptyResult())
+        return;
+
       var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
 
       // safari does'nt support saveAs
@@ -698,6 +712,10 @@
     //
 
     function save_query() {
+      // can't save an empty query
+      if (qc.emptyQuery())
+        return;
+
       var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
 
       // safari does'nt support saveAs

@@ -44,8 +44,8 @@
              onchange="console.log("changed files")">
             Import Query</button>
           </span>
-          <button
-            ng-click="qc.save_query()" class="outline">
+          <button ng-click="qc.save_query()" class="outline"  
+                  ng-class="{dynamic_disabled: qc.emptyQuery()}">
           Export Query
           </button>
         </span>
@@ -100,7 +100,8 @@
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}">Plan Text</a>
       </span>
-      <button ng-click="qc.save()" class="outline">
+      <button ng-click="qc.save()" class="outline" 
+        ng-class="{dynamic_disabled: qc.emptyResult()}">
         Export as JSON
       </button>
     </div>

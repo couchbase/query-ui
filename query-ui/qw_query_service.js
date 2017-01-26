@@ -35,10 +35,14 @@
     qwQueryService.hasNextResult = hasNextResult;
     qwQueryService.prevResult = prevResult;
     qwQueryService.nextResult = nextResult;
+    qwQueryService.addNewQueryAtEndOfHistory = addNewQueryAtEndOfHistory;
 
     qwQueryService.canCreateBlankQuery = canCreateBlankQuery;
 
     qwQueryService.getPastQueries = function() {return(pastQueries);}
+    qwQueryService.getQueryHistoryLength = function() {return(pastQueries.length);}
+
+    qwQueryService.emptyResult = emptyResult;
 
     //
     // keep track of the bucket and field names we have seen, for use in autocompletion
@@ -226,6 +230,11 @@
     var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
                                 // end of the array, since there's no history yet
+
+    function emptyResult() {
+        return(!pastQueries[currentQueryIndex] ||
+            pastQueries[currentQueryIndex].result === savedResultTemplate.result);
+    }
 
     //
     // where are we w.r.t. the query history?
@@ -512,13 +521,21 @@
 
       // if the end query has been run, and is unedited, create a blank query
       else if (canCreateBlankQuery()) {
-        var newResult = newQueryTemplate.clone();
-        newResult.query = "";
-        pastQueries.push(newResult);
-        currentQueryIndex++;
-        lastResult.copyIn(pastQueries[currentQueryIndex]);
+        addNewQueryAtEndOfHistory();
       }
     }
+
+    function addNewQueryAtEndOfHistory(query) {
+      var newResult = newQueryTemplate.clone();
+      if (query)
+        newResult.query  = query;
+      else
+        newResult.query = "";
+      pastQueries.push(newResult);
+      currentQueryIndex = pastQueries.length - 1;
+      lastResult.copyIn(pastQueries[currentQueryIndex]);
+    }
+
 
     //
     // clear the entire query history

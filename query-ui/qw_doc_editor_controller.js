@@ -33,11 +33,25 @@
 
     dec.retrieveDocs = retrieveDocs;
 
+    dec.clickedOn = function(row) {console.log("clicked on: " + row);};
+    dec.updateDoc = updateDoc;
+
     //
     // call the activate method for initialization
     //
 
     activate();
+
+    //
+    // function to update a document given what the user typed
+    //
+
+    function updateDoc(row) {
+      console.log("updating row: " + row);
+      console.log("current id: " + dec.options.current_result[row].id);
+      console.log("current data: " + JSON.stringify(dec.options.current_result[row].data));
+
+    }
 
     //
     // build a query from the current options, and get the results
@@ -68,7 +82,7 @@
 
       // did the query succeed?
       .success(function(data, status, headers, config) {
-        //console.log("Editor Q Success Data Len: " + JSON.stringify(data.results.length));
+        console.log("Editor Q Success Data Len: " + JSON.stringify(data.results.length));
         //console.log("Editor Q Success Status: " + JSON.stringify(status));
 
         if (data && data.status && data.status == 'success')

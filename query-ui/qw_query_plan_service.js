@@ -55,28 +55,32 @@
       if (plan.operator)
         return(convertPlanJSONToPlanNodes(plan.operator,null,lists));
 
+      // special case #2: plan with query timings is wrapped in an outer object
+      if (plan.plan && !plan['#operator'])
+        return(convertPlanJSONToPlanNodes(plan.plan,null,lists));
+
       //console.log("Inside analyzePlan");
 
       // iterate over fields, look for "#operator" field
-      var operatorName;
-      var fields = [];
-
-      _.forIn(plan,function(value,key) {
-        if (key === '#operator')
-          operatorName = value;
-
-        var type;
-        if (_.isString(value)) type = 'string';
-        else if (_.isArray(value)) type = 'array';
-        else if (_.isObject(value)) type = 'object';
-        else if (_.isNumber(value)) type = 'number';
-        else if (_.isNull(value)) type = 'null';
-        else type = 'unknown';
-
-        var field = {};
-        field[key] = type;
-        fields.push(field);
-      });
+      var operatorName = plan['#operator'];
+//      var fields = [];
+//
+//      _.forIn(plan,function(value,key) {
+//        if (key === '#operator')
+//          operatorName = value;
+//
+//        var type;
+//        if (_.isString(value)) type = 'string';
+//        else if (_.isArray(value)) type = 'array';
+//        else if (_.isObject(value)) type = 'object';
+//        else if (_.isNumber(value)) type = 'number';
+//        else if (_.isNull(value)) type = 'null';
+//        else type = 'unknown';
+//
+//        var field = {};
+//        field[key] = type;
+//        fields.push(field);
+//      });
 
       // at this point we should have an operation name and a field array
 
@@ -85,10 +89,7 @@
       // we had better have an operator name at this point
 
       if (!operatorName) {
-        console.log("Error, no operator found for item, fields were:");
-        _.forIn(plan,function(value,key) {
-          console.log(" key: " + key);
-        });
+        console.log("Error, no operator found for item, plan: " + JSON.stringify(plan));
         console.log(JSON.stringify(plan));
         return(null);
       }
@@ -468,28 +469,32 @@
       if (plan.operator)
         return(analyzePlan(plan.operator,null));
 
+      // special case #2: plan with query timings is wrapped in an outer object
+      if (plan.plan && !plan['#operator'])
+        return(analyzePlan(plan.plan,null));
+
       //console.log("Inside analyzePlan: " + JSON.stringify(plan,null,true));
 
       // iterate over fields, look for "#operator" field
-      var operatorName;
-      var fields = [];
-
-      _.forIn(plan,function(value,key) {
-        if (key === '#operator')
-          operatorName = value;
-
-        var type;
-        if (_.isString(value)) type = 'string';
-        else if (_.isArray(value)) type = 'array';
-        else if (_.isObject(value)) type = 'object';
-        else if (_.isNumber(value)) type = 'number';
-        else if (_.isNull(value)) type = 'null';
-        else type = 'unknown';
-
-        var field = {};
-        field[key] = type;
-        fields.push(field);
-      });
+      var operatorName = plan['#operator'];
+//      var fields = [];
+//
+//      _.forIn(plan,function(value,key) {
+//        if (key === '#operator')
+//          operatorName = value;
+//
+//        var type;
+//        if (_.isString(value)) type = 'string';
+//        else if (_.isArray(value)) type = 'array';
+//        else if (_.isObject(value)) type = 'object';
+//        else if (_.isNumber(value)) type = 'number';
+//        else if (_.isNull(value)) type = 'null';
+//        else type = 'unknown';
+//
+//        var field = {};
+//        field[key] = type;
+//        fields.push(field);
+//      });
 
       // at this point we should have an operation name and a field array
       //console.log("  after analyze, got op name: " + operatorName);
