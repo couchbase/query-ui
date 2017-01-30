@@ -363,7 +363,11 @@
         break;
 
       case "Filter":
-        result.push(op.condition);
+        if (op.condition)
+          if (op.condition.length > 30)
+            result.push(op.condition.slice(0,30) + "...");
+          else
+            result.push(op.condition);
         break;
       }
 
