@@ -1081,7 +1081,7 @@
               /*,
               buckets: qwQueryService.buckets,
               tokens: qwQueryService.autoCompleteTokens*/};
-          newResult.explainResultText = JSON.stringify(newResult.explainResult,null,'  ');
+          newResult.explainResultText = JSON.stringify(newResult.explainResult.explain,null,'  ');
         }
 
         newResult.queryDone = true;

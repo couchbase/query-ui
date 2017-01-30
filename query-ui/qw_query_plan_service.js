@@ -63,24 +63,6 @@
 
       // iterate over fields, look for "#operator" field
       var operatorName = plan['#operator'];
-//      var fields = [];
-//
-//      _.forIn(plan,function(value,key) {
-//        if (key === '#operator')
-//          operatorName = value;
-//
-//        var type;
-//        if (_.isString(value)) type = 'string';
-//        else if (_.isArray(value)) type = 'array';
-//        else if (_.isObject(value)) type = 'object';
-//        else if (_.isNumber(value)) type = 'number';
-//        else if (_.isNull(value)) type = 'null';
-//        else type = 'unknown';
-//
-//        var field = {};
-//        field[key] = type;
-//        fields.push(field);
-//      });
 
       // at this point we should have an operation name and a field array
 
@@ -153,14 +135,17 @@
           return(null);
       }
 
-      // Authorize operators have a single child called '~child'
+      // Authorize operators have a single child called '~child', the child comes *after*
+      // the authorize op
       else if (operatorName === "Authorize" && plan['~child']) {
-        return(new PlanNode(convertPlanJSONToPlanNodes(plan['~child'],null,lists),plan,null,lists.total_time));
+        var authorizeNode = new PlanNode(predecessor,plan,null,lists.total_time);
+        var authorizeChildren = convertPlanJSONToPlanNodes(plan['~child'],authorizeNode,lists);
+        return(authorizeChildren);
       }
 
       // DistinctScan operators have a single child called 'scan'
       else if (operatorName === "DistinctScan" && plan['scan']) {
-        return(new PlanNode(convertPlanJSONToPlanNodes(plan['scan'],null,lists),plan),null,lists.total_time);
+        return(new PlanNode(convertPlanJSONToPlanNodes(plan['scan'],null,lists),plan,null,lists.total_time));
       }
 
       // UNION operators will have an array of predecessors drawn from their "children".
@@ -477,24 +462,6 @@
 
       // iterate over fields, look for "#operator" field
       var operatorName = plan['#operator'];
-//      var fields = [];
-//
-//      _.forIn(plan,function(value,key) {
-//        if (key === '#operator')
-//          operatorName = value;
-//
-//        var type;
-//        if (_.isString(value)) type = 'string';
-//        else if (_.isArray(value)) type = 'array';
-//        else if (_.isObject(value)) type = 'object';
-//        else if (_.isNumber(value)) type = 'number';
-//        else if (_.isNull(value)) type = 'null';
-//        else type = 'unknown';
-//
-//        var field = {};
-//        field[key] = type;
-//        fields.push(field);
-//      });
 
       // at this point we should have an operation name and a field array
       //console.log("  after analyze, got op name: " + operatorName);

@@ -100,7 +100,11 @@
   function makeTreeFromPlanNodes(plan,hasSuccessor) {
     var result = '';
 
-    var opName = plan.operator['#operator'] ? plan.operator['#operator'] : "unknown op";
+    if (!plan)
+      return("empty plan");
+
+    var opName = (plan && plan.operator && plan.operator['#operator'])
+      ? plan.operator['#operator'] : "unknown op";
     var opClass = "qw-node";
 
     // if we are at the end of the line, we need less padding
