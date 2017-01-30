@@ -800,11 +800,12 @@
     function updateSearchResults() {
       var history = qwQueryService.getPastQueries();
       // reset the history
+      var searchText = searchInfo.searchText.toLowerCase();
       historySearchResults.length = 0;
       if (searchInfo.searchText.trim().length > 0)
         for (var i=0; i<history.length; i++) {
           //console.log("  comparing to: " + history[i].query)
-          if (history[i].query.indexOf(searchInfo.searchText) > -1)
+          if (history[i].query.toLowerCase().indexOf(searchText) > -1)
             historySearchResults.push(i);
         }
 
