@@ -1,56 +1,72 @@
-<div id="query_prefs_dialog" style="width: 500px">
-  <h1 class="dialog_corner_radius">Query Preferences</h1>
-  <form>
-    <div class="sub_section" style="margin: 1em; min-height: 300px">
-    
-      <div>
-        <input type="checkbox" ng-model="options.timings">&nbsp;Collect Query Timings</input>
+<div id="query_prefs_dialog" class="dialog-med">
+  <div class="panel-header">
+    <h2>Run-Time Preferences</h2>
+  </div>
+
+  <form class="forms">
+    <div class="panel-content">
+      <div class="formrow">
+        <label class="checkbox inline"><input type="checkbox" ng-model="options.timings">Collect query timings</label>
+        <a
+           href=""
+           class="info-popup"
+           uib-tooltip="Collects per-operator query timings during query execution and displays them in the query plan. This preference is ON by default.">
+          <span class="icon fa-info-circle orange-3"></span>
+        </a>
       </div>
-      
-      <div>Max parallelism:
+      <div class="formrow">
+        <label class="inline">Max Parallelism</label>
         <input type="text" id="pwd" ng-model="options.max_parallelism"></input>
       </div>
-      
-      <div>Scan consistency:
+      <div class="formrow">
+        <label>Scan Consistency</label>
         <select ng-model="options.scan_consistency">
           <option value="not_bounded">not_bounded</option>
           <option value="request_plus">request_plus</option>
           <option value="statement_plus">statement_plus</option>
         </select>
       </div>
-
-      <div>
-        <span>Positional parameters: 
-            <button title="Add parameter" ng-click="options.positional_parameters.push('')">+</button>
-            <button title="Remove parameter" ng-click="options.positional_parameters.splice(-1,1)" ng-class="{dynamic_disabled: options.positional_parameters.length < 1}">&nbsp;-&nbsp;</button>
-        </span>
-          <table>
-            <tr ng-repeat="param in options.positional_parameters track by $index">
-                <td>${{$index}}</td>
-                <td><input type="text" ng-model="options.positional_parameters[$index]"></input></td>
-            </tr>
-          </table>
+      <div class="formrow">
+        <div class="row">
+          <label>Positional Parameters</label>
+          <span>
+            <button class="outline btn-small" title="Add a parameter" ng-click="options.positional_parameters.push('')">+</button>
+            <button class="outline btn-small" title="Remove parameter" ng-click="options.positional_parameters.splice(-1,1)" ng-disabled="options.positional_parameters.length < 1">-</button>
+          </span>
+        </div>
+        <div style="margin:.5rem 0;" ng-repeat="param in options.positional_parameters track by $index">
+          <span class="input-prepend">
+            ${{$index}} = &nbsp;
+            <input type="text" ng-model="options.positional_parameters[$index]">
+          </span>
+        </div>
       </div>
-
-      <div>
-        <span>Named parameters: 
-            <button title="Add parameter" ng-click="options.named_parameters.push({name:'',value:''})" >+</button>
-            <button title="Remove parameter" ng-click="options.named_parameters.splice(-1,1)" ng-class="{dynamic_disabled: options.positional_parameters.length < 1}">&nbsp;-&nbsp;</button>
-        </span>
-          <table>
-            <thead ng-if="options.named_parameters.length > 0"><th>Name</th><th>Value</th></thead>
-            <tr ng-repeat="param in options.named_parameters track by $index">
-                <td>$<input type="text" ng-model="options.named_parameters[$index].name"></input></td>
-                <td><input type="text" ng-model="options.named_parameters[$index].value"></input></td>
-            </tr>
-          </table>
+      <div class="formrow">
+        <div class="row">
+          <label>Named Parameters</label>
+          <span>
+            <button class="outline btn-small" title="Add parameter" ng-click="options.named_parameters.push({name:'',value:''})" >+</button>
+            <button class="outline btn-small" title="Remove parameter" ng-click="options.named_parameters.splice(-1,1)" ng-disabled="options.named_parameters.length < 1">-</button>
+          </span>
+        </div>
+        <div class="row" ng-repeat="param in options.named_parameters track by $index">
+          <div class="column width-6" style="margin-bottom:.5rem">
+            <label>name</label>
+            <span class="input-prepend">
+              $ +&nbsp;<input type="text" ng-model="options.named_parameters[$index].name">
+            </span>
+          </div>
+          <div class="column width-6" style="margin-bottom:.5rem">
+            <label>value</label>
+            <input type="text" ng-model="options.named_parameters[$index].value">
+          </div>
+        </div>
       </div>
-      
     </div>
-    <div class="save_cancel">
-      <button type="submit" class="save_button float_right"
-        ng-click="$close('ok')">OK</button>
-      <a type="submit" class="close" ng-click="$dismiss('cancel')">Cancel</a>
+
+    <div class="panel-footer">
+      <a ng-click="$dismiss('cancel')">Cancel</a>
+      <button type="submit" ng-click="$close('ok')">Save Preferences</button>
     </div>
   </form>
 </div>
