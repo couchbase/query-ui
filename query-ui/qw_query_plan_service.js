@@ -371,6 +371,13 @@
         break;
       }
 
+      // if there's a limit on the operator, add it here
+      if (op.limit)
+        if (op.limit.length > 30)
+          result.push(op.limit.slice(0,30) + "...");
+        else
+          result.push(op.limit);
+
       // if we get operator timings, put them at the end of the details
       if (op['#time_normal']) {
 
@@ -578,7 +585,8 @@
       // Similar to UNIONs, IntersectScan, UnionScan group a number of different scans
       // have an array of 'scan' that are merged together
 
-      else if ((operatorName == "UnionScan") || (operatorName == "IntersectScan")) {
+      else if ((operatorName == "UnionScan") || (operatorName == "IntersectScan")
+          || (operatorName == "OrderedIntersectScan")) {
         for (var i = 0; i < plan['scans'].length; i++)
           analyzePlan(plan['scans'][i],lists);
 
@@ -606,6 +614,7 @@
       //  - condition is a string containing an expression, fields there are of the form (`keyspace`.`field`)
       //  - expr is the same as condition
       //  - on_keys is an expression
+      //  - limit is an expression
       //  - group_keys is an array of fields
 
       if (plan.keyspace)
@@ -622,6 +631,9 @@
         getFieldsFromExpression(plan.expr,lists);
       if (plan.on_keys)
         getFieldsFromExpression(plan.on_keys,lists);
+      if (plan.limit)
+        getFieldsFromExpression(plan.limit,lists);
+
       if (plan.as && plan.keyspace)
         lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
       if (plan.result_terms && _.isArray(plan.result_terms))

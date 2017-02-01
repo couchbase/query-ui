@@ -1349,6 +1349,9 @@
     // manage metadata, including buckets, fields, and field descriptions
     //
 
+    // update buckets whenever we hear about a bucket change
+    $rootScope.$on("bucketUriChanged",function() {updateBuckets();});
+
     function updateBuckets() {
       if (qwQueryService.gettingBuckets.busy)
         return;
