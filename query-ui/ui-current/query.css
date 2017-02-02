@@ -15,7 +15,7 @@
 }
 
 #query_editor * {
-  line-height: 1.5rem !important;
+  line-height: 1.4rem !important;
   font-size: 14px !important;
 }
 
@@ -96,7 +96,7 @@ margin-top: .5rem;
 }
 /* the wrapper around the JSON view to capture all its children brutally */
 #result_editor * {
-  line-height: 1.5rem !important;
+  line-height: 1.4rem !important;
 }
 
 #metadata {

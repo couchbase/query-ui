@@ -574,7 +574,7 @@
         var curSession = qc.inputEditor.getSession();
         var lines = curSession.getLength();
         var halfScreen = queryAreaHeight/2-queryHeaderHeight*3;
-        var height = Math.max(75,(lines-1)*17); // make sure height no less than 75
+        var height = Math.max(75,((lines-1)*21)-10); // make sure height no less than 75
         if (halfScreen > 75 && height > halfScreen)
           height = halfScreen;
 

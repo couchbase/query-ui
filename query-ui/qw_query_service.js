@@ -1351,6 +1351,7 @@
 
     // update buckets whenever we hear about a bucket change
     $rootScope.$on("bucketUriChanged",function() {updateBuckets();});
+    $rootScope.$on("indexStatusURIChanged",function() {updateBuckets();});
 
     function updateBuckets() {
       if (qwQueryService.gettingBuckets.busy)
