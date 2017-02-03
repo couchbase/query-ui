@@ -48,11 +48,13 @@
 }
 
 #result_summary {
-  margin-left: 1.5rem;
+  margin: 0 1.5rem;
+  text-align: left;
+  flex-grow: 1;
 }
 
 #result_summary span {
-  margin: 0 .5rem;
+  white-space: nowrap;
   color: #555;
 }
 
@@ -262,6 +264,11 @@ thead.sortable th .icon {color:#555;}
 
 .fa-spinner:before {
   content: "\f110";
+}
+
+.fa-gear:before,
+.fa-cog:before {
+  content: "\f013";
 }
 
 .loading {

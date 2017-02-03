@@ -9,10 +9,8 @@
     <div id="query_box">
 <!-- Editor "header row" -->
       <div id="query_header" class="row">
-            <h4>Query Editor
-            <a class="outline" ng-if="qc.showOptions" ng-click="qc.options()">
-            <img src="../_p/ui/query/images/gear_small.png"/>
-          </a></h4>
+
+      <h4>Query Editor</h4>
         <div class="query-history-controls">
           <button
              title="View previous queries/results" ng-click="qc.prev()"
@@ -58,7 +56,7 @@
     </div>
 
 <!-- wrapper under query editor for button and stats -->
-    <div id="query_footer" class="row flex-left">
+    <div id="query_footer" class="row">
       <button ng-click="qc.query()" class="qw-button-exec">
         <div ng-if="!qc.executingQuery.busy">Execute</div>
         <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
@@ -68,21 +66,26 @@
       <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">
         <span
           ng-class="{success: qc.status_success(), error: qc.status_fail()}">
-          Status: {{qc.lastResult.status}}</span>
-        |
-        <span>Elapsed: {{qc.lastResult.elapsedTime}}</span>
-        |
-        <span>Execution: {{qc.lastResult.executionTime}}</span>
-        |
+          {{qc.lastResult.status}}</span>
+
+        <span>| Elapsed: {{qc.lastResult.elapsedTime}}</span>
+
+        <span>| Execution: {{qc.lastResult.executionTime}}</span>
+
         <span ng-if="qc.lastResult.mutationCount">
-            Mutation Count: {{qc.lastResult.mutationCount}}
+            | Mutations: {{qc.lastResult.mutationCount}}
         </span>
         <span ng-if="!qc.lastResult.mutationCount">
-            Result Count: {{qc.lastResult.resultCount}}
+            | Count: {{qc.lastResult.resultCount}}
         </span>
-        |
-        <span>Result Size: {{qc.lastResult.resultSize}}</span>
+        <span>| Size: {{qc.lastResult.resultSize}}</span>
       </div>
+
+      <a href="" ng-if="qc.showOptions" ng-click="qc.options()" class="row">
+        <span class="icon fa-cog margin-right"></span>
+        <span class="text-smaller">Run-Time Preferences</span>
+      </a>
+
     </div>
 
 <!-- query results -->

@@ -209,21 +209,21 @@
     var dummyResult = new QueryResult('-','-','-','0','0','',{},'');
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
-    savedResultTemplate.status = "cached query";
-    savedResultTemplate.result = '{"data_not_cached": "hit execute to rerun query"}';
-    savedResultTemplate.data = {data_not_cached: "hit execute to rerun query"};
+    savedResultTemplate.status = "Cached query";
+    savedResultTemplate.result = '{"data_not_cached": "Hit execute to rerun query"}';
+    savedResultTemplate.data = {data_not_cached: "Hit execute to rerun query"};
     savedResultTemplate.explainResult = savedResultTemplate.data;
     savedResultTemplate.explainResultText = savedResultTemplate.result;
 
     var newQueryTemplate = dummyResult.clone();
-    newQueryTemplate.status = "not yet run";
-    newQueryTemplate.result = '{"no_data_yet": "hit execute to run query"}';
-    newQueryTemplate.data = {no_data_yet: "hit execute to run query"};
+    newQueryTemplate.status = "Not yet run";
+    newQueryTemplate.result = '{"no_data_yet": "Hit execute to run query"}';
+    newQueryTemplate.data = {no_data_yet: "Hit execute to run query"};
 
     var executingQueryTemplate = dummyResult.clone();
-    executingQueryTemplate.status = "executing";
-    executingQueryTemplate.result = '{"status": "Executing Statement"}';
-    executingQueryTemplate.data = {status: "Executing Statement"};
+    executingQueryTemplate.status = "Executing";
+    executingQueryTemplate.result = '{"status": "Executing statement"}';
+    executingQueryTemplate.data = {status: "Executing statement"};
     executingQueryTemplate.resultSize = 0;
     executingQueryTemplate.resultCount = 0;
 
