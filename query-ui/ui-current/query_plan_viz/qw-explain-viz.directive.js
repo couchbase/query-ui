@@ -116,10 +116,17 @@
       result += makeTreeFromPlanNodes(plan.subsequence,plan.predecessor);
 
     // if we have no predecessor, or we do and it's a single op, output our operator
+
+/* TOOLTIP VERSION OF REALITY:
+else if (!plan.predecessor || !_.isArray(plan.predecessor))
+  result += '<a href="" class="info-popup" uib-tooltip="Tooltip text goes here...."><div class="' + opClass +'">'
+  + getLabelForOperator(plan)
+  + '</div></a>';
+*/
     else if (!plan.predecessor || !_.isArray(plan.predecessor))
       result += '<div class="' + opClass + '" title="'
       + JSON.stringify(plan.operator).replace(/"/g,'\'') + '">'
-      + getLabelForOperator(plan,'<br>')
+      + getLabelForOperator(plan)
       + '</div>';
 
     if (plan.predecessor)
@@ -265,22 +272,20 @@
   // given a node from a JSON plan, come up with an HTML label appropriate
   //
 
-  function getLabelForOperator(node, separator) {
-    if (!separator)
-      separator = '';
+  function getLabelForOperator(node) {
 
     var label = "";
 
     // is it expensive?
     if (node.GetCostLevel() == 2)
-      label = '<span class="cbui-plan-expensive">' + node.GetName() + '</span>' + separator;
+      label = '<span class=" ">' + node.GetName() + '</span>';
     else
-      label = node.GetName() + separator;
+      label = node.GetName();
 
     // now add the details, if any
     var details = node.GetDetails();
     for (var i = 0; i < details.length; i++) {
-      label += ' <span class="qw-field">' + details[i] + '</span>' + separator;
+      label += ' <span class="qw-field">' + details[i] + '</span>';
     }
 
     return(label);
@@ -355,4 +360,3 @@
 
 
 })();
-
