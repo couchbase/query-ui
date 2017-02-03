@@ -47,12 +47,6 @@
   margin: 0 .25rem;
 }
 
-.icon-button .icon {
-  padding: 0;
-  position: relative;
-  left: 4px;
-}
-
 #result_summary {
   margin-left: 1.5rem;
 }
@@ -193,6 +187,22 @@ thead.sortable th {cursor:pointer;}
 thead.sortable th .icon {color:#555;}
 
 
+.icon-button .icon {
+  padding: 0;
+  position: relative;
+  left: 4px;
+}
+
+.qw-button-exec {
+  width: 8rem;
+}
+
+.icon { /* can't animate an inline element >>> THIS MOVES TO BASE.CSS */
+  display: inline-block;
+  line-height: 1;
+  font-size: inherit;
+}
+
 .icon.margin-left {
   margin-left: .25rem;
 }
@@ -222,11 +232,12 @@ thead.sortable th .icon {color:#555;}
 }
 
 .fa-spin {
-  -webkit-animation: fa-spin .5s infinite linear;
+  -webkit-animation: fa-spin 1s infinite linear;
   animation: fa-spin 1s infinite linear;
 }
-.fa-spinner:before {
-  content: "\f110";
+.fa-pulse {
+  -webkit-animation: fa-spin 1s infinite steps(8);
+  animation: fa-spin 1s infinite steps(8);
 }
 @-webkit-keyframes fa-spin {
   0% {
@@ -247,6 +258,10 @@ thead.sortable th .icon {color:#555;}
     -webkit-transform: rotate(359deg);
     transform: rotate(359deg);
   }
+}
+
+.fa-spinner:before {
+  content: "\f110";
 }
 
 .loading {

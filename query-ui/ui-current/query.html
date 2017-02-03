@@ -44,7 +44,7 @@
              onchange="console.log("changed files")">
             Import Query</button>
           </span>
-          <button ng-click="qc.save_query()" class="outline"  
+          <button ng-click="qc.save_query()" class="outline"
                   ng-disabled="qc.emptyQuery()">
           Export Query
           </button>
@@ -59,9 +59,9 @@
 
 <!-- wrapper under query editor for button and stats -->
     <div id="query_footer" class="row flex-left">
-      <button ng-click="qc.query()">
-        <div ng-if="!qc.executingQuery.busy">Execute Query</div>
-        <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel Query <span class="icon fa-spinner fa-spin"></span></div>
+      <button ng-click="qc.query()" class="qw-button-exec">
+        <div ng-if="!qc.executingQuery.busy">Execute</div>
+        <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
       </button>
 
 <!-- query results stats -->
@@ -100,7 +100,7 @@
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}">Plan Text</a>
       </span>
-      <button ng-click="qc.save()" class="outline" 
+      <button ng-click="qc.save()" class="outline"
         ng-disabled="qc.emptyResult()">
         Export as JSON
       </button>
