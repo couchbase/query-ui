@@ -57,7 +57,7 @@
         name: 'Query',
         state: 'app.admin.query.workbench',
         plugIn: 'adminTab',
-        after: 'buckets'//,
+        after: 'indexes'//,
         //ngShow: canQuery("rbac.cluster.admin.internal.all"
       });
     })
