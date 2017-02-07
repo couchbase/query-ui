@@ -96,33 +96,29 @@ margin-top: .5rem;
 }
 
 #metadata {
-  padding-left: 1.5rem;
+  padding-left: 2rem;
 }
 
-#sidebar_header {
-  min-height: 2rem;
-  border-left: 1px solid #d1d1d1;
-  padding-left: .5rem;
-  }
 #sidebar_body {
   border-left: 1px solid #d1d1d1;
-  padding: .5rem 0 0 .5rem;
+  padding: .25rem 0 .5rem 1rem;
+  white-space: nowrap;
   overflow: auto;
 }
+
 #sidebar_body h5 {
-  line-height: 2rem;
+  line-height: 1.5;
   font-weight: 600;
   color: #000;
 }
-#sidebar_body .row {
-line-height: 2rem;
-margin-bottom:.5rem;
-padding-right: .5rem;
-}
 
 #sidebar_body .icon {
-  cursor: pointer;
-  color: #555;
+  color:#333;
+}
+
+#sidebar_body  section .icon {
+  line-height: 0.75em;
+  vertical-align: -15%;
 }
 
 .ajtd-row-matched-search {
@@ -134,25 +130,31 @@ padding-right: .5rem;
   }
 
  #sidebar_body li {
-    list-style-type: none;
-  }
-#sidebar_body  section {
-  border:none;
+  list-style-type: none;
 }
+
+#sidebar_body  section {
+border-width: 0;
+margin-top: 1rem;
+}
+
 #show_anyway {
   color:red;
   font-size:.875rem;
   padding:1.5rem;
 }
+
 #show_anyway a {
   display:block;
   width:100%;
   text-align:right;
 }
+
 #qw_history_table {
   max-height: 460px;
   overflow: auto;
 }
+
 #qw_history_dialog .panel-content .filter-input-group {
   margin: -.5rem auto 1rem auto;
 }
@@ -202,7 +204,6 @@ thead.sortable th .icon {color:#555;}
 .icon { /* can't animate an inline element >>> THIS MOVES TO BASE.CSS */
   display: inline-block;
   line-height: 1;
-  font-size: inherit;
 }
 
 .icon.margin-left {
@@ -211,6 +212,11 @@ thead.sortable th .icon {color:#555;}
 
 .icon.margin-right {
   margin-right: .25rem;
+}
+
+.fa-fw {
+  width: 1rem;
+  text-align: center;
 }
 
 .fa-caret-up:before {
@@ -237,10 +243,12 @@ thead.sortable th .icon {color:#555;}
   -webkit-animation: fa-spin 1s infinite linear;
   animation: fa-spin 1s infinite linear;
 }
+
 .fa-pulse {
   -webkit-animation: fa-spin 1s infinite steps(8);
   animation: fa-spin 1s infinite steps(8);
 }
+
 @-webkit-keyframes fa-spin {
   0% {
     -webkit-transform: rotate(0deg);
@@ -251,6 +259,7 @@ thead.sortable th .icon {color:#555;}
     transform: rotate(359deg);
   }
 }
+
 @keyframes fa-spin {
   0% {
     -webkit-transform: rotate(0deg);
@@ -316,9 +325,9 @@ thead.sortable th .icon {color:#555;}
 }
 
 .flex-top {
-    -webkit-align-items: flex-start;
-    -ms-flex-align: flex-start;
-    align-items: stretch;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: flex-start;
 }
 
 .dialog-lg {

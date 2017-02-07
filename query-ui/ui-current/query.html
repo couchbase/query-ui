@@ -132,41 +132,36 @@
   </div>
 
   <div id="metadata" class="width-3">
-    <div id="sidebar_header" class="row">
-      <h4>&nbsp;Data Analysis</h4>
-        <a title="resize" ng-click="qc.toggleAnalysisSize()"
-           ng-disabled="!qc.hasPrev()">
-          <span ng-if="!qc.analysisExpanded" class="icon fa-expand"></span>
-          <span ng-if="qc.analysisExpanded" class="icon fa-compress"></span>
-        </a>
-    </div>
-
     <div id="sidebar_body">
-      <div class="row gray-6">
-        <h5>&nbsp; Data Bucket Insights</h5>
-        <a href="" title="refresh" ng-hide="qc.gettingBuckets.busy"
-          ng-click="qc.updateBuckets()" class="icon fa-refresh text-small"></a>
-          <span ng-show="qc.gettingBuckets.busy" class="icon fa-refresh fa-spin text-small"></span>
+      <div class="row">
+        <h4>Bucket Insights</h4>
+          <a title="expand or contract sidebar"
+             ng-click="qc.toggleAnalysisSize()">
+            <span ng-if="!qc.analysisExpanded" class="icon fa-expand"></span>
+            <span ng-if="qc.analysisExpanded" class="icon fa-compress"></span>
+          </a>
       </div>
-      <section class="indent-1">
+
+
+      <section>
         <h5 title="Buckets with a primary index support all queries.">Fully Queryable Buckets</h5>
-        <span class="bucket" ng-repeat="bucket in qc.buckets"
+        <span ng-repeat="bucket in qc.buckets"
             ng-show="bucket.has_prim">
             <div bucket-display="bucket"></div>
         </span>
       </section>
 
-      <section class="indent-1">
+      <section>
         <h5 title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">Queryable on Indexed Fields</h5>
-          <span class="bucket" ng-repeat="bucket in qc.buckets"
+          <span ng-repeat="bucket in qc.buckets"
             ng-show="!bucket.has_prim && bucket.has_sec">
             <div bucket-display="bucket"></div>
           </span>
       </section>
 
-      <section class="indent-1">
+      <section>
         <h5 title="Buckets with no index cannot be queried.">Non-Indexed Buckets</h5>
-          <span class="bucket" ng-repeat="bucket in qc.buckets"
+          <span ng-repeat="bucket in qc.buckets"
             ng-show="!bucket.has_prim && !bucket.has_sec">
             <div bucket-display="bucket"></div>
           </span>
