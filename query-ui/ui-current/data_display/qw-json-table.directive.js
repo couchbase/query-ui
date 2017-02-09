@@ -20,7 +20,9 @@
 (function() {
 
 	'use strict';
-	angular.module('qwJsonTable', []).directive('qwJsonTable', function () {
+	angular.module('qwJsonTable', []).
+	  directive('qwJsonTable', function () {
+
 		return {
 			restrict: 'A',
 			scope: { data: '=qwJsonTable' },
@@ -31,13 +33,15 @@
 				//console.log("Got toggleExpoand: " + qwToggleExpand);
 
 				scope.$watch('data', function (json) {
-					if (typeof json === 'string') {
-						try {
-							scope.json_length = json.length;
-							json = JSON.parse(json);
-						} catch (e) {
-						}
-					}
+
+                  if (typeof json === 'string') {
+                        try {
+				      scope.json_length = json.length;
+				      json = JSON.parse(json);
+				    } catch (e) {
+				      console.log("Error parsing json passed to table viewer.");
+				    }
+				  }
 
 					// start with an empty div, if we have data convert it to HTML
 					var content = "<div>{}</div>";
@@ -61,8 +65,18 @@
 				});
 			}
 		};
+
+
+
 	});
 
+	// avoid HTML injection by changing tag markers to HTML
+
+    var lt = /</gi;
+    var gt = />/gi;
+    var mySanitize = function(str) {
+      return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+    };
 
 
 	//recursion in Angular is really inefficient, so we will use a javascript
@@ -153,7 +167,7 @@
 
 			var keys = (innerKeys ? innerKeys : itemsKeysToObject);
 			_.forIn(keys, function(value,key) {
-              result += '<th>' + key +'</th>';
+              result += '<th>' + mySanitize(key) +'</th>';
 			});
 
 			result += '</thead><tbody>';
@@ -174,20 +188,25 @@
 					else _.forIn(keys, function(b,key) {
 						var value = item ? item[key] : null;
 						result += '<td title="' + prefix + "[" + index  +
-                        '].' + key + '" class="ajtd-cell">'; // start the cell
+                        '].' + mySanitize(key) + '" class="ajtd-cell">'; // start the cell
 
 
 						// for objects and arrays, make a recursive call
 						if (_.isArray(value) || _.isPlainObject(value))
-							result += makeHTMLtable(value,prefix + '[' + index + '].'+ key + ".");
+							result += makeHTMLtable(value,prefix +
+							    '[' + index + '].'+ mySanitize(key) + ".");
 
 						// for long strings, output an expandable cell
 						else if (_.isString(value) && value.length > 128)
-							result += '<div class=ajtd-value><div class="ajtd-hideContent">' + value + '</div><a href="javascript:void();" onclick="qwJsonTableToggleExpand(this)">more...</a></div>';
+							result += '<div class=ajtd-value><div class="ajtd-hideContent">' + mySanitize(value) + '</div><a href="javascript:void();" onclick="qwJsonTableToggleExpand(this)">more...</a></div>';
+
+                        // for strings, sanitize content
+                        else if (_.isString(value))
+                            result += '<div class="ajtd-value">' + mySanitize(value) + '</div>';
 
 						// for everything else, just output the values
 						else if (!_.isUndefined(value) || value === 0)
-							result += '<div class=ajtd-value>' + value + ' </div>';
+							result += '<div class="ajtd-value">' + value + ' </div>';
 
 						// except undefined values, in which case output a nbsp
 						else
@@ -254,7 +273,7 @@
 			if (specialCase) {
 				result += '<th></th>';
 				_.forEach(memberKeys, function(item,index) {
-					result += '<th>' + item +'</th>';
+					result += '<th>' + mySanitize(item) +'</th>';
 				});
 
 				// start the table body
@@ -262,17 +281,19 @@
 
 				// for each object member, output the name of the object, then its members
 				_.forIn(object, function(value,key) {
-					result += '<tr><td title="' + prefix + key +
-                    '" class="ajtd-cell"><div>' + key + '</div></td>';
+					result += '<tr><td title="' + prefix + mySanitize(key) +
+                    '" class="ajtd-cell"><div>' + mySanitize(key) + '</div></td>';
 
 					_.forEach(memberKeys, function(innerKey,index) {
-						result += '<td title="' + prefix + key + '.' + innerKey +
+						result += '<td title="' + prefix + mySanitize(key) + '.' + mySanitize(innerKey) +
                         '" class="ajtd-cell"><div>';
 
 						if (_.isArray(value[innerKey]) || _.isPlainObject(value[innerKey]))
-							result +=  makeHTMLtable(value[innerKey],prefix + key + "." + innerKey + ".") ;
-						else if (!_.isUndefined(value[innerKey]))
-							result += value[innerKey];
+							result +=  makeHTMLtable(value[innerKey],prefix + mySanitize(key) + "." + mySanitize(innerKey) + ".") ;
+                        else if (_.isString(value[innerKey]))
+                          result += mySanitize(value[innerKey]);
+                        else if (!_.isUndefined(value[innerKey]))
+                          result += value[innerKey];
 
 						result += '</div></td>';
 					});
@@ -283,7 +304,7 @@
 			// regular case, horizontal table with headers are names of keys
 			else {
 				_.forIn(object, function(value,key) {
-					result += '<th>' + key +'</th>';
+					result += '<th>' + mySanitize(key) +'</th>';
 				});
 				result += '</thead><tbody><tr>';
 
@@ -291,14 +312,17 @@
 				_.forIn(object, function(value,key) {
 					// for arrays and objects, we need a recursive call
 					if (_.isArray(value) || _.isPlainObject(value))
-						result += '<td title="' + prefix + key  +
+						result += '<td title="' + prefix + mySanitize(key)  +
                         '" class="ajtd-cell"><div>' +
-						  makeHTMLtable(value,prefix + key + ".") + '</div></td>';
+						  makeHTMLtable(value,prefix + mySanitize(key) + ".") + '</div></td>';
 
 					// otherwise, for primitives, output key/value pair
+					else if (_.isString(value))
+                      result += '<td title="' + prefix + mySanitize(key)  +
+                      '"><div>' + mySanitize(value) + '</span></div></td>';
 					else
-						result += '<td title="' + prefix + key  +
-                        '"><div>' + value + '</span></div></td>';
+                      result += '<td title="' + prefix + mySanitize(key)  +
+                      '"><div>' + value + '</span></div></td>';
 				});
 			}
 			// finish the table
@@ -308,10 +332,13 @@
 
 		//it's also possible we were passed a primitive value, in which case just put it in a div
 
-		else
-			result += '<div class=ajtd-value>' + object + '</div>'
+		else if (_.isString(object))
+          result += '<div class="ajtd-value">' + mySanitize(object) + '</div>';
 
-			return(result);
+		else
+          result += '<div class="ajtd-value">' + object + '</div>';
+
+	  return(result);
 	};
 
 	//

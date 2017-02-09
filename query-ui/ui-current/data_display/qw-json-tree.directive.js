@@ -45,6 +45,13 @@
     };
   });
 
+  // avoid HTML injection by changing tag markers to HTML
+
+  var lt = /</gi;
+  var gt = />/gi;
+  var mySanitize = function(str) {
+    return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+  };
 
   //recursion in Angular is really inefficient, so we will use a javascript
   //routine to convert the object to an HTML representation. It's not true to
@@ -72,14 +79,16 @@
         if (key === '$$hashKey') return;
         // for arrays and objects, we need a recursive call
         if (_.isArray(value) || _.isPlainObject(value))
-          result += '<li title="' + prefix + key + '"><div><div class=ajtd-key>'
-            + key + '</div><div class=ajtd-object-value>' +
-          makeHTMLtree(value,prefix + key + ".") + '</div></div></li>';
+          result += '<li title="' + prefix + mySanitize(key) +
+            '"><div><div class=ajtd-key>'
+            + mySanitize(key) + '</div><div class=ajtd-object-value>' +
+          makeHTMLtree(value,prefix + mySanitize(key) + ".") + '</div></div></li>';
         // otherwise, for primitives, output key/value pair
         else
-          result += '<li title="' + prefix + key + '"><table><tr><td class=ajtd-key>' +
-          key + '</td><td class=ajtd-value>' +
-          value + '</td></tr></table></li>';
+          result += '<li title="' + prefix + mySanitize(key) +
+            '"><table><tr><td class=ajtd-key>' +
+            mySanitize(key) + '</td><td class=ajtd-value>' +
+            mySanitize(value) + '</td></tr></table></li>';
       });
       result += "</ul>";
     }
@@ -94,12 +103,16 @@
       result += '<ul class="ajtd-type-array">';
       for (var i=0; i<object.length; i++) {
         var value = object[i];
-        result += '<li  title="' + prefix + "[" + i + "]" + '"><div class=ajtd-value>';
+        result += '<li  title="' + prefix + "[" + i + "]" +
+          '"><div class=ajtd-value>';
 
         // for arrays and objects, we need a recursive call
         if (_.isArray(value) || _.isPlainObject(value))
           result += makeHTMLtree(value,prefix + "[" + i + "].");
 
+        // otherwise, for primitives, output key/value pair
+        else if (_.isString(value))
+          result += mySanitize(value);
         // otherwise, for primitives, output key/value pair
         else if (!_.isUndefined(value))
           result += value;
@@ -114,8 +127,10 @@
 
     // it's also possible we were passed a primitive value, in which case just put it in a div
 
+    else if (_.isString(object))
+      result += '<div class=ajtd-value title="' + prefix + '">' + mySanitize(object) + '</div>';
     else
-      result += '<div class=ajtd-value title="' + prefix + '">' + object + '</div>'
+      result += '<div class=ajtd-value title="' + prefix + '">' + object + '</div>';
 
       return(result);
   };
