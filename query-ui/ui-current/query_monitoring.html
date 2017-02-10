@@ -1,149 +1,170 @@
 <div
    ng-controller="qwQueryMonitorController as qmc"
-   ng-show="qmc.validated.valid()"
-   class="interim main-content">
+   ng-show="qmc.validated.valid()">
 
-  <div class="row margin-bottom-half">
-    <div class="text-small">
-      <em>
-        <span ng-if="qmc.isSelected(1)">Active queries at </span>
-        <span ng-if="qmc.isSelected(2)">Slowest completed queries at </span>
-        <span ng-if="qmc.isSelected(3)">Prepared queries at </span>
-        {{qmc.updatedTime()}} &nbsp;
-      </em>
-       <a href="" ng-click="qmc.toggle_update()">
-         <span ng-if="qmc.get_update_flag()" class='icon fa-pause-circle'></span>
-         <span ng-if="!qmc.get_update_flag()" class='icon fa-play-circle'></span>
-         {{qmc.get_toggle_label()}}
-       </a>
+  <div class="row margin-bottom-half"> <!-- top row w/ title/time/pill selectors -->
+    <div class="row">
+      <h4 class="inline">
+        <span ng-if="qmc.isSelected(1)">Slowest Active Queries</span>
+        <span ng-if="qmc.isSelected(2)">Slowest Completed Queries</span>
+        <span ng-if="qmc.isSelected(3)">Slowest Prepared Queries</span>
+        <small>
+          {{qmc.updatedTime()}}
+          <span ng-if="qmc.get_update_flag()" class="loading"></span>
+          <span ng-if="!qmc.get_update_flag()" class="loading-placeholder"></span>
+        </small>
+      </h4>
+      <button class="outline fw-7 icon-small" ng-click="qmc.toggle_update()">
+        <span ng-if="qmc.get_update_flag()" class="icon fa-pause"></span>
+        <span ng-if="!qmc.get_update_flag()" class="icon fa-play"></span>
+        &nbsp;{{qmc.get_toggle_label()}}
+      </button>
     </div>
 
     <div class="pills text-right">
       <a ng-click="qmc.selectTab(1)"
          ng-class="{selected: qmc.isSelected(1)}">Active</a>
       <a ng-click="qmc.selectTab(2)"
-         ng-class="{selected: qmc.isSelected(2)}">Completed (Long-Running)</a>
+         ng-class="{selected: qmc.isSelected(2)}">Completed</a>
       <a ng-click="qmc.selectTab(3)"
          ng-class="{selected: qmc.isSelected(3)}">Prepared</a>
     </div>
   </div>
 
-  <div id="active_table" ng-if="qmc.isSelected(1)">
-  <table>
-    <thead>
-        <th ng-click="qmc.update_active_sort('statement')">Query
-          <span ng-if="qmc.show_up_caret_active('statement')">&and;</span>
-          <span ng-if="qmc.show_down_caret_active('statement')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_active_sort('node')">Node
-          <span ng-if="qmc.show_up_caret_active('node')">&and;</span>
-          <span ng-if="qmc.show_down_caret_active('node')">&or;</span>
-        </th>        
-        <th ng-click="qmc.update_active_sort('elapsedTime')">Duration
-          <span ng-if="qmc.show_up_caret_active('elapsedTime')">&and;</span>
-          <span ng-if="qmc.show_down_caret_active('elapsedTime')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_active_sort('requestId')">Request ID
-          <span ng-if="qmc.show_up_caret_active('requestId')">&and;</span>
-          <span ng-if="qmc.show_down_caret_active('requestId')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_active_sort('state')">State
-          <span ng-if="qmc.show_up_caret_active('state')">&and;</span>
-          <span ng-if="qmc.show_down_caret_active('state')">&or;</span>
-        </th>
-        <th></th>
-    </thead>
-    <tbody>
-    <tr ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
-    <td style="max-width:600px">{{result.statement | limitTo: 1024}}{{result.statement.length > 1024 ? '...' : ''}}</td>
-    <td>{{result.node}}</td>
-    <td>{{result.elapsedTime}}</td>
-    <td>{{result.requestId}}</td>
-    <td>{{result.state}}</td>
-    <td><a ng-click="qmc.cancelQueryById(result.requestId)">
-        <span>Cancel</span>
-    </a></td>
-    </tr>
-    </tbody>
-    </table>
+<!-- ACTIVE QUERIES TABLE  ************************************  -->
+
+  <div id="active_table" class="cbui-table" ng-if="qmc.isSelected(1)"> <!-- table wrapper -->
+    <div class="cbui-table-header-filled padding-left"> <!-- table header row, no <section> wrapper -->
+      <span class="cbui-table-cell flex-grow-3" ng-click="qmc.update_active_sort('statement')">Query
+        <span ng-if="qmc.show_up_caret_active('statement')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_active('statement')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell" ng-click="qmc.update_active_sort('node')">Node
+        <span ng-if="qmc.show_up_caret_active('node')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_active('node')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell" ng-click="qmc.update_active_sort('elapsedTime')">Duration
+        <span ng-if="qmc.show_up_caret_active('elapsedTime')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_active('elapsedTime')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell flex-grow-2" ng-click="qmc.update_active_sort('requestId')">Request ID
+        <span ng-if="qmc.show_up_caret_active('requestId')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_active('requestId')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell" ng-click="qmc.update_active_sort('state')">State
+        <span ng-if="qmc.show_up_caret_active('state')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_active('state')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell flex-grow-15"></span>
+    </div>
+
+    <section ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
+      <div class="cbui-tablerow padding-left">
+        <span class="cbui-table-cell flex-grow-3 wrap">{{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
+        <span class="cbui-table-cell">{{result.node}}</span>
+        <span class="cbui-table-cell">{{result.elapsedTime}}</span>
+        <span class="cbui-table-cell flex-grow-2">{{result.requestId}}</span>
+        <span class="cbui-table-cell">{{result.state}}</span>
+        <span class="cbui-table-cell flex-grow-15 wrap text-right">
+          <a href="" class="nowrap">
+            <span class="icon fa-external-link"></span>
+            edit
+          </a>
+          <a href="" class="margin-left-half nowrap" ng-click="qmc.cancelQueryById(result.requestId)">
+            <span class="icon fa-times-circle"></span>
+            cancel
+          </a>
+        </span>
+      </div>
+    </section>
   </div>
 
-  <div id="completed_table" ng-if="qmc.isSelected(2)">
-    <table>
-      <thead>
-        <th ng-click="qmc.update_completed_sort('statement')">Query
-          <span ng-if="qmc.show_up_caret_completed('statement')">&and;</span>
-          <span ng-if="qmc.show_down_caret_completed('statement')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_completed_sort('node')">Node <span
-          ng-if="qmc.show_up_caret_completed('node')">&and;</span> <span
-          ng-if="qmc.show_down_caret_completed('node')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_completed_sort('elapsedTime')">Duration
-          <span ng-if="qmc.show_up_caret_completed('elapsedTime')">&and;</span>
-          <span ng-if="qmc.show_down_caret_completed('elapsedTime')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_completed_sort('resultCount')">Result
-          Count <span ng-if="qmc.show_up_caret_completed('resultCount')">&and;</span>
-          <span ng-if="qmc.show_down_caret_completed('resultCount')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_completed_sort('state')">State <span
-          ng-if="qmc.show_up_caret_completed('state')">&and;</span> <span
-          ng-if="qmc.show_down_caret_completed('state')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_completed_sort('time')">Run at <span
-          ng-if="qmc.show_up_caret_completed('time')">&and;</span> <span
-          ng-if="qmc.show_down_caret_completed('time')">&or;</span>
-        </th>
-      </thead>
-      <tbody>
-        <tr 
-          ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
-          <td style="max-width: 600px">{{result.statement |
-            limitTo: 1024}}{{result.statement.length > 1024 ? '...' :
-            ''}}</td>
-          <td>{{result.node}}</td>
-          <td>{{result.elapsedTime}}</td>
-          <td>{{result.resultCount}}</td>
-          <td>{{result.state}}</td>
-          <td>{{result.time}}</td>
-        </tr>
-      </tbody>
-    </table>
+<!-- COMPLETED TABLE  ************************************  -->
+
+  <div id="completed_table" class="cbui-table" ng-if="qmc.isSelected(2)">
+    <div class="cbui-table-header-filled padding-left">
+      <span class="cbui-table-cell flex-grow-3 wrap" ng-click="qmc.update_completed_sort('statement')">Query
+          <span ng-if="qmc.show_up_caret_completed('statement')" class="icon fa-caret-up"></span>
+          <span ng-if="qmc.show_down_caret_completed('statement')" class="icon fa-caret-down"></span>
+      </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('node')">Node
+          <span ng-if="qmc.show_up_caret_completed('node')" class="icon fa-caret-up"></span>
+          <span ng-if="qmc.show_down_caret_completed('node')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('elapsedTime')">Duration
+          <span ng-if="qmc.show_up_caret_completed('elapsedTime')" class="icon fa-caret-up"></span>
+          <span ng-if="qmc.show_down_caret_completed('elapsedTime')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('resultCount')">Result Count
+          <span ng-if="qmc.show_up_caret_completed('resultCount')" class="icon fa-caret-up"></span>
+          <span ng-if="qmc.show_down_caret_completed('resultCount')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('state')">State
+          <span ng-if="qmc.show_up_caret_completed('state')" class="icon fa-caret-up"></span>
+          <span ng-if="qmc.show_down_caret_completed('state')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('time')">Run at
+          <span ng-if="qmc.show_up_caret_completed('time')" class="icon fa-caret-up"></span>
+          <span ng-if="qmc.show_down_caret_completed('time')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell"></span>
+    </div>
+
+    <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
+      <div class="cbui-tablerow padding-left">
+        <span class="cbui-table-cell flex-grow-3 wrap">{{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
+        <span class="cbui-table-cell">{{result.node}}</span>
+        <span class="cbui-table-cell">{{result.elapsedTime}}</span>
+        <span class="cbui-table-cell">{{result.resultCount}}</span>
+        <span class="cbui-table-cell">{{result.state}}</span>
+        <span class="cbui-table-cell">{{result.time}}</span>
+        <span class="cbui-table-cell text-right">
+          <a href="" class="nowrap">
+            <span class="icon fa-external-link"></span>
+            edit
+          </a>
+        </span>
+      </div>
+    </section>
+
   </div>
 
-  <div id="prepareds_table" ng-if="qmc.isSelected(3)">
-    <table>
-      <thead>
-        <th ng-click="qmc.update_prepared_sort('statement')">Query
-          <span ng-if="qmc.show_up_caret_prepared('statement')">&and;</span>
-          <span ng-if="qmc.show_down_caret_prepared('statement')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_prepared_sort('avgElapsedTime')">Avg
-          Elapsed <span
-          ng-if="qmc.show_up_caret_prepared('avgElapsedTime')">&and;</span>
-          <span ng-if="qmc.show_down_caret_prepared('avgElapsedTime')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_prepared_sort('uses')">#Uses <span
-          ng-if="qmc.show_up_caret_prepared('uses')">&and;</span> <span
-          ng-if="qmc.show_down_caret_prepared('uses')">&or;</span>
-        </th>
-        <th ng-click="qmc.update_prepared_sort('node')">Node <span
-          ng-if="qmc.show_up_caret_prepared('node')">&and;</span> <span
-          ng-if="qmc.show_down_caret_prepared('node')">&or;</span>
-        </th>
-      </thead>
-      <tbody>
-        <tr
-          ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
-          <td style="max-width: 600px">{{result.statement |
-            limitTo: 1024}}{{result.statement.length > 1024 ? '...' :
-            ''}}</td>
-          <td>{{result.avgElapsedTime}}</td>
-          <td>{{result.uses}}</td>
-          <td>{{result.node}}</td>
-        </tr>
-      </tbody>
-    </table>
+<!-- PREPARED TABLE  ************************************  -->
+
+  <div id="prepareds_table" class="cbui-table" ng-if="qmc.isSelected(3)">
+    <div class="cbui-table-header-filled padding-left">
+      <span  class="cbui-table-cell flex-grow-3 wrap" ng-click="qmc.update_prepared_sort('statement')">Query
+        <span ng-if="qmc.show_up_caret_prepared('statement')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_prepared('statement')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell" ng-click="qmc.update_prepared_sort('avgElapsedTime')">Avg Elapsed
+        <span ng-if="qmc.show_up_caret_prepared('avgElapsedTime')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_prepared('avgElapsedTime')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell" ng-click="qmc.update_prepared_sort('uses')">Times Used
+        <span ng-if="qmc.show_up_caret_prepared('uses')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_prepared('uses')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell" ng-click="qmc.update_prepared_sort('node')">Node
+        <span ng-if="qmc.show_up_caret_prepared('node')" class="icon fa-caret-up"></span>
+        <span ng-if="qmc.show_down_caret_prepared('node')" class="icon fa-caret-down"></span>
+      </span>
+      <span class="cbui-table-cell"></span>
+    </div>
+
+    <section ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
+      <div class="cbui-tablerow padding-left">
+        <span class="cbui-table-cell flex-grow-3 wrap">{{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
+        <span class="cbui-table-cell">{{result.avgElapsedTime}}</span>
+        <span class="cbui-table-cell">{{result.uses}}</span>
+        <span class="cbui-table-cell">{{result.node}}</span>
+        <span class="cbui-table-cell text-right">
+          <a href="" class="nowrap">
+            <span class="icon fa-external-link"></span>
+            edit
+          </a>
+        </span>
+      </div>
+    </section>
   </div>
 </div>

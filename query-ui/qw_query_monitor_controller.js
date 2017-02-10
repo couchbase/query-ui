@@ -172,7 +172,7 @@
       if (qwQueryService.monitoringAutoUpdate)
         return("pause");
       else
-        return("run");
+        return("resume");
     }
 
     //

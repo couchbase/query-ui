@@ -2,66 +2,58 @@
   margin: 0;
   padding: 0;
 }
-
 #query_header {
   min-height: 2rem;
   margin-bottom: .5rem;
 }
-
 #query_editor {
   overflow: auto;
   background-color: #f6f7f9;
   padding: 1.5rem;
 }
-
 #query_editor * {
   line-height: 1.4rem !important;
   font-size: 14px !important;
 }
-
 #query_footer {
   margin-top: .5rem;
 }
 
+/* ACE editor overrides ***************** */
 .ace_gutter {
   background-color: #f6f7f9 !important;
 }
-
 .ace_print-margin {
   display:none !important;
 }
-
 .ace_keyword {
   color: green !important;
 }
-
 .ace_active-line {
   background-color: #eceff2 !important;
 }
-
 .ace_gutter-active-line {
   background-color: #eceff2 !important;
 }
-
 .query-history-controls-inner {
   margin: 0 .25rem;
 }
 
+/* Results summary row ***************** */
 #result_summary {
   margin: 0 1.5rem;
   text-align: left;
   flex-grow: 1;
 }
-
 #result_summary span {
   white-space: nowrap;
   color: #555;
 }
-
 #result_summary span:first-child {
   margin-left: 0;
 }
 
+/* Results data display ***************** */
 #result_header {
 min-height: 2rem;
 margin-top: 1.5rem;
@@ -80,9 +72,12 @@ margin-top: .5rem;
 #sidebar_body {
   overflow: auto;
 }
-#result_tree {padding:.5rem .5rem .5rem 0;}
-#query_plan {padding:.5rem;}
-
+#result_tree {
+  padding: .5rem .5rem .5rem 0;
+}
+#query_plan {
+  padding: .5rem;
+}
 /* the wrapper around the JSON view */
 #result_editor {
   background-color: #f6f7f9;
@@ -95,155 +90,191 @@ margin-top: .5rem;
   line-height: 1.4rem !important;
 }
 
+/* bucket inference sidebar ***************** */
 #metadata {
   padding-left: 2rem;
 }
-
 #sidebar_body {
   border-left: 1px solid #d1d1d1;
   padding: .25rem 0 .5rem 1rem;
   white-space: nowrap;
   overflow: auto;
 }
-
 #sidebar_body h5 {
   line-height: 1.5;
   font-weight: 600;
   color: #000;
 }
-
 #sidebar_body .icon {
-  color:#333;
+  color: #333;
 }
-
-#sidebar_body  section .icon {
+#sidebar_body section .icon {
   line-height: 0.75em;
   vertical-align: -15%;
 }
-
 .ajtd-row-matched-search {
   background-color: #d9c5ff;
 }
-
 #sidebar_body ul {
   margin: 0 0 .5rem 0;
-  }
-
+}
  #sidebar_body li {
   list-style-type: none;
 }
-
-#sidebar_body  section {
+#sidebar_body section {
 border-width: 0;
 margin-top: 1rem;
 }
 
+/* show anyway for too large data sets ***** */
 #show_anyway {
-  color:red;
-  font-size:.875rem;
-  padding:1.5rem;
+  color: red;
+  font-size: .875rem;
+  padding: 1.5rem;
 }
-
 #show_anyway a {
-  display:block;
-  width:100%;
-  text-align:right;
+  display: block;
+  width: 100%;
+  text-align: right;
 }
 
+/* query history dialog ***** */
 #qw_history_table {
   max-height: 460px;
   overflow: auto;
 }
-
 #qw_history_dialog .panel-content .filter-input-group {
   margin: -.5rem auto 1rem auto;
 }
-
 #qw_history_table section {
-  margin:0;
-  padding:0;
+  margin: 0;
+  padding: 0;
   border-top: 1px solid #d1d1d1;
   border-bottom: 0;
 }
-
 #qw_history_table section:hover {
   background-color: #ecf3fa;
 }
-
 #qw_history_table section span {
   padding: .5rem 0;
-  min-height:2rem;
-  cursor:pointer;
-  line-height:1.3;}
-
+  min-height: 2rem;
+  cursor: pointer;
+  line-height: 1.3;
+}
 #qw_history_table section span.selected {
   background-color: #ececec;
 }
 
-/* to be added to cbui-layout.css  when appropriate -------------------- */
-.main-content {
-  width: calc(100% - 160px);
+/* for sorting HTML tables -------------------- */
+thead.sortable th {
+  cursor: pointer;
 }
-/* to be added to base css files when appropriate -------------------- */
+thead.sortable th .icon {
+  color: #555;
+}
 
-thead.sortable th {cursor:pointer;}
+/* fixed width button for query execution + spinner */
+.qw-button-exec {
+  width: 8rem;
+}
 
-thead.sortable th .icon {color:#555;}
+/* query monitoring polling activity indicator - animated ellipsis */
+.loading { /* TO-DO -> change to "running" */
+  display: inline-block;
+  width: 1rem;
+}
+.loading-placeholder {
+  display: inline-block;
+  width: 1rem;
+}
+.loading:after {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  -webkit-animation: ellipsis steps(4,end) 1100ms infinite;
+  animation: ellipsis steps(4,end) 1100ms infinite slidein;
+  content: "\2026"; /* ascii code for the ellipsis character */
+  width: 0px;
+  position: relative;
+  left: -3px;
+}
+@keyframes ellipsis {
+  to {
+    width: 1rem;
+  }
+}
+@-webkit-keyframes ellipsis {
+  to {
+    width: 1rem;
+  }
+}
 
+/* TO DO: THE FOLLOWING STYLES SHOULD MOVE TO CBUI-BASE.CSS!!! ------ */
 
+.icon { /* can't animate an inline element */
+  display: inline-block;
+  line-height: 1;
+}
 .icon-button .icon {
   padding: 0;
   position: relative;
   left: 4px;
 }
-
-.qw-button-exec {
-  width: 8rem;
-}
-
-.icon { /* can't animate an inline element >>> THIS MOVES TO BASE.CSS */
-  display: inline-block;
-  line-height: 1;
-}
-
 .icon.margin-left {
   margin-left: .25rem;
 }
-
 .icon.margin-right {
   margin-right: .25rem;
+}
+
+button.fw-7 {
+  width: 7rem;
+  padding: 0 1rem;
+}
+button.icon-small {
+  font-size: .875rem;
+}
+button.icon-small .icon {
+  font-size: .75rem;
 }
 
 .fa-fw {
   width: 1rem;
   text-align: center;
 }
-
 .fa-caret-up:before {
   content: "\f0d8";
 }
-
 .fa-caret-down:before {
   content: "\f0d7";
 }
-
 .fa-caret-right:before {
   content: "\f0da";
 }
-
+.fa-play:before {
+  content: "\f04b";
+}
 .fa-pause:before {
   content: "\f04c";
 }
-
 .fa-play-circle:before {
   content: "\f144";
 }
-
+.fa-remove:before,
+.fa-close:before,
+.fa-times:before {
+  content: "\f00d";
+}
+.fa-external-link:before {
+  content: "\f08e";
+}
+.fa-times-circle:before {
+  content: "\f057";
+}
 .fa-spin {
   -webkit-animation: fa-spin 1s infinite linear;
   animation: fa-spin 1s infinite linear;
 }
-
 .fa-pulse {
   -webkit-animation: fa-spin 1s infinite steps(8);
   animation: fa-spin 1s infinite steps(8);
@@ -274,67 +305,32 @@ thead.sortable th .icon {color:#555;}
 .fa-spinner:before {
   content: "\f110";
 }
-
 .fa-gear:before,
 .fa-cog:before {
   content: "\f013";
 }
 
-.loading {
-  display:inline-block;
-  width:1rem;
+.hidden {
+  display: none;
 }
-
-.loading-placeholder {
-  display:inline-block;
-  width:1rem;
-}
-
-.loading:after {
-  overflow: hidden;
-  display: inline-block;
-  vertical-align: bottom;
-  -webkit-animation: ellipsis steps(4,end) 900ms infinite;
-  animation: ellipsis steps(4,end) 900ms infinite;
-  content: "\2026"; /* ascii code for the ellipsis character */
-  width: 0px;
-}
-
-@keyframes ellipsis {
-  to {
-    width: 1rem;
-  }
-}
-
-@-webkit-keyframes ellipsis {
-  to {
-    width: 1rem;
-  }
-}
-
-.hidden {display:none;}
-
 .panel-footer.spaced {
-  -webkit-justify-content:space-between;
-      -ms-flex-pack:justify;
-          justify-content:space-between;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
 }
-
 .gray-6 {
-  background-color:#ececec;
+  background-color: #ececec;
 }
-
 .flex-top {
   -webkit-box-align: start;
   -ms-flex-align: start;
   align-items: flex-start;
 }
-
 .dialog-lg {
   width: 640px;
 }
 
-/* redundant with proposed changes to cbui-components.css */
+/* TO DO: THE FOLLOWING STYLES SHOULD MOVE TO CBUI-COMPONENTS.CSS!!! ------ */
 .pills a {
   color: #333;
   font-size: .961rem;
@@ -342,20 +338,235 @@ thead.sortable th .icon {color:#555;}
   display: inline-block;
   padding: .25rem .75rem;
   border-radius: 1rem;
-  cursor:pointer;
+  cursor: pointer;
 }
-
 .pills a:hover {
   background-color: #b3cfef;
 }
-
-a.selected {
+.pills a.selected {
   background-color: #7babe2;
   color: #fff !important;
 }
-
-a.selected:hover {
+.pills a.selected:hover {
   background-color: #7babe2 !important;
   color: #fff;
   cursor: text;
+}
+
+/* CSS/FLEXBOX TABLES -- moves to cbui_components.css  */
+.cbui-table {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-flow: column;
+  flex-flow: column;
+  font-size: .875rem;
+  width: 100%;
+}
+.cbui-tablerow {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  min-height: 1rem;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-wrap: no-wrap;
+  -ms-flex-wrap: no-wrap;
+  flex-wrap: no-wrap;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 1rem 0 0;
+  min-height: 3rem;
+  margin: 0;
+}
+.cbui-tablerow.padding-left {
+  padding-left: .5rem;
+}
+.cbui-table-header {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  min-height: 1rem;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-wrap: no-wrap;
+  -ms-flex-wrap: no-wrap;
+  flex-wrap: no-wrap;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  position: relative;
+  border-bottom: solid 1px #d1d1d1;
+  font-size: .813rem;
+  min-height: 3rem;
+  cursor: pointer;
+}
+.cbui-table-header-filled {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  min-height: 1rem;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-wrap: no-wrap;
+  -ms-flex-wrap: no-wrap;
+  flex-wrap: no-wrap;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  position: relative;
+  border-width: 0;
+  font-size: .813rem;
+  min-height: 2rem;
+  cursor: pointer;
+  background-color: #eceff2;
+}
+.cbui-table-header-filled.padding-left {
+  padding-left: .5rem;
+}
+.cbui-table section:hover {/* this overrides the default hover style on <sections> TO-DO -> REMOVE THAT DEFAULT!!! */
+  background-color: #fff;
+  cursor: default;
+}
+.cbui-tablerow:hover {/* this overrides the default hover style on .cbui-tablerow TO-DO -> REMOVE THAT DEFAULT!!! */
+  background-color: #fff;
+  cursor: default;
+}
+.cbui-tablerow-title {
+  font-weight: 600;
+  font-size: .961rem;
+}
+.cbui-tablerow-expanded {
+  padding: 1rem;
+}
+.cbui-tablerow-expanded.status.success {
+  border: .5rem solid #56b349;
+  border-width: 0 0 0 .5rem;
+  color: #333;
+}
+.cbui-tablerow-expanded.status.warning {
+  border: .5rem solid #f9ca7b;
+  border-width: 0 0 0 .5rem;
+  color: #333;
+}
+.cbui-tablerow-expanded.status.error {
+  border: .5rem solid #e07f82;
+  border-width: 0 0 0 .5rem;
+  color: #333;
+}
+.cbui-tablerow-expanded:empty {
+  padding: 0;
+}
+.cbui-table-bucketprops {
+  line-height: 2.2;
+  font-size: .75rem
+}
+.cbui-table-serverprops {
+  line-height: 2.2;
+  font-size: .75rem
+}
+.cbui-table-serverprops .wrap {
+  white-space: normal;
+  -webkit-column-break-after: always;
+  page-break-after: always;
+  break-after: always;
+  word-break: break-all;
+  line-height: 1;
+}
+.cbui-table-meters {
+  margin: 0 0 0 4rem;
+}
+
+/* table cell-related stuff --------- */
+.cbui-table-cell {
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 0;
+  flex: 1 1 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 1rem;
+}
+.cbui-table-cell .label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cbui-table-cell.status {
+  -webkit-box-flex: 0;
+  -ms-flex: 0 1 .5rem;
+  flex: 0 1 .5rem;
+  min-height: 3rem;
+  margin-right: 1rem;
+  padding-right: 0;
+}
+.cbui-table-cell.status.success {
+  background-color: #56b349;
+}
+.cbui-table-cell.status.warning {
+  background-color: #f9ca7b;
+}
+.cbui-table-cell.status.error {
+  background-color: #e07f82;
+}
+/* flex-grow factors control column width -------- */
+.cbui-table-cell.flex-grow-half {
+  -webkit-box-flex: .5;
+  -ms-flex-positive: .5;
+  flex-grow: .5;
+}
+.cbui-table-cell.flex-grow-1 {
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+}
+.cbui-table-cell.flex-grow-15 {
+  -webkit-box-flex: 1.5;
+  -ms-flex-positive: 1.5;
+  flex-grow: 1.5;
+}
+.cbui-table-cell.flex-grow-2 {
+  -webkit-box-flex: 2;
+  -ms-flex-positive: 2;
+  flex-grow: 2;
+}
+.cbui-table-cell.flex-grow-2-5 {
+  -webkit-box-flex: 2.5;
+  -ms-flex-positive: 2.5;
+  flex-grow: 2.5;
+}
+.cbui-table-cell.flex-grow-3 {
+  -webkit-box-flex: 3;
+  -ms-flex-positive: 3;
+  flex-grow: 3;
+}
+.cbui-table-cell.wrap {
+  white-space: normal;
+  overflow: visible;
+}
+.cbui-tablerow .cbui-table-cell:last-child {
+  padding-right: 0;
+}
+
+.cbui-table .icon {
+  font-size: .75rem;
+}
+.cbui-table-header .icon,
+.cbui-table-header-filled .icon {
+  color: #555;
+  font-size: .75rem;
+  margin-left: .5rem;
+}
+
+/* MOVE TO CBUI-LAYOUT.CSS */
+.margin-left-half {
+  margin-left: .5rem;
+}
+.main-content {
+  width: calc(100% - 160px);
 }
