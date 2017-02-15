@@ -567,6 +567,15 @@ button.icon-small .icon {
 .margin-left-half {
   margin-left: .5rem;
 }
+
+input.ng-invalid {
+  background-color: pink;
+}
+
+.break-word {
+    word-break: break-all;
+}
+
 .main-content {
   width: calc(100% - 160px);
 }

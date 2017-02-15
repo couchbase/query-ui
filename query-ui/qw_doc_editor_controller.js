@@ -36,6 +36,8 @@
     dec.clickedOn = function(row) {console.log("clicked on: " + row);};
     dec.updateDoc = updateDoc;
 
+    dec.updatingRow = -1;
+
     //
     // call the activate method for initialization
     //
@@ -46,12 +48,32 @@
     // function to update a document given what the user typed
     //
 
-    function updateDoc(row) {
+    function updateDoc(row, makePristine) {
+      if (dec.updatingRow >= 0)
+        return;
+
+      dec.updatingRow = row;
+
       console.log("updating row: " + row);
-      var query = "UPSERT INTO " + dec.options.current_bucket + ' (KEY, VALUE) VALUES ("' +
+      var query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
         dec.options.current_result[row].id + '", ' +
         JSON.stringify(dec.options.current_result[row].data) + ')';
-      console.log("Query: " + query);
+      //console.log("Query: " + query + ", pristine: " + makePristine);
+
+      qwQueryService.executeQueryUtil(query,false)
+      // did the query succeed?
+      .success(function(data, status, headers, config) {
+        console.log("successfully updated row: " + row);
+        makePristine();
+        dec.updatingRow = -1;
+      })
+
+      // ...or fail?
+      .error(function (data,status,headers,config) {
+        console.log("failed updating row: " + row);
+        dec.updatingRow = -1;
+      });
+
     }
 
     //
