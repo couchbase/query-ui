@@ -119,8 +119,8 @@
         '  style="height: 0.75em" src="../_p/ui/query/images/ArrowRight.png" />' +
 //        '<span class="icon fa-caret-down" ng-show="bucket.expanded"></span>' +
 //        '<span class="icon fa-caret-right"  ng-hide="bucket.expanded">&nbsp; </span>' +
-        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
-        '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
+        //'<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
+        //'<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
         '  &nbsp; {{bucket.id}}</div>' +
         '  <ul class="bucket" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +

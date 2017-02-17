@@ -6,6 +6,7 @@
                               'qwJsonTable',
                               'qwExplainViz',
                               'qwLongPress',
+                              'mnBucketsService',
                               'mnPendingQueryKeeper',
                               'mnServersService',
                               'mnPoolDefault',
@@ -14,16 +15,16 @@
 
     .config(function($stateProvider,$urlRouterProvider) {
       $urlRouterProvider.otherwise('/workbench');
-      
+
       $stateProvider
       .state('workbench', {
         url: '/workbench',
-        templateUrl: 'query.html'
+        templateUrl: 'ui-classic/query.html'
       })
       ;
 
     })
-                              
+
     // we can only work if we have a query node. This service checks for
     // a query node a reports back whether it is present.
 
@@ -31,10 +32,11 @@
       var service = {
           inProgress: function() {return false;},
           valid: function()      {return true;},
+          updateValidBuckets() {}
       }
       return service;
     });
-                              
+
 
   angular.module('app', ['ui.router','qwQuery']);
 

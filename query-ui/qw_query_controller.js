@@ -14,7 +14,7 @@
     // current UI version number
     //
 
-    qc.version = "1.0.6 (DP 6)";
+    qc.version = "1.0.7 (DP 7)";
 
     //
     // alot of state is provided by the qwQueryService
@@ -359,7 +359,7 @@
       // only support auto-complete if we're in enterprise mode
       //
 
-      if (mnPools.export.isEnterprise) {
+      if (mnPools.export.isEnterprise || qwConstantsService.standAloneMode) {
         _editor.setOptions({enableBasicAutocompletion: true});
         langTools.addCompleter(identifierCompleter);
       }

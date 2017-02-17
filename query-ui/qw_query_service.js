@@ -62,9 +62,12 @@
 
     qwQueryService.executeQueryUtil = executeQueryUtil;
 
+    qwQueryService.saveStateToStorage = saveStateToStorage;
+
     // update store the metadata about buckets
 
     qwQueryService.buckets = [];
+    qwQueryService.bucket_names = [];
     qwQueryService.indexes = [];
     qwQueryService.gettingBuckets = {busy: false};
     //qwQueryService.gettingSchemas = {busy: false};
@@ -293,6 +296,9 @@
           qwQueryService.outputTab = savedState.outputTab;
           if (savedState.options)
             qwQueryService.options = savedState.options;
+          if (savedState.doc_editor_options) {
+            qwQueryService.doc_editor_options = savedState.doc_editor_options;
+          }
         }
         else
           console.log("No last result");
@@ -316,6 +322,18 @@
       savedState.lastResult = savedResultTemplate.clone();
       savedState.lastResult.query = lastResult.query;
       savedState.options = qwQueryService.options;
+
+      savedState.doc_editor_options = {
+          selected_bucket: qwQueryService.doc_editor_options.selected_bucket,
+          query_busy: false,
+          limit: qwQueryService.doc_editor_options.limit,
+          offset: qwQueryService.doc_editor_options.offset,
+          where_clause: qwQueryService.doc_editor_options.where_clause,
+          current_query: '',
+          current_bucket: qwQueryService.doc_editor_options.current_bucket,
+          current_result: [] // don't want to save the results - they could be big
+      };
+
       _.forEach(pastQueries,function(queryRes,index) {
         var qcopy = savedResultTemplate.clone();
         qcopy.query = queryRes.query;
@@ -1395,8 +1413,10 @@
           bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
           //passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
-          if (bucket.validated)
+          if (bucket.validated) {
             qwQueryService.buckets.push(bucket); // only include buckets we have access to
+            qwQueryService.bucket_names.push(bucket.id);
+          }
           addToken(bucket.id,"bucket");
         }
         refreshAutoCompleteArray();
@@ -1623,8 +1643,10 @@
       }, function errorCallback(response) {
         var error = "Error getting schema for bucket: " + bucket.id;
         if (response)
-          if (response.data && response.data.errors)
+          if (response.data && response.data.errors) {
             error += ", " + JSON.stringify(response.data.errors,null,'  ');
+            bucket.schema_error = response.data.errors;
+          }
           else if (response.status)
             error += ", " + response.status;
           else
