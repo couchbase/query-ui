@@ -152,14 +152,19 @@
       // we expect predecessor to be null if we see a UNION
       else if (operatorName === "UnionAll" && plan['~children']) {
         if (predecessor != null)
-          console.log("ERROR: Union with unexpected predecessor: " + JSON.stringify(predecessor));
+          console.log("ERROR: Union with unexpected predecessor. ");
 
         var unionChildren = [];
 
         for (var i = 0; i < plan['~children'].length; i++)
           unionChildren.push(convertPlanJSONToPlanNodes(plan['~children'][i],null,lists));
 
-        return(new PlanNode(unionChildren,plan,null,lists.total_time));
+        var unionNode = new PlanNode(unionChildren,plan,null,lists.total_time);
+
+        //if (predecessor)
+        //  return(new PlanNode(predecessor,plan,[unionNode],lists.total_time));
+        //else
+          return(unionNode);
       }
 
       // Similar to UNIONs, IntersectScan, UnionScan group a number of different scans

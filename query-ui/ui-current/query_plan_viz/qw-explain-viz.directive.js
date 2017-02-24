@@ -111,6 +111,13 @@
     if (!plan.predecessor && !plan.subsequence && !hasSuccessor)
      opClass += " qw-last-node";
 
+    // how expensive are we?
+    if (plan && plan.time_percent)
+      if (plan.time_percent >= 20) opClass += " expensive-3";
+      else if (plan.time_percent >= 5)  opClass += " expensive-2";
+      else if (plan.time_percent >= 1)  opClass += " expensive-1";
+
+
     // we ignore operators of nodes with subsequences
     if (plan.subsequence)
       result += makeTreeFromPlanNodes(plan.subsequence,plan.predecessor);
@@ -123,11 +130,13 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
   + getLabelForOperator(plan)
   + '</div></a>';
 */
-    else if (!plan.predecessor || !_.isArray(plan.predecessor))
-      result += '<div class="' + opClass + '" title="'
-      + JSON.stringify(plan.operator).replace(/"/g,'\'') + '">'
-      + getLabelForOperator(plan)
-      + '</div>';
+    else if (!plan.predecessor || !_.isArray(plan.predecessor)) {
+      result += '<div class="';
+      if (plan.operator)
+        result += opClass + '" title="' + JSON.stringify(plan.operator).replace(/"/g,'\'') + '">'
+        + getLabelForOperator(plan)
+        + '</div>';
+    }
 
     if (plan.predecessor)
      if (_.isArray(plan.predecessor)) {
@@ -149,109 +158,6 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
 
     return(result);
   }
-
-  //
-  // We need to take the query plan, which is a somewhat arbitrary tree-like
-  // structure and turn it into more of a data-flow tree, suitable for showing
-  // in the UI as an HTML table
-  //
-
-  var makeHTMLtable = function(plan) {
-    var result = '';
-
-    result += '<table class="ajtd-root ajtd-object-value ajtd-value single-type-array"><tbody>';
-
-    if (_.isString(plan))
-      result += '<tr><td>' + plan + '</td></tr>';
-
-    else if (plan) {
-      var transformedPlan = plan;
-
-      var depth = transformedPlan.Depth();
-      var width = transformedPlan.BranchCount();
-      //console.log("Got plan depth: " + transformedPlan.Depth() + ", width: " + transformedPlan.BranchCount());
-      //printPlan(transformedPlan,2);
-
-      // build a 2D array holding the elements of the processed plan to then build the table
-      var array = [];
-      for (var col = 0; col < width; col++) {
-        var c = [];
-        for (var row = 0; row < depth; row++)
-          c.push("");
-        array.push(c);
-      }
-
-      //
-      //putPlanInArray(array,transformedPlan,width-1,depth-1);
-      putPlanInArray(array,transformedPlan,0,0);
-
-      for (var row = 0; row < depth; row++) {
-        result += '<tr>';
-        for (var col = 0; col < width; col++) {
-          var cell = array[col][row];
-
-          // start with a blank cell to break up the cell border lines
-          result += '<td class="';
-
-          if (cell.union && !cell.unionText)
-            result += 'qw-union ';
-          if (cell.parallel)
-            result += 'qw-parallel ';
-          if (cell.parallelBegin)
-            result += 'qw-parallel-begin ';
-          if (cell.parallelEnd)
-            result += 'qw-parallel-end ';
-
-          result += '"> </td>';
-
-          // style the cell based on whether it's part of a parallel block, or a union
-          result += '<td class="cbui-explain-table ';
-
-          if (cell.union)
-            result += 'qw-union ';
-          if (cell.unionText)
-            result += 'qw-union-text ';
-          if (cell.unionChild)
-            result += 'qw-union-child ';
-
-          result += '"';
-
-          // done with style, add a tool tip with more details
-          if (array[col][row].operator) {
-            var op = array[col][row].operator;
-            // for UnionAll, remove the "children" so the tool tip doesn't have everything
-            if (op['#operator'] === 'UnionAll') {
-              op = _.clone(op);
-              delete op.children;
-            }
-
-            result += ' title="' + JSON.stringify(op).replace(/"/g,'\'') + '"';
-          }
-
-          // and, of course, the actual content of the cell, a label
-          result += '>' + getLabelForCell(array[col][row]) + '</td>';
-
-          // one more blank cell to keep union lines from running in to parallel lines
-
-          result += '<td class="';
-
-          if (cell.union && !cell.unionChild)
-            result += 'qw-union ';
-
-          result += '">&nbsp</td>';
-
-        }
-        result += '</tr>';
-        //if (row == 0)
-        //  console.log("Got table html first row: " + result);
-      }
-    }
-
-    result += '</tbody></table>';
-
-    //console.log("Got table html: " + result);
-    return(result);
-  };
 
   //
   //
@@ -290,73 +196,5 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
 
     return(label);
   }
-
-  //
-  // Once we have the tree structure of operators, we want to convert that tree into
-  // an array that can be used to fill in an HTML table
-  //
-
-  function putPlanInArray(array,plan,curX,curY) {
-    var ourDepth = 1;
-
-    // do we have a multi-step subsequence?
-    if (plan.subsequence) {
-      ourDepth = plan.subsequence.Depth();
-      putPlanInArray(array,plan.subsequence,curX,curY);
-    }
-
-    // just one op
-    else {
-    //console.log(" Putting item: " + plan.operator['#operator'] + " into position: " + curX + "," + curY);
-    //console.log(" array[] length: " + array.length);
-    //console.log(" array[curX] length: " + array[curX].length);
-      array[curX][curY] = plan; // put the name in
-    }
-
-    // if no predecessor, nothing more to do
-    if (!plan.predecessor)
-      return;
-
-    // if we have a single predecessor, make a recursive call
-    else if (!_.isArray(plan.predecessor))
-      putPlanInArray(array,plan.predecessor,curX,curY+ourDepth);
-
-    // if we have an array of predecessors, make a recursive call for each, placing each in a
-    // different column
-    else {
-      array[curX][curY].union = true;
-      array[curX][curY].unionText = true;
-      var childX = curX;
-      //console.log("Starting union at: " + curX + "," + curY + ", pred len: " + plan.predecessor.length);
-      //var prevChildX = curX;
-
-      // iterate over the children we are unioning
-      for (var i = 0; i < plan.predecessor.length; i++) {
-        //console.log("  Got childX: " + childX + ", and branch count: " + plan.predecessor[i].BranchCount());
-        // add the child to the array
-        putPlanInArray(array,plan.predecessor[i],childX,curY+ourDepth);
-
-        // if there are any gaps between this child and the next, fill in with union line
-        if (i < plan.predecessor.length - 1)
-          for (var c = childX + 1; c < childX + plan.predecessor[i].BranchCount(); c++) {
-            //console.log('   setting union for: ' + c + "," + curY);
-            array[c][curY] = {union: true, operator: ""};
-          }
-
-        // for subsequent children, add marks to indicate union parentage
-        if (i > 0) {
-          // here is the box right above the child
-          array[childX][curY] = {union: true, unionChild: true, operator: ""};
-          // fill in any gaps between current child and previous child
-//          for (var c = prevChildX - 1; c > childX; c--)
-          //prevChildX = childX;
-        }
-
-        // the next child may be displaced by many rows if we have many branches
-        childX = childX + plan.predecessor[i].BranchCount();
-      }
-    }
-  }
-
 
 })();
