@@ -5,10 +5,21 @@
 
   <form class="forms">
     <div class="panel-content">
+
       <div class="filter-input-group width-10">
         <input type="text" name="searchTerm" maxlength="256" class="filter-input width-12"
-          ng-model="searchInfo.searchText"
-          ng-change="updateSearchResults()">
+           placeholder="filter queries"
+           ng-model="searchInfo.searchText"
+           ng-change="updateSearchResults()">
+        <span
+           class="icon fa-search-minus"
+           ng-hide="searchInfo.searchText.length > 0">
+        </span>
+        <span
+           class="icon fa-times-circle"
+           ng-show="searchInfo.searchText.length > 0"
+           ng-click="searchInfo.searchText = '' ; updateSearchResults()">
+        </span>
       </div>
 
       <div id="qw_history_table">
