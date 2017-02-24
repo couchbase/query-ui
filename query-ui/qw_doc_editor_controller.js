@@ -25,13 +25,15 @@
 
     dec.options = qwQueryService.doc_editor_options;
     dec.currentDocs = [];
-    dec.buckets = qwQueryService.buckets;
+    dec.buckets = qwQueryService.bucket_names;
 
     //
     //
     //
 
     dec.retrieveDocs = retrieveDocs;
+    dec.nextBatch = nextBatch;
+    dec.prevBatch = prevBatch;
 
     dec.clickedOn = function(row) {console.log("clicked on: " + row);};
     dec.updateDoc = updateDoc;
@@ -43,6 +45,22 @@
     //
 
     activate();
+
+    //
+    // get the next or previous set of documents using paging
+    //
+
+    function prevBatch() {
+      dec.options.offset -= dec.options.limit;
+      if (dec.options.offset < 0)
+        dec.options.offset = 0;
+      retrieveDocs();
+    }
+
+    function nextBatch() {
+      dec.options.offset += dec.options.limit;
+      retrieveDocs();
+    }
 
     //
     // function to update a document given what the user typed
@@ -77,10 +95,94 @@
     }
 
     //
+    // function to save a document with a different key
+    //
+
+    function saveDocAs(row) {
+      if (dec.updatingRow >= 0)
+        return;
+
+      dec.updatingRow = row;
+
+      // bring up a dialog to get the new key
+
+      var dialogScope = $rootScope.$new(true);
+
+      // default names for save and save_query
+      dialogScope.data = {value: dec.options.current_result[row].id + '_copy'};
+      dialogScope.header_message = "Save As...";
+      dialogScope.body_message = "Enter a key for the new document: ";
+
+      $uibModal.open({
+        templateUrl: '../_p/ui/query/ui/current/file_dialog/qw_input_dialog.html',
+        scope: dialogScope
+      }).then(function (res) {
+
+        //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
+        console.log("saving row: " + row);
+        var query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
+          dialogScope.data.value + '", ' +
+          JSON.stringify(dec.options.current_result[row].data) + ')';
+        //console.log("Query: " + query + ", pristine: " + makePristine);
+
+        qwQueryService.executeQueryUtil(query,false)
+        // did the query succeed?
+        .success(function(data, status, headers, config) {
+          console.log("successfully updated row: " + row);
+          makePristine();
+          dec.updatingRow = -1;
+        })
+
+        // ...or fail?
+        .error(function (data,status,headers,config) {
+          console.log("failed updating row: " + row);
+          dec.updatingRow = -1;
+        });
+
+
+      });
+
+
+    }
+
+    //
+    // function to delete a document
+    //
+
+    function deleteDoc(row) {
+      if (dec.updatingRow >= 0)
+        return;
+
+      dec.updatingRow = row;
+
+      console.log("deleting row: " + row);
+      var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
+        dec.options.current_result[row].id;
+
+      qwQueryService.executeQueryUtil(query,false)
+      // did the query succeed?
+      .success(function(data, status, headers, config) {
+        console.log("successfully deleted row: " + row);
+        makePristine();
+        dec.updatingRow = -1;
+      })
+
+      // ...or fail?
+      .error(function (data,status,headers,config) {
+        console.log("failed deleting row: " + row);
+        dec.updatingRow = -1;
+      });
+
+    }
+
+    //
     // build a query from the current options, and get the results
     //
 
     function retrieveDocs() {
+      //console.log("Retrieving docs...");
+      qwQueryService.saveStateToStorage();
+
       // create a query based on either limit/skip or where clause
 
       // can't do anything without a bucket
@@ -88,7 +190,7 @@
         return;
 
       // start making a query
-      var query = 'select meta().id, * from `' + dec.options.selected_bucket.id +
+      var query = 'select meta().id, * from `' + dec.options.selected_bucket +
         '` data ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
@@ -99,14 +201,14 @@
       }
 
       dec.options.current_query = query;
-      dec.options.current_bucket = dec.options.selected_bucket.id;
+      dec.options.current_bucket = dec.options.selected_bucket;
       dec.options.current_result = [];
 
       qwQueryService.executeQueryUtil(query,false)
 
       // did the query succeed?
       .success(function(data, status, headers, config) {
-        console.log("Editor Q Success Data Len: " + JSON.stringify(data.results.length));
+        //console.log("Editor Q Success Data Len: " + JSON.stringify(data.results.length));
         //console.log("Editor Q Success Status: " + JSON.stringify(status));
 
         if (data && data.status && data.status == 'success')

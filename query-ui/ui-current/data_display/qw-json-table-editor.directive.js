@@ -412,9 +412,9 @@
       var inputStyle = ' style="width: ' + (columnWidth-10) + 'px; margin-left: 5px"';
 
       if (_.isNumber(object))
-        result += '<input type="number" ' + model + inputStyle + '>';
+        result += '<input class="cbui-input" type="number" ' + model + inputStyle + '>';
       else
-        result += '<textarea class="ajtd-editor"' + model + inputStyle + '></textarea>';
+        result += '<textarea class="cbui-input ajtd-editor"' + model + inputStyle + '></textarea>';
     }
 
     return(result);

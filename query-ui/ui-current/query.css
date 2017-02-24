@@ -568,7 +568,7 @@ button.icon-small .icon {
   margin-left: .5rem;
 }
 
-input.ng-invalid {
+.cbui-input.ng-invalid {
   background-color: pink;
 }
 

@@ -11,7 +11,7 @@
     <label>Bucket: </label>
      <select
       ng-model="dec.options.selected_bucket"
-      ng-options="bucket.id for bucket in dec.buckets">
+      ng-options="bucket for bucket in dec.buckets">
     </select>
 
     <!-- Query using limit or where clause -->
@@ -27,10 +27,16 @@
   <!-- Button to get the documents -->
 
   <div class="row flex-left">
-    <button ng-click="dec.retrieveDocs()" style="margin-bottom: 0.5rem">
+    <button ng-click="dec.retrieveDocs()" style="margin-bottom: 0.5rem; margin-right: 0.5rem">
       <div ng-if="!dec.options.queryBusy">Retrieve Docs</div>
       <div ng-if="dec.options.queryBusy" class="icon-button">
         Cancel Retrieve</div>
+    </button>
+    <button ng-click="dec.prevBatch()" style="margin-bottom: 0.5rem; margin-right: 0.5rem" ng-disabled="dec.options.offset <= 0">
+      Prev Batch
+    </button>
+    <button ng-click="dec.nextBatch()" style="margin-bottom: 0.5rem; margin-right: 0.5rem">
+      Next Batch
     </button>
   </div>
 
