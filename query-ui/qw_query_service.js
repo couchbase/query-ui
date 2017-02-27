@@ -926,7 +926,7 @@
         }
         $http(request)
         .success(function(data, status, headers, config) {
-          if (data && data.status == "success") {
+          if (data && data.status == "success" && data.results && data.results.length > 0) {
             var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
             newResult.explainResult =
                {explain: data.results[0],
@@ -951,12 +951,17 @@
 //            }
           }
 
-          else
+          else if (data.errors)
             newResult.explainResult = data.errors;
+          else
+            newResult.explainResult = {'error': 'No server response for explain.'};
 
           newResult.explainDone = true;
-          newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
 
+          if (newResult.explainResult.explain)
+            newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
+          else
+            newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
           lastResult.copyIn(newResult);
 
           // if the query has run and finished already, mark everything as done
