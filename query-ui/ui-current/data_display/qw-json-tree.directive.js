@@ -88,7 +88,7 @@
           result += '<li title="' + prefix + mySanitize(key) +
             '"><table><tr><td class=ajtd-key>' +
             mySanitize(key) + '</td><td class=ajtd-value>' +
-            mySanitize(value) + '</td></tr></table></li>';
+            (_.isString(value) ? mySanitize(value) : value) + '</td></tr></table></li>';
       });
       result += "</ul>";
     }
