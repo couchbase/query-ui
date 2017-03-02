@@ -25,7 +25,7 @@
     qwConstantsService.queryURL = "../_p/query/query/service";
 
     // should we get passwords from the Couchbase server?
-    qwConstantsService.getCouchbaseBucketPasswords = true;
+    qwConstantsService.getCouchbaseBucketPasswords = false;
 
     // should we run 'explain' in the background for each query?
     qwConstantsService.autoExplain = true;
@@ -40,7 +40,7 @@
     qwConstantsService.queryMode = 'n1ql';
 
     // should queries include an array of credentials? ("creds")
-    qwConstantsService.sendCreds = true;
+    qwConstantsService.sendCreds = false;
 
     // the following query asks Couchbase for a list of keyspaces, returning the 'id',
     // and a 'has_prim' boolean indicating whether or not it has a primary index, and
