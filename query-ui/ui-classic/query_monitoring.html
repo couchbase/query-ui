@@ -44,6 +44,10 @@
           <span ng-if="qmc.show_up_caret_active('state')">&and;</span>
           <span ng-if="qmc.show_down_caret_active('state')">&or;</span>
         </th>
+        <th class="ajtd-column-header" ng-click="qmc.update_active_sort('users')">User
+          <span ng-if="qmc.show_up_caret_active('users')">&and;</span>
+          <span ng-if="qmc.show_down_caret_active('users')">&or;</span>
+        </th>
         <th class="ajtd-column-header"></th>
     </thead>
     <tbody>
@@ -53,6 +57,7 @@
     <td class="ajtd-cell">{{result.elapsedTime}}</td>
     <td class="ajtd-cell">{{result.requestId}}</td>
     <td class="ajtd-cell">{{result.state}}</td>
+    <td class="ajtd-cell">{{result.users}}</td>
     <td>
         <a class="ajtd-cell"
         ng-click="qmc.cancelQueryById(result.requestId)">
@@ -96,6 +101,11 @@
           ng-if="qmc.show_up_caret_completed('time')">&and;</span>
           <span ng-if="qmc.show_down_caret_completed('time')">&or;</span>
         </th>
+        <th class="ajtd-column-header"
+          ng-click="qmc.update_completed_sort('users')">User <span
+          ng-if="qmc.show_up_caret_completed('users')">&and;</span>
+          <span ng-if="qmc.show_down_caret_completed('users')">&or;</span>
+        </th>
       </thead>
       <tbody>
     <tr ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
@@ -105,6 +115,7 @@
     <td class="ajtd-cell">{{result.resultCount}}</td>
     <td class="ajtd-cell">{{result.state}}</td>
     <td class="ajtd-cell">{{result.time}}</td>
+    <td class="ajtd-cell">{{result.users}}</td>
     </tr>
     </tbody>
    </table>
