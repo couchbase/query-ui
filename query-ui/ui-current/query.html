@@ -98,7 +98,7 @@
            ng-class="{selected: qc.isSelected(2)}">Table</a>
         <a ng-click="qc.selectTab(3)"
            ng-class="{selected: qc.isSelected(3)}">Tree</a>
-        <a ng-click="qc.selectTab(4)"
+        <a ng-click="qc.selectTab(4)" ng-if="qc.isEnterprise"
            ng-class="{selected: qc.isSelected(4)}">Plan</a>
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}">Plan Text</a>

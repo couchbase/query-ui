@@ -1458,7 +1458,7 @@
         })
 
         .error(function(data,status,headers,config) {
-          console.log("Error getting pools/default/buckets: " + data);
+          //console.log("Error getting pools/default/buckets: " + data);
 
         });
 

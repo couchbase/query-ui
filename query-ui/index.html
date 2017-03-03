@@ -43,11 +43,11 @@
 <script src="qw_query_controller.js"></script>
 <script src="qw_query_plan_service.js"></script>
 <script src="qw_query_service.js"></script>
-<script src="ui-classic/data_display/qw-json-tree.directive.js"></script>
-<script src="ui-classic/data_display/qw-json-table.directive.js"></script>
-<script src="ui-classic/query_plan_viz/qw-explain-viz.directive.js"></script>
+<script src="ui-current/data_display/qw-json-tree.directive.js"></script>
+<script src="ui-current/data_display/qw-json-table.directive.js"></script>
+<script src="ui-current/query_plan_viz/qw-explain-viz.directive.js"></script>
 <script src="long_press/qw-long-press.directive.js"></script>
-<script src="ui-classic/schema_display/qw_query_schema_display.directive.js"></script>
+<script src="ui-current/schema_display/qw_query_schema_display.directive.js"></script>
 
 <script src="libs/ui-ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="libs/ace/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -60,27 +60,31 @@
 
 <link rel="stylesheet" type="text/css" href="libs-standalone/layout-default-latest.css">
 <link rel="stylesheet" type="text/css" href="libs-standalone/selectize.default.css">
+
 <link rel="stylesheet" type="text/css" href="app-standalone.css">
 
-<link rel="stylesheet" type="text/css" href="ui-classic/data_display/qw-json-tree-table.css">
-<link rel="stylesheet" type="text/css" href="ui-classic/schema_display/qw_query_schema_display.css">
-<link rel="stylesheet" type="text/css" href="ui-classic/query_plan_viz/qw-query-plan-viz.css">
-<link rel="stylesheet" type="text/css" href="ui-classic/query.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-base.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-layout.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-components.css">
+<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-responsive.css">
+
+<link rel="stylesheet" type="text/css" href="ui-current/data_display/qw-json-tree-table.css">
+<link rel="stylesheet" type="text/css" href="ui-current/schema_display/qw_query_schema_display.css">
+<link rel="stylesheet" type="text/css" href="ui-current/query_plan_viz/qw-query-plan-viz.css">
+<link rel="stylesheet" type="text/css" href="ui-current/query.css">
 
 
 </head>
 <body ng-controller="qwQueryController as qc">
   <div>
-    <div style="display: inline-block; white-space: nowrap">
+    <div id="header_bar">
       <h3 style="margin-left: 0.5em; margin-top: 0.750em; margin-bottom: 0em; color: black;vertical-align: middle;">
       <img style="vertical-align: middle; margin-right: 1em" width="140" height="32"
           src="/images/logo.svg" />
          Stand-Alone Query Workbench {{ qc.version }}
       </h3> 
     </div>
-
-    <br>
-    <br>
+    <div id="spacer_bar"></div>
 
     <div class="container">
       <div ui-view></div>

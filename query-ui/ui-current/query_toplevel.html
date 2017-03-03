@@ -23,7 +23,7 @@
     <nav ng-if="qc.validated.valid()" class="sub-nav">
       <a ui-sref="app.admin.query.workbench" ui-sref-active="selected">
         Query Workbench</a>
-      <a ui-sref="app.admin.query.monitoring"
+      <a ui-sref="app.admin.query.monitoring" ng-if="qc.isEnterprise"
        ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">
         Query Monitor</a>
         <!-- 

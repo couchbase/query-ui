@@ -91,7 +91,7 @@
         if (perms && perms.bucket)
           _.forEach(perms.bucket,function(v,k) {
             // uncomment the following when RBAC is working properly for data access
-            //if (v && v.data && (v.data.read || v.data.write))
+            if (v && v.data && (v.data.read || v.data.write))
               _bucketList.push(k);
               //console.log("Allowed to query: "+ k);
           });

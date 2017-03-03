@@ -1,6 +1,5 @@
 (function() {
 
-
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
   queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService'];
@@ -14,7 +13,7 @@
     // current UI version number
     //
 
-    qc.version = "1.0.7 (DP 7)";
+    qc.version = "1.0.8 (DP 8)";
 
     //
     // alot of state is provided by the qwQueryService
@@ -157,6 +156,10 @@
     qc.fullyQueryableBuckets = qwConstantsService.fullyQueryableBuckets;
     qc.queryOnIndexedBuckets = qwConstantsService.queryOnIndexedBuckets;
     qc.nonIndexedBuckets = qwConstantsService.nonIndexedBuckets;
+
+    // are we enterprise?
+
+    qc.isEnterprise = mnPools.export.isEnterprise;
 
     //
     // call the activate method for initialization
@@ -359,7 +362,7 @@
       // only support auto-complete if we're in enterprise mode
       //
 
-      if (mnPools.export.isEnterprise || qwConstantsService.standAloneMode) {
+      if (mnPools.export.isEnterprise) {
         _editor.setOptions({enableBasicAutocompletion: true});
         langTools.addCompleter(identifierCompleter);
       }

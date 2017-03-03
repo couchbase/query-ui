@@ -128,7 +128,7 @@
                <li ng-if="qc.autoExplain" class="tab_middle"><a ng-click="qc.selectTab(3)"
                 ng-class="{selected: qc.isSelected(3)}">Tree</a></li>
                <li ng-if="qc.autoExplain" class="tab_middle"><a ng-click="qc.selectTab(4)"
-                ng-class="{selected: qc.isSelected(4)}">Plan</a></li>
+                ng-class="{selected: qc.isSelected(4)}" ng-if="qc.isEnterprise">Plan</a></li>
                <li ng-if="qc.autoExplain" class="tab_right"><a ng-click="qc.selectTab(5)"
                 ng-class="{selected: qc.isSelected(5)}">Plan Text</a></li>
             </ul>
