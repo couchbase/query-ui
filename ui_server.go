@@ -1,14 +1,14 @@
 package main
 
 import (
-	"flag"
+ 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
-	"io/ioutil"
 
 	"github.com/couchbase/go-couchbase"
 	json "github.com/dustin/gojson"
@@ -31,7 +31,6 @@ func main() {
 	flag.Parse()
 	launchWebService()
 }
-
 
 //
 // Given a CB Server URL, ask it what ports KV and Query are running on
@@ -119,16 +118,27 @@ func getClusterQueryKVsAndMgmt(server, user, pass string) ([]string, []string, [
 var serverHost string
 var queryHost string
 var serverUrl, serverUser, serverPass string
-var kvs []string
+
+//var kvs []string
 
 func launchWebService() {
 	fmt.Printf("Launching query web service.\n")
-
+	
+	//
+	// error checking
+	//
+	
+	if len(*WEBCONTENT) == 0 {
+	    fmt.Printf("Unable to start proxy, -webcontent was not specified.")
+	    return
+	}
+	
+	// if we were not given a URL for the QUERYENGINE,
 	// the datastore allows us to get /pools, find out where every service is
 	if len(*DATASTORE) > 0 {
 		fmt.Printf("    Using CB Server at: %s\n", *DATASTORE)
 
-		serverUrl = *DATASTORE
+		serverUrl = strings.TrimRight(*DATASTORE,"/")
 		serverUser = *USER
 		serverPass = *PASS
 
@@ -139,30 +149,38 @@ func launchWebService() {
 		}
 
 		//
-		// get a query and kv service that we'll need
+		// if we were not given a query engine, use /pools to get a query and
+		// kv service that we'll need
 		//
 
-		var n1ql []string
-		var mgmt []string
-		n1ql, kvs, mgmt = getClusterQueryKVsAndMgmt(*DATASTORE, *USER, *PASS)
+		if QUERYENGINE == nil || len(*QUERYENGINE) == 0 {
+			var n1ql []string
+			var mgmt []string
+			n1ql, _, mgmt = getClusterQueryKVsAndMgmt(*DATASTORE, *USER, *PASS)
 
-		if len(n1ql) == 0 {
-			fmt.Printf("Unable to find a N1QL query service on: %s\n", *DATASTORE)
-			return
-		} else {
-			fmt.Printf("    Using N1QL query service on: %s\n", n1ql[0])
-			//queryURL = fmt.Sprintf("http://%s/query/service", n1ql[0])
-			queryHost = n1ql[0]
+			if len(n1ql) == 0 {
+				fmt.Printf("Unable to find a N1QL query service on: %s\n", *DATASTORE)
+				return
+			} else {
+				fmt.Printf("    Using N1QL query service on: %s\n", n1ql[0])
+				//queryURL = fmt.Sprintf("http://%s/query/service", n1ql[0])
+				queryHost = n1ql[0]
+			}
+
+			if len(mgmt) == 0 {
+				fmt.Printf("Unable to find the mgmt query service on: %s\n", *DATASTORE)
+				return
+			} else {
+				fmt.Printf("    Using mgmt query service on: %s\n", serverHost)
+			}
 		}
 
-		if len(mgmt) == 0 {
-			fmt.Printf("Unable to find the mgmt query service on: %s\n", *DATASTORE)
-			return
-		} else {
-			fmt.Printf("    Using mgmt query service on: %s\n", serverHost)
-		}
+	}
 
-	} else if len(*QUERYENGINE) > 0 { // if no DATASTORE, there must be a QUERYENGINE
+	//
+	// if they specified a QUERYENGINE, remember what they specified
+
+	if QUERYENGINE != nil && len(*QUERYENGINE) > 0 { // if no DATASTORE, there must be a QUERYENGINE
 
 		queryHost = *QUERYENGINE
 
@@ -172,8 +190,10 @@ func launchWebService() {
 
 		fmt.Printf("    Using query service on: %s\n", queryHost)
 
-	} else { // let the user know that they need either DATASTORE or QUERYENGINE
-		fmt.Printf("Error: you must specify either -datastore=<couchbase URL> or -queryEngine=<query engine URL>\n")
+	}
+
+	if len(serverHost) == 0 && len(queryHost) == 0 { // let the user know that they need either DATASTORE or QUERYENGINE
+		fmt.Printf("Error: you must specify -datastore=<couchbase URL> or -queryEngine=<query engine URL>\n")
 		os.Exit(1)
 	}
 
@@ -205,7 +225,11 @@ func launchWebService() {
 	if len(serverHost) > 0 {
 		mgmtProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost})
 		mgmtProxy.Director = toMgmt
+		//mgmtProxy.ModifyResponse = fromMgmt
 		http.Handle("/pools", mgmtProxy)
+		http.Handle("/uilogin", mgmtProxy)
+		http.Handle("/uilogout", mgmtProxy)
+		http.Handle("/whoami", mgmtProxy)
 		http.Handle("/pools/", mgmtProxy)
 	}
 
@@ -225,23 +249,22 @@ func launchWebService() {
 	listenAndServe(*LOCALPORT)
 }
 
-
 type Credential struct {
 	User string `json:"user"`
 	Pass string `json:"pass"`
 }
-	
+
 type QueryParams struct {
-    Statement string `json:"statement"`
-    ClientContextId string `json:"client_context_id"`
-    Creds []Credential `json:"creds"`
-}	
+	Statement       string       `json:"statement"`
+	ClientContextId string       `json:"client_context_id"`
+	Creds           []Credential `json:"creds"`
+}
 
 func toQuery(r *http.Request) {
 	r.Host = queryHost
 	r.URL.Host = r.Host
 	r.URL.Scheme = "http"
-	
+
 	// rewrite the URL to the approriate proxied value
 	//fmt.Printf("Got query path: %s %s\n  form: %v\n", r.Host,r.URL.Path, r.Form)
 	if strings.HasPrefix(strings.ToLower(r.URL.Path), "/_p/query/query") {
@@ -252,46 +275,97 @@ func toQuery(r *http.Request) {
 		r.URL.Path = *QUERY_PREFIX + r.URL.Path[17:]
 		//fmt.Printf("  new host %v path: %s\n", r.Host,r.URL.Path)
 	}
-	
+
+	//fmt.Printf(" Got query request encoding: %v\n", r.Header.Get("Content-Type"))
+
 	// if we were given a USER/PASS, we need to insert them into the creds array
 	// to give queries those privileges
-    if USER != nil && PASS != nil {
-        r.SetBasicAuth(*USER, *PASS)
-        // create a credentials array with USER and PASS
-       	var credentials []Credential = make([]Credential,0,0)
-        newCred := new(Credential)
-        newCred.User = *USER
-        newCred.Pass = *PASS
-        credentials = append(credentials,*newCred)
+	if USER != nil && len(*USER) > 0 && PASS != nil && len(*PASS) > 0 {
+		r.SetBasicAuth(*USER, *PASS)
+		// create a credentials array with USER and PASS
+		var credentials []Credential = make([]Credential, 0, 0)
+		newCred := new(Credential)
+		newCred.User = *USER
+		newCred.Pass = *PASS
+		credentials = append(credentials, *newCred)
 
-        queryParams := new(QueryParams)
-        err := json.NewDecoder(r.Body).Decode(&queryParams) 
-        if err != nil {
-            log(fmt.Sprintf("Error decoding body: %v\n",err))
-            return
-        } else {
-            log(fmt.Sprintf("Got statement: %s\n",queryParams.Statement))
-            log(fmt.Sprintf("Got client context: %s\n",queryParams.ClientContextId))
-            log(fmt.Sprintf("Got creds: %v\n",queryParams.Creds))
-        }
-        
-        queryParams.Creds = append(queryParams.Creds,credentials...)
-    	
-    	newParamBytes,cerr := json.Marshal(queryParams)
-    	log(fmt.Sprintf("Got new params: %s\n",string(newParamBytes)))
-        if (cerr != nil) {
-            log(fmt.Sprintf("Error marshalling new credentials %v\n",cerr))
-        } else {
-            newBody := string(newParamBytes)
-            r.Body = ioutil.NopCloser(strings.NewReader(newBody))
-            r.ContentLength = int64(len(newBody))
-        }
-        
+		//
+		// do we have JSON params or URL encoded params?
+		//
 
-        
-        log(fmt.Sprintf("Got new request form: %v\n",r.PostForm))
-        //log(fmt.Sprintf("Got new request: %v\n",r))
-    }
+		if strings.EqualFold(r.Header.Get("Content-Type"), "application/json") {
+    		queryParams := new(QueryParams)
+			err := json.NewDecoder(r.Body).Decode(&queryParams)
+			if err != nil {
+				log(fmt.Sprintf("Error decoding JSON body: %v\n", err))
+				return
+			} else {
+				//log(fmt.Sprintf("Got statement: %s\n", queryParams.Statement))
+				//log(fmt.Sprintf("Got client context: %s\n", queryParams.ClientContextId))
+				//log(fmt.Sprintf("Got creds: %v\n", queryParams.Creds))
+			}
+
+    		queryParams.Creds = append(queryParams.Creds, credentials...)
+
+			newParamBytes, cerr := json.Marshal(queryParams)
+			//log(fmt.Sprintf("Got new params: %s\n", string(newParamBytes)))
+			if cerr != nil {
+				log(fmt.Sprintf("Error marshalling new credentials %v\n", cerr))
+			} else {
+				newBody := string(newParamBytes)
+				r.Body = ioutil.NopCloser(strings.NewReader(newBody))
+				r.ContentLength = int64(len(newBody))
+			}
+
+			//log(fmt.Sprintf("Added creds, new bytes: %v\n", string(newParamBytes)))
+
+			// URL encoded
+		} else if strings.EqualFold(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				log(fmt.Sprintf("Error parsing URL-encoded body: %v\n", err))
+				return
+			}
+			values, err := url.ParseQuery(string(body))
+			if err != nil {
+				log(fmt.Sprintf("Error parsing URL-encoded body values: %v\n", err))
+				return
+			}
+			stmt := values.Get("statement")
+			cci := values.Get("client_context_id")
+			creds := values.Get("creds")
+
+            // creds is JSON, array of Credential
+            var cred_array []Credential
+			//log(fmt.Sprintf("Got creds bytes: %v\n", creds))
+			if (len(creds) > 0) {
+			    err = json.Unmarshal([]byte(creds), &cred_array) 
+			    if (err != nil) {
+			        log(fmt.Sprintf("Error unmarshalling creds: %v\n", err))			        
+			        return
+			    }
+			    cred_array = append(cred_array, credentials...)
+			    creds_bytes, err := json.Marshal(cred_array)
+			    if (err != nil) {
+                    log(fmt.Sprintf("Error re-marshalling creds: %v\n", err))
+			        return
+			    }
+			    creds = string(creds_bytes)
+    			//log(fmt.Sprintf("Added u-creds, new bytes: %v\n", string(creds_bytes)))
+			}
+
+			data := url.Values{}
+			data.Set("statement", stmt)
+			data.Add("client_context_id", cci)
+			data.Add("creds", creds)
+			newBody := data.Encode()
+			r.Body = ioutil.NopCloser(strings.NewReader(newBody))
+			r.ContentLength = int64(len(newBody))
+		} 
+	}
+
+	//log(fmt.Sprintf("Got new request form: %v\n", r.PostForm))
+	//log(fmt.Sprintf("Got new request: %v\n", r))
 }
 
 func toImage(r *http.Request) {
@@ -310,16 +384,24 @@ func toImage(r *http.Request) {
 }
 
 func toMgmt(r *http.Request) {
-	//fmt.Printf("toMgmt, host %v path %v\n",r.Host,r.URL.Path);
+	//fmt.Printf(" pre toMgmt, host %v path %v\n", r.Host, r.URL.Path)
 	r.Host = serverHost
 	r.URL.Host = r.Host
 	r.URL.Scheme = "http"
-	
+
 	// if we have a login/password, use it for authorization
-    if USER != nil && PASS != nil {
-        r.SetBasicAuth(*USER, *PASS)
-    }	
-	//fmt.Printf(" post toMgmt, host %v path %v\n",r.Host,r.URL.Path);
+	if USER != nil && len(*USER) > 0 && PASS != nil && len(*PASS) > 0 {
+		//fmt.Printf(" Setting user to %s and pass to %s\n",*USER,*PASS)
+		r.SetBasicAuth(*USER, *PASS)
+	}
+	//fmt.Printf(" post toMgmt, host %v path %v\n", r.Host, r.URL.Path)
+}
+
+func fromMgmt(resp *http.Response) error {
+	fmt.Printf("Got response: %v\n", resp.Header)
+	delete(resp.Header, "Www-Authenticate")
+	//fmt.Printf("After got response: %v\n",resp.Header)
+	return nil
 }
 
 //
