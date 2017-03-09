@@ -59,7 +59,7 @@
         <span ng-if="qmc.show_up_caret_active('users')" class="icon fa-caret-up"></span>
         <span ng-if="qmc.show_down_caret_active('users')" class="icon fa-caret-down"></span>
       </span>
-      <span class="cbui-table-cell flex-grow-15"></span>
+      <span class="cbui-table-cell flex-grow-1-5"></span>
     </div>
 
     <section ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
@@ -70,7 +70,7 @@
         <span class="cbui-table-cell flex-grow-2">{{result.requestId}}</span>
         <span class="cbui-table-cell">{{result.state}}</span>
         <span class="cbui-table-cell">{{result.users}}</span>
-        <span class="cbui-table-cell flex-grow-15 wrap text-right">
+        <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
           <a href="" class="nowrap">
             <span class="icon fa-external-link"></span>
             edit
