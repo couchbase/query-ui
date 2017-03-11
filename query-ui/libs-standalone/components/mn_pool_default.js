@@ -7,13 +7,14 @@
     ])
     .factory('mnPoolDefault', mnPoolDefaultFactory);
 
-  function mnPoolDefaultFactory($http, $q, mnPools, $window) {
+  function mnPoolDefaultFactory($http, $q, mnPools, $window, $location, $httpParamSerializerJQLike) {
     var latest = {};
     var mnPoolDefault = {
       latestValue: latestValue,
       get: get,
       clearCache: clearCache,
       getFresh: getFresh,
+      getUrlsRunningService: getUrlsRunningService,
       export: {
         compat: undefined
       }
@@ -22,7 +23,10 @@
     var version30 = encodeCompatVersion(3, 0);
     var version40 = encodeCompatVersion(4, 0);
     var version45 = encodeCompatVersion(4, 5);
+    var version46 = encodeCompatVersion(4, 6);
+    var version50 = encodeCompatVersion(5, 0);
     var cache;
+    var request;
 
     return mnPoolDefault;
 
@@ -40,13 +44,15 @@
       if (!(params && params.etag) && cache) {
         return $q.when(cache);
       }
+      if (request && !cache) {
+        return request;
+      }
       params = params || {waitChange: 0};
-      return $q.all([
+      request = $q.all([
         $http({
           mnHttp: mnHttpParams,
           method: 'GET',
           url: '/pools/default',
-          responseType: 'json',
           params: params,
           timeout: 30000
         }),
@@ -65,7 +71,9 @@
           atLeast25: poolDefault.thisNode.clusterCompatibility >= version25,
           atLeast30: poolDefault.thisNode.clusterCompatibility >= version30,
           atLeast40: poolDefault.thisNode.clusterCompatibility >= version40,
-          atLeast45: poolDefault.thisNode.clusterCompatibility >= version45
+          atLeast45: poolDefault.thisNode.clusterCompatibility >= version45,
+          atLeast46: poolDefault.thisNode.clusterCompatibility >= version46,
+          atLeast50: poolDefault.thisNode.clusterCompatibility >= version50
         };
         poolDefault.isKvNode =  _.indexOf(poolDefault.thisNode.services, "kv") > -1;
         poolDefault.capiBase = $window.location.protocol === "https:" ? poolDefault.thisNode.couchApiBaseHTTPS : poolDefault.thisNode.couchApiBase;
@@ -76,13 +84,47 @@
 
         return poolDefault;
       });
+      return request;
     }
     function clearCache() {
       cache = undefined;
+      request = undefined;
       return this;
     }
     function getFresh(params) {
       return mnPoolDefault.clearCache().get(params);
+    }
+    /**
+     * @param nodeInfos - details on the nodes in the cluster returned
+     *                    by
+     * @param service - name of service
+     * @param max - max number of links to return
+     * @return a list of URLs for the current UI location running the
+     *         specified service.
+     */
+    function getUrlsRunningService(nodeInfos, service, max) {
+      var nodes = _.filter(nodeInfos, function (node) {
+        return _.indexOf(node.services, service) > -1
+          && node.clusterMembership === 'active';
+      });
+      if (max && max < nodes.length) {
+        nodes = nodes.slice(0, max);
+      }
+      var protocol = $location.protocol();
+      var appbase = $window.location.pathname;
+      var search = $httpParamSerializerJQLike($location.search());
+      var hash = $location.hash();
+      return _.map(nodes, function(node) {
+        var hostnameAndPort = node.hostname.split(':');
+        var port = protocol == "https" ? node.ports.httpsMgmt : hostnameAndPort[1];
+        return protocol
+          + "://" + hostnameAndPort[0]
+          + ":" + port
+          + appbase
+          + "#" + $location.path()
+          + (search ? "?" + search : "")
+          + (hash ? "#" + hash : "");
+      });
     }
   }
 })();

@@ -47,7 +47,7 @@
     function convertPlanJSONToPlanNodes(plan, predecessor, lists) {
 
       // sanity check
-      if (_.isString(plan))
+      if (!plan || _.isString(plan))
         return(null);
 
       // special case: prepared queries

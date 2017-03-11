@@ -1,0 +1,79 @@
+<div class="sign-in-background"></div>
+<div class="row items-center items-top dialog_main_wrapper">
+  <div class="panel dialog-small dialog">
+    <div class="panel-header">
+      <img
+         src="/images/cb_logo_bug_white.svg"
+         width="35"
+         height="35"
+         alt="Couchbase Server"
+         class="logobug">
+      <h2>Couchbase Server</h2>
+    </div>
+    <form
+       name="loginForm"
+       novalidate=""
+       ng-submit="!loginForm.$invalid && authCtl.submit()">
+
+      <div class="panel-content forms">
+        <div
+           ng-messages="authCtl.error"
+           class="error error-form"
+           ng-if="authCtl.error">
+          <span ng-message="_400">
+            Login failed. Please try again.
+          </span>
+          <span ng-message="_410">
+            The client's version does not match the server's. Please the reload tab.
+          </span>
+        </div>
+
+        <div class="formrow">
+          <input
+             autocorrect="off"
+             spellcheck="false"
+             autocapitalize="off"
+             type="text"
+             id="auth-username-input"
+             ng-model="authCtl.user.username"
+             ng-model-options="{updateOn: 'default'}"
+             name="username"
+             placeholder="Username"
+             required
+             mn-focus>
+          <div
+             ng-messages="loginForm.username.$error"
+             ng-show="loginForm.username.$dirty"
+             class="error error-field">
+            <div ng-message="required">Username is required.</div>
+          </div>
+        </div>
+
+        <div class="formrow">
+          <input
+             type="password"
+             autocorrect="off"
+             spellcheck="false"
+             id="auth-password-input"
+             ng-model="authCtl.user.password"
+             ng-model-options="{updateOn: 'default'}"
+             name="password"
+             placeholder="Password"
+             required
+             mn-autocomplete-off>
+          <div
+             ng-messages="loginForm.password.$error"
+             ng-show="loginForm.password.$dirty"
+             class="error error-field">
+            <div ng-message="required">Password is required.</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button
+           type="submit"
+           ng-disabled="loginForm.$invalid">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>

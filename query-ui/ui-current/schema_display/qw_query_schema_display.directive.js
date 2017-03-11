@@ -115,9 +115,9 @@
         '<a href="" ng-click="changeExpandBucket(bucket)" class="margin-bottom-half text-small">' +
         '<span class="icon fa-caret-down fa-fw" ng-show="bucket.expanded"></span>' +
         '<span class="icon fa-caret-right fa-fw"  ng-hide="bucket.expanded"></span>' +
-        //'<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" ng-click="changeExpandBucket(bucket)"/>' +
-        //'<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
-        ' {{bucket.id}}</a>' +
+        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" />' +
+        '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
+        ' {{bucket.id}} <span ng-if="bucket.count > -1">&nbsp;({{bucket.count}})</span></a>' +
         '  <ul class="text-small" ng-if="bucket.expanded">' +
         '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         '    <li class="schema" ng-repeat="flavor in bucket.schema">' +
@@ -159,7 +159,7 @@
                 bucket.tempPassword = "";
                 //console.log("Password required: " + scope.bucket.passwordNeeded);
                 //console.log("bucket: " + scope.bucket.id);
-                if (bucket.passwordNeeded && !bucket.validated) {
+                if (bucket.passwordNeeded && !bucket.password) {
 
                   // open the dialog to ask for a password
 
@@ -171,14 +171,11 @@
                   // if they gave us one, try and get the schema to test the password
                   promise.then(function (res) {
                     bucket.password = bucket.tempPassword;
-                    qwQueryService.getSchemaForBucket(bucket)
-
-                    .then(function success(data, status, headers, config) {
-                      //console.log("Got authentication success!");
-                      bucket.validated = true;
+                    qwQueryService.testAuth(bucket,
+                        function() {
+                      qwQueryService.getSchemaForBucket(bucket);
                       bucket.expanded = true;
-                    },function error(data, status, headers, config) {
-                      bucket.validated = false;
+                    },function() {
                       bucket.password = null;
                       scope.error_title = "Bucket Password Failure";
                       scope.error_detail = "Incorrect password for bucket '" + bucket.id + "'.";

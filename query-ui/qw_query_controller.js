@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService'];
+  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService', 'mnPoolDefault'];
 
-  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService) {
+  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService, mnPoolDefault) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());

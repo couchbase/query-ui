@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService'];
+  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService','mnPoolDefault','mnPools'];
 
-  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService) {
+  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools) {
 
     var qwQueryService = {};
 
@@ -73,7 +73,7 @@
     //qwQueryService.gettingSchemas = {busy: false};
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
-    //qwQueryService.authenticateBuckets = authenticateBuckets; // check password
+    qwQueryService.testAuth = testAuth; // check passward
 
     //
     // keep track of active queries, complete requests, and prepared statements
@@ -697,7 +697,12 @@
         return(dummy);
       }
 
-      return($http(request));
+      var promise = $http(request);
+//      promise.success(function(data, status, headers, config)
+//          {console.log("Got success: " + JSON.stringify(data));});
+//      promise.error(function(data, status, headers, config)
+//          {console.log("Got error: " + JSON.stringify(data));});
+      return(promise);
     }
 
     function buildQueryRequest(queryText, is_user_query, queryOptions) {
@@ -718,13 +723,17 @@
           credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
         }
 
-        queryData.creds = credArray;
+        if (credArray.length > 0) {
+          queryData.creds = credArray;
+        }
       }
+      //console.log("Creds was: " + JSON.stringify(queryData.creds));
 
       // are there options we need to add to the query request?
 
       if (queryOptions) {
-        if (queryOptions.timings) // keep track of timings for each op?
+        if (queryOptions.timings && mnPoolDefault.export.compat &&
+            mnPoolDefault.export.compat.atLeast50) // keep track of timings for each op?
           queryData.profile = "timings";
 
         if (queryOptions.max_parallelism && queryOptions.max_parallelism.length > 0)
@@ -750,37 +759,56 @@
         queryData.client_context_id = qwQueryService.currentQueryRequestID;
       }
 
+      //
+      // build the query request appropriately for the server version. 4.5 and later
+      // work with JSON encoding, 4.1 requires URL encoding
+      //
+
+      var queryRequest;
+
+      if (mnPoolDefault.export.compat && mnPoolDefault.export.compat.atLeast45) {
+
+        // An alternate way to get around Angular's encoding is "isNotForm: true". But
+        // that triggers bug MB-16964, where the server currently fails to parse creds
+        // when they are JSON encoded.
+        // MB-16964 is fixed as of 4.5, so for that version we'll send queries this
+        // way and avoid URL encoding
+
+        //console.log("JSON Encoding Query");
+        var queryRequest = {
+            url: qwConstantsService.queryURL,
+            method: "POST",
+            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,'ignore-401':'true'},
+            data: queryData,
+            mnHttp: {
+              isNotForm: true,
+              group: "global"
+            }
+        };
+      }
+
       // Because Angular automatically urlencodes JSON parameters, but has a special
       // algorithm that doesn't encode semicolons, any semicolons inside the query
       // will get mis-parsed by the server as the end of the parameter (see MB-18621
       // for an example). To bypass this, we will url-encode ahead of time, and then
       // make sure the semicolons get urlencoded as well.
 
-//      var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-//      qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
-//          method: "POST",
-//          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
-//          data: encodedQuery,
-//          mnHttp: {
-//            group: "global"
-//          }
-//      };
-
-      // An alternate way to get around Angular's encoding is "isNotForm: true". But
-      // that triggers bug MB-16964, where the server currently fails to parse creds
-      // when they are JSON encoded.
-      // MB-16964 is now fixed, so we'll send queries this way and avoid URL encoding
-
-      var queryRequest = {
-          url: qwConstantsService.queryURL,
-          method: "POST",
-          headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,'ignore-401':'true'},
-          data: queryData,
-          mnHttp: {
-            isNotForm: true,
-            group: "global"
-          }
-      };
+      else {
+        //console.log("URL Encoding Query");
+        if (queryData.creds)
+          queryData.creds = JSON.stringify(queryData.creds);
+        var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
+        queryRequest = {url: "/_p/query/query/service",
+            method: "POST",
+            headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+            data: encodedQuery,
+            mnHttp: {
+              group: "global"
+            }
+        };
+        //console.log("Query data: " + JSON.stringify(queryData));
+        //console.log("Encoded query: " + encodedQuery);
+      }
 
       // if it's a userQuery, make sure to handle really long ints, and remember the
       // request in case we need to cancel
@@ -800,6 +828,7 @@
         return(null);
       }
 
+      //console.log("Built query: " + JSON.stringify(queryRequest));
       return(queryRequest);
     }
 
@@ -881,20 +910,21 @@
       // protected buckets
       //
 
-      var queryData = {statement: queryText};
-      if (qwConstantsService.sendCreds) {
-        var credArray = [];
-
-        for (var i = 0; i < qwQueryService.buckets.length; i++) {
-          var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
-          credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
-        }
-
-        queryData.creds = credArray;
-      }
-
-      qwQueryService.currentQueryRequestID = UUID.generate();
-      queryData.client_context_id = qwQueryService.currentQueryRequestID;
+//      var queryData = {statement: queryText};
+//      if (qwConstantsService.sendCreds) {
+//        var credArray = [];
+//
+//        for (var i = 0; i < qwQueryService.buckets.length; i++) {
+//          var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
+//          credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
+//        }
+//
+//        if (credArray.length > 0)
+//          queryData.creds = credArray;
+//      }
+//
+//      qwQueryService.currentQueryRequestID = UUID.generate();
+//      queryData.client_context_id = qwQueryService.currentQueryRequestID;
 
       // send the query off via REST API
       //
@@ -971,9 +1001,9 @@
 
         })
         .error(function(data, status, headers, config) {
-//          console.log("Explain error Data: " + JSON.stringify(data));
-//          console.log("Explain error Status: " + JSON.stringify(status));
-//          console.log("Explain error Headers: " + JSON.stringify(headers));
+          console.log("Explain error Data: " + JSON.stringify(data));
+          console.log("Explain error Status: " + JSON.stringify(status));
+          console.log("Explain error Headers: " + JSON.stringify(headers));
 
           if (data && _.isString(data))
             newResult.explainResult = {errors: data};
@@ -1057,11 +1087,11 @@
         else if (data.errors) {
           var failed = "Authorization Failed";
           // hack - detect authorization failed, make a suggestion
-          for (var i=0; i < data.errors.length; i++)
-            if (data.errors[i].msg &&
-                data.errors[i].msg.length >= failed.length &&
-                data.errors[i].msg.substring(0,failed.length) == failed)
-              data.errors[i].suggestion = "Try reloading bucket information by refreshing the Bucket Analysis pane.";
+//          for (var i=0; i < data.errors.length; i++)
+//            if (data.errors[i].msg &&
+//                data.errors[i].msg.length >= failed.length &&
+//                data.errors[i].msg.substring(0,failed.length) == failed)
+//              data.errors[i].suggestion = "Try reloading bucket information by refreshing the Bucket Analysis pane.";
 
           result = data.errors;
         }
@@ -1386,37 +1416,21 @@
       validateQueryService.updateValidBuckets();
 
       // use a query to get buckets with a primary index
-      //var queryText = "select distinct indexes.keyspace_id from system:indexes where is_primary = true order by indexes.keyspace_id ;";
-      //var queryText2 = "select indexes.keyspace_id, array_agg(index_key) primary_indexes " +
-      //"from system:indexes where state = 'online' group by indexes.keyspace_id having array_agg(is_primary) " +
-      //"order by indexes.keyspace_id;";
 
       var queryText = qwConstantsService.keyspaceQuery;
-//        "select max(keyspace_id) id, max(has_primary) has_prim, max(has_second) has_sec, max(secondary_indexes) sec_ind from (" +
-//        " select indexes.keyspace_id, true has_primary" +
-//        "  from system:indexes where is_primary = true and state = 'online'" +
-//        "  union" +
-//        "  select indexes.keyspace_id, true has_second, array_agg(indexes.index_key) secondary_indexes" +
-//        "  from system:indexes where state = 'online' and is_primary is missing or is_primary = false group by keyspace_id having keyspace_id is not null" +
-//        "  union" +
-//        "   select id keyspace_id from system:keyspaces except (select indexes.keyspace_id from system:indexes where state = 'online' union select \"\" keyspace_id)" +
-//        "  ) foo group by keyspace_id having keyspace_id is not null order by keyspace_id";
 
       res1 = executeQueryUtil(queryText, false)
       .success(function(data, status, headers, config) {
 
-        //var bucket_names = [];
-        //var passwords = [];
+        // initialize the data structure for holding all the buckets
 
         if (data && data.results) for (var i=0; i< data.results.length; i++) {
           var bucket = data.results[i];
           bucket.expanded = false;
           bucket.schema = [];
-          //bucket_names.push(bucket.id);
-          bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
+          //bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
           bucket.indexes = [];
           bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
-          //passwords.push(""); // assume no password for now
           //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
           if (bucket.validated) {
             qwQueryService.buckets.push(bucket); // only include buckets we have access to
@@ -1428,40 +1442,43 @@
 
 
         //
-        // get the passwords from the REST API (how gross!)
+        // Should we go get information for each bucket?
         //
 
-        if (qwConstantsService.getCouchbaseBucketPasswords)
-            $http.get("../pools/default/buckets")
-        .success(function(data) {
-          //
-          // bucket data should be an array of objects, where each object has
-          // 'name' and  'saslPassword' fields (among much other data)
-          //
+        if (qwConstantsService.showSchemas)
+          getInfoForBucketBackground(qwQueryService.buckets,0);
 
-          //console.log("Getting bucket info from /pools/default/buckets...");
-          if (_.isArray(data)) _.forEach(data, function(bucket, index) {
-            if (bucket.name && _.isString(bucket.saslPassword))
-              //console.log("  for bucket: " + bucket.name + " got password: " + bucket.saslPassword);
-              _.forEach(qwQueryService.buckets, function(mBucket, i) {
-                if (mBucket.id === bucket.name) {
-                  mBucket.password = bucket.saslPassword;
-                  mBucket.passwordNeeded = false;
-                  return(false);
-                }
-              });
-          });
+//        if (qwConstantsService.getCouchbaseBucketPasswords)
+//            $http.get("../pools/default/buckets")
+//        .success(function(data) {
+//          //
+//          // bucket data should be an array of objects, where each object has
+//          // 'name' and  'saslPassword' fields (among much other data)
+//          //
+//
+//          //console.log("Getting bucket info from /pools/default/buckets...");
+//          if (_.isArray(data)) _.forEach(data, function(bucket, index) {
+//            if (bucket.name && _.isString(bucket.saslPassword))
+//              //console.log("  for bucket: " + bucket.name + " got password: " + bucket.saslPassword);
+//              _.forEach(qwQueryService.buckets, function(mBucket, i) {
+//                if (mBucket.id === bucket.name) {
+//                  mBucket.password = bucket.saslPassword;
+//                  mBucket.passwordNeeded = false;
+//                  return(false);
+//                }
+//              });
+//          });
 
           // now that we have passwords, go get the schemas for each bucket
 
-          getSchemaForBucketBackground(qwQueryService.buckets,0);
-        })
-
-        .error(function(data,status,headers,config) {
-          //console.log("Error getting pools/default/buckets: " + data);
-
-        });
-
+//        getSchemaForBucketBackground(qwQueryService.buckets,0);
+//        })
+//
+//        .error(function(data,status,headers,config) {
+//          //console.log("Error getting pools/default/buckets: " + data);
+//
+//        });
+//
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes
@@ -1495,9 +1512,9 @@
 
           // error status from query about indexes
           .error(function (data,status,headers,config) {
-            console.log("Ind Error Data: " + JSON.stringify(data));
-            console.log("Ind Error Status: " + JSON.stringify(status));
-            console.log("Ind Error Headers: " + JSON.stringify(headers));
+            //console.log("Ind Error Data: " + JSON.stringify(data));
+            //console.log("Ind Error Status: " + JSON.stringify(status));
+            //console.log("Ind Error Headers: " + JSON.stringify(headers));
             //console.log("Ind Error statusText: " + JSON.stringify(statusText));
 
             var error = "Error retrieving list of indexes";
@@ -1542,36 +1559,80 @@
     //
     // this method uses promises and recursion to get the schemas for a list of
     // buckets in sequential order, waiting for each one before moving on to the next.
+    // the first thing we do is get the count of documents in the bucket. This might
+    // return an authentication error, meaning that the bucket is locked to us. Once
+    // we have the count information, and validate access, we get the schema for the bucket
     //
 
-    function getSchemaForBucketBackground(bucketList,currentIndex) {
-
-      // skip any buckets that require passwords
-      while (currentIndex < bucketList.length &&
-          bucketList[currentIndex].passwordNeeded == true &&
-          !bucketList[currentIndex].password)
-        currentIndex++;
-
+    function getInfoForBucketBackground(bucketList,currentIndex) {
       // if we've run out of buckets, nothing more to do
       if (currentIndex < 0 || currentIndex >= bucketList.length)
-        return(null);
-      else {
+        return;
+
+      //console.log("Getting info for: " + bucketList[currentIndex].id);
+
+      testAuth(bucketList[currentIndex],
+      function() { // authentication succeeded, get the schema for the bucket
         var res = getSchemaForBucket(bucketList[currentIndex]);
         if (res && res.then)
           res.then(function successCallback(response) {
-            getSchemaForBucketBackground(bucketList,currentIndex+1);
+            getInfoForBucketBackground(bucketList,currentIndex+1);
           }, function errorCallback(response) {
-            getSchemaForBucketBackground(bucketList,currentIndex+1);
+            getInfoForBucketBackground(bucketList,currentIndex+1);
           });
-      }
+      },
+      function() { // authentication failed, just move on to the next bucket
+        getInfoForBucketBackground(bucketList,currentIndex+1);
+      });
     }
 
+
+    //
+    // test authentication for a bucket by asking for the document count, if no permissions error 10000 comes back
+    //
+
+    function testAuth(bucket, success, failure) {
+      // start by getting the document count for each bucket
+      queryText = "select count(*) cnt from `" + bucket.id + '`';
+
+      res1 = executeQueryUtil(queryText, false)
+      .success(function (data,status,headers,config) {
+
+        // data might have a result array with an object {cnt: <count> }
+        if (data && _.isArray(data.results) && data.results.length > 0 && _.isNumber(data.results[0].cnt)) {
+          bucket.count = data.results[0].cnt;
+          success();
+        }
+
+        // data might have authorization error
+        else if (data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
+          bucket.passwordNeeded = true;
+          failure();
+        }
+      })
+
+      // error status from query about indexes
+      .error(function (data,status,headers,config) {
+        // for 4.5+, auth errors come back here
+        if (data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
+          bucket.passwordNeeded = true;
+          failure();
+        }
+      });
+    }
 
     //
     // Get a schema for a given, named bucket.
     //
 
     function getSchemaForBucket(bucket) {
+
+      // no schema inferencing until version 4.5, and then only enterprise
+
+      if (!mnPoolDefault.export.compat.atLeast45 || !mnPools.export.isEnterprise) {
+        bucket.schema_error = "Version 4.5 EE or above needed for Schema inferencing.";
+        return;
+      }
 
       //console.log("Getting schema for : " + bucket.id);
 
@@ -1907,7 +1968,9 @@
     // when we are initialized, get the list of buckets
     //
 
-    updateBuckets();
+    $timeout(function(){
+      updateBuckets();
+    },500);
 
     //
     // all done creating the service, now return it
