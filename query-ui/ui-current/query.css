@@ -45,7 +45,7 @@
   text-align: left;
   flex-grow: 1;
 }
-#result_summary span {
+#result_summary span:not(.success):not(.error) {
   white-space: nowrap;
   color: #555;
 }
