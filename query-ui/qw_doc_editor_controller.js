@@ -37,6 +37,9 @@
 
     dec.clickedOn = function(row) {console.log("clicked on: " + row);};
     dec.updateDoc = updateDoc;
+    dec.copyDoc = copyDoc;
+    dec.deleteDoc = deleteDoc;
+    dec.editDoc = editDoc;
 
     dec.updatingRow = -1;
 
@@ -72,7 +75,7 @@
 
       dec.updatingRow = row;
 
-      console.log("updating row: " + row);
+      //console.log("updating row: " + row);
       var query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
         dec.options.current_result[row].id + '", ' +
         JSON.stringify(dec.options.current_result[row].data) + ')';
@@ -81,14 +84,24 @@
       qwQueryService.executeQueryUtil(query,false)
       // did the query succeed?
       .success(function(data, status, headers, config) {
-        console.log("successfully updated row: " + row);
+        //console.log("successfully updated row: " + row + ", makePristine: " + makePristine);
         makePristine();
         dec.updatingRow = -1;
       })
 
       // ...or fail?
       .error(function (data,status,headers,config) {
-        console.log("failed updating row: " + row);
+
+        $timeout(retrieveDocs,200);
+        var dialogScope = $rootScope.$new(true);
+        dialogScope.error_title = "Error Updating Document";
+        dialogScope.error_detail = JSON.stringify(data);
+        $uibModal.open({
+          templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+          scope: dialogScope
+        });
+
+        //console.log("failed updating row: " + row);
         dec.updatingRow = -1;
       });
 
@@ -98,44 +111,53 @@
     // function to save a document with a different key
     //
 
-    function saveDocAs(row) {
+    function copyDoc(row, makePristine) {
       if (dec.updatingRow >= 0)
         return;
-
-      dec.updatingRow = row;
 
       // bring up a dialog to get the new key
 
       var dialogScope = $rootScope.$new(true);
 
       // default names for save and save_query
-      dialogScope.data = {value: dec.options.current_result[row].id + '_copy'};
+      dialogScope.file = {name: dec.options.current_result[row].id + '_copy'};
       dialogScope.header_message = "Save As...";
       dialogScope.body_message = "Enter a key for the new document: ";
 
-      $uibModal.open({
-        templateUrl: '../_p/ui/query/ui/current/file_dialog/qw_input_dialog.html',
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_input_dialog.html',
         scope: dialogScope
-      }).then(function (res) {
+      }).result;
 
-        //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
-        console.log("saving row: " + row);
+      promise.then(function (res) {
+        dec.updatingRow = row;
+
         var query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-          dialogScope.data.value + '", ' +
+          dialogScope.file.name + '", ' +
           JSON.stringify(dec.options.current_result[row].data) + ')';
+        //console.log("Copying row: " + row + " with query: " + query);
         //console.log("Query: " + query + ", pristine: " + makePristine);
 
         qwQueryService.executeQueryUtil(query,false)
         // did the query succeed?
         .success(function(data, status, headers, config) {
-          console.log("successfully updated row: " + row);
-          makePristine();
+          //console.log("successfully copied row: " + row);
           dec.updatingRow = -1;
+          $timeout(retrieveDocs,200);
         })
 
         // ...or fail?
         .error(function (data,status,headers,config) {
-          console.log("failed updating row: " + row);
+          //console.log("failed copying row: " + row + JSON.stringify(data));
+
+          $timeout(retrieveDocs,200);
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error Copying Document";
+          dialogScope.error_detail = JSON.stringify(data);
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
           dec.updatingRow = -1;
         });
 
@@ -153,26 +175,126 @@
       if (dec.updatingRow >= 0)
         return;
 
-      dec.updatingRow = row;
+      //
+      // make sure they really want to do this
+      //
 
-      console.log("deleting row: " + row);
-      var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
-        dec.options.current_result[row].id;
+      var dialogScope = $rootScope.$new(true);
+      dialogScope.error_title = "Are you sure?";
+      dialogScope.error_detail = "Really delete the document: " + dec.options.current_result[row].id;
+      dialogScope.showCancel = true;
 
-      qwQueryService.executeQueryUtil(query,false)
-      // did the query succeed?
-      .success(function(data, status, headers, config) {
-        console.log("successfully deleted row: " + row);
-        makePristine();
-        dec.updatingRow = -1;
-      })
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+        scope: dialogScope
+      }).result;
 
-      // ...or fail?
-      .error(function (data,status,headers,config) {
-        console.log("failed deleting row: " + row);
-        dec.updatingRow = -1;
+      promise.then(function (res) {
+        dec.updatingRow = row;
+        var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
+        dec.options.current_result[row].id + '"';
+        //console.log("deleting row: " + row + " with query: " + query);
+
+        qwQueryService.executeQueryUtil(query,false)
+        // did the query succeed?
+        .success(function(data, status, headers, config) {
+          //console.log("successfully deleted row: " + row);
+          dec.updatingRow = -1;
+          $timeout(retrieveDocs,200);
+        })
+
+        // ...or fail?
+        .error(function (data,status,headers,config) {
+
+          $timeout(retrieveDocs,200);
+
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error Deleting Document";
+          dialogScope.error_detail = JSON.stringify(data);
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
+
+          //console.log("failed deleting row: " + row);
+          dec.updatingRow = -1;
+        });
       });
+    }
 
+    //
+    // function to edit the JSON of a document
+    //
+
+    function editDoc(row) {
+      if (dec.updatingRow >= 0)
+        return;
+
+      var dialogScope = $rootScope.$new(true);
+
+      // use an ACE editor for editing the JSON document
+      dialogScope.ace_options = {
+          mode: 'json',
+          showGutter: true,
+          useWrapMode: true,
+          onLoad: function(_editor) { dialogScope.editor = _editor;},
+          $blockScrolling: Infinity
+      };
+      dialogScope.doc_id = dec.options.current_result[row].id;
+      dialogScope.doc_json = JSON.stringify(dec.options.current_result[row].data,null,2);
+
+      // are there any syntax errors in the editor?
+      dialogScope.errors = function() {
+        if (dialogScope.editor) {
+          var annot_list = dialogScope.editor.getSession().getAnnotations();
+          if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
+            if (annot_list[i].type == "error")
+              return true;
+        }
+        return false;
+      };
+
+
+      //
+      // put up a dialog box with the JSON in it, if they hit SAVE, save the doc, otherwise
+      // revert
+      //
+
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      promise.then(function (res) {
+        dec.updatingRow = row;
+        var newJson = dialogScope.editor.getSession().getValue();
+
+        var query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
+        dec.options.current_result[row].id + '", ' + newJson + ')';
+        console.log("Updating with query: " + query);
+
+        qwQueryService.executeQueryUtil(query,false)
+        // did the query succeed?
+        .success(function(data, status, headers, config) {
+          $timeout(retrieveDocs,200);
+          dec.updatingRow = -1;
+        })
+
+        // ...or fail?
+        .error(function (data,status,headers,config) {
+
+          $timeout(retrieveDocs,200);
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error Updating Document";
+          dialogScope.error_detail = JSON.stringify(data);
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
+
+          dec.updatingRow = -1;
+        });
+      });
     }
 
     //
@@ -222,7 +344,14 @@
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          console.log("Got error: " + dec.options.current_result);
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error Getting Documents";
+          dialogScope.error_detail = dec.options.current_result;
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
+        //console.log("Got error: " + dec.options.current_result);
         }
       });
 

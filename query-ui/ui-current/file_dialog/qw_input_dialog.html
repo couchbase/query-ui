@@ -2,13 +2,11 @@
 	<h1 class="dialog_corner_radius">{{header_message}}</h1>
 	<form class="simple-form">
 		<div class="sub_section" style="margin: 1em">
-			<table style="margin-left:0em"><tr style="white-space: nowrap">
-				<td style="margin-top: 0.25em; padding-right: 1em; vertical-align: middle">
-						{{body_message}} </td>
-				<td width="100%">
-					<input type="text" id="pwd"
-						ng-model="file.name" focus-me="open" style="width: 100%"></input></td>
-			</tr></table>
+			<div style="row margin-left:0em">
+				<span style="flex-grow: 1">{{body_message}}</span>
+				<input type="text" style="width: 300px" id="pwd"
+					ng-model="file.name" focus-me="open"></input>
+			</div>
 		</div>
 		<div class="save_cancel">
 			<button type="submit" class="save_button float_right"

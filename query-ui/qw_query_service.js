@@ -1614,7 +1614,7 @@
       // error status from query about indexes
       .error(function (data,status,headers,config) {
         // for 4.5+, auth errors come back here
-        if (data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
+        if (data && data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
           bucket.passwordNeeded = true;
           failure();
         }

@@ -1,0 +1,22 @@
+<div id="doc_editor_dialog" style="width: 800px; height: 800px">
+  <h1 class="dialog_corner_radius">{{header_message}}</h1>
+  <form class="simple-form">
+    <div class="sub_section" style="margin: 1em">
+      <div class="row" style="margin-left: 0em">
+        <span
+          style="margin-top: 0.25em; padding-right: 1em; vertical-align: middle">
+          Document: {{doc_id}} </span>
+
+      </div>
+      <div class="">
+        <div style="height: 700px" "id="result_editor" ui-ace="ace_options"
+          ng-model="doc_json"></div>
+      </div>
+    </div>
+    <div class="save_cancel">
+      <button type="submit" class="save_button float_right" 
+        ng-click="!errors() && $close('ok')">OK</button>
+      <a type="submit" class="close" ng-click="$dismiss('cancel')">Cancel</a>
+    </div>
+  </form>
+</div>

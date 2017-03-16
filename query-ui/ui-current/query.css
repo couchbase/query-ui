@@ -19,6 +19,10 @@
   margin-top: .5rem;
 }
 
+.dialog_label {
+  white-space: nowrap;
+}
+
 /* ACE editor overrides ***************** */
 .ace_gutter {
   background-color: #f6f7f9 !important;
@@ -525,6 +529,11 @@ button.icon-small .icon {
   -ms-flex-positive: 1;
   flex-grow: 1;
 }
+.cbui-table-cell.flex-grow-12 {
+  -webkit-box-flex: 1.3;
+  -ms-flex-positive: 1.3;
+  flex-grow: 1.2;
+}
 .cbui-table-cell.flex-grow-15 {
   -webkit-box-flex: 1.5;
   -ms-flex-positive: 1.5;
@@ -578,4 +587,42 @@ button.icon-small .icon {
 
 .main-content {
   width: calc(100% - 160px);
+}
+
+
+/* Buttons for the document editor */
+
+.btn.qw-doc-editor {
+  min-width: 1rem;
+  padding: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.btn.qw-doc-editor[disabled] {
+  background-color: #d3ccd3;
+}
+
+.qw-editor-btn {
+  vertical-align: top;
+  color: black;
+}
+
+.qw-fa-trash:before {
+  font-size: 1.5em;
+  content: "\f014";
+}
+
+.qw-fa-copy:before {
+  font-size: 1.5em;
+  content: "\f0c5";
+}
+
+.qw-fa-save:before {
+  font-size: 1.5em;
+  content: "\f0c7";
+}
+
+.qw-fa-edit:before {
+  font-size: 1.5em;
+  content: "\f044";
 }

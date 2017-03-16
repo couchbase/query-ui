@@ -122,7 +122,7 @@
       //
       var totalWidth = 0;
       var columnHeaders = '<div class="cbui-table-header-filled padding-left">';
-      columnHeaders += '<span class="cbui-table-cell flex-grow-1">update</span>';
+      columnHeaders += '<span class="cbui-table-cell flex-grow-12">update</span>';
       columnHeaders += '<span class="cbui-table-cell flex-grow-2">id</span>';
 
       _.forIn(topLevelKeys, function(value,key) {
@@ -138,17 +138,38 @@
 
       for (var row=0; row < object.length; row++) if (object[row].data && object[row].id)  {// they'd all better have these
         var formName = 'row' + row + 'Form';
+        var pristineName = formName + '.$pristine';
+        var setPristineName = formName + '.$setPristine';
+        var invalidName = formName + '.$invalid';
         result += '<form name="' + formName + '"' +
-          ' ng-submit="dec.updateDoc(' + row +',' + formName + '.$setPristine)">' +
+          ' ng-submit="dec.updateDoc(' + row +',' + setPristineName + ')">' +
           '<div class="cbui-tablerow padding-left">'; // new row for each object
 
         // button to update record in the first column
-        result += '<span class="cbui-table-cell flex-grow-1">' +
-        '<button type="submit" style="margin-bottom: 0.5rem" ng-disabled="' + formName +
-          '.$pristine || '+formName + '.$invalid">' +
-        '<span ng-if="!dec.options.queryBusy">Update</span>' +
-        '<span ng-if="dec.options.queryBusy">Updating</span>' +
-        '</button></span>';
+        result += '<span class="cbui-table-cell flex-grow-12"> ' +
+        '<a class="btn qw-doc-editor" ' +
+        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+        'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +
+        '><span class="icon qw-fa-save qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ' +
+        'ng-disabled="' + invalidName + '" ' +
+        'ng-click="dec.copyDoc(' + row +')" ' +
+        '><span class="icon qw-fa-copy qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ' +
+        'ng-disabled="' + invalidName + '" ' +
+        'ng-click="dec.editDoc(' + row +')" ' +
+        '><span class="icon qw-fa-edit qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ' +
+        'ng-click="dec.deleteDoc(' + row +')" ' +
+        '><span class="icon qw-fa-trash qw-editor-btn"></span></a>' +
+
+        //        '<span ng-if="!dec.options.queryBusy">Update</span>' +
+//        '<span ng-if="dec.options.queryBusy">Updating</span>' +
+//          '</button></span>';
+          '</span>';
 
         // put the meta().id in the next column
         result += '<span class="cbui-table-cell wrap break-word flex-grow-2">' +
@@ -163,7 +184,7 @@
             + childHTML + '</span>';
         });
 
-        result += '</div></form><br>'; // end of the row for the top level object
+        result += '</div></form>'; // end of the row for the top level object
       }
 
       //console.log("After header, loop: " + result);
