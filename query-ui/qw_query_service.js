@@ -778,7 +778,8 @@
         var queryRequest = {
             url: qwConstantsService.queryURL,
             method: "POST",
-            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,'ignore-401':'true'},
+            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,
+                      'ignore-401':'true','CB-User-Agent': 'Couchbase Query Workbench'},
             data: queryData,
             mnHttp: {
               isNotForm: true,
@@ -800,7 +801,8 @@
         var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
         queryRequest = {url: "/_p/query/query/service",
             method: "POST",
-            headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+                      'ns-server-proxy-timeout':timeout*1000,'CB-User-Agent': 'Couchbase Query Workbench'},
             data: encodedQuery,
             mnHttp: {
               group: "global"

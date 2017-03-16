@@ -1,0 +1,30 @@
+<div id="bucket_file_dialog" style="width: 600px">
+	<h1 class="dialog_corner_radius">Save to...</h1>
+	<form class="simple-form">
+		<div class="sub_section" style="margin: 1em">
+            <div class="row">
+              Export: 
+              <label data-ng-repeat="choice in file_options track by $index">
+                  <input style="display:unset" type="radio" name="response" value="{{$index}}"
+                   ng-model="$parent.selected.item">
+                  {{choice.label}}
+              </label>
+            </div>
+			<div class="row" ng-hide="safari">
+              <span class="dialog_label">Enter a name for the {{file_options[selected].label}} file:</span>
+              <input type="text" id="pwd"
+						ng-model="file.name" focus-me="open" style="width: 100%"></input>
+              <span class="dialog_label">.{{file_options[selected.item].kind}}</span>
+            </div>
+            <div class="row" ng-show="safari"><br>
+            Safari does not support HTML SaveAs. Output will appear in a new tab, you can use File->SaveAs from there.
+            </div>
+		</div>
+		<div class="save_cancel">
+			<button type="submit" class="save_button float_right"
+				ng-click="$close('ok')">OK</button>
+            <a type="submit" class="close"
+                ng-click="$dismiss('cancel')">Cancel</a>
+		</div>
+	</form>
+</div>

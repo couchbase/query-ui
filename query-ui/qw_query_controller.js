@@ -78,6 +78,7 @@
     qc.query = query;
     qc.save = save;
     qc.save_query = save_query;
+    qc.unified_save = unified_save;
     qc.options = options;
 
     qc.load_query = load_query;
@@ -658,6 +659,7 @@
     // default names for save and save_query
     dialogScope.data_file = {name: "data.json"};
     dialogScope.query_file = {name: "n1ql_query.txt"};
+    dialogScope.file = {name: "output"};
     dialogScope.options = qwQueryService.options;
 
     function options() {
@@ -690,7 +692,7 @@
       }
 
       // but for those that do, get a name for the file
-      dialogScope.file_type = 'json ';
+      dialogScope.file_type = 'json';
       dialogScope.file = dialogScope.data_file;
       var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
@@ -729,7 +731,7 @@
       }
 
       // but for those that do, get a name for the file
-      dialogScope.file_type = 'query ';
+      dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.query_file;
       var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
@@ -746,6 +748,55 @@
         saveAs(file,dialogScope.file.name);
       });
     };
+
+    //
+    // going forward we will have a single file dialog that allows the user to select
+    // "Results" or "Query"
+    //
+
+    function unified_save() {
+      dialogScope.safari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
+
+      // but for those that do, get a name for the file
+      dialogScope.file_type = 'query';
+      dialogScope.file = dialogScope.file;
+      dialogScope.file_options = [{kind: "json", label: "Results"},{kind: "txt", label: "Query"}];
+      dialogScope.selected = {item: 0};
+      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_query_unified_file_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      // now save it
+      promise.then(function (res) {
+        var file;
+        var file_extension;
+        console.log("Got selected: " + dialogScope.selected.item + " isString: " + _.isString(dialogScope.selected.item));
+
+        if (dialogScope.selected.item == 0) {
+          file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
+          file_extension = ".json";
+        }
+        else if (dialogScope.selected.item == 1) {
+          file = new Blob([qc.lastResult.query],{type: "text/plain", name: "query.txt"});
+          file_extension = ".txt";
+        }
+        else
+          console.log("Error, no match");
+
+
+        // safari does'nt support saveAs
+        if (dialogScope.safari) {
+          saveAs(file,dialogScope.query_file.name + file_extension);
+          return;
+        }
+        else
+          saveAs(file,dialogScope.file.name + file_extension);
+      });
+
+    }
 
     //
     // save the current query to a file. Here we need to use a scope to to send the file name
