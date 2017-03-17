@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService','mnPoolDefault','mnPools'];
+  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService','mnPoolDefault','mnPools','mnAuthService'];
 
-  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools) {
+  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools,mnAuthService) {
 
     var qwQueryService = {};
 
@@ -74,6 +74,11 @@
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     qwQueryService.testAuth = testAuth; // check passward
+
+    mnAuthService.whoami().then(function (resp) {
+      if (resp) qwQueryService.user = resp;
+    });
+
 
     //
     // keep track of active queries, complete requests, and prepared statements
@@ -765,6 +770,9 @@
       //
 
       var queryRequest;
+      var userAgent = 'Couchbase Query Workbench';
+      if (qwQueryService.user && qwQueryService.user.id)
+        userAgent += ' (' + qwQueryService.user.id + ')';
 
       if (mnPoolDefault.export.compat && mnPoolDefault.export.compat.atLeast45) {
 
@@ -779,7 +787,7 @@
             url: qwConstantsService.queryURL,
             method: "POST",
             headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,
-                      'ignore-401':'true','CB-User-Agent': 'Couchbase Query Workbench'},
+                      'ignore-401':'true','CB-User-Agent': userAgent},
             data: queryData,
             mnHttp: {
               isNotForm: true,
@@ -802,7 +810,7 @@
         queryRequest = {url: "/_p/query/query/service",
             method: "POST",
             headers: {'Content-Type': 'application/x-www-form-urlencoded',
-                      'ns-server-proxy-timeout':timeout*1000,'CB-User-Agent': 'Couchbase Query Workbench'},
+                      'ns-server-proxy-timeout':timeout*1000,'CB-User-Agent': userAgent},
             data: encodedQuery,
             mnHttp: {
               group: "global"
