@@ -760,7 +760,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.file;
-      dialogScope.file_options = [{kind: "json", label: "Results"},{kind: "txt", label: "Query"}];
+      dialogScope.file_options = [{kind: "json", label: "Query Results"},{kind: "txt", label: "Query Statement"}];
       dialogScope.selected = {item: 0};
       var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
