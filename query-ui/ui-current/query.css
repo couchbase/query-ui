@@ -351,7 +351,6 @@ a.selected:hover {
   color: #fff;
   cursor: text;
 }
-<<<<<<< HEAD
 
 /* MOVE TO CBUI-LAYOUT.CSS */
 .margin-left-half {
@@ -367,6 +366,10 @@ a.selected:hover {
 }
 
 /* Buttons for the document editor */
+
+.flex-grow-125 {
+  flex-grow: 1.25;
+}
 
 .btn.qw-doc-editor {
   min-width: 1rem;

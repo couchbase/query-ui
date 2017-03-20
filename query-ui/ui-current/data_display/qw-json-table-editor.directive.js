@@ -122,7 +122,7 @@
       //
       var totalWidth = 0;
       var columnHeaders = '<div class="cbui-table-header-filled padding-left">';
-      columnHeaders += '<span class="cbui-table-cell flex-grow-12">update</span>';
+      columnHeaders += '<span class="cbui-table-cell flex-grow-125">update</span>';
       columnHeaders += '<span class="cbui-table-cell flex-grow-2">id</span>';
 
       _.forIn(topLevelKeys, function(value,key) {
@@ -146,7 +146,7 @@
           '<div class="cbui-tablerow padding-left">'; // new row for each object
 
         // button to update record in the first column
-        result += '<span class="cbui-table-cell flex-grow-12"> ' +
+        result += '<span class="cbui-table-cell flex-grow-125"> ' +
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
         'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +

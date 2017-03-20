@@ -97,7 +97,7 @@
         dialogScope.error_title = "Error Updating Document";
         dialogScope.error_detail = JSON.stringify(data);
         $uibModal.open({
-          templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
           scope: dialogScope
         });
 
@@ -155,7 +155,7 @@
           dialogScope.error_title = "Error Copying Document";
           dialogScope.error_detail = JSON.stringify(data);
           $uibModal.open({
-            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
             scope: dialogScope
           });
           dec.updatingRow = -1;
@@ -212,7 +212,7 @@
           dialogScope.error_title = "Error Deleting Document";
           dialogScope.error_detail = JSON.stringify(data);
           $uibModal.open({
-            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
             scope: dialogScope
           });
 
@@ -271,7 +271,7 @@
 
         var query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
         dec.options.current_result[row].id + '", ' + newJson + ')';
-        console.log("Updating with query: " + query);
+        //console.log("Updating with query: " + query);
 
         qwQueryService.executeQueryUtil(query,false)
         // did the query succeed?
@@ -288,7 +288,7 @@
           dialogScope.error_title = "Error Updating Document";
           dialogScope.error_detail = JSON.stringify(data);
           $uibModal.open({
-            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
             scope: dialogScope
           });
 
@@ -348,7 +348,7 @@
           dialogScope.error_title = "Error Getting Documents";
           dialogScope.error_detail = dec.options.current_result;
           $uibModal.open({
-            templateUrl: '../_p/ui/query/ui_current/password_dialog/qw_query_error_dialog.html',
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
             scope: dialogScope
           });
         //console.log("Got error: " + dec.options.current_result);
