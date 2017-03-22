@@ -33,6 +33,7 @@
 
 <!-- ACTIVE QUERIES TABLE  ************************************  -->
 
+  <div id="monitoring_tables">
   <div id="active_table" class="cbui-table" ng-if="qmc.isSelected(1)"> <!-- table wrapper -->
     <div class="cbui-table-header-filled padding-left"> <!-- table header row, no <section> wrapper -->
       <span class="cbui-table-cell flex-grow-3" ng-click="qmc.update_active_sort('statement')">Query
@@ -176,5 +177,30 @@
         </span>
       </div>
     </section>
+  </div>
+  </div>
+  
+<!-- Now for Query Stats -->
+  <div id="query_stats" style="position:fixed; bottom:0;">
+
+    <div class="chart-cell-small gray-7"
+      ng-class="{dynamic_dim: statInfo.missing}" ng-if="qmc.stats.query_selects"
+      ng-repeat="statName in qmc.stat_names track by statName"
+      ui-sref-active="dynamic_selected">
+      <div ui-sref="{graph: qmc.stats[statName].name}">
+        <div class="chart-small">
+          <div mn-plot mn-plot-config="qmc.stats[statName].config"
+            is-small-graph="true" style="width: 150px; height: 50px;">
+          </div>
+        </div>
+
+        <div class="relative ellipsis"
+          uib-tooltip="{{qmc.stats[statName].title}}: {{qmc.stats[statName].desc}}"
+          tooltip-placement="right" tooltip-trigger="'mouseenter'"
+          tooltip-append-to-body="true">
+          {{qmc.stats[statName].config.value}}
+          {{qmc.stats[statName].title}}</div>
+      </div>
+
   </div>
 </div>

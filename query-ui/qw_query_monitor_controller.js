@@ -3,9 +3,9 @@
 
   angular.module('qwQuery').controller('qwQueryMonitorController', queryMonController);
 
-  queryMonController.$inject = ['$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService'];
+  queryMonController.$inject = ['$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService'];
 
-  function queryMonController ($rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService) {
+  function queryMonController ($rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService) {
 
     var qmc = this;
 
@@ -31,6 +31,11 @@
     qmc.toggle_update = toggle_update;
     qmc.get_toggle_label = get_toggle_label;
     qmc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
+
+    qmc.stats = {};
+    qmc.stat_names = ["query_requests","query_selects","query_avg_req_time","query_avg_svc_time",
+      "query_errors", "query_warnings","query_avg_response_size","query_avg_result_count",
+      "query_requests_250ms","query_requests_500ms", "query_requests_1000ms","query_requests_5000ms"];
 
     //
     // sorting for each of the three result tables
@@ -158,8 +163,10 @@
 
     function toggle_update() {
       if (qwQueryService.monitoringAutoUpdate) {
-        if (qmc.timer) // stop any timers
+        if (qmc.timer) { // stop any timers
           $timeout.cancel(qmc.timer);
+          qmc.timer = null;
+        }
         qwQueryService.monitoringAutoUpdate = false;
       }
       else {
@@ -184,17 +191,44 @@
       // update the currently selected tab
       qwQueryService.updateQueryMonitoring(qwQueryService.monitoringTab);
 
+      // get the stats
+      var buckets = validateQueryService.validBuckets();
+      //console.log("Got buckets: "+ JSON.stringify(buckets));
+
+      if (buckets && buckets.length > 1) mnAnalyticsService.getStats({$stateParams:{
+//        "#": null,
+//        specificStat: "query_selects",
+//        enableInternalSettings: null,
+//        disablePoorMansAlerts: null,
+//        list: "active",
+//        statsHostname: "127.0.0.1:9091",
+        bucket: buckets[1],
+//        bucket: "*",
+//        openedStatsBlock: [
+//          "Query"
+//        ],
+        "graph": "ops",
+        "zoom": "minute"
+          }}).then(function (data) {
+            if (data && data.statsByName)
+              qmc.stats = data.statsByName;
+          });
+
       // do it again in 5 seconds
-      if (!qmc.stop_updating && qwQueryService.monitoringAutoUpdate)
-        qmc.timer = $timeout(function(){update();},5000);
+      if (qwQueryService.monitoringAutoUpdate) {
+        qmc.timer = $timeout(update,5000);
+      }
 
     }
 
     // when the controller is destroyed, stop the updates
     $scope.$on('$destroy',function(){
-      qmc.stop_updating = true;
-      if (qmc.timer)
+      console.log("Destroy");
+      qwQueryService.monitoringAutoUpdate = false;
+      if (qmc.timer) {
          $timeout.cancel(qmc.timer);
+         qmc.timer = null;
+      }
     });
 
     //
