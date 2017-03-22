@@ -200,12 +200,6 @@ thead.sortable th .icon {color:#555;}
   width: 8rem;
 }
 
-.icon { /* can't animate an inline element >>> THIS MOVES TO BASE.CSS */
-  display: inline-block;
-  line-height: 1;
-  font-size: inherit;
-}
-
 .icon.margin-left {
   margin-left: .25rem;
 }
