@@ -345,7 +345,7 @@
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
           var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error Getting Documents";
+          dialogScope.error_title = "Error with document retrieval query.";
           dialogScope.error_detail = dec.options.current_result;
           $uibModal.open({
             templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
