@@ -72,13 +72,13 @@
         <span class="cbui-table-cell">{{result.state}}</span>
         <span class="cbui-table-cell">{{result.users}}</span>
         <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
-          <a href="" class="nowrap">
+          <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
             <span class="icon fa-external-link"></span>
             edit
           </a>
           <a href="" class="margin-left-half nowrap" ng-click="qmc.cancelQueryById(result.requestId)">
             <span class="icon fa-times-circle"></span>
-            cancel
+            {{qmc.getCancelLabel(result.requestId)}}
           </a>
         </span>
       </div>
@@ -130,7 +130,7 @@
         <span class="cbui-table-cell">{{result.time}}</span>
         <span class="cbui-table-cell">{{result.users}}</span>
         <span class="cbui-table-cell text-right">
-          <a href="" class="nowrap">
+          <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
             <span class="icon fa-external-link"></span>
             edit
           </a>
@@ -160,7 +160,6 @@
         <span ng-if="qmc.show_up_caret_prepared('node')" class="icon fa-caret-up"></span>
         <span ng-if="qmc.show_down_caret_prepared('node')" class="icon fa-caret-down"></span>
       </span>
-      <span class="cbui-table-cell"></span>
     </div>
 
     <section ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
@@ -169,12 +168,6 @@
         <span class="cbui-table-cell">{{result.avgElapsedTime}}</span>
         <span class="cbui-table-cell">{{result.uses}}</span>
         <span class="cbui-table-cell">{{result.node}}</span>
-        <span class="cbui-table-cell text-right">
-          <a href="" class="nowrap">
-            <span class="icon fa-external-link"></span>
-            edit
-          </a>
-        </span>
       </div>
     </section>
   </div>

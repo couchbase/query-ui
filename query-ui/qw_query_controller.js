@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService', 'mnPoolDefault'];
+  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService', 'mnPoolDefault'];
 
-  function queryController ($rootScope, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService, mnPoolDefault) {
+  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService, mnPoolDefault) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());
@@ -954,7 +954,15 @@
     //
 
     function activate() {
+      // make sure we're up-to-date with buckets
       qc.validated.updateValidBuckets();
+
+      // if we receive a query parameter, and it's not the same as the current query,
+      // insert it at the end of history
+      if (_.isString($stateParams.query) && $stateParams.query.length > 0 &&
+          $stateParams.query != qc.lastResult.query) {
+        qwQueryService.addNewQueryAtEndOfHistory($stateParams.query);
+      }
 
       // Prevent the backspace key from navigating back. Thanks StackOverflow!
       $(document).unbind('keydown').bind('keydown', function (event) {

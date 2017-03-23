@@ -19,7 +19,9 @@
 
     qmc.selectTab = qwQueryService.selectMonitoringTab;
     qmc.isSelected = qwQueryService.isMonitoringSelected;
-    qmc.cancelQueryById = qwQueryService.cancelQueryById;
+    qmc.cancelQueryById = cancelQueryById;
+    qmc.getCancelLabel = getCancelLabel;
+    qmc.cancelledQueries = {}; // keep track of user-cancelled queries
 
     //
     // keep track of results from the server
@@ -85,6 +87,29 @@
     qmc.show_down_caret_prepared = function(field) {
       return(qmc.prepared_sort_by == field && !qmc.prepared_sort_reverse);
     };
+
+
+    //
+    // cancel a running query
+    //
+
+    function cancelQueryById(requestId) {
+      // remember that the query was cancelled
+      qmc.cancelledQueries[requestId] = true;
+      // do the cancel
+      qwQueryService.cancelQueryById(requestId);
+    }
+
+    //
+    // get a label for cancel, which changes when the user hits "cancel"
+    //
+
+    function getCancelLabel(requestId) {
+      if (qmc.cancelledQueries[requestId])
+        return("cancelling");
+      else
+        return("cancel");
+    }
 
     //
     // when was the data last updated?
@@ -195,20 +220,23 @@
       var buckets = validateQueryService.validBuckets();
       //console.log("Got buckets: "+ JSON.stringify(buckets));
 
+      // we need to pass in the name of a bucket to which we have access, even though
+      // the query stats are not bucket-specific
+
       if (buckets && buckets.length > 1) mnAnalyticsService.getStats({$stateParams:{
+        bucket: buckets[1],
+        "graph": "ops",
+        "zoom": "minute"
 //        "#": null,
 //        specificStat: "query_selects",
 //        enableInternalSettings: null,
 //        disablePoorMansAlerts: null,
 //        list: "active",
 //        statsHostname: "127.0.0.1:9091",
-        bucket: buckets[1],
 //        bucket: "*",
 //        openedStatsBlock: [
 //          "Query"
 //        ],
-        "graph": "ops",
-        "zoom": "minute"
           }}).then(function (data) {
             if (data && data.statsByName)
               qmc.stats = data.statsByName;
@@ -223,7 +251,6 @@
 
     // when the controller is destroyed, stop the updates
     $scope.$on('$destroy',function(){
-      console.log("Destroy");
       qwQueryService.monitoringAutoUpdate = false;
       if (qmc.timer) {
          $timeout.cancel(qmc.timer);

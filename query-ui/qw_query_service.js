@@ -560,7 +560,6 @@
       lastResult.copyIn(pastQueries[currentQueryIndex]);
     }
 
-
     //
     // clear the entire query history
     //
@@ -1413,8 +1412,8 @@
     //
 
     // update buckets whenever we hear about a bucket change
-    $rootScope.$on("bucketUriChanged",function() {updateBuckets();});
-    $rootScope.$on("indexStatusURIChanged",function() {updateBuckets();});
+    $rootScope.$on("bucketUriChanged",updateBuckets);
+    $rootScope.$on("indexStatusURIChanged",updateBuckets);
 
     function updateBuckets() {
       if (qwQueryService.gettingBuckets.busy)
@@ -1457,38 +1456,6 @@
 
         if (qwConstantsService.showSchemas)
           getInfoForBucketBackground(qwQueryService.buckets,0);
-
-//        if (qwConstantsService.getCouchbaseBucketPasswords)
-//            $http.get("../pools/default/buckets")
-//        .success(function(data) {
-//          //
-//          // bucket data should be an array of objects, where each object has
-//          // 'name' and  'saslPassword' fields (among much other data)
-//          //
-//
-//          //console.log("Getting bucket info from /pools/default/buckets...");
-//          if (_.isArray(data)) _.forEach(data, function(bucket, index) {
-//            if (bucket.name && _.isString(bucket.saslPassword))
-//              //console.log("  for bucket: " + bucket.name + " got password: " + bucket.saslPassword);
-//              _.forEach(qwQueryService.buckets, function(mBucket, i) {
-//                if (mBucket.id === bucket.name) {
-//                  mBucket.password = bucket.saslPassword;
-//                  mBucket.passwordNeeded = false;
-//                  return(false);
-//                }
-//              });
-//          });
-
-          // now that we have passwords, go get the schemas for each bucket
-
-//        getSchemaForBucketBackground(qwQueryService.buckets,0);
-//        })
-//
-//        .error(function(data,status,headers,config) {
-//          //console.log("Error getting pools/default/buckets: " + data);
-//
-//        });
-//
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes

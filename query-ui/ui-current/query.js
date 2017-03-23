@@ -41,7 +41,7 @@
           templateUrl: '../_p/ui/query/ui-current/query_monitoring.html'
         })
         .state(parent + '.workbench', {
-          url: '/workbench',
+          url: '/workbench?query',
           controller: 'qwQueryController',
           templateUrl: '../_p/ui/query/ui-current/query.html'
         })
