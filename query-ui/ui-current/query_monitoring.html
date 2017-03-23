@@ -65,12 +65,24 @@
 
     <section ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
       <div class="cbui-tablerow padding-left">
-        <span class="cbui-table-cell flex-grow-3 wrap">{{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
-        <span class="cbui-table-cell">{{result.node}}</span>
-        <span class="cbui-table-cell">{{result.elapsedTime}}</span>
-        <span class="cbui-table-cell flex-grow-2">{{result.requestId}}</span>
-        <span class="cbui-table-cell">{{result.state}}</span>
-        <span class="cbui-table-cell">{{result.users}}</span>
+        <span class="cbui-table-cell flex-grow-3 wrap" uib-tooltip="{{result.statement}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.node}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.node}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.elapsedTime}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.elapsedTime}}</span>
+        <span class="cbui-table-cell flex-grow-2" uib-tooltip="{{result.requestId}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.requestId}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.state}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.state}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.users}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.users}}</span>
         <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
           <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
             <span class="icon fa-external-link"></span>
@@ -122,13 +134,27 @@
 
     <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
       <div class="cbui-tablerow padding-left">
-        <span class="cbui-table-cell flex-grow-3 wrap">{{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
-        <span class="cbui-table-cell">{{result.node}}</span>
-        <span class="cbui-table-cell">{{result.elapsedTime}}</span>
-        <span class="cbui-table-cell">{{result.resultCount}}</span>
-        <span class="cbui-table-cell">{{result.state}}</span>
-        <span class="cbui-table-cell">{{result.time}}</span>
-        <span class="cbui-table-cell">{{result.users}}</span>
+        <span class="cbui-table-cell flex-grow-3 wrap" uib-tooltip="{{result.statement}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.node}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.node}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.elapsedTime}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.elapsedTime}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.resultCount}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.resultCount}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.state}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.state}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.time}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.time}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.users}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.users}}</span>
         <span class="cbui-table-cell text-right">
           <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
             <span class="icon fa-external-link"></span>
@@ -164,10 +190,18 @@
 
     <section ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
       <div class="cbui-tablerow padding-left">
-        <span class="cbui-table-cell flex-grow-3 wrap">{{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
-        <span class="cbui-table-cell">{{result.avgElapsedTime}}</span>
-        <span class="cbui-table-cell">{{result.uses}}</span>
-        <span class="cbui-table-cell">{{result.node}}</span>
+        <span class="cbui-table-cell flex-grow-3 wrap" uib-tooltip="{{result.statement}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.avgElapsedTime}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.avgElapsedTime}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.uses}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.uses}}</span>
+        <span class="cbui-table-cell" uib-tooltip="{{result.node}}"
+          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          {{result.node}}</span>
       </div>
     </section>
   </div>
