@@ -75,9 +75,9 @@
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     qwQueryService.testAuth = testAuth; // check passward
 
-    mnAuthService.whoami().then(function (resp) {
-      if (resp) qwQueryService.user = resp;
-    });
+//    mnAuthService.whoami().then(function (resp) {
+//      if (resp) qwQueryService.user = resp;
+//    });
 
 
     //
