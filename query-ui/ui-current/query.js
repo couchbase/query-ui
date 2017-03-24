@@ -99,6 +99,7 @@
         var queryData = {statement: "select keyspaces.name from system:keyspaces;"};
         $http.post("/_p/query/query/service",queryData)
         .success(function(data) {
+          //console.log("Success getting keyspaces: " + JSON.stringify(data));
           //console.log("Got bucket list data: " + JSON.stringify(data));
           if (data && _.isArray(data.results) && data.results.length > 0) {
             for (var i=0; i< data.results.length; i++)
@@ -106,8 +107,11 @@
 
             mnPermissions.check().then(updateValidBuckets);
           }
+
+          _valid = true; _inProgress = false;
         })
         .error(function(data, status) {
+          //console.log("Error getting keyspaces: " + JSON.stringify(data));
           _valid = false; _inProgress = false;
           _otherStatus = status;
           _otherError = data;
@@ -115,7 +119,6 @@
       }
 
       function updateValidBuckets() {
-        _valid = true; _inProgress = false;
         // see what buckets we have permission to access
         var perms = mnPermissions.export.cluster;
         //console.log("Checking bucket permissions... "/*+ JSON.stringify(perms)*/);
