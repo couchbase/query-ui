@@ -711,7 +711,7 @@
 
     function buildQueryRequest(queryText, is_user_query, queryOptions) {
 
-      //console.log("Running query: " + queryText);
+      //console.log("Building query: " + queryText);
       //
       // create a data structure for holding the query, and the credentials for any SASL
       // protected buckets
@@ -915,32 +915,8 @@
       var pre_post_ms = new Date().getTime(); // when did we start?
 
       //
-      // create a data structure for holding the query, and the credentials for any SASL
-      // protected buckets
-      //
-
-//      var queryData = {statement: queryText};
-//      if (qwConstantsService.sendCreds) {
-//        var credArray = [];
-//
-//        for (var i = 0; i < qwQueryService.buckets.length; i++) {
-//          var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
-//          credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
-//        }
-//
-//        if (credArray.length > 0)
-//          queryData.creds = credArray;
-//      }
-//
-//      qwQueryService.currentQueryRequestID = UUID.generate();
-//      queryData.client_context_id = qwQueryService.currentQueryRequestID;
-
-      // send the query off via REST API
-      //
-      //
-
-
       // if the query is not already an explain, run a version with explain to get the query plan
+      //
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
@@ -949,8 +925,8 @@
 
         newResult.explainDone = false;
 
-        var request = buildQueryRequest("explain " + queryText, false);
-        if (!request) {
+        var explain_request = buildQueryRequest("explain " + queryText, false);
+        if (!explain_request) {
           newResult.result = '{"status": "Query Failed."}';
           newResult.data = {status: "Query Failed."};
           newResult.status = "errors";
@@ -963,7 +939,7 @@
           finishQuery();
           return;
         }
-        $http(request)
+        $http(explain_request)
         .success(function(data, status, headers, config) {
           if (data && data.status == "success" && data.results && data.results.length > 0) {
             var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
@@ -971,9 +947,7 @@
                {explain: data.results[0],
                  analysis: lists,
                  plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan, null, lists)
-                 /*,
-                 buckets: qwQueryService.buckets,
-                 tokens: qwQueryService.autoCompleteTokens*/};
+                 };
 
             // let's check all the fields to make sure they are all valid
 //            for (var f in newResult.explainResult.analysis.fields) {
@@ -990,8 +964,10 @@
 //            }
           }
 
-          else if (data.errors)
+          else if (data.errors) {
             newResult.explainResult = data.errors;
+            newResult.explainResult.explain_query = explain_request.data.statement;
+          }
           else
             newResult.explainResult = {'error': 'No server response for explain.'};
 
@@ -1010,20 +986,26 @@
 
         })
         .error(function(data, status, headers, config) {
-          console.log("Explain error Data: " + JSON.stringify(data));
-          console.log("Explain error Status: " + JSON.stringify(status));
-          console.log("Explain error Headers: " + JSON.stringify(headers));
+          //console.log("Explain error Data: " + JSON.stringify(data));
+          //console.log("Explain error Status: " + JSON.stringify(status));
+          //console.log("Explain error Headers: " + JSON.stringify(headers));
 
-          if (data && _.isString(data))
+          if (data && _.isString(data)) {
             newResult.explainResult = {errors: data};
-          else if (data && data.errors)
+            newResult.explainResult.query_from_user = explain_request.data.statement;
+          }
+          else if (data && data.errors) {
+            if (data.errors.length > 0)
+              data.errors[0].query_from_user = explain_request.data.statement;
             newResult.explainResult = {errors: data.errors};
-          else
+          }
+          else {
             newResult.explainResult = {errors: "Unknown error getting explain plan"};
+            newResult.explainResult.query_from_user = explain_request.data.statement;
+          }
 
           newResult.explainDone = true;
           newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
-
           lastResult.copyIn(newResult);
 
           //console.log("Explain: " + newResult.explainResult);

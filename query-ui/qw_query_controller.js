@@ -608,6 +608,10 @@
     //
 
     function query() {
+      // make sure there is a query to run
+      if (qc.lastResult.query.trim().length == 0)
+        return;
+
       // if a query is already running, we should cancel it
       if (qc.executingQuery.busy) {
         qwQueryService.cancelQuery();
