@@ -85,11 +85,9 @@
           {{result.users}}</span>
         <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
           <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
-            <span class="icon fa-external-link"></span>
             edit
           </a>
           <a href="" class="margin-left-half nowrap" ng-click="qmc.cancelQueryById(result.requestId)">
-            <span class="icon fa-times-circle"></span>
             {{qmc.getCancelLabel(result.requestId)}}
           </a>
         </span>
@@ -129,13 +127,13 @@
           <span ng-if="qmc.show_up_caret_completed('users')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_completed('users')" class="icon fa-caret-down"></span>
         </span>
-        <span class="cbui-table-cell"></span>
+        <span class="cbui-table-cell flex-grow-half"></span>
     </div>
 
     <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
       <div class="cbui-tablerow padding-left">
         <span class="cbui-table-cell flex-grow-3 wrap" uib-tooltip="{{result.statement}}"
-          tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
+          tooltip-placement="auto top" tooltip-class="large" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
           {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}</span>
         <span class="cbui-table-cell" uib-tooltip="{{result.node}}"
           tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
@@ -151,13 +149,12 @@
           {{result.state}}</span>
         <span class="cbui-table-cell" uib-tooltip="{{result.time}}"
           tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
-          {{result.time}}</span>
+          {{result.time | limitTo: -28 | limitTo: 8}}</span>
         <span class="cbui-table-cell" uib-tooltip="{{result.users}}"
           tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
           {{result.users}}</span>
-        <span class="cbui-table-cell text-right">
+        <span class="cbui-table-cell flex-grow-half text-right">
           <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
-            <span class="icon fa-external-link"></span>
             edit
           </a>
         </span>
@@ -206,7 +203,7 @@
     </section>
   </div>
   </div>
-  
+
 <!-- Now for Query Stats -->
   <div id="query_stats" style="position:fixed; bottom:0;">
 
