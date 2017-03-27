@@ -1402,8 +1402,6 @@
         return;
 
       qwQueryService.gettingBuckets.busy = true;
-      qwQueryService.buckets.length = 0;
-      qwQueryService.autoCompleteTokens = {};
       validateQueryService.updateValidBuckets();
 
       // use a query to get buckets with a primary index
@@ -1413,7 +1411,17 @@
       res1 = executeQueryUtil(queryText, false)
       .success(function(data, status, headers, config) {
 
+        // remember the counts of each bucket so the screen doesn't blink when recomputing counts
+        var bucket_counts = {};
+        for (var i=0; i < qwQueryService.buckets.length; i++) {
+
+          bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
+        }
+
         // initialize the data structure for holding all the buckets
+        qwQueryService.buckets.length = 0;
+        qwQueryService.bucket_names.length = 0;
+        qwQueryService.autoCompleteTokens = {};
 
         if (data && data.results) for (var i=0; i< data.results.length; i++) {
           var bucket = data.results[i];
@@ -1422,6 +1430,7 @@
           //bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
           bucket.indexes = [];
           bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
+          bucket.count = bucket_counts[bucket.id];
           //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
           if (bucket.validated) {
             qwQueryService.buckets.push(bucket); // only include buckets we have access to
@@ -1429,8 +1438,8 @@
           }
           addToken(bucket.id,"bucket");
         }
-        refreshAutoCompleteArray();
 
+        refreshAutoCompleteArray();
 
         //
         // Should we go get information for each bucket?
@@ -1487,6 +1496,7 @@
 
             console.log(error);
 
+            qwQueryService.index_error = error;
             qwQueryService.gettingBuckets.busy = false;
           }
           );
@@ -1507,6 +1517,9 @@
         else if (status)
           error = error + ", contacting query service returned status: " + status;
 
+        qwQueryService.buckets.length = 0;
+        qwQueryService.autoCompleteTokens = {};
+        qwQueryService.bucket_errors = error;
         qwQueryService.buckets.push({id: error, schema: []});
 
         qwQueryService.gettingBuckets.busy = false;
