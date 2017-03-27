@@ -129,6 +129,17 @@
         named_parameters: []
     };
 
+    // clone options so we can have a scratch copy for the dialog box
+    qwQueryService.clone_options = function() {
+        return {
+          timings: qwQueryService.options.timings,
+          max_parallelism: qwQueryService.options.max_parallelism,
+          scan_consistency: qwQueryService.options.scan_consistency,
+          positional_parameters: qwQueryService.options.positional_parameters.slice(),
+          named_parameters: qwQueryService.options.named_parameters.slice()
+        };
+    };
+
     //
     // a few variables for keeping track of the doc editor
     //

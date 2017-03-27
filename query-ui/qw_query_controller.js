@@ -664,10 +664,10 @@
     dialogScope.data_file = {name: "data.json"};
     dialogScope.query_file = {name: "n1ql_query.txt"};
     dialogScope.file = {name: "output"};
-    dialogScope.options = qwQueryService.options;
 
     function options() {
       var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      dialogScope.options = qwQueryService.clone_options();
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -676,8 +676,9 @@
       }).result;
 
       // now save it
-//      promise.then(function (res) {
-//      });
+      promise.then(function (res) {
+        qwQueryService.options = dialogScope.options;
+      });
 
     }
 
