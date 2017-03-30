@@ -3,9 +3,9 @@
 
   angular.module('qwQuery').controller('qwQueryMonitorController', queryMonController);
 
-  queryMonController.$inject = ['$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService'];
+  queryMonController.$inject = ['$http','$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService'];
 
-  function queryMonController ($rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService) {
+  function queryMonController ($http, $rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService) {
 
     var qmc = this;
 
@@ -35,6 +35,7 @@
     qmc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
 
     qmc.stats = {};
+    qmc.vitals = {};
     qmc.stat_names = ["query_requests","query_selects","query_avg_req_time","query_avg_svc_time",
       "query_errors", "query_warnings","query_avg_response_size","query_avg_result_count",
       "query_requests_250ms","query_requests_500ms", "query_requests_1000ms","query_requests_5000ms"];
@@ -216,12 +217,22 @@
       // update the currently selected tab
       qwQueryService.updateQueryMonitoring(qwQueryService.monitoringTab);
 
-      // get the stats
-      var buckets = validateQueryService.validBuckets();
-      //console.log("Got buckets: "+ JSON.stringify(buckets));
+      // get the stats from the Query service
+      $http({
+        url: "../_p/query/admin/vitals",
+        method: "GET"
+      }).then(function (resp) {
+        if (resp && resp.status == 200 && resp.data) {
+          qmc.vitals = resp.data;
+          qmc.vitals.memory_util = Math.round((qmc.vitals["memory.usage"] / qmc.vitals["memory.system"]) * 100);
+        }
+      });
 
       // we need to pass in the name of a bucket to which we have access, even though
       // the query stats are not bucket-specific
+
+      var buckets = validateQueryService.validBuckets();
+      //console.log("Got buckets: "+ JSON.stringify(buckets));
 
       if (buckets && buckets.length > 1) mnAnalyticsService.getStats({$stateParams:{
         bucket: buckets[1],

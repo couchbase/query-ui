@@ -206,7 +206,15 @@
 
 <!-- Now for Query Stats -->
   <div id="query_stats" style="position:fixed; bottom:0;">
-
+    <div id="vitals">
+        <span>requests/sec (15min): {{qmc.vitals["request.per.sec.15min"]}}</span>
+        <span>requests/sec (5min): {{qmc.vitals["request.per.sec.5min"]}}</span>
+        <span>requests/sec (1min): {{qmc.vitals["request.per.sec.1min"]}}</span>
+        <span>mean request time: {{qmc.vitals["request_time.mean"]}}</span>
+        <span>median request time: {{qmc.vitals["request_time.median"]}}</span>
+        <span>memory util: {{qmc.vitals.memory_util}}%</span>
+        
+    </div>
     <div class="chart-cell-small gray-7"
       ng-class="{dynamic_dim: statInfo.missing}" ng-if="qmc.stats.query_selects"
       ng-repeat="statName in qmc.stat_names track by statName"
