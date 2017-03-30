@@ -3,9 +3,9 @@
 
   angular.module('qwQuery').controller('qwQueryMonitorController', queryMonController);
 
-  queryMonController.$inject = ['$http','$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService'];
+  queryMonController.$inject = ['$http','$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService','qwQueryPlanService'];
 
-  function queryMonController ($http, $rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService) {
+  function queryMonController ($http, $rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService, qwQueryPlanService) {
 
     var qmc = this;
 
@@ -35,10 +35,19 @@
     qmc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
 
     qmc.stats = {};
-    qmc.vitals = {};
     qmc.stat_names = ["query_requests","query_selects","query_avg_req_time","query_avg_svc_time",
       "query_errors", "query_warnings","query_avg_response_size","query_avg_result_count",
       "query_requests_250ms","query_requests_500ms", "query_requests_1000ms","query_requests_5000ms"];
+    qmc.getLatestStat = getLatestStat;
+
+    qmc.vitals = {};
+    qmc.vitals_names = ["request.per.sec.15min","request.per.sec.5min",
+      "request.per.sec.1min","request_time.mean","request_time.median","memory_util",
+      "cpu.user.percent","cores"];
+    qmc.vitals_labels = ["requests/sec (15min)","requests/sec (5min)",
+      "requests/sec (1min)","mean request time","median request time","memory util",
+      "cpu utilization","# cores"];
+    qmc.getVital = getVital;
 
     //
     // sorting for each of the three result tables
@@ -212,7 +221,6 @@
     // function to update the current data at regular intervals
     //
 
-
     function update() {
       // update the currently selected tab
       qwQueryService.updateQueryMonitoring(qwQueryService.monitoringTab);
@@ -223,8 +231,10 @@
         method: "GET"
       }).then(function (resp) {
         if (resp && resp.status == 200 && resp.data) {
+          //console.log("Got vitals: " + JSON.stringify(resp.data));
           qmc.vitals = resp.data;
           qmc.vitals.memory_util = Math.round((qmc.vitals["memory.usage"] / qmc.vitals["memory.system"]) * 100);
+          qmc.vitals_updated_at = Date.now();
         }
       });
 
@@ -249,8 +259,10 @@
 //          "Query"
 //        ],
           }}).then(function (data) {
-            if (data && data.statsByName)
+            if (data && data.statsByName) {
               qmc.stats = data.statsByName;
+              qmc.stats_updated_at = Date.now();
+            }
           });
 
       // do it again in 5 seconds
@@ -258,6 +270,32 @@
         qmc.timer = $timeout(update,5000);
       }
 
+    }
+
+    //
+    // since the stats come as arrays of values for the past minute, here is a convenience
+    // function to return the latest value for any named stat
+    //
+
+    function getLatestStat(name) {
+      if (qmc.stats && qmc.stats[name] && qmc.stats[name].config && _.isArray(qmc.stats[name].config.data))
+        return qmc.stats[name].config.data[qmc.stats[name].config.data.length - 1];
+      else
+        return null;
+    }
+
+    //
+    // the vitals might be numbers, but they might be strings indicating a duration
+    // (e.g., "452.637ms"). Make sure all are returned as numbers
+    //
+
+    function getVital(name) {
+      var val = qmc.vitals[name];
+      //console.log("Got vital: " +name + " = "+ val);
+      if (_.isString(val))
+        return(qwQueryPlanService.convertTimeStringToFloat(val));
+      else
+        return(val);
     }
 
     // when the controller is destroyed, stop the updates

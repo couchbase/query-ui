@@ -17,6 +17,7 @@
     qwQueryPlanService.convertPlanJSONToPlanNodes = convertPlanJSONToPlanNodes;
     qwQueryPlanService.analyzePlan = analyzePlan;
     qwQueryPlanService.convertTimeToNormalizedString = convertTimeToNormalizedString;
+    qwQueryPlanService.convertTimeStringToFloat = convertTimeStringToFloat;
 
     //
     // convertPlanJSONToPlanNodes
