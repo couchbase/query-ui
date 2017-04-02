@@ -1,13 +1,14 @@
-<div ng-controller="qwQueryMonitorController as qmc"
-  ng-show="qmc.validated.valid()">
+<div
+   ng-controller="qwQueryMonitorController as qmc"
+   ng-show="qmc.validated.valid()">
 
   <div class="row margin-bottom-half">
-    <!-- top row w/ title/time/pill selectors -->
+<!-- top row w/ title/time/pill selectors -->
     <div class="row">
       <h4 class="inline">
-        <span ng-if="qmc.isSelected(1)">Slowest Active Queries</span> 
-        <span ng-if="qmc.isSelected(2)">Slowest Completed Queries</span> 
-        <span ng-if="qmc.isSelected(3)">Slowest Prepared Queries</span> 
+        <span ng-if="qmc.isSelected(1)">Slowest Active Queries</span>
+        <span ng-if="qmc.isSelected(2)">Slowest Completed Queries</span>
+        <span ng-if="qmc.isSelected(3)">Slowest Prepared Queries</span>
         <small>
           {{qmc.updatedTime()}} <span ng-if="qmc.get_update_flag()"
           class="loading"></span> <span ng-if="!qmc.get_update_flag()"
@@ -23,39 +24,39 @@
     </div>
 
     <div class="pills text-right">
-      <a ng-click="qmc.selectTab(1)" ng-class="{selected: qmc.isSelected(1)}">Active</a> 
-      <a ng-click="qmc.selectTab(2)" ng-class="{selected: qmc.isSelected(2)}">Completed</a> 
+      <a ng-click="qmc.selectTab(1)" ng-class="{selected: qmc.isSelected(1)}">Active</a>
+      <a ng-click="qmc.selectTab(2)" ng-class="{selected: qmc.isSelected(2)}">Completed</a>
       <a ng-click="qmc.selectTab(3)" ng-class="{selected: qmc.isSelected(3)}">Prepared</a>
     </div>
   </div>
 
-  <!-- ACTIVE QUERIES TABLE  ************************************  -->
-
   <div id="monitoring_tables">
+
+<!-- ACTIVE QUERIES TABLE  ************************************  -->
     <div id="active_table" class="cbui-table" ng-if="qmc.isSelected(1)">
       <!-- table wrapper -->
       <div class="cbui-table-header-filled padding-left">
         <!-- table header row, no <section> wrapper -->
-        <span class="cbui-table-cell flex-grow-3" ng-click="qmc.update_active_sort('statement')">Query 
-          <span ng-if="qmc.show_up_caret_active('statement')" class="icon fa-caret-up"></span> 
+        <span class="cbui-table-cell flex-grow-3" ng-click="qmc.update_active_sort('statement')">Query
+          <span ng-if="qmc.show_up_caret_active('statement')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_active('statement')" class="icon fa-caret-down"></span>
-        </span> <span class="cbui-table-cell" ng-click="qmc.update_active_sort('node')">Node 
-          <span ng-if="qmc.show_up_caret_active('node')" class="icon fa-caret-up"></span> 
+        </span> <span class="cbui-table-cell" ng-click="qmc.update_active_sort('node')">Node
+          <span ng-if="qmc.show_up_caret_active('node')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_active('node')" class="icon fa-caret-down"></span>
-        </span> 
+        </span>
         <span class="cbui-table-cell" ng-click="qmc.update_active_sort('elapsedTime')">Duration
-          <span ng-if="qmc.show_up_caret_active('elapsedTime')" class="icon fa-caret-up"></span> 
+          <span ng-if="qmc.show_up_caret_active('elapsedTime')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_active('elapsedTime')" class="icon fa-caret-down"></span>
-        </span> <span class="cbui-table-cell flex-grow-2" ng-click="qmc.update_active_sort('requestId')">Request ID 
-          <span ng-if="qmc.show_up_caret_active('requestId')" class="icon fa-caret-up"></span> 
+        </span> <span class="cbui-table-cell flex-grow-2" ng-click="qmc.update_active_sort('requestId')">Request ID
+          <span ng-if="qmc.show_up_caret_active('requestId')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_active('requestId')" class="icon fa-caret-down"></span>
-        </span> 
-        <span class="cbui-table-cell" ng-click="qmc.update_active_sort('state')">State 
-          <span ng-if="qmc.show_up_caret_active('state')" class="icon fa-caret-up"></span> 
+        </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_active_sort('state')">State
+          <span ng-if="qmc.show_up_caret_active('state')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_active('state')" class="icon fa-caret-down"></span>
-        </span> 
-        <span class="cbui-table-cell" ng-click="qmc.update_active_sort('users')">User 
-          <span ng-if="qmc.show_up_caret_active('users')" class="icon fa-caret-up"></span> 
+        </span>
+        <span class="cbui-table-cell" ng-click="qmc.update_active_sort('users')">User
+          <span ng-if="qmc.show_up_caret_active('users')" class="icon fa-caret-up"></span>
           <span ng-if="qmc.show_down_caret_active('users')" class="icon fa-caret-down"></span>
         </span> <span class="cbui-table-cell flex-grow-1-5"></span>
       </div>
@@ -202,27 +203,85 @@
       </div>
     </section>
   </div>
-  </div>
+</div>
 
-  <!-- Now for Query Stats -->
-  <div id="query_stats" style="position: fixed; bottom: 0;">
+<!-- QUERY STATISTICS ************************************** -->
+  <div id="query_stats">
+
+<div class="column vertical-divider">
+
+  <span class="width-6">{{qmc.stats["query_requests_250ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_250ms") | number:1}}</span><br>
+  <span class="width-6">{{qmc.stats["query_requests_500ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_500ms") | number:1}}</span><br>
+  <span class="width-6">{{qmc.stats["query_requests_1000ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_1000ms") | number:1}}</span><br>
+  <span class="width-6">{{qmc.stats["query_requests_5000ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_5000ms") | number:1}}</span><br>
+
+</div>
+
+<div class="column wide vertical-divider text-center">
+  <span class="text-center">
+  <div mn-plot mn-plot-config="qmc.stats['query_requests'].config"
+    is-small-graph="true" style="width: 100px; height: 25px;">
+  </div>
+  <desc>{{qmc.stats["query_requests"].title}}: {{qmc.getAverageStat("query_requests") | number:1}}</desc>
+</span>
+<span class="text-center indent-2">
+  <div mn-plot mn-plot-config="qmc.stats['query_avg_req_time'].config"
+    is-small-graph="true" style="width: 100px; height: 25px;">
+  </div>
+  <desc>{{qmc.stats["query_avg_req_time"].title}}: {{qmc.getAverageStat("query_avg_req_time") | number:1}}</desc>
+</span>
+<span class="text-center indent-2">
+  <div mn-plot mn-plot-config="qmc.stats['query_avg_svc_time'].config"
+    is-small-graph="true" style="width: 100px; height: 25px;" >
+  </div>
+  <desc>{{qmc.stats["query_avg_svc_time"].title}}: {{qmc.getAverageStat("query_avg_svc_time") | number:1}}</desc>
+</span>
+
+<hr>
+
+  <desc>memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
+
+</div>
+
+<div class="column">
+
+  <span class="width-6">requests/sec > last minute</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}}</span><br>
+  <span class="width-6">requests/sec > last 5 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}}</span><br>
+  <span class="width-6">requests/sec > last 15 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}}</span><br>
+  <span class="width-6">mean request time</span> <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:1}}</span><br>
+
+</div>
+
+
+
+
+<!--
+
+<div class="column vertical-divider">
+{{qmc.getVital("request.per.sec.15min") | number:2}}
+
+</div>
+
+
+    <span>
     <div id="vitals" ng-repeat="vitalName in qmc.vitals_names track by $index">
         {{qmc.vitals_labels[$index]}}: {{qmc.getVital(vitalName) | number:2}}
     </div>
-
+</span>
+  <span>
     <div id="stats_latest" ng-repeat="statName in qmc.stat_names track by statName">
         {{qmc.stats[statName].title}}: {{qmc.getLatestStat(statName) | number:2}}
     </div>
-
+</span>
     <div id="stats_charts">
       <div class="chart-cell-small gray-7" ng-class="{dynamic_dim:
         statInfo.missing}" ng-if="qmc.stats.query_selects"
         ng-repeat="statName in qmc.stat_names track by statName"
         ui-sref-active="dynamic_selected">
         <div ui-sref="{graph: qmc.stats[statName].name}">
-          <div class="chart-small">
+          <div class="">
             <div mn-plot mn-plot-config="qmc.stats[statName].config"
-              is-small-graph="true" style="width: 150px; height: 50px;">
+              is-small-graph="true" style="width: 75px; height: 25px;">
             </div>
           </div>
 
@@ -235,4 +294,5 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
+</div>

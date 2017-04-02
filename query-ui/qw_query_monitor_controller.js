@@ -39,6 +39,7 @@
       "query_errors", "query_warnings","query_avg_response_size","query_avg_result_count",
       "query_requests_250ms","query_requests_500ms", "query_requests_1000ms","query_requests_5000ms"];
     qmc.getLatestStat = getLatestStat;
+    qmc.getAverageStat = getAverageStat;
 
     qmc.vitals = {};
     qmc.vitals_names = ["request.per.sec.15min","request.per.sec.5min",
@@ -283,6 +284,26 @@
       else
         return null;
     }
+
+
+    //
+    // since the stats come as arrays of values for the past minute, here is a convenience
+    // function to return the average value for any named stat
+    //
+
+    function getAverageStat(name) {
+      if (qmc.stats && qmc.stats[name] && qmc.stats[name].config && _.isArray(qmc.stats[name].config.data)) {
+        var sum = 0;
+        for (var i=0;i<qmc.stats[name].config.data.length;i++)
+          sum += qmc.stats[name].config.data[i];
+        //console.log("For stat: " + name + " got length: " + qmc.stats[name].config.data.length + " and sum: " + sum);
+        return sum/qmc.stats[name].config.data.length;
+      }
+      else
+        return null;
+    }
+
+
 
     //
     // the vitals might be numbers, but they might be strings indicating a duration
