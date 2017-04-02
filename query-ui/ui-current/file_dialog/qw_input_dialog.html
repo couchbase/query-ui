@@ -1,18 +1,25 @@
-<div id="bucket_file_dialog" style="width: 600px">
-	<h1 class="dialog_corner_radius">{{header_message}}</h1>
-	<form class="simple-form">
-		<div class="sub_section" style="margin: 1em">
-			<div style="row margin-left:0em">
-				<span style="flex-grow: 1">{{body_message}}</span>
-				<input type="text" style="width: 300px" id="pwd"
-					ng-model="file.name" focus-me="open"></input>
-			</div>
-		</div>
-		<div class="save_cancel">
-			<button type="submit" class="save_button float_right"
-				ng-click="$close('ok')">OK</button>
-            <a type="submit" class="close"
-                ng-click="$dismiss('cancel')">Cancel</a>
-		</div>
-	</form>
+<div class="dialog-small" id="bucket_file_dialog">
+  <div class="panel-header">
+    <h2 class="ellipsis">{{header_message}}</h2>
+  </div>
+  <form class="forms">
+  <div class="panel-content">
+    <label>{{body_message}}</label>
+    <div class="formrow">
+      <input
+         type="text" id="pwd"
+         ng-model="file.name" focus-me="open">
+    </div>
+  </div>
+  <div class="panel-footer">
+    <a
+       ng-click="$dismiss('cancel')"
+       href="">
+      Cancel
+    </a>
+    <button
+       type="submit"
+       ng-click="!errors() && $close('ok')">Save</button>
+  </div>
+  </form>
 </div>

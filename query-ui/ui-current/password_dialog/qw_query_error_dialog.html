@@ -1,18 +1,23 @@
-<div id="bucket_password_error_dialog" style="width:500px">
-    <h1 class="dialog_corner_radius">{{error_title}}</h1>
-    <form>
-    <div class="row sub_section" style="margin:1em">
-      <div style="float:left;margin-top:0.25em;margin-right:0.5em;margin-bottom:1.25em;vertical-align:middle">
-      {{error_title}}</div>
+<div class="dialog-small" id="bucket_file_dialog">
+  <div class="panel-header">
+    <h2 class="ellipsis">{{error_title}}</h2>
+  </div>
+  <form class="forms">
+  <div class="panel-content">
+    <div class="row">
+      <span class="icon red-3 fa-warning fa-2x"></span>
+      <p>{{error_detail}}</p>
     </div>
-    <div class="row sub_section" style="margin:1em">
-      <div style="float:left;margin-top:0.25em;margin-right:0.5em;margin-bottom:1.25em;vertical-align:middle">
-      {{error_detail}}</div>
-    </div>
-    </form>
-    <div class="save_cancel">
-      <button type="submit" class="save_button float_right" ng-click="$close('ok')" 
-      focus-me="yes">OK</button>
-      <a ng-if="showCancel" type="submit" class="close" ng-click="$dismiss('cancel')">Cancel</a>
-    </div>
+  </div>
+  <div class="panel-footer">
+    <a
+       ng-click="$dismiss('cancel')"
+       href="">
+      Cancel
+    </a>
+    <button
+       type="submit"
+       ng-click="!errors() && $close('ok')">Okay</button>
+  </div>
+  </form>
 </div>

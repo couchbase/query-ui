@@ -121,8 +121,8 @@
 
       // default names for save and save_query
       dialogScope.file = {name: dec.options.current_result[row].id + '_copy'};
-      dialogScope.header_message = "Save As...";
-      dialogScope.body_message = "Enter a key for the new document: ";
+      dialogScope.header_message = "Save As";
+      dialogScope.body_message = "New Document Key ";
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_input_dialog.html',
@@ -180,8 +180,8 @@
       //
 
       var dialogScope = $rootScope.$new(true);
-      dialogScope.error_title = "Are you sure?";
-      dialogScope.error_detail = "Really delete the document: " + dec.options.current_result[row].id;
+      dialogScope.error_title = "Delete Document";
+      dialogScope.error_detail = "Warning, this will delete the document: " + dec.options.current_result[row].id;
       dialogScope.showCancel = true;
 
       var promise = $uibModal.open({

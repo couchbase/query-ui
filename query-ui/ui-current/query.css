@@ -352,8 +352,23 @@ a.selected:hover {
     word-break: break-all;
 }
 
-/* Buttons for the document editor */
+/* TABULAR DOCUMENT EDITOR ------------------- */
+#doc_editor_tabular .controls {
+  margin: .5rem 0 .5rem 0;
+  font-size: .875rem;
+}
+#doc_editor_tabular .controls > input {
+  margin: 0 2rem 0 .25rem;
+}
+#doc_editor_tabular .controls > input:last-child {
+  margin: 0 0 0 .25rem;
+  width: 100%;
+}
+#doc_editor_tabular .controls > select {
+  margin: 0 2rem 0 0;
+}
 
+/* Buttons for the document editor */
 .flex-grow-125 {
   flex-grow: 1.25;
 }
@@ -370,7 +385,7 @@ a.selected:hover {
 
 .qw-editor-btn {
   vertical-align: top;
-  color: black;
+  color: #fff;
 }
 
 .qw-fa-trash:before {
