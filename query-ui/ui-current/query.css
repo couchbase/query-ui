@@ -313,32 +313,6 @@ padding-right: .5rem;
   width: 640px;
 }
 
-/* redundant with proposed changes to cbui-components.css */
-.pills a {
-  color: #333;
-  font-size: .961rem;
-  font-weight: 400;
-  display: inline-block;
-  padding: .25rem .75rem;
-  border-radius: 1rem;
-  cursor:pointer;
-}
-
-.pills a:hover {
-  background-color: #b3cfef;
-}
-
-a.selected {
-  background-color: #7babe2;
-  color: #fff !important;
-}
-
-a.selected:hover {
-  background-color: #7babe2 !important;
-  color: #fff;
-  cursor: text;
-}
-
 /* MOVE TO CBUI-LAYOUT.CSS */
 .margin-left-half {
   margin-left: .5rem;
