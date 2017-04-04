@@ -259,13 +259,12 @@
 //        openedStatsBlock: [
 //          "Query"
 //        ],
-          }}).then(function success(resp) {
-            var data = resp.data, status = resp.status;
+          }}).then(function success(data) {
             if (data && data.statsByName) {
               qmc.stats = data.statsByName;
               qmc.stats_updated_at = Date.now();
             }
-          });
+          },function error(resp) {console.log("Error getting graph data");});
 
       // do it again in 5 seconds
       if (qwQueryService.monitoringAutoUpdate) {
