@@ -407,12 +407,21 @@
     }
 
     function loadQueryFileList(files) {
-      // files is a FileList of File objects. load the first one into the editor, if any.
-      if (files.length >= 1) {
-        var reader = new FileReader();
-        reader.addEventListener("loadend",function() {addNewQueryContents(reader.result);});
-        reader.readAsText(files[0]);
+      // make sure we have a file
+      if (files.length == 0)
+        return;
+
+      // make sure the file ends in .txt or .n1ql
+      var file = files.item(0);
+      if (!file.name.toLowerCase().endsWith(".n1ql") && !file.name.toLowerCase().endsWith(".txt")) {
+        showErrorMessage("Can't load: " + file.name + ".\nQuery import only supports files ending in '.txt'")
+        return;
       }
+
+      // files is a FileList of File objects. load the first one into the editor, if any.
+      var reader = new FileReader();
+      reader.addEventListener("loadend",function() {addNewQueryContents(reader.result);});
+      reader.readAsText(files[0]);
     }
 
     // when they click the Load Query button
@@ -946,10 +955,12 @@
 
     function showErrorMessage(message) {
       var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      dialogScope.error_title = "Error";
+      dialogScope.error_detail = message;
 
       $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
-        scope: {error_title: "Error", error_detail: message}
+        scope: dialogScope
       });
     }
 
