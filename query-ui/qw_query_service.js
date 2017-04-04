@@ -644,15 +644,15 @@
 
         executeQueryUtil(query,false)
 
-//        .success(function(data, status, headers, config) {
-//          console.log("Success cancelling query.");
-//          console.log("    Data: " + JSON.stringify(data));
-//          console.log("    Status: " + JSON.stringify(status));
-//        })
-
+        .then(function success() {
+//        console.log("Success cancelling query.");
+//        console.log("    Data: " + JSON.stringify(data));
+//        console.log("    Status: " + JSON.stringify(status));
+        },
 
         // sanity check - if there was an error put a message in the console.
-        .error(function(data, status, headers, config) {
+        function error(resp) {
+          var data = resp.data, status = resp.status;
           console.log("Error cancelling query.");
           console.log("    Data: " + JSON.stringify(data));
           console.log("    Status: " + JSON.stringify(status));
@@ -672,14 +672,15 @@
 
       executeQueryUtil(query,false)
 
-//        .success(function(data, status, headers, config) {
-//          console.log("Success cancelling query.");
-//          console.log("    Data: " + JSON.stringify(data));
-//          console.log("    Status: " + JSON.stringify(status));
-//        })
+        .then(function success() {
+//        console.log("Success cancelling query.");
+//        console.log("    Data: " + JSON.stringify(data));
+//        console.log("    Status: " + JSON.stringify(status));
+        },
 
       // sanity check - if there was an error put a message in the console.
-      .error(function(data, status, headers, config) {
+      function error(resp) {
+        var data = resp.data, status = resp.status;
         console.log("Error cancelling query.");
         console.log("    Data: " + JSON.stringify(data));
         console.log("    Status: " + JSON.stringify(status));
@@ -697,6 +698,7 @@
     //
 
     function executeQueryUtil(queryText, is_user_query) {
+      //console.log("Running query: " + queryText);
       var request = buildQueryRequest(queryText,is_user_query);
 
       // if the request can't be built because the query is too big, return a dummy
@@ -705,19 +707,14 @@
 
       if (!request) {
         var dummy = Promise.resolve({errors: "Query too long"});
-        dummy.success = function(fn) {/*nop*/ return(dummy);};
-        dummy.error = function(fn) {dummy.then(fn); return(dummy);};
+        //dummy.success = function(fn) {/*nop*/ return(dummy);};
+        //dummy.error = function(fn) {dummy.then(fn); return(dummy);};
         dummy.origThen = dummy.then;
         dummy.then = function(fn1,fn2) {dummy.origThen(fn1,fn2); return(dummy);};
         return(dummy);
       }
 
-      var promise = $http(request);
-//      promise.success(function(data, status, headers, config)
-//          {console.log("Got success: " + JSON.stringify(data));});
-//      promise.error(function(data, status, headers, config)
-//          {console.log("Got error: " + JSON.stringify(data));});
-      return(promise);
+      return($http(request));
     }
 
     function buildQueryRequest(queryText, is_user_query, queryOptions) {
@@ -951,7 +948,8 @@
           return;
         }
         $http(explain_request)
-        .success(function(data, status, headers, config) {
+        .then(function success(resp) {
+          var data = resp.data, status = resp.status;
           if (data && data.status == "success" && data.results && data.results.length > 0) {
             var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
             newResult.explainResult =
@@ -995,8 +993,10 @@
             finishQuery();
           }
 
-        })
-        .error(function(data, status, headers, config) {
+        },
+        /* error response from $http */
+        function error(resp) {
+          var data = resp.data, status = resp.status;
           //console.log("Explain error Data: " + JSON.stringify(data));
           //console.log("Explain error Status: " + JSON.stringify(status));
           //console.log("Explain error Headers: " + JSON.stringify(headers));
@@ -1064,7 +1064,8 @@
       }
       var promise = $http(request)
       // SUCCESS!
-      .success(function(data, status, headers, config) {
+      .then(function success(resp) {
+        var data = resp.data, status = resp.status;
 //      console.log("Success Data: " + JSON.stringify(data));
 //      console.log("Success Status: " + JSON.stringify(status));
 //      console.log("Success Headers: " + JSON.stringify(headers));
@@ -1164,8 +1165,10 @@
           lastResult.copyIn(newResult);
           finishQuery();
         }
-      })
-      .error(function(data, status, headers, config) {
+      },
+      /* error response from $http */
+      function error(resp) {
+        var data = resp.data, status = resp.status;
 //      console.log("Error Data: " + JSON.stringify(data));
 //      console.log("Error Status: " + JSON.stringify(status));
 //      console.log("Error Headers: " + JSON.stringify(headers));
@@ -1420,7 +1423,8 @@
       var queryText = qwConstantsService.keyspaceQuery;
 
       res1 = executeQueryUtil(queryText, false)
-      .success(function(data, status, headers, config) {
+      .then(function success(resp) {
+        var data = resp.data, status = resp.status;
 
         // remember the counts of each bucket so the screen doesn't blink when recomputing counts
         var bucket_counts = {};
@@ -1468,7 +1472,8 @@
 
           res1 = executeQueryUtil(queryText, false)
           //res1 = $http.post("/_p/query/query/service",{statement : queryText})
-          .success(function (data,status,headers,config) {
+          .then(function (resp) {
+            var data = resp.data, status = resp.status;
 
             //console.log("Got index info: " + JSON.stringify(data));
 
@@ -1487,10 +1492,12 @@
 
             refreshAutoCompleteArray();
             qwQueryService.gettingBuckets.busy = false;
-          })
+          },
 
           // error status from query about indexes
-          .error(function (data,status,headers,config) {
+          function (resp) {
+            var data = resp.data, status = resp.status;
+
             //console.log("Ind Error Data: " + JSON.stringify(data));
             //console.log("Ind Error Status: " + JSON.stringify(status));
             //console.log("Ind Error Headers: " + JSON.stringify(headers));
@@ -1515,8 +1522,10 @@
         else
           qwQueryService.gettingBuckets.busy = false;
 
-      })
-      .error(function(data, status, headers, config) {
+      },
+      /* error response from $http */
+      function error(resp) {
+        var data = resp.data, status = resp.status;
 //        console.log("Schema Error Data: " + JSON.stringify(data));
 //        console.log("Schema Error Status: " + JSON.stringify(status));
 //        console.log("Schema Error Headers: " + JSON.stringify(headers));
@@ -1579,7 +1588,8 @@
       queryText = "select count(*) cnt from `" + bucket.id + '`';
 
       res1 = executeQueryUtil(queryText, false)
-      .success(function (data,status,headers,config) {
+      .then(function successCallback(resp) {
+        var data = resp.data, status = resp.status;
 
         // data might have a result array with an object {cnt: <count> }
         if (data && _.isArray(data.results) && data.results.length > 0 && _.isNumber(data.results[0].cnt)) {
@@ -1592,10 +1602,11 @@
           bucket.passwordNeeded = true;
           failure();
         }
-      })
+      },
 
       // error status from query about indexes
-      .error(function (data,status,headers,config) {
+      function errorCallback(resp) {
+        var data = resp.data, status = resp.status;
         // for 4.5+, auth errors come back here
         if (data && data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
           bucket.passwordNeeded = true;

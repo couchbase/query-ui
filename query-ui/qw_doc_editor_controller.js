@@ -83,14 +83,15 @@
 
       qwQueryService.executeQueryUtil(query,false)
       // did the query succeed?
-      .success(function(data, status, headers, config) {
+      .then(function success(resp) {
         //console.log("successfully updated row: " + row + ", makePristine: " + makePristine);
         makePristine();
         dec.updatingRow = -1;
-      })
+      },
 
       // ...or fail?
-      .error(function (data,status,headers,config) {
+      function error(resp) {
+        var data = resp.data, status = resp.status;
 
         $timeout(retrieveDocs,200);
         var dialogScope = $rootScope.$new(true);
@@ -129,7 +130,7 @@
         scope: dialogScope
       }).result;
 
-      promise.then(function (res) {
+      promise.then(function success(resp) {
         dec.updatingRow = row;
 
         var query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
@@ -140,14 +141,15 @@
 
         qwQueryService.executeQueryUtil(query,false)
         // did the query succeed?
-        .success(function(data, status, headers, config) {
+        .then(function success(resp) {
           //console.log("successfully copied row: " + row);
           dec.updatingRow = -1;
           $timeout(retrieveDocs,200);
-        })
+        },
 
         // ...or fail?
-        .error(function (data,status,headers,config) {
+        function error(resp) {
+          var data = resp.data, status = resp.status;
           //console.log("failed copying row: " + row + JSON.stringify(data));
 
           $timeout(retrieveDocs,200);
@@ -189,7 +191,7 @@
         scope: dialogScope
       }).result;
 
-      promise.then(function (res) {
+      promise.then(function success(res) {
         dec.updatingRow = row;
         var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
         dec.options.current_result[row].id + '"';
@@ -197,14 +199,15 @@
 
         qwQueryService.executeQueryUtil(query,false)
         // did the query succeed?
-        .success(function(data, status, headers, config) {
+        .then(function(resp) {
           //console.log("successfully deleted row: " + row);
           dec.updatingRow = -1;
           $timeout(retrieveDocs,200);
-        })
+        },
 
         // ...or fail?
-        .error(function (data,status,headers,config) {
+        function error(resp) {
+          var data = resp.data, status = resp.status;
 
           $timeout(retrieveDocs,200);
 
@@ -265,7 +268,7 @@
         scope: dialogScope
       }).result;
 
-      promise.then(function (res) {
+      promise.then(function success(res) {
         dec.updatingRow = row;
         var newJson = dialogScope.editor.getSession().getValue();
 
@@ -275,13 +278,14 @@
 
         qwQueryService.executeQueryUtil(query,false)
         // did the query succeed?
-        .success(function(data, status, headers, config) {
+        .then(function(resp) {
           $timeout(retrieveDocs,200);
           dec.updatingRow = -1;
-        })
+        },
 
         // ...or fail?
-        .error(function (data,status,headers,config) {
+        function error(resp) {
+          var data = resp.data, status = resp.status;
 
           $timeout(retrieveDocs,200);
           var dialogScope = $rootScope.$new(true);
@@ -329,16 +333,19 @@
       qwQueryService.executeQueryUtil(query,false)
 
       // did the query succeed?
-      .success(function(data, status, headers, config) {
+      .then(function success(resp) {
+        var data = resp.data, status = resp.status;
+
         //console.log("Editor Q Success Data Len: " + JSON.stringify(data.results.length));
         //console.log("Editor Q Success Status: " + JSON.stringify(status));
 
         if (data && data.status && data.status == 'success')
           dec.options.current_result = data.results;
-      })
+      },
 
       // ...or fail?
-      .error(function (data,status,headers,config) {
+      function error(resp) {
+        var data = resp.data, status = resp.status;
         //console.log("Editor Q Error Data: " + JSON.stringify(data));
         //console.log("Editor Q Error Status: " + JSON.stringify(status));
 

@@ -169,13 +169,13 @@
                   }).result;
 
                   // if they gave us one, try and get the schema to test the password
-                  promise.then(function (res) {
+                  promise.then(function success(resp) {
                     bucket.password = bucket.tempPassword;
                     qwQueryService.testAuth(bucket,
-                        function() {
+                        function auth_success() {
                       qwQueryService.getSchemaForBucket(bucket);
                       bucket.expanded = true;
-                    },function() {
+                    },function auth_error(resp) {
                       bucket.password = null;
                       scope.error_title = "Bucket Password Failure";
                       scope.error_detail = "Incorrect password for bucket '" + bucket.id + "'.";

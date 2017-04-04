@@ -81,11 +81,12 @@
         // we can only run on nodes that support our API
         var queryData = {statement: "select \"test\";"};
         $http.post("/_p/query/query/service",queryData)
-        .success(function(data, status, headers, config) {
+        .then(function success(resp) {
           _valid = true; _inProgress = false;
 
-        })
-        .error(function(data, status, headers, config) {
+        },
+        function error(resp) {
+          var data = resp.data, status = resp.status;
           _valid = false; _inProgress = false;
 
           // if we got a 404, there is no query service on this node.

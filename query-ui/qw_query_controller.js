@@ -635,8 +635,7 @@
 
       if (promise) {
         // also have the input grab focus at the end
-        promise.success(doneWithQuery)
-        .error(doneWithQuery);
+        promise.then(doneWithQuery,doneWithQuery);
       }
       else
         doneWithQuery();
@@ -676,7 +675,7 @@
       }).result;
 
       // now save it
-      promise.then(function (res) {
+      promise.then(function success(res) {
         qwQueryService.options = dialogScope.options;
       });
 
@@ -708,7 +707,7 @@
       }).result;
 
       // now save it
-      promise.then(function (res) {
+      promise.then(function success(res) {
         //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
         var file = new Blob([qc.lastResult.result],{type: "text/json"});
         saveAs(file,dialogScope.file.name);
@@ -747,7 +746,7 @@
       }).result;
 
       // now save it
-      promise.then(function (res) {
+      promise.then(function success(res) {
         //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
         var file = new Blob([qc.lastResult.query],{type: "text/plain"});
         saveAs(file,dialogScope.file.name);
@@ -775,7 +774,7 @@
       }).result;
 
       // now save it
-      promise.then(function (res) {
+      promise.then(function success(res) {
         var file;
         var file_extension;
         console.log("Got selected: " + dialogScope.selected.item + " isString: " + _.isString(dialogScope.selected.item));

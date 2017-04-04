@@ -98,7 +98,8 @@
         // meanwhile issue a query to the local node get the list of buckets
         var queryData = {statement: "select keyspaces.name from system:keyspaces;"};
         $http.post("/_p/query/query/service",queryData)
-        .success(function(data) {
+        .then(function success(resp) {
+          var data = resp.data, status = resp.status;
           //console.log("Success getting keyspaces: " + JSON.stringify(data));
           //console.log("Got bucket list data: " + JSON.stringify(data));
           if (data && _.isArray(data.results) && data.results.length > 0) {
@@ -109,8 +110,10 @@
           }
 
           _valid = true; _inProgress = false;
-        })
-        .error(function(data, status) {
+        },
+        // Error from $http
+        function error(resp) {
+          var data = resp.data, status = resp.status;
           //console.log("Error getting keyspaces: " + JSON.stringify(data));
           _valid = false; _inProgress = false;
           _otherStatus = status;

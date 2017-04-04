@@ -230,7 +230,7 @@
       $http({
         url: "../_p/query/admin/vitals",
         method: "GET"
-      }).then(function (resp) {
+      }).then(function success(resp) {
         if (resp && resp.status == 200 && resp.data) {
           //console.log("Got vitals: " + JSON.stringify(resp.data));
           qmc.vitals = resp.data;
@@ -259,7 +259,8 @@
 //        openedStatsBlock: [
 //          "Query"
 //        ],
-          }}).then(function (data) {
+          }}).then(function success(resp) {
+            var data = resp.data, status = resp.status;
             if (data && data.statsByName) {
               qmc.stats = data.statsByName;
               qmc.stats_updated_at = Date.now();
