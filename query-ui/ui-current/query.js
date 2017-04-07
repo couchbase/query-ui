@@ -14,7 +14,7 @@
     'mnPermissions',
     'ui.ace',
     'ui.bootstrap'])
-    .config(function($stateProvider, mnPluggableUiRegistryProvider) {
+    .config(function($stateProvider, $transitionsProvider, mnPluggableUiRegistryProvider) {
 
       $stateProvider
       .state('app.admin.query', {
@@ -60,6 +60,17 @@
         after: 'indexes'//,
           //ngShow: canQuery("rbac.cluster.admin.internal.all"
       });
+
+      //
+      // whenever the user logs out, we want ensure that validateQueryService knows it needs
+      // to re-validate
+      //
+
+      $transitionsProvider.onFinish({
+        from: "app.auth",
+        to: "app.admin.**",
+      }, function (qwQueryService) {qwQueryService.updateBuckets();});
+
     })
     .run(function(jQuery, $timeout, $http) {
     })
@@ -69,11 +80,14 @@
 
     .factory('validateQueryService', function($http,mnServersService,mnPermissions, mnPoolDefault) {
       var _valid = false;
-      var _inProgress = true;
+      var _inProgress = false;
+      var _monitoringAllowed = false;
+      var _clusterStatsAllowed = false;
       var _validNodes = [];
       var _otherStatus;
       var _otherError;
       var _bucketList = [];
+      var _bucketStatsList = [];
       var service = {
           inProgress: function()       {return _inProgress;},
           valid: function()            {return _valid;},
@@ -81,7 +95,10 @@
           otherNodes: function()       {return _validNodes;},
           otherStatus: function()      {return _otherStatus;},
           otherError: function()       {return _otherError;},
-          updateValidBuckets: updateValidBuckets
+          monitoringAllowed: function() {return _monitoringAllowed;},
+          clusterStatsAllowed: function() {return _clusterStatsAllowed;},
+          updateValidBuckets: getBucketsAndNodes,
+          getBucketsAndNodes: getBucketsAndNodes
       }
 
       //
@@ -90,9 +107,20 @@
       //
 
       function getBucketsAndNodes() {
+        // make sure we only do this once at a time
+        if (_inProgress)
+          return;
+
+        _valid = false;
+        _otherStatus = null;
+        _otherError = null;
+        _inProgress = true;
+
         // get the list of valid nodes in the cluster, in case we need it
         mnPoolDefault.get().then(function(value){
           _validNodes = mnPoolDefault.getUrlsRunningService(value.nodes, "n1ql");
+          //console.log("Got valid nodes: " + JSON.stringify(_validNodes));
+          //console.log("Got URL: " + window.location.href);
         });
 
         // meanwhile issue a query to the local node get the list of buckets
@@ -102,14 +130,18 @@
           var data = resp.data, status = resp.status;
           //console.log("Success getting keyspaces: " + JSON.stringify(data));
           //console.log("Got bucket list data: " + JSON.stringify(data));
-          if (data && _.isArray(data.results) && data.results.length > 0) {
-            for (var i=0; i< data.results.length; i++)
-              mnPermissions.set("cluster.bucket[" + data.results[i].name + "].data!read");
 
-            mnPermissions.check().then(updateValidBuckets);
+          mnPermissions.set("cluster.n1ql.meta!read"); // system catalogs
+          mnPermissions.set("cluster.stats!read"); // system catalogs
+
+          if (data && _.isArray(data.results) && data.results.length > 0) {
+            for (var i=0; i< data.results.length; i++) {
+              mnPermissions.set("cluster.bucket[" + data.results[i].name + "].data!read");
+              mnPermissions.set("cluster.bucket[" + data.results[i].name + "].n1ql.select!execute");
+            }
           }
 
-          _valid = true; _inProgress = false;
+          mnPermissions.check().then(updateValidBuckets);
         },
         // Error from $http
         function error(resp) {
@@ -124,17 +156,35 @@
       function updateValidBuckets() {
         // see what buckets we have permission to access
         var perms = mnPermissions.export.cluster;
-        //console.log("Checking bucket permissions... "/*+ JSON.stringify(perms)*/);
+        //console.log("Got bucket permissions... " + JSON.stringify(perms));
+
+        _bucketList = []; _bucketStatsList = [];
+
+        // stats perms
+        _clusterStatsAllowed = (perms && perms.stats && perms.stats.read);
+
+        // metadata perms
+        _monitoringAllowed = (perms && perms.n1ql && perms.n1ql.meta && perms.n1ql.meta.read);
+
+        // per-bucket perms
         if (perms && perms.bucket)
           _.forEach(perms.bucket,function(v,k) {
             // uncomment the following when RBAC is working properly for data access
-            if (v && v.data && (v.data.read || v.data.write))
+            if (v && v.n1ql && v.n1ql.select && v.n1ql.select.execute)
               _bucketList.push(k);
-            //console.log("  For bucket: " + k + ", got v: "+ JSON.stringify(v));
+            if (v && v.stats && v.stats.read && k != "*") {
+              _bucketStatsList.push(k);
+            }
           });
+
+        //console.log("bucketList: " + JSON.stringify(_bucketList));
+        //console.log("bucketStatsList: " + JSON.stringify(_bucketStatsList));
+
+        // all done
+        _valid = true; _inProgress = false;
       }
 
-      getBucketsAndNodes();
+      //getBucketsAndNodes();
       // we need to initialize the valid buckets
       //updateValidBuckets();
 

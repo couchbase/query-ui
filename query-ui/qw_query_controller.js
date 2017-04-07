@@ -970,7 +970,7 @@
 
     function activate() {
       // make sure we're up-to-date with buckets
-      qc.validated.updateValidBuckets();
+      qc.validated.getBucketsAndNodes();
 
       // if we receive a query parameter, and it's not the same as the current query,
       // insert it at the end of history

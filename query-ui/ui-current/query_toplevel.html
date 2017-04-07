@@ -2,13 +2,18 @@
   <h3 ng-if="qc.validated.inProgress()">Contacting Query Node</h3>
   <div ng-if="!qc.validated.inProgress() && !qc.validated.valid()">
     <div ng-if="qc.validated.otherStatus()">
-    <h2>Unable to access query panel: {{qc.validated.otherStatus()}}</h2>
-    <h2>{{qc.validated.otherError()}}</h2>
+    <h2>Unable to access query panel.</h2>
+    <h2>{{qc.validated.otherError()}}</h2><br>
     </div>
     <div ng-if="qc.validated.otherNodes().length" class="cbui-error-message">
-      The query interface is only available on Couchbase nodes
-        running the query service. <br>
+      <div ng-if="qc.validated.otherStatus() == 404">
+      The query interface is only available on Couchbase nodes running the query service. <br>
       You may access the interface here:<br><br>
+       </div>
+       <div ng-if="qc.validated.otherStatus() != 404">
+      There seems to be an error with the query service on this node.<br>
+      The query service is supposed to be running on the following nodes:<br><br>
+      </div>
       <ul>
         <li class="cbui-nodelist"
           ng-repeat="url in qc.validated.otherNodes()"><a
@@ -23,7 +28,7 @@
     <nav ng-if="qc.validated.valid()" class="sub-nav">
       <a ui-sref="app.admin.query.workbench" ui-sref-active="selected">
         Query Workbench</a>
-      <a ui-sref="app.admin.query.monitoring" ng-if="qc.isEnterprise"
+      <a ui-sref="app.admin.query.monitoring" ng-if="qc.isEnterprise && qc.validated.monitoringAllowed()"
        ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">
         Query Monitor</a>
         <!-- 

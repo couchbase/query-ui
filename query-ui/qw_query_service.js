@@ -1416,7 +1416,7 @@
         return;
 
       qwQueryService.gettingBuckets.busy = true;
-      validateQueryService.updateValidBuckets();
+      validateQueryService.getBucketsAndNodes();
 
       // use a query to get buckets with a primary index
 

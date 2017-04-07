@@ -30,7 +30,13 @@
     </div>
   </div>
 
-  <div id="monitoring_tables">
+<!--   ************************************  -->
+  <div id="not_permitted" ng-if="!qc.validated.monitoringAllowed()">
+  Insufficient permissions to perform query monitoring.
+  </div>
+
+
+  <div id="monitoring_tables" ng-if="qc.validated.monitoringAllowed()">
 
 <!-- ACTIVE QUERIES TABLE  ************************************  -->
     <div id="active_table" class="cbui-table" ng-if="qmc.isSelected(1)">
@@ -206,9 +212,9 @@
 </div>
 
 <!-- QUERY STATISTICS ************************************** -->
-  <div id="query_stats">
+  <div id="query_stats" ng-if="qc.validated.monitoringAllowed()">
 
-<div class="column vertical-divider">
+<div class="column vertical-divider" ng-if="qc.validated.clusterStatsAllowed()">
 
   <span class="width-6">{{qmc.stats["query_requests_250ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_250ms") | number:1}}</span><br>
   <span class="width-6">{{qmc.stats["query_requests_500ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_500ms") | number:1}}</span><br>
@@ -217,7 +223,7 @@
 
 </div>
 
-<div class="column wide vertical-divider text-center">
+<div class="column wide vertical-divider text-center" ng-if="qc.validated.clusterStatsAllowed()">
   <span class="text-center">
   <div mn-plot mn-plot-config="qmc.stats['query_requests'].config"
     is-small-graph="true" style="width: 100px; height: 25px;">
@@ -245,6 +251,11 @@
 
 <div class="column">
 
+  <span ng-if="!qc.validated.clusterStatsAllowed()">
+    <span class="width-6">memory utilization (this node):</span>
+    <span class="text-right width-6">{{qmc.getVital("memory_util") | number:1}}%</span>
+  </span><br>
+
   <span class="width-6">requests/sec > last minute</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}}</span><br>
   <span class="width-6">requests/sec > last 5 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}}</span><br>
   <span class="width-6">requests/sec > last 15 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}}</span><br>
@@ -252,47 +263,4 @@
 
 </div>
 
-
-
-
-<!--
-
-<div class="column vertical-divider">
-{{qmc.getVital("request.per.sec.15min") | number:2}}
-
-</div>
-
-
-    <span>
-    <div id="vitals" ng-repeat="vitalName in qmc.vitals_names track by $index">
-        {{qmc.vitals_labels[$index]}}: {{qmc.getVital(vitalName) | number:2}}
-    </div>
-</span>
-  <span>
-    <div id="stats_latest" ng-repeat="statName in qmc.stat_names track by statName">
-        {{qmc.stats[statName].title}}: {{qmc.getLatestStat(statName) | number:2}}
-    </div>
-</span>
-    <div id="stats_charts">
-      <div class="chart-cell-small gray-7" ng-class="{dynamic_dim:
-        statInfo.missing}" ng-if="qmc.stats.query_selects"
-        ng-repeat="statName in qmc.stat_names track by statName"
-        ui-sref-active="dynamic_selected">
-        <div ui-sref="{graph: qmc.stats[statName].name}">
-          <div class="">
-            <div mn-plot mn-plot-config="qmc.stats[statName].config"
-              is-small-graph="true" style="width: 75px; height: 25px;">
-            </div>
-          </div>
-
-          <div class="relative ellipsis"
-            uib-tooltip="{{qmc.stats[statName].title}}: {{qmc.stats[statName].desc}}"
-            tooltip-placement="right" tooltip-trigger="'mouseenter'"
-            tooltip-append-to-body="true">
-            {{qmc.stats[statName].config.value}}
-            {{qmc.stats[statName].title}}</div>
-        </div>
-      </div>
-    </div>
-  </div> -->
 </div>
