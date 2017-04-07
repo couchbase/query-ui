@@ -1,29 +1,5 @@
 <div ng-controller="qwQueryController as qc">
-  <h3 ng-if="qc.validated.inProgress()">Contacting Query Node</h3>
-  <div ng-if="!qc.validated.inProgress() && !qc.validated.valid()">
-    <div ng-if="qc.validated.otherStatus()">
-    <h2>Unable to access query panel.</h2>
-    <h2>{{qc.validated.otherError()}}</h2><br>
-    </div>
-    <div ng-if="qc.validated.otherNodes().length" class="cbui-error-message">
-      <div ng-if="qc.validated.otherStatus() == 404">
-      The query interface is only available on Couchbase nodes running the query service. <br>
-      You may access the interface here:<br><br>
-       </div>
-       <div ng-if="qc.validated.otherStatus() != 404">
-      There seems to be an error with the query service on this node.<br>
-      The query service is supposed to be running on the following nodes:<br><br>
-      </div>
-      <ul>
-        <li class="cbui-nodelist"
-          ng-repeat="url in qc.validated.otherNodes()"><a
-          href="{{url}}">{{url}}</a></li>
-      </ul>
-    </div>
-    <div ng-if="qc.validated.otherNodes().length == 0" class="cbui-error-message">
-      No query nodes were found on this cluster, so N1QL querying is not possible.
-    </div>
-  </div>
+
   <mn-element-cargo depot="subnav">
     <nav ng-if="qc.validated.valid()" class="sub-nav">
       <a ui-sref="app.admin.query.workbench" ui-sref-active="selected">
@@ -31,11 +7,37 @@
       <a ui-sref="app.admin.query.monitoring" ng-if="qc.isEnterprise && qc.validated.monitoringAllowed()"
        ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">
         Query Monitor</a>
-        <!-- 
+        <!--
       <a ui-sref="app.admin.query.doc_editor" ui-sref-active="selected">
         Document Editor</a> -->
     </nav>
   </mn-element-cargo>
+
+  <div class="margin-top1" ng-if="qc.validated.inProgress()">
+    <p>Contacting query node...</p>
+  </div>
+
+  <div ng-if="!qc.validated.inProgress() && !qc.validated.valid()" class="margin-top1">
+    <p>The query interface is only available on Couchbase nodes running the query service.</p>
+
+    <div ng-if="qc.validated.otherNodes().length">
+      <span ng-if="qc.validated.otherStatus() == 404">
+        <p>The query service was found on the following nodes:</p>
+      </span>
+      <span ng-if="qc.validated.otherStatus() != 404">
+        <p class="error">There seems to be an error with the query service on this node.</p>
+        <p>The query service should be found on the following nodes:</p>
+      </span>
+      <ul class="nobullet">
+        <li ng-repeat="url in qc.validated.otherNodes()">
+          <a href="{{url}}">{{url}}</a>
+        </li>
+      </ul>
+    </div>
+    <div ng-if="qc.validated.otherNodes().length == 0">
+      <p class="error">No query nodes were found on this cluster.</p>
+    </div>
+  </div>
 
   <div ui-view=""></div>
 </div>
