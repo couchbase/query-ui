@@ -59,6 +59,10 @@
         <div ng-if="!qc.executingQuery.busy">Execute</div>
         <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
       </button>
+      &nbsp;&nbsp;&nbsp;
+      <a href="" ng-click="qc.query(true)" class="qw-button-exec">
+        Explain
+      </a>
 
 <!-- query results stats -->
       <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">

@@ -856,7 +856,7 @@
 
     var timeout = 600; // query timeout in seconds
 
-    function executeQuery(queryText, userQuery, queryOptions) {
+    function executeQuery(queryText, userQuery, queryOptions, explainOnly) {
       var newResult;
 
       //console.log("Got query to execute: " + queryText);
@@ -942,7 +942,7 @@
           newResult.resultSize = 0;
           newResult.queryDone = true;
 
-          // make sure to only finish if the explain query is also done
+          // can't recover from error, finish query
           lastResult.copyIn(newResult);
           finishQuery();
           return;
@@ -989,10 +989,12 @@
           lastResult.copyIn(newResult);
 
           // if the query has run and finished already, mark everything as done
-          if (newResult.queryDone) {
+          if (newResult.queryDone || explainOnly) {
             finishQuery();
           }
 
+          if (explainOnly)
+            qwQueryService.selectTab(4); // make the explain visible
         },
         /* error response from $http */
         function error(resp) {
@@ -1017,12 +1019,20 @@
 
           newResult.explainDone = true;
           newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+
+          // if we're doing explain only, copy the errors to the regular results as well
+
+          if (explainOnly) {
+            newResult.data = newResult.explainResult;
+            newResult.result = newResult.explainResultText;
+          }
+
           lastResult.copyIn(newResult);
 
           //console.log("Explain: " + newResult.explainResult);
 
           // if the query has run and finished already, mark everything as done
-          if (newResult.queryDone) {
+          if (newResult.queryDone || explainOnly) {
             // when we have errors, don't show the plan tabs
             if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
               qwQueryService.selectTab(1);
@@ -1038,6 +1048,13 @@
         newResult.explainResult = {};
         newResult.explainResultText = "";
       }
+
+      //
+      // if they wanted only an explain, we're done
+      //
+
+      if (!queryIsExplain && explainOnly)
+        return;
 
       //console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
 

@@ -190,7 +190,8 @@ padding-right: .5rem;
 }
 
 .qw-button-exec {
-  width: 8rem;
+  width: 7rem;
+  min-width: 7rem;
 }
 
 .icon.margin-left {
