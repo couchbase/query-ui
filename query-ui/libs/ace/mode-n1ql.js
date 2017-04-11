@@ -1,10 +1,18 @@
 (function() {
 
+  //
   // some globals used by both the highlighter and the autocompleter
+  //
+
   var keywords = (
-      "all|alter|analyze|and|any|array|as|asc|begin|between|binary|boolean|break|bucket|build|by|call|case|cast|cluster|collate|collection|commit|connect|continue|correlate|create|database|dataset|datastore|declare|decrement|delete|derived|desc|describe|distinct|do|drop|each|element|else|end|every|except|exclude|execute|exists|explain|first|flatten|for|force|from|function|grant|group|gsi|having|if|ignore|ilike|in|include|increment|index|infer|inline|inner|insert|intersect|into|is|join|key|keys|keyspace|last|left|let|letting|like|limit|lsm|map|mapping|matched|materialized|merge|minus|missing|namespace|nest|not|null|number|object|offset|on|option|or|order|outer|over|parse|partition|password|path|pool|prepare|primary|private|privilege|procedure|public|raw|realm|reduce|rename|return|returning|revoke|right|role|rollback|satisfies|schema|select|self|semi|set|show|some|start|statistics|string|system:active_requests|system:completed_requests|system:indexes|system:keyspaces|system:prepareds|then|to|transaction|trigger|truncate|under|union|unique|unnest|unset|update|upsert|use|user|using|validate|value|valued|values|via|view|when|where|while|with|within|work|xor|admin|ro_admin|cluster_admin|bucket_admin|bucket_admin|bucket_admin|bucket_admin|bucket_admin|bucket_sasl|bucket_sasl|bucket_sasl|bucket_sasl|bucket_sasl|views_admin|views_admin|views_admin|views_admin|views_admin|replication_admin|data_reader|data_reader|data_reader|data_reader|data_reader|data_reader_writer|data_reader_writer|data_reader_writer|data_reader_writer|data_reader_writer|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_backup|data_backup|data_backup|data_backup|data_backup|data_monitoring|data_monitoring|data_monitoring|data_monitoring|data_monitoring|fts_admin|fts_admin|fts_admin|fts_admin|fts_admin|fts_searcher|fts_searcher|fts_searcher|fts_searcher|fts_searcher|query_select|query_select|query_select|query_select|query_select|query_update|query_update|query_update|query_update|query_update|query_insert|query_insert|query_insert|query_insert|query_insert|query_delete|query_delete|query_delete|query_delete|query_delete|query_manage_index|query_manage_index|query_manage_index|query_manage_index|query_manage_index|query_system_catalog|query_external_access"
+      "all|alter|analyze|and|any|array|as|asc|begin|between|binary|boolean|break|bucket|build|by|call|case|cast|cluster|collate|collection|commit|connect|continue|correlate|create|database|dataset|datastore|declare|decrement|delete|derived|desc|describe|distinct|do|drop|each|element|else|end|every|except|exclude|execute|exists|explain|first|flatten|for|force|from|function|grant|group|gsi|having|if|ignore|ilike|in|include|increment|index|infer|inline|inner|insert|intersect|into|is|join|key|keys|keyspace|last|left|let|letting|like|limit|lsm|map|mapping|matched|materialized|merge|minus|missing|namespace|nest|not|null|number|object|offset|on|option|or|order|outer|over|parse|partition|password|path|pool|prepare|primary|private|privilege|procedure|public|raw|realm|reduce|rename|return|returning|revoke|right|role|rollback|satisfies|schema|select|self|semi|set|show|some|start|statistics|string|system:active_requests|system:completed_requests|system:indexes|system:keyspaces|system:prepareds|then|to|transaction|trigger|truncate|under|union|unique|unnest|unset|update|upsert|use|user|using|validate|value|valued|values|via|view|when|where|while|with|within|work|xor"
   );
   var keywords_array = keywords.split('|');
+
+  var roles = (
+      "admin|ro_admin|cluster_admin|bucket_admin|bucket_admin|bucket_admin|bucket_admin|bucket_admin|bucket_sasl|bucket_sasl|bucket_sasl|bucket_sasl|bucket_sasl|views_admin|views_admin|views_admin|views_admin|views_admin|replication_admin|data_reader|data_reader|data_reader|data_reader|data_reader|data_reader_writer|data_reader_writer|data_reader_writer|data_reader_writer|data_reader_writer|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_backup|data_backup|data_backup|data_backup|data_backup|data_monitoring|data_monitoring|data_monitoring|data_monitoring|data_monitoring|fts_admin|fts_admin|fts_admin|fts_admin|fts_admin|fts_searcher|fts_searcher|fts_searcher|fts_searcher|fts_searcher|query_select|query_select|query_select|query_select|query_select|query_update|query_update|query_update|query_update|query_update|query_insert|query_insert|query_insert|query_insert|query_insert|query_delete|query_delete|query_delete|query_delete|query_delete|query_manage_index|query_manage_index|query_manage_index|query_manage_index|query_manage_index|query_system_catalog|query_external_access"
+  );
+  var roles_array = roles.split('|');
 
   var builtinConstants = (
       "true|false|indexes|keyspaces"
@@ -17,10 +25,20 @@
   );
   var builtinFunctions_array = builtinFunctions.split('|');
 
-  var dataTypes = (
-      ""
-  );
-  var dataTypes_array = dataTypes.split('|');
+  //
+  // put all categories of keywords in one data structure we can traverse
+  //
+
+  var terms = [
+    {name:"keyword", tokens: keywords_array},
+    {name:"built-in", tokens: builtinConstants_array},
+    {name:"function", tokens: builtinFunctions_array},
+    {name:"role", tokens: roles_array},
+  ];
+
+  //
+  // language tokens
+  //
 
   define("ace/mode/n1ql_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"],
       function(require, exports, module) {
@@ -35,7 +53,7 @@
         "support.function": builtinFunctions,
         "keyword": keywords,
         "constant.language": builtinConstants,
-        "storage.type": dataTypes
+        "storage.type": roles
       }, "identifier", true);
 
       this.$rules = {
@@ -139,24 +157,30 @@
       this.getCompletions = function(state, session, pos, prefix) {
         var token = session.getTokenAt(pos.row, pos.column);
 
-        // return only matching keywords, constants, or datatypes
+        // return anything matching from the terms structure
+
         var results = [];
 
-        for (var i=0; i<keywords_array.length; i++)
-          if (_.startsWith(keywords_array[i],prefix))
-            results.push({value: keywords_array[i], meta: 'keyword', score: 1});
-
-        for (var i=0; i<builtinConstants_array.length; i++)
-          if (_.startsWith(builtinConstants_array[i],prefix))
-            results.push({value: builtinConstants_array[i], meta: 'built-in', score: 1});
-
-        for (var i=0; i<builtinFunctions_array.length; i++)
-          if (_.startsWith(builtinFunctions_array[i],prefix))
-            results.push({value: builtinFunctions_array[i], meta: 'function', score: 1});
-
-        for (var i=0; i<dataTypes_array.length; i++)
-          if (_.startsWith(dataTypes_array[i],prefix))
-            results.push({value: dataTypes_array[i], meta: 'datatype', score: 1});
+        for (var i=0; i<terms.length; i++)
+          for (var t=0; t<terms[i].tokens.length; t++)
+            if (_.startsWith(terms[i].tokens[t],prefix))
+              results.push({value: terms[i].tokens[t], meta: terms[i].name, score: 1});
+//
+//        for (var i=0; i<keywords_array.length; i++)
+//          if (_.startsWith(keywords_array[i],prefix))
+//            results.push({value: keywords_array[i], meta: 'keyword', score: 1});
+//
+//        for (var i=0; i<builtinConstants_array.length; i++)
+//          if (_.startsWith(builtinConstants_array[i],prefix))
+//            results.push({value: builtinConstants_array[i], meta: 'built-in', score: 1});
+//
+//        for (var i=0; i<builtinFunctions_array.length; i++)
+//          if (_.startsWith(builtinFunctions_array[i],prefix))
+//            results.push({value: builtinFunctions_array[i], meta: 'function', score: 1});
+//
+//        for (var i=0; i<dataTypes_array.length; i++)
+//          if (_.startsWith(dataTypes_array[i],prefix))
+//            results.push({value: dataTypes_array[i], meta: 'datatype', score: 1});
 
         return results;
       };
