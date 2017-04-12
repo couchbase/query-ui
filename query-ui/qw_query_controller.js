@@ -640,7 +640,7 @@
       //console.log("Running query: " + queryStr);
       // run the query and show a spinner
 
-      var promise = qwQueryService.executeQuery(queryStr,qc.lastResult.query,dialogScope.options,explainOnly);
+      var promise = qwQueryService.executeQuery(queryStr,qc.lastResult.query,qwQueryService.options,explainOnly);
 
       if (promise) {
         // also have the input grab focus at the end
