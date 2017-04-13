@@ -275,6 +275,14 @@
       var noText = curSession.getValue().length == 0;
       var emptyMessageNode = qc.inputEditor.renderer.emptyMessageNode;
 
+      // when the input is changed, clear all the markers
+      curSession.clearAnnotations();
+      if (qc.markerIds) {
+        for (var i=0; i< qc.markerIds.length; i++)
+          curSession.removeMarker(qc.markerIds[i]);
+        qc.markerIds.length = 0;
+      }
+
       //console.log("Notext: " +noText + ", emptyMessageNode: " + emptyMessageNode);
       if (noText && !emptyMessageNode) {
         emptyMessageNode = qc.inputEditor.renderer.emptyMessageNode = document.createElement("div");
@@ -654,9 +662,46 @@
     // when a query finishes, we need to re-enable the query field, and try and put
     // the focus there
     //
+    var aceRange = ace.require('ace/range').Range;
 
     function doneWithQuery() {
+      // if there are possibly bad fields in the query, mark them
+      var annotations = [];
+      var markers = [];
+      var markerIds = [];
+      var session = qc.inputEditor.getSession();
+
+      if (qc.lastResult.explainResult.problem_fields && qc.lastResult.explainResult.problem_fields.length > 0) {
+        var lines = session.getLines(0,session.getLength()-1);
+        var fields = qc.lastResult.explainResult.problem_fields;
+
+        // for each line, for each problem field, find all matches and add an info annotation
+        for (var l=0; l < lines.length; l++)
+          for (var f=0; f < fields.length; f++) {
+            var startFrom = 0;
+            var curIdx = -1;
+            while ((curIdx = lines[l].indexOf(fields[f],startFrom)) > -1) {
+              annotations.push({row: l, column: curIdx, text: "Field `"+fields[f]+"` not found in inferred schema.",
+              		type: "warning"});
+              markers.push({start_row: l, end_row: l, start_col: curIdx, end_col: curIdx + fields[f].length});
+              startFrom = curIdx + 1;
+            }
+          }
+      }
+
+      for (var i=0; i<markers.length; i++)
+        markerIds.push(session.addMarker(new aceRange(markers[i].start_row,markers[i].start_col,
+                                    markers[i].end_row,markers[i].end_col),
+                          "ace_selection","text"));
+
+      if (annotations.length > 0)
+        session.setAnnotations(annotations);
+      else
+        session.clearAnnotations();
+
+      // now update everything
       qc.inputEditor.setReadOnly(false);
+      qc.markerIds = markerIds;
       updateEditorSizes();
       focusOnInput();
     }

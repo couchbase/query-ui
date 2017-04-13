@@ -439,6 +439,9 @@
     //
 
     function isFieldNameInSchema(schema,fieldName) {
+      // all schemas have the name "*"
+      if (fieldName == "*")
+        return true;
       // the field name might be a plain string, it might be suffixed with "[]", and it might
       // have a subfield expression starting with a "."
       var firstDot = fieldName.indexOf(".");
@@ -849,6 +852,31 @@
       return(queryRequest);
     }
 
+    //
+    // convenience function to see if fields mentioned in a query are not found in the schema
+    // for the buckets involved
+    //
+
+    function getProblemFields(fields) {
+      var problem_fields = [];
+
+      for (var f in fields) {
+        var firstDot = f.indexOf(".");
+        var bucketName = f.substring(0,firstDot);
+        var fieldName = f.substring(firstDot + 1);
+        //console.log("Checking field: " + f + ", bucket: " + bucketName);
+        var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
+        if (bucket) {
+          //console.log("  Got bucket: " + bucket + ", bucket schema: " + bucket.schema);
+          if (bucket && bucket.schema.length > 0 && !isFieldNameInSchema(bucket.schema,fieldName)) {
+            problem_fields.push(fieldName);
+            //console.log("Field: " + fieldName + "is not o.k.");
+          }
+        }
+      }
+
+      return(problem_fields);
+    }
 
     //
     // executeQuery
@@ -928,6 +956,7 @@
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
+      var explain_promise;
 
       if (!queryIsExplain && !queryIsPrepare && qwConstantsService.autoExplain) {
 
@@ -947,30 +976,23 @@
           finishQuery();
           return;
         }
-        $http(explain_request)
+        explain_promise = $http(explain_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
+
+          // now check the status of what came back
           if (data && data.status == "success" && data.results && data.results.length > 0) {
             var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
             newResult.explainResult =
-               {explain: data.results[0],
-                 analysis: lists,
-                 plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan, null, lists)
-                 };
+            {explain: data.results[0],
+                analysis: lists,
+                plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan, null, lists)
+            };
 
             // let's check all the fields to make sure they are all valid
-//            for (var f in newResult.explainResult.analysis.fields) {
-//              var firstDot = f.indexOf(".");
-//              var bucketName = f.substring(0,firstDot);
-//              var fieldName = f.substring(firstDot + 1);
-//              var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
-//              if (bucket) {
-//                console.log("Checking field: " + f + ", bucket: " + bucketName +
-//                    ", bucket: " + bucket + ", bucket schema: " + bucket.schema);
-//                if (bucket && bucket.schema.length > 0)
-//                  console.log("Field: " + fieldName + " o.k.: " + isFieldNameInSchema(bucket.schema,fieldName));
-//              }
-//            }
+            var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
+            if (problem_fields.length > 0)
+              newResult.explainResult.problem_fields = problem_fields;
           }
 
           else if (data.errors) {
@@ -986,15 +1008,22 @@
             newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           else
             newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+
+          // if we're doing explain only, copy the explain results to the regular results as well
+
+          if (explainOnly) {
+            newResult.data = newResult.explainResult;
+            newResult.result = newResult.explainResultText;
+          }
+
+          // all done
+
           lastResult.copyIn(newResult);
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone || explainOnly) {
             finishQuery();
           }
-
-          if (explainOnly)
-            qwQueryService.selectTab(4); // make the explain visible
         },
         /* error response from $http */
         function error(resp) {
@@ -1034,8 +1063,8 @@
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone || explainOnly) {
             // when we have errors, don't show the plan tabs
-            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
-              qwQueryService.selectTab(1);
+            //if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+            //  qwQueryService.selectTab(1);
             finishQuery();
           }
         });
@@ -1054,7 +1083,7 @@
       //
 
       if (!queryIsExplain && explainOnly)
-        return;
+        return(explain_promise);
 
       //console.log("submitting query: " + JSON.stringify(qwQueryService.currentQueryRequest));
 
@@ -1155,6 +1184,11 @@
               buckets: qwQueryService.buckets,
               tokens: qwQueryService.autoCompleteTokens*/};
           newResult.explainResultText = JSON.stringify(newResult.explainResult.explain,null,'  ');
+
+          // let's check all the fields to make sure they are all valid
+          var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
+          if (problem_fields.length > 0)
+            newResult.explainResult.problem_fields = problem_fields;
         }
 
         newResult.queryDone = true;
