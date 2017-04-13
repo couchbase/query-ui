@@ -680,10 +680,13 @@
           for (var f=0; f < fields.length; f++) {
             var startFrom = 0;
             var curIdx = -1;
-            while ((curIdx = lines[l].indexOf(fields[f],startFrom)) > -1) {
-              annotations.push({row: l, column: curIdx, text: "Field `"+fields[f]+"` not found in inferred schema.",
-              		type: "warning"});
-              markers.push({start_row: l, end_row: l, start_col: curIdx, end_col: curIdx + fields[f].length});
+            while ((curIdx = lines[l].indexOf(fields[f].field,startFrom)) > -1) {
+              annotations.push(
+                  {row: l,column: curIdx,
+                  text: "Field `"+ fields[f].field + "` not found in inferred schema for bucket `" +
+                         fields[f].bucket + "`",
+                  type: "warning"});
+              markers.push({start_row: l, end_row: l, start_col: curIdx, end_col: curIdx + fields[f].field.length});
               startFrom = curIdx + 1;
             }
           }

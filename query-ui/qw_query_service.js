@@ -869,7 +869,7 @@
         if (bucket) {
           //console.log("  Got bucket: " + bucket + ", bucket schema: " + bucket.schema);
           if (bucket && bucket.schema.length > 0 && !isFieldNameInSchema(bucket.schema,fieldName)) {
-            problem_fields.push(fieldName);
+            problem_fields.push({field: fieldName, bucket: bucket.id});
             //console.log("Field: " + fieldName + "is not o.k.");
           }
         }
