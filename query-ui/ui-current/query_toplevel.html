@@ -13,7 +13,7 @@
     </nav>
   </mn-element-cargo>
 
-  <div class="margin-top1" ng-if="qc.validated.inProgress()">
+  <div class="margin-top1" ng-if="qc.validated.inProgress() && !qc.validated.valid()">
     <p>Contacting query node...</p>
   </div>
 

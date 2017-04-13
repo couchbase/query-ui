@@ -1467,8 +1467,11 @@
         return;
 
       qwQueryService.gettingBuckets.busy = true;
-      validateQueryService.getBucketsAndNodes();
+      validateQueryService.getBucketsAndNodes(updateBucketsCallback);
+    }
 
+    function updateBucketsCallback() {
+      //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 
       var queryText = qwConstantsService.keyspaceQuery;

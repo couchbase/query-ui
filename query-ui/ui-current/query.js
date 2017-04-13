@@ -103,15 +103,20 @@
 
       //
       // with RBAC the only safe way to get the list of buckets is through a query
-      // of system:keyspaces, which should return only accessible buckets for the user
+      // of system:keyspaces, which should return only accessible buckets for the user.
+      // we accept a callback function that will be called once the list of buckets is updated.
       //
 
-      function getBucketsAndNodes() {
+      function getBucketsAndNodes(callback) {
+        //console.trace();
+
         // make sure we only do this once at a time
         if (_inProgress)
           return;
 
-        _valid = false;
+        //console.log("Getting nodes and buckets...");
+
+        //_valid = false;
         _otherStatus = null;
         _otherError = null;
         _inProgress = true;
@@ -128,7 +133,6 @@
         $http.post("/_p/query/query/service",queryData)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
-          //console.log("Success getting keyspaces: " + JSON.stringify(data));
           //console.log("Got bucket list data: " + JSON.stringify(data));
 
           mnPermissions.set("cluster.n1ql.meta!read"); // system catalogs
@@ -141,7 +145,10 @@
             }
           }
 
-          mnPermissions.check().then(updateValidBuckets);
+          mnPermissions.check().then(function() {
+            updateValidBuckets();
+            if (callback) callback();
+          });
         },
         // Error from $http
         function error(resp) {
@@ -177,16 +184,13 @@
             }
           });
 
-        //console.log("bucketList: " + JSON.stringify(_bucketList));
+        //console.log("valid bucketList: " + JSON.stringify(_bucketList));
         //console.log("bucketStatsList: " + JSON.stringify(_bucketStatsList));
 
         // all done
         _valid = true; _inProgress = false;
       }
 
-      //getBucketsAndNodes();
-      // we need to initialize the valid buckets
-      //updateValidBuckets();
 
       // now return the service
       return service;
