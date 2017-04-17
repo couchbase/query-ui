@@ -586,6 +586,8 @@
       lastResult.copyIn(dummyResult);
       pastQueries.length = 0;
       currentQueryIndex = 0;
+
+      saveStateToStorage(); // save current history
     }
 
     //
@@ -602,6 +604,8 @@
         currentQueryIndex = pastQueries.length - 1;
 
       lastResult.copyIn(pastQueries[currentQueryIndex]);
+
+      saveStateToStorage(); // save current history
     }
 
     /**

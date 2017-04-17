@@ -875,7 +875,21 @@
       dialogScope.del = function() {qwQueryService.clearCurrentQuery(); updateSearchResults();};
       // disable delete button if search results don't include selected query
       dialogScope.disableDel = function() {return searchInfo.searchText.length > 0 && !dialogScope.isRowMatched(qwQueryService.getCurrentIndexNumber());};
-      dialogScope.delAll = qwQueryService.clearHistory;
+      dialogScope.delAll = function(close) {
+        var innerScope = $rootScope.$new(true);
+        innerScope.error_title = "Delete All History";
+        innerScope.error_detail = "Warning, this will delete the entire query history.";
+        innerScope.showCancel = true;
+
+        var promise = $uibModal.open({
+          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+          scope: innerScope
+        }).result;
+
+        promise.then(
+            function success() {qwQueryService.clearHistory(); close('ok');});
+
+      };
       dialogScope.searchInfo = searchInfo;
       dialogScope.updateSearchResults = updateSearchResults;
       dialogScope.selectNextMatch = selectNextMatch;
