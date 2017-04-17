@@ -69,7 +69,10 @@
       $transitionsProvider.onFinish({
         from: "app.auth",
         to: "app.admin.**",
-      }, function (qwQueryService) {qwQueryService.updateBuckets();});
+      }, function ($transition$) {
+        var qwQueryService = $transition$.injector().get("qwQueryService");
+        qwQueryService.updateBuckets();
+      });
 
     })
     .run(function(jQuery, $timeout, $http) {
