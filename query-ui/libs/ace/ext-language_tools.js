@@ -1648,8 +1648,7 @@ Autocomplete.startCommand = {
         editor.completer.showPopup(editor);
         editor.completer.cancelContextMenu();
     },
-    //*****COUCHBASE CUSTOMIZATION: Want autocomplete after hitting Tab*****
-    bindKey: "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab"
+    bindKey: "Ctrl-Space|Ctrl-Shift-Space|Alt-Space"
 };
 
 var FilteredList = function(array, filterText) {
@@ -1822,8 +1821,7 @@ var snippetCompleter = {
     }
 };
 
-//*****COUCHBASE CUSTOMIZATION: The TextCompleter is not good with N1Ql queries*****
-var completers = [snippetCompleter, keyWordCompleter];
+var completers = [snippetCompleter, textCompleter, keyWordCompleter];
 exports.setCompleters = function(val) {
     completers.length = 0;
     if (val) completers.push.apply(completers, val);

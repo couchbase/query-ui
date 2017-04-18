@@ -332,6 +332,7 @@
 
     function aceInputLoaded(_editor) {
       var langTools = ace.require("ace/ext/language_tools");
+      var autocomplete = ace.require("ace/autocomplete");
 
       _editor.$blockScrolling = Infinity;
       _editor.setFontSize('13px');
@@ -343,37 +344,17 @@
 
       qc.inputEditor = _editor;
 
-      // this function is used for autocompletion of dynamically known names such
-      // as bucket names, field names, and so on. We only want to return items that
-      // either start with the prefix, or items where the prefix follows a '.'
-      // (meaning that the prefix is a field name from a path
-
-      var identifierCompleter = {
-          getCompletions: function(editor, session, pos, prefix, callback) {
-            var results = [];
-            var modPrefix = '.' + prefix;
-            var modPrefix2 = '`' + prefix;
-            //console.log("Looking for: *" + prefix + "*");
-            for (var i=0; i<qwQueryService.autoCompleteArray.length; i++) {
-              //console.log("  *" + qwQueryService.autoCompleteArray[i].caption + "*");
-              if (_.startsWith(qwQueryService.autoCompleteArray[i].caption,prefix) ||
-                  qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix) >= 0 ||
-                  qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix2) >= 0) {
-                //console.log("    Got it!");
-                results.push(qwQueryService.autoCompleteArray[i]);
-              }
-            }
-            callback(null,results);
-          }
-      };
-
       //
       // only support auto-complete if we're in enterprise mode
       //
 
       if (mnPools.export.isEnterprise) {
+        // make autocomplete work with 'tab'
+        autocomplete.Autocomplete.startCommand.bindKey = "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab";
+        // enable autocomplete
         _editor.setOptions({enableBasicAutocompletion: true});
-        langTools.addCompleter(identifierCompleter);
+        // add completer that works with path expressions with '.'
+        langTools.setCompleters([identifierCompleter,langTools.keyWordCompleter]);
       }
 
       focusOnInput();
@@ -385,6 +366,32 @@
       $("#query_editor")[0].addEventListener('dragover',handleDragOver,false);
       $("#query_editor")[0].addEventListener('drop',handleFileDrop,false);
       $("#loadQuery")[0].addEventListener('change',handleFileSelect,false);
+    };
+
+    // this function is used for autocompletion of dynamically known names such
+    // as bucket names, field names, and so on. We only want to return items that
+    // either start with the prefix, or items where the prefix follows a '.'
+    // (meaning that the prefix is a field name from a path
+
+    var identifierCompleter = {
+        getCompletions: function(editor, session, pos, prefix, callback) {
+          //console.log("Completing: *" + prefix + "*");
+
+          var results = [];
+          var modPrefix = '.' + prefix;
+          var modPrefix2 = '`' + prefix;
+          for (var i=0; i<qwQueryService.autoCompleteArray.length; i++) {
+            //console.log("  *" + qwQueryService.autoCompleteArray[i].caption + "*");
+            if (_.startsWith(qwQueryService.autoCompleteArray[i].caption,prefix) ||
+                qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix) >= 0 ||
+                qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix2) >= 0) {
+              //console.log("    Got it!");
+              results.push(qwQueryService.autoCompleteArray[i]);
+            }
+          }
+
+          callback(null,results);
+        }
     };
 
     //
