@@ -225,10 +225,10 @@
     // structures for remembering queries and results
     //
 
-    var dummyResult = new QueryResult('-','-','-','0','0','',{},'');
+    var dummyResult = new QueryResult('','','','','','',{},'');
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
-    savedResultTemplate.status = "Cached query";
+    savedResultTemplate.status = "cached query";
     savedResultTemplate.result = '{"data_not_cached": "Hit execute to rerun query"}';
     savedResultTemplate.data = {data_not_cached: "Hit execute to rerun query"};
     savedResultTemplate.explainResult = savedResultTemplate.data;

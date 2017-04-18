@@ -55,39 +55,33 @@
 
 <!-- wrapper under query editor for button and stats -->
     <div id="query_footer" class="row">
-      <button ng-click="qc.query()" class="qw-button-exec">
-        <div ng-if="!qc.executingQuery.busy">Execute</div>
-        <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
-      </button>
-      &nbsp;&nbsp;&nbsp;
-      <a href="" ng-click="qc.query(true)" class="qw-button-exec">
-        Explain
-      </a>
+      <span class="nowrap">
+        <button ng-click="qc.query()" class="qw-button-exec">
+          <div ng-if="!qc.executingQuery.busy">Execute</div>
+          <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
+        </button>
+        <button ng-click="qc.query(true)" class="outline tight">
+          Explain
+        </button>
+      </span>
 
 <!-- query results stats -->
       <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">
         <span
-          ng-class="{success: qc.status_success(), error: qc.status_fail()}">
+          ng-class="{success: qc.status_success(), error: qc.status_fail()}"
+          class="semi-bold">
           {{qc.lastResult.status}}</span>
-
-        <span>| Elapsed: {{qc.lastResult.elapsedTime}}</span>
-
-        <span>| Execution: {{qc.lastResult.executionTime}}</span>
-
-        <span ng-if="qc.lastResult.mutationCount">
-            | Mutations: {{qc.lastResult.mutationCount}}
-        </span>
-        <span ng-if="!qc.lastResult.mutationCount">
-            | Count: {{qc.lastResult.resultCount}}
-        </span>
-        <span>| Size: {{qc.lastResult.resultSize}}</span>
+        <span> | elapsed: {{qc.lastResult.elapsedTime}} | </span>
+        <span>execution: {{qc.lastResult.executionTime}} | </span>
+        <span ng-if="qc.lastResult.mutationCount">mutations: {{qc.lastResult.mutationCount}} | </span>
+        <span ng-if="!qc.lastResult.mutationCount">count: {{qc.lastResult.resultCount}} | </span>
+        <span>size: {{qc.lastResult.resultSize}}</span>
       </div>
 
       <a href="" ng-if="qc.showOptions" ng-click="qc.options()" class="row">
         <span class="icon fa-cog margin-right"></span>
-        <span class="text-smaller">Run-Time Preferences</span>
+        <span class="text-smaller">Preferences</span>
       </a>
-
     </div>
 
 <!-- query results -->
