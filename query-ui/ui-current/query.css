@@ -85,7 +85,7 @@ margin-top: .5rem;
 }
 #result_tree {padding:.5rem .5rem .5rem 0;}
 #query_plan {padding:.5rem;}
-#result_table {max-width: 72vw;}
+#result_table {}
 
 /* the wrapper around the JSON view */
 #result_editor {

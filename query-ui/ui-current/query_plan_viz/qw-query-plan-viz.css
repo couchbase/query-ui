@@ -63,8 +63,8 @@
   margin-bottom: 1rem;
   border: 1px solid #ececec;
 }
-.qw-combi-wrapper {}
-.qw-rows-wrapper {position:relative}
+.qw-combi-wrapper {width:100%;}
+.qw-rows-wrapper {width:100%;}
 .qw-node-wrapper {width:100%;}
 /* .qw-explain-summary {
   background-color: #f5f5f5;
@@ -152,4 +152,23 @@
 
 .qw-node.expensive-3 {
   background: #f9ca7b;
+}
+
+.qw-zoom-wrapper {
+  white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+  margin: 0 2rem 0 0;
+}
+
+/* zoom controls ---------------- */
+
+ .qw-explain-wrapper.qw_zoom_out > * {
+  transform-origin: right top;
+  transform: scale(.33);
+  transition: all linear 0.5s;
+}
+
+.padding-0 {
+  padding: 0 !important;
 }

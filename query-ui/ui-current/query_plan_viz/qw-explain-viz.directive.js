@@ -65,6 +65,7 @@
                 content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
               content += "</div>";
+
             }
 
             // Tabular plan
@@ -78,10 +79,9 @@
               // map the plan to a data structure, the walk the structure, turning it into
               //
 
-            //  content += '<br><br><h3>Visual Plan</h3><br>'
-              content += '<div class="row qw-explain-wrapper"><div class="qw-node-wrapper qw-sequence flex-left qw-first-node">';
+              content += '<div class="qw-explain-wrapper min-width-zero"><div class="row qw-zoom-wrapper"><div class="qw-node-wrapper qw-sequence qw-first-node">';
               content += makeTreeFromPlanNodes(data.plan_nodes);
-              content += '</div></div>';
+              content += '</div></div></div>';
               //console.log("Visual tree: " + makeTree(transformedPlan));
             }
           }
@@ -140,13 +140,13 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
 
     if (plan.predecessor)
      if (_.isArray(plan.predecessor)) {
-        result += '</div><div class="row cbui-padding0 qw-combi-wrapper">';
+        result += '</div><div class="row padding-0 qw-combi-wrapper">';
         result += '<div class="qw-node qw-combinor">' + opName + "</div>";
         result += '<div class="qw-combinor-border"></div>';
         result += '<div class="qw-rows-wrapper">';
 
         for (var i = 0; i < plan.predecessor.length; i++) {
-          result += '<div class="row cbui-padding0"><div class="qw-node-wrapper qw-sequence"><div class="qw-arrow-tip"></div>';
+          result += '<div class="row padding-0"><div class="qw-node-wrapper qw-sequence"><div class="qw-arrow-tip"></div>';
           result += makeTreeFromPlanNodes(plan.predecessor[i],hasSuccessor);
           result += '</div></div>';
         }
