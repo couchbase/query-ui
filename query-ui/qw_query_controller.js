@@ -330,10 +330,10 @@
     // initialize the query editor
     //
 
-    function aceInputLoaded(_editor) {
-      var langTools = ace.require("ace/ext/language_tools");
-      var autocomplete = ace.require("ace/autocomplete");
+    var langTools = ace.require("ace/ext/language_tools");
+    var autocomplete = ace.require("ace/autocomplete");
 
+    function aceInputLoaded(_editor) {
       _editor.$blockScrolling = Infinity;
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
@@ -349,8 +349,9 @@
       //
 
       if (mnPools.export.isEnterprise) {
-        // make autocomplete work with 'tab'
+        // make autocomplete work with 'tab', and auto-insert if 1 match
         autocomplete.Autocomplete.startCommand.bindKey = "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab";
+        autocomplete.Autocomplete.startCommand.exec = autocomplete_exec;
         // enable autocomplete
         _editor.setOptions({enableBasicAutocompletion: true});
         // add completer that works with path expressions with '.'
@@ -385,13 +386,27 @@
             if (_.startsWith(qwQueryService.autoCompleteArray[i].caption,prefix) ||
                 qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix) >= 0 ||
                 qwQueryService.autoCompleteArray[i].caption.indexOf(modPrefix2) >= 0) {
-              //console.log("    Got it!");
+              //console.log("    Got it, pushing: " + qwQueryService.autoCompleteArray[i]);
               results.push(qwQueryService.autoCompleteArray[i]);
             }
           }
 
           callback(null,results);
         }
+    };
+
+    //
+    // for autocompletion, we want to override the 'exec' function so that autoInsert
+    // is the default (i.e., if there is only one match, don't bother showing the menu).
+    //
+
+    var autocomplete_exec =  function(editor) {
+      if (!editor.completer)
+        editor.completer = new autocomplete.Autocomplete();
+      editor.completer.autoInsert = true;
+      editor.completer.autoSelect = true;
+      editor.completer.showPopup(editor);
+      editor.completer.cancelContextMenu();
     };
 
     //

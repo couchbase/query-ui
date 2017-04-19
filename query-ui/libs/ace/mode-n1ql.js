@@ -109,7 +109,7 @@
    */
 
   var util = require("ace/autocomplete/util");
-  var ID_REGEX = /[a-z\.:A-Z_0-9\$\-\u00A2-\uFFFF]/;
+  var ID_REGEX = /[a-z\.`:A-Z_0-9\$\-\u00A2-\uFFFF]/;
 
   util.retrievePrecedingIdentifier = function(text, pos, regex) {
     regex = regex || ID_REGEX;
