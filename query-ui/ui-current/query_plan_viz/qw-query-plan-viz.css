@@ -163,7 +163,19 @@
 
 /* zoom controls ---------------- */
 
- .qw-explain-wrapper.qw_zoom_out > * {
+.qw-explain-wrapper.qw_zoom_out > * {
+  transform-origin: right top;
+  transform: scale(.33);
+  transition: all linear 0.5s;
+}
+
+.qw-explain-wrapper.qw_zoom_1 > * {
+  transform-origin: right top;
+  transform: scale(.66);
+  transition: all linear 0.5s;
+}
+
+.qw-explain-wrapper.qw_zoom_2 > * {
   transform-origin: right top;
   transform: scale(.33);
   transition: all linear 0.5s;

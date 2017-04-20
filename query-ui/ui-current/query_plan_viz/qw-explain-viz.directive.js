@@ -64,8 +64,16 @@
               for (var f in data.analysis.fields)
                 content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
+
+
+              content += "<div class='column'>";
+              content += "<div class='semi-bold'>Zoom:</div>";
+              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)">S</a>&nbsp;';
+              content += '<a onclick="$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)">M</a>&nbsp';
+              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)">L</a>';
               content += "</div>";
 
+              content += "</div>";
             }
 
             // Tabular plan
