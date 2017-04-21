@@ -462,7 +462,7 @@
             var field = schema[i]['properties'][field_name];
             // if we had an array expr, check subfields against the array schema
             if (arrayIndex > -1 && field['items'] && field['items'].subtype &&
-                isFieldNameInSchema(field['items'].subtype,fieldSuffix))
+                isFieldNameInSchema([field['items'].subtype],fieldSuffix))
               return true;
 
             // if we have a non-array, check the subschema
@@ -766,7 +766,7 @@
 
         if (queryOptions.named_parameters)
           for (var i=0; i < queryOptions.named_parameters.length; i++)
-            queryData['$' + queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
+            queryData[queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
 
         //console.log("Running query: " + JSON.stringify(queryData));
       }
@@ -785,8 +785,8 @@
 
       var queryRequest;
       var userAgent = 'Couchbase Query Workbench';
-      if (qwQueryService.user && qwQueryService.user.id)
-        userAgent += ' (' + qwQueryService.user.id + ')';
+      if (mnPoolDefault.export.thisNode && mnPoolDefault.export.thisNode.version)
+        userAgent += ' (' + mnPoolDefault.export.thisNode.version + ')';
 
       if (mnPoolDefault.export.compat && mnPoolDefault.export.compat.atLeast45) {
 
@@ -935,6 +935,8 @@
           newResult.status = "errors";
           newResult.data = {error: "Error, you cannot issue more than one query at once. Please remove all text after the semicolon closing the first query."};
           newResult.result = JSON.stringify(newResult.data);
+          newResult.explainResult = newResult.data;
+          newResult.explainResultText = newResult.result;
           lastResult.copyIn(newResult);
           saveStateToStorage(); // save current history
           return null;

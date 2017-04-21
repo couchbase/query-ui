@@ -693,7 +693,10 @@
       var markerIds = [];
       var session = qc.inputEditor.getSession();
 
-      if (qc.lastResult.explainResult.problem_fields && qc.lastResult.explainResult.problem_fields.length > 0) {
+      //console.log("Explain result: " + JSON.stringify(qc.lastResult.explainResult.problem_fields));
+
+      if (qc.lastResult && qc.lastResult.explainResult && qc.lastResult.explainResult.problem_fields &&
+          qc.lastResult.explainResult.problem_fields.length > 0) {
         var lines = session.getLines(0,session.getLength()-1);
         var fields = qc.lastResult.explainResult.problem_fields;
 
