@@ -383,6 +383,18 @@ padding-right: .5rem;
   content: "\f044";
 }
 
+.fa-search:before {
+  content: "\f002";
+}
+
+.fa-1-5x {
+  font-size: 1.5em;
+}
+
+.padding-0 {
+  padding: 0 !important;
+}
+
 /* monitoring statistics --------------- */
 #query_stats {
   display: flex;

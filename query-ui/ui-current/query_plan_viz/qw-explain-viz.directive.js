@@ -41,10 +41,9 @@
 
             // summarize plan
             if (data.analysis) {
-              //content += "<h3>Query Plan Summary:</h3>";
-              content += "<div class='row qw-planviz-summary flex-left text-small'>";
+              content += "<div class='row items-top qw-explain-summary indent-1'>";
               content += "<div class='column'>";
-              content += "<div class='semi-bold'>Indexes</div>";
+              content += "<h5>Indexes</h5>";
 //              content += "<li>Indexes used: <ul>";
               for (var f in data.analysis.indexes)
                 if (f.indexOf("#primary") >= 0)
@@ -54,23 +53,22 @@
               content += "</div>";
 
               content += "<div class='column'>";
-              content += "<div class='semi-bold'>Buckets</div>";
+              content += "<h5>Buckets</h5>";
               for (var b in data.analysis.buckets)
                 content += "<em>" + b + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
               content += "<div class='column'>";
-              content += "<div class='semi-bold'>Fields</div>";
+              content += "<h5>Fields</h5>";
               for (var f in data.analysis.fields)
                 content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
 
-              content += "<div class='column'>";
-              content += "<div class='semi-bold'>Zoom:</div>";
-              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)">S</a>&nbsp;';
-              content += '<a onclick="$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)">M</a>&nbsp';
-              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)">L</a>';
+              content += "<div class='column text-right nowrap'>";
+              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)"><span class="icon fa-search"></span></a>';
+              content += '<a onclick="$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)"><span class="icon fa-search fa-1-5x"></span></a>';
+              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)"><span class="icon fa-search fa-2x"></span></a>';
               content += "</div>";
 
               content += "</div>";
@@ -154,7 +152,7 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
         result += '<div class="qw-rows-wrapper">';
 
         for (var i = 0; i < plan.predecessor.length; i++) {
-          result += '<div class="row padding-0"><div class="qw-node-wrapper qw-sequence"><div class="qw-arrow-tip"></div>';
+          result += '<div class="row padding-0"><div class="qw-sequence qw-node-wrapper"><div class="qw-arrow-tip"></div>';
           result += makeTreeFromPlanNodes(plan.predecessor[i],hasSuccessor);
           result += '</div></div>';
         }
