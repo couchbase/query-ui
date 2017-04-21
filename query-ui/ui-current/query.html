@@ -3,7 +3,7 @@
    ng-show="qc.validated.valid()"
    class="row flex-top">
 
-  <mn-element-cargo depot="actions">
+  <mn-element-cargo depot="actions" ng-if="qc.validated.valid()">
     <div class="header-controls">
       <input type="file" id="loadQuery" name="files" style="display:none" accept="text/plain">
       <a href=""
