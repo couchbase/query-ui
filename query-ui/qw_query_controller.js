@@ -366,7 +366,9 @@
 
       $("#query_editor")[0].addEventListener('dragover',handleDragOver,false);
       $("#query_editor")[0].addEventListener('drop',handleFileDrop,false);
-      $("#loadQuery")[0].addEventListener('change',handleFileSelect,false);
+      var loadQueryLink = $("#loadQuery");
+      if (loadQueryLink && loadQueryLink[0])
+        loadQueryLink[0].addEventListener('change',handleFileSelect,false);
     };
 
     // this function is used for autocompletion of dynamically known names such

@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
-  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService','mnPoolDefault','mnPools','mnAuthService'];
+  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper', 'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService','mnPoolDefault','mnPools','mnAuthService', 'mnServersService'];
 
-  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools,mnAuthService) {
+  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, $httpParamSerializer,qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools,mnAuthService,mnServersService) {
 
     var qwQueryService = {};
 
@@ -69,8 +69,6 @@
     qwQueryService.buckets = [];
     qwQueryService.bucket_names = [];
     qwQueryService.indexes = [];
-    qwQueryService.gettingBuckets = {busy: false};
-    //qwQueryService.gettingSchemas = {busy: false};
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     qwQueryService.testAuth = testAuth; // check passward
@@ -1461,18 +1459,46 @@
     };
 
     //
-    // manage metadata, including buckets, fields, and field descriptions
+    // when the cluster nodes change, test to see if it's a significant change. if so,
+    // update the list of buckets and nodes.
     //
 
-    // update buckets whenever we hear about a bucket change
-    $rootScope.$on("bucketUriChanged",updateBuckets);
+    var prev_active_nodes = null;
+
+    $rootScope.$on("nodesChanged", function () {
+      mnServersService.getNodes().then(function(nodes) {
+        if (prev_active_nodes && !nodeListsEqual(prev_active_nodes,nodes.active)) {
+          validateQueryService.getBucketsAndNodes(updateBucketsCallback);
+        }
+        prev_active_nodes = nodes.active;
+      });
+     });
+
+    function nodeListsEqual(one, other) {
+      if (!_.isArray(one) || !_.isArray(other))
+        return(false);
+
+      if (one.length != other.length)
+        return(false);
+
+      for (var i=0; i<one.length; i++) {
+        if (!(_.isEqual(one[i].clusterMembership,other[i].clusterMembership) &&
+            _.isEqual(one[i].hostname,other[i].hostname) &&
+            _.isEqual(one[i].services,other[i].services) &&
+            _.isEqual(one[i].status,other[i].status)))
+          return false;
+      }
+      return(true);
+    }
+
+    //
+    // whenever the system changes, we need to update the list of valid nodes and buckets
+    //
+
     $rootScope.$on("indexStatusURIChanged",updateBuckets);
+    $rootScope.$on("bucketUriChanged",updateBuckets);
 
-    function updateBuckets() {
-      if (qwQueryService.gettingBuckets.busy)
-        return;
-
-      qwQueryService.gettingBuckets.busy = true;
+    function updateBuckets(event,data) {
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
@@ -1551,7 +1577,6 @@
             }
 
             refreshAutoCompleteArray();
-            qwQueryService.gettingBuckets.busy = false;
           },
 
           // error status from query about indexes
@@ -1575,12 +1600,9 @@
             console.log(error);
 
             qwQueryService.index_error = error;
-            qwQueryService.gettingBuckets.busy = false;
           }
           );
         }
-        else
-          qwQueryService.gettingBuckets.busy = false;
 
       },
       /* error response from $http */
@@ -1601,8 +1623,6 @@
         qwQueryService.autoCompleteTokens = {};
         qwQueryService.bucket_errors = error;
         qwQueryService.buckets.push({id: error, schema: []});
-
-        qwQueryService.gettingBuckets.busy = false;
       });
 
 
@@ -1759,7 +1779,6 @@
               hasFields: true});
         }
 
-        //qwQueryService.gettingSchemas.busy = false;
       }, function errorCallback(response) {
         var error = "Error getting schema for bucket: " + bucket.id;
         if (response)
@@ -1773,7 +1792,6 @@
             error += JSON.stringify(response);
 
         console.log("   error: " + error);
-        //qwQueryService.gettingSchemas.busy = false;
       });
 
     };
