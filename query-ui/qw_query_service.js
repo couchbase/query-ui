@@ -562,12 +562,23 @@
     }
 
     function addNewQueryAtEndOfHistory(query) {
-      var newResult = newQueryTemplate.clone();
-      if (query)
-        newResult.query  = query;
-      else
-        newResult.query = "";
-      pastQueries.push(newResult);
+      // if the end of the history is a blank query, add it there.
+
+      if (pastQueries.length > 0 && pastQueries[pastQueries.length -1].query.length == 0) {
+        pastQueries[pastQueries.length -1].query = query;
+      }
+
+      // otherwise, add a new query at the end of history
+
+      else {
+        var newResult = newQueryTemplate.clone();
+        if (query)
+          newResult.query  = query;
+        else
+          newResult.query = "";
+        pastQueries.push(newResult);
+      }
+
       currentQueryIndex = pastQueries.length - 1;
       lastResult.copyIn(pastQueries[currentQueryIndex]);
     }
