@@ -20,7 +20,7 @@
   <div ng-if="!qc.validated.inProgress() && !qc.validated.valid()" class="margin-top1">
     <p>The query interface is only available on Couchbase nodes running the query service.</p>
 
-    <div ng-if="qc.validated.otherNodes().length">
+    <div ng-if="qc.validNodes.length">
       <span ng-if="qc.validated.otherStatus() == 404">
         <p>The query service was found on the following nodes:</p>
       </span>
@@ -29,12 +29,12 @@
         <p>The query service should be found on the following nodes:</p>
       </span>
       <ul class="nobullet">
-        <li ng-repeat="url in qc.validated.otherNodes()">
+        <li ng-repeat="url in qc.validNodes">
           <a href="{{url}}">{{url}}</a>
         </li>
       </ul>
     </div>
-    <div ng-if="qc.validated.otherNodes().length == 0">
+    <div ng-if="qc.validNodes.length == 0">
       <p class="error">No query nodes were found on this cluster.</p>
     </div>
   </div>

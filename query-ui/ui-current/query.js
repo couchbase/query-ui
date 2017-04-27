@@ -85,26 +85,23 @@
     .factory('validateQueryService', function($http,mnServersService,mnPermissions, mnPoolDefault) {
       var _checked = false;              // have we checked validity yet?
       var _valid = false;                // do we have a valid query node?
-      var _nodesInProgress = false;      // are we retrieving the list of valid nodes?
       var _bucketsInProgress = false;    // are we retrieving the list of buckets?
       var _monitoringAllowed = false;
       var _clusterStatsAllowed = false;
-      var _validNodes = [];
       var _otherStatus;
       var _otherError;
       var _bucketList = [];
       var _bucketStatsList = [];
       var service = {
-          inProgress: function()       {return !_checked || _nodesInProgress || _bucketsInProgress;},
+          inProgress: function()       {return !_checked || _bucketsInProgress;},
           valid: function()            {return _valid;},
           validBuckets: function()     {return _bucketList;},
-          otherNodes: function()       {return _validNodes;},
           otherStatus: function()      {return _otherStatus;},
           otherError: function()       {return _otherError;},
           monitoringAllowed: function() {return _monitoringAllowed;},
           clusterStatsAllowed: function() {return _clusterStatsAllowed;},
-          updateValidBuckets: getBucketsAndNodes,
-          getBucketsAndNodes: getBucketsAndNodes
+          updateValidBuckets: getBuckets,
+          getBucketsAndNodes: getBuckets
       }
 
       //
@@ -113,28 +110,19 @@
       // we accept a callback function that will be called once the list of buckets is updated.
       //
 
-      function getBucketsAndNodes(callback) {
+      function getBuckets(callback) {
         //console.trace();
         //console.log("Getting nodes and buckets, progress: " + _nodesInProgress + ", " + _bucketsInProgress);
 
         // make sure we only do this once at a time
-        if (_nodesInProgress || _bucketsInProgress)
-          return;
+        if (_bucketsInProgress)
+         return;
 
         //_valid = false;
         _checked = true;
         _otherStatus = null;
         _otherError = null;
-        _nodesInProgress = true;
         _bucketsInProgress = true;
-
-        // get the list of valid nodes in the cluster, in case we need it
-        mnPoolDefault.get().then(function success(value){
-          _validNodes = mnPoolDefault.getUrlsRunningService(value.nodes, "n1ql");
-          _nodesInProgress = false;
-          //console.log("Got valid nodes: " + JSON.stringify(_validNodes));
-        },
-        function error(err) {_nodesInProgress = false;});
 
         // meanwhile issue a query to the local node get the list of buckets
         var queryData = {statement: "select keyspaces.name from system:keyspaces;"};

@@ -1459,40 +1459,7 @@
     };
 
     //
-    // when the cluster nodes change, test to see if it's a significant change. if so,
-    // update the list of buckets and nodes.
-    //
-
-    var prev_active_nodes = null;
-
-    $rootScope.$on("nodesChanged", function () {
-      mnServersService.getNodes().then(function(nodes) {
-        if (prev_active_nodes && !nodeListsEqual(prev_active_nodes,nodes.active)) {
-          validateQueryService.getBucketsAndNodes(updateBucketsCallback);
-        }
-        prev_active_nodes = nodes.active;
-      });
-     });
-
-    function nodeListsEqual(one, other) {
-      if (!_.isArray(one) || !_.isArray(other))
-        return(false);
-
-      if (one.length != other.length)
-        return(false);
-
-      for (var i=0; i<one.length; i++) {
-        if (!(_.isEqual(one[i].clusterMembership,other[i].clusterMembership) &&
-            _.isEqual(one[i].hostname,other[i].hostname) &&
-            _.isEqual(one[i].services,other[i].services) &&
-            _.isEqual(one[i].status,other[i].status)))
-          return false;
-      }
-      return(true);
-    }
-
-    //
-    // whenever the system changes, we need to update the list of valid nodes and buckets
+    // whenever the system changes, we need to update the list of valid buckets
     //
 
     $rootScope.$on("indexStatusURIChanged",updateBuckets);

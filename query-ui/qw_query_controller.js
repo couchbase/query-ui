@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService', 'mnPoolDefault'];
+  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService', 'mnPoolDefault', 'mnServersService'];
 
-  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService, mnPoolDefault) {
+  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService, mnPoolDefault, mnServersService) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());
@@ -118,6 +118,7 @@
     //
 
     qc.validated = validateQueryService;
+    qc.validNodes = [];
 
     //
     // error message when result is too large to display
@@ -1054,10 +1055,58 @@
     }
 
     //
+    // when the cluster nodes change, test to see if it's a significant change. if so,
+    // update the list of nodes.
+    //
+
+    var prev_active_nodes = null;
+
+    function nodeListsEqual(one, other) {
+      if (!_.isArray(one) || !_.isArray(other))
+        return(false);
+
+      if (one.length != other.length)
+        return(false);
+
+      for (var i=0; i<one.length; i++) {
+        if (!(_.isEqual(one[i].clusterMembership,other[i].clusterMembership) &&
+            _.isEqual(one[i].hostname,other[i].hostname) &&
+            _.isEqual(one[i].services,other[i].services) &&
+            _.isEqual(one[i].status,other[i].status)))
+          return false;
+      }
+      return(true);
+    }
+
+
+    //
+    // get the latest valid nodes for query
+    //
+
+    function updateValidNodes() {
+      qc.validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
+    }
+
+    //
     // let's start off with a list of the buckets
     //
 
     function activate() {
+      //
+      // make sure we stay on top of the latest query nodes
+      //
+
+      updateValidNodes();
+
+      $rootScope.$on("nodesChanged", function () {
+        mnServersService.getNodes().then(function(nodes) {
+          if (prev_active_nodes && !nodeListsEqual(prev_active_nodes,nodes.active)) {
+            updateValidNodes();
+          }
+          prev_active_nodes = nodes.active;
+        });
+       });
+
       // if we receive a query parameter, and it's not the same as the current query,
       // insert it at the end of history
       if (_.isString($stateParams.query) && $stateParams.query.length > 0 &&
