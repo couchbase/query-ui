@@ -16,19 +16,18 @@
   min-width: 0;
   width: 100%;
 }
-.qw-node-wrapper {}
-.qw-node-wrapper.qw-first-node {}
-
 .qw-explain-summary {
   font-size: .75rem;
   margin-bottom: 1rem;
 }
 .qw-explain-summary .column {
+  -webkit-box-flex: 1.5;
   flex-grow: 1.5;
   margin: 0 2rem 0 0;
   padding: 0;
 }
 .qw-explain-summary .column:last-child {
+  -webkit-box-flex: 1;
   flex-grow: 1;
   margin: 0 1rem 0 0;
   align-self: flex-end;
@@ -41,14 +40,16 @@
 .qw-explain-summary a:hover {
   color: #000;
 }
-
 .qw-sequence {
   margin: 1rem 0;
   position: relative;
   height: 100%;
   padding: 0;
+  display: -webkit-box;
   display: flex;
+  -webkit-box-align: center;
   align-items: center;
+  -webkit-box-pack: justify;
   justify-content: space-between;
 }
 .qw-sequence:before {
@@ -65,7 +66,6 @@
 .qw-sequence > .qw-node:last-child {
   margin-right: 10px;
 }
-
 .qw-combinor-border:after {
   position: absolute;
   top: 0;
@@ -85,7 +85,6 @@
   padding: 0;
   z-index: 1;
 }
-
 .qw-node {
   margin: 0 12px 0px 0px;
   padding: .5rem .75rem;
@@ -115,19 +114,17 @@
   padding-left: 0;
 }
 .qw-last-node {
-  margin-right: 0!important;
+  margin-right: 0 !important;
 }
-
 .qw-field {
-   font-weight: 400;
-   color: #333;
-   display: block;
-   position: relative;
-   white-space: nowrap;
-   overflow: hidden;
-   text-overflow: ellipsis;
+  font-weight: 400;
+  color: #333;
+  display: block;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
 .qw-node.expensive-1 {
   background-image: linear-gradient(to top, #f9ca7b 0%, #f9ca7b 33%, #fdedd3 33%, #fdedd3 100%);
 }

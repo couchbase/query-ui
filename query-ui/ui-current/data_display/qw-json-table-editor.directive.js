@@ -143,7 +143,7 @@
         var invalidName = formName + '.$invalid';
         result += '<form name="' + formName + '"' +
           ' ng-submit="dec.updateDoc(' + row +',' + setPristineName + ')">' +
-          '<div class="cbui-tablerow padding-left">'; // new row for each object
+          '<div class="cbui-tablerow items-top padding-left">'; // new row for each object
 
         // button to update record in the first column
         result += '<span class="cbui-table-cell flex-grow-125"> ' +
