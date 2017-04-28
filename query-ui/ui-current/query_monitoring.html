@@ -213,10 +213,10 @@
   <div id="query_stats" ng-if="qc.validated.monitoringAllowed()">
 
     <div class="column vertical-divider" ng-if="qc.validated.clusterStatsAllowed()">
-      <span class="width-6">{{qmc.stats["query_requests_250ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_250ms") | number:1}}</span><br>
-      <span class="width-6">{{qmc.stats["query_requests_500ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_500ms") | number:1}}</span><br>
-      <span class="width-6">{{qmc.stats["query_requests_1000ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_1000ms") | number:1}}</span><br>
-      <span class="width-6">{{qmc.stats["query_requests_5000ms"].title}}</span> <span class="text-right width-6">{{qmc.getLatestStat("query_requests_5000ms") | number:1}}</span><br>
+      <span class="width-6">{{qmc.stats["query_requests_250ms"].title}}</span> <span class="text-right width-6">{{qmc.getAverageStat("query_requests_250ms") | number:1}}</span><br>
+      <span class="width-6">{{qmc.stats["query_requests_500ms"].title}}</span> <span class="text-right width-6">{{qmc.getAverageStat("query_requests_500ms") | number:1}}</span><br>
+      <span class="width-6">{{qmc.stats["query_requests_1000ms"].title}}</span> <span class="text-right width-6">{{qmc.getAverageStat("query_requests_1000ms") | number:1}}</span><br>
+      <span class="width-6">{{qmc.stats["query_requests_5000ms"].title}}</span> <span class="text-right width-6">{{qmc.getAverageStat("query_requests_5000ms") | number:1}}</span><br>
     </div>
 
     <div class="column wide vertical-divider text-center" ng-if="qc.validated.clusterStatsAllowed()">
