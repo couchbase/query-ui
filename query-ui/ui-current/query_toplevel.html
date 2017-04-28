@@ -25,7 +25,9 @@
         <p>The query service was found on the following nodes:</p>
       </span>
       <span ng-if="qc.validated.otherStatus() != 404">
-        <p class="error">There seems to be an error with the query service on this node.</p>
+        <p class="error">Received error {{qc.validated.otherStatus()}} when contacting the 
+        query service on this node. You can try refreshing the browser, or connecting to another node
+        (if available).</p>
         <p>The query service should be found on the following nodes:</p>
       </span>
       <ul class="nobullet">
