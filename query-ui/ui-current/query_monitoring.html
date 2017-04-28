@@ -126,8 +126,8 @@
             <span ng-if="qmc.show_down_caret_completed('state')" class="icon fa-caret-down"></span>
           </span>
           <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('time')">Run at
-            <span ng-if="qmc.show_up_caret_completed('time')" class="icon fa-caret-up"></span>
-            <span ng-if="qmc.show_down_caret_completed('time')" class="icon fa-caret-down"></span>
+            <span ng-if="qmc.show_up_caret_completed('requestTime')" class="icon fa-caret-up"></span>
+            <span ng-if="qmc.show_down_caret_completed('requestTime')" class="icon fa-caret-down"></span>
           </span>
           <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('users')">User
             <span ng-if="qmc.show_up_caret_completed('users')" class="icon fa-caret-up"></span>
@@ -153,9 +153,9 @@
           <span class="cbui-table-cell" uib-tooltip="{{result.state}}"
             tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
             {{result.state}}</span>
-          <span class="cbui-table-cell" uib-tooltip="{{result.time}}"
+          <span class="cbui-table-cell" uib-tooltip="{{result.requestTime}}"
             tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
-            {{result.time | limitTo: -28 | limitTo: 8}}</span>
+            {{result.requestTime | limitTo:8:11}}</span>
           <span class="cbui-table-cell" uib-tooltip="{{result.users}}"
             tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
             {{result.users}}</span>
