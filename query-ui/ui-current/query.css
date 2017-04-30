@@ -199,6 +199,10 @@
   overflow: auto;
 }
 
+.cbui-input.ng-invalid {
+  background-color: #f9e9ea; /* red-7 */
+}
+
 /* Buttons for the document editor */
 .flex-grow-1-25 {
   flex-grow: 1.25;
@@ -261,75 +265,4 @@
 }
 #query_stats hr {
   margin: .5rem 0;
-}
-
-/* MOVE TO CBUI .CSS ------------ */
-
-.row.items-stretch {
-  -webkit-box-align: stretch;
-  -ms-grid-row-align: stretch;
-  align-items: stretch;
-}
-.cbui-tablerow.items-top {
-  -webkit-align-items: flex-start;
-  align-items: flex-start;
-}
-.hidden {display:none;}
-
-.panel-footer.spaced {
-  -webkit-justify-content:space-between;
-  justify-content:space-between;
-}
-
-.gray-6 {
-  background-color:#ececec;
-}
-
-.dialog-lg {
-  width: 640px;
-}
-
-.margin-left-half {
-  margin-left: .5rem;
-}
-
-.cbui-input.ng-invalid {
-  background-color: pink;
-}
-
-.break-word {
-    word-break: break-all;
-}
-
-.padding-0 {
-  padding: 0 !important;
-}
-
-/* "Loading" animated ellipsis ------------------ */
-.loading {
-  display: inline-block;
-  width: 1rem;
-}
-.loading-placeholder {
-  display: inline-block;
-  width: 1rem;
-}
-.loading:after {
-  overflow: hidden;
-  display: inline-block;
-  vertical-align: bottom;
-  -webkit-animation: ellipsis steps(4,end) 900ms infinite;
-  animation: ellipsis steps(4,end) 900ms infinite;
-  content: "\2026"; /* ascii code for the ellipsis character */
-  width: 0;
-}
-@keyframes ellipsis {
-  to {
-    width: 1rem;
-  }
-}
-@-webkit-keyframes ellipsis {
-  to {
-    width: 1rem;
-  }
 }
