@@ -19,6 +19,10 @@
 #query_footer {
   margin-top: .5rem;
 }
+.qw-button-exec {
+  width: 7rem;
+  min-width: 7rem;
+}
 
 /* ACE editor overrides ------------------------ */
 .ace_gutter {
@@ -191,41 +195,27 @@
 #doc_editor_tabular .controls > select {
   margin: 0 2rem 0 0;
 }
+#doc_editor_tabular .doc-editor-results {
+  overflow: auto;
+}
 
 /* Buttons for the document editor */
-.flex-grow-125 {
+.flex-grow-1-25 {
   flex-grow: 1.25;
 }
 .btn.qw-doc-editor {
   min-width: 1rem;
   padding: .5rem;
-  margin-right: .5rem;
+  margin-right: .25rem;
+  border-radius: 4px;
 }
 .btn.qw-doc-editor[disabled] {
   background-color: #d3ccd3;
 }
-.qw-editor-btn {
+.btn .qw-editor-btn {
   vertical-align: top;
   color: #fff;
-}
-.qw-fa-trash:before {
-  font-size: 1.5em;
-  content: "\f014";
-}
-.qw-fa-copy:before {
-  font-size: 1.5em;
-  content: "\f0c5";
-}
-.qw-fa-save:before {
-  font-size: 1.5em;
-  content: "\f0c7";
-}
-.qw-fa-edit:before {
-  font-size: 1.5em;
-  content: "\f044";
-}
-.fa-search:before {
-  content: "\f002";
+  font-size: inherit;
 }
 
 /* monitoring statistics --------------- */
@@ -271,76 +261,6 @@
 }
 #query_stats hr {
   margin: .5rem 0;
-}
-
-/* ICONS !!!!!!!!!!!!!!!!!!!!!!!!!! */
-.icon-button .icon {
-  padding: 0;
-  position: relative;
-  left: 4px;
-}
-.qw-button-exec {
-  width: 7rem;
-  min-width: 7rem;
-}
-.icon.margin-left {
-  margin-left: .25rem;
-}
-.icon.margin-right {
-  margin-right: .25rem;
-}
-.fa-caret-up:before {
-  content: "\f0d8";
-}
-.fa-caret-down:before {
-  content: "\f0d7";
-}
-.fa-caret-right:before {
-  content: "\f0da";
-}
-.fa-pause:before {
-  content: "\f04c";
-}
-.fa-play-circle:before {
-  content: "\f144";
-}
-.fa-spin {
-  -webkit-animation: fa-spin 1s infinite linear;
-  animation: fa-spin 1s infinite linear;
-}
-.fa-pulse {
-  -webkit-animation: fa-spin 1s infinite steps(8);
-  animation: fa-spin 1s infinite steps(8);
-}
-@-webkit-keyframes fa-spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-@keyframes fa-spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-.fa-spinner:before {
-  content: "\f110";
-}
-.fa-gear:before,
-.fa-cog:before {
-  content: "\f013";
-}
-.fa-1-5x {
-  font-size: 1.5em;
 }
 
 /* MOVE TO CBUI .CSS ------------ */

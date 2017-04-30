@@ -4,7 +4,7 @@
   <h4>Document Editor</h4>
 
 <!-- row of controls for the query *********** -->
-  <div class="row flex-left controls" style="max-width: 86vw;">
+  <div class="row flex-left controls">
     <select
        ng-model="dec.options.selected_bucket"
        ng-options="bucket for bucket in dec.buckets">
@@ -18,7 +18,7 @@
   </div>
 
 <!-- Buttons to get the documents -->
-  <div class="row margin-bottom1" style="max-width: 86vw;">
+  <div class="row margin-bottom1">
     <button ng-click="dec.retrieveDocs()" class="qw-doc-editor button-exec">
       <div ng-if="!dec.options.queryBusy">Retrieve Docs</div>
       <div ng-if="dec.options.queryBusy" class="icon-button">
@@ -36,9 +36,9 @@
 
 <!-- RESULTS ************* -->
   <div class="text-small" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
-    Results for: &nbsp; <span class="success semi-bold">{{dec.options.current_query}}</span>
+    Results for: &nbsp; <span class="success semi-bold margin-bottom-half">{{dec.options.current_query}}</span>
   </div>
 
-  <div style="overflow:auto;max-width: 86vw;margin-top:.5rem;" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
+  <div class="doc-editor-results" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
     <qw-json-table-editor data="dec.options.current_result" controller="dec"></div>
 </div>

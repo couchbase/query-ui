@@ -122,7 +122,7 @@
       //
       var totalWidth = 0;
       var columnHeaders = '<div class="cbui-table-header-filled padding-left">';
-      columnHeaders += '<span class="cbui-table-cell flex-grow-125">update</span>';
+      columnHeaders += '<span class="cbui-table-cell flex-grow-1-25"></span>';
       columnHeaders += '<span class="cbui-table-cell flex-grow-2">id</span>';
 
       _.forIn(topLevelKeys, function(value,key) {
@@ -143,28 +143,28 @@
         var invalidName = formName + '.$invalid';
         result += '<form name="' + formName + '"' +
           ' ng-submit="dec.updateDoc(' + row +',' + setPristineName + ')">' +
-          '<div class="cbui-tablerow items-top padding-left">'; // new row for each object
+          '<div class="cbui-tablerow items-top padding-left-0">'; // new row for each object
 
         // button to update record in the first column
-        result += '<span class="cbui-table-cell flex-grow-125"> ' +
+        result += '<span class="cbui-table-cell flex-grow-1-25"> ' +
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
         'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +
-        '><span class="icon qw-fa-save qw-editor-btn"></span></a>' +
+        '><span class="icon fa-save qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.copyDoc(' + row +')" ' +
-        '><span class="icon qw-fa-copy qw-editor-btn"></span></a>' +
+        '><span class="icon fa-copy qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.editDoc(' + row +')" ' +
-        '><span class="icon qw-fa-edit qw-editor-btn"></span></a>' +
+        '><span class="icon fa-edit qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
-        '><span class="icon qw-fa-trash qw-editor-btn"></span></a>' +
+        '><span class="icon fa-trash qw-editor-btn"></span></a>' +
 
         //        '<span ng-if="!dec.options.queryBusy">Update</span>' +
 //        '<span ng-if="dec.options.queryBusy">Updating</span>' +
