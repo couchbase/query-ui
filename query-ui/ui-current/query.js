@@ -14,7 +14,7 @@
     'mnPermissions',
     'ui.ace',
     'ui.bootstrap'])
-    .config(function($stateProvider, $transitionsProvider, mnPluggableUiRegistryProvider) {
+    .config(function($stateProvider, $transitionsProvider, mnPluggableUiRegistryProvider, mnPermissionsProvider) {
 
       $stateProvider
       .state('app.admin.query', {
@@ -75,6 +75,13 @@
         qwQueryService.updateBuckets();
       });
 
+      mnPermissionsProvider.set("cluster.n1ql.meta!read"); // system catalogs
+      mnPermissionsProvider.setBucketSpecific(function (name) {
+        return [
+          "cluster.bucket[" + name + "].n1ql.select!execute"
+        ]
+      })
+
     })
     .run(function(jQuery, $timeout, $http) {
     })
@@ -128,19 +135,7 @@
         var queryData = {statement: "select keyspaces.name from system:keyspaces;"};
         $http.post("/_p/query/query/service",queryData)
         .then(function success(resp) {
-          var data = resp.data, status = resp.status;
           //console.log("Got bucket list data: " + JSON.stringify(data));
-
-          mnPermissions.set("cluster.n1ql.meta!read"); // system catalogs
-          mnPermissions.set("cluster.stats!read"); // system catalogs
-
-          if (data && _.isArray(data.results) && data.results.length > 0) {
-            for (var i=0; i< data.results.length; i++) {
-              mnPermissions.set("cluster.bucket[" + data.results[i].name + "].data!read");
-              mnPermissions.set("cluster.bucket[" + data.results[i].name + "].n1ql.select!execute");
-            }
-          }
-
           mnPermissions.check().then(function() {
             updateValidBuckets();
             if (callback) callback();
