@@ -47,6 +47,8 @@
     qc.status_success = qwQueryService.status_success;
     qc.status_fail = qwQueryService.status_fail;
 
+    qc.qqs = qwQueryService;
+
     //
     // options for the two editors, query and result
     //

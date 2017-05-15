@@ -69,7 +69,8 @@
 
         </div>
 
-        <div id="sidebar_body" class="cbui-overflow">
+        <div ng-if="qc.qqs.bucket_errors" id="sidebar_body" class="cbui-overflow">{{qc.qqs.bucket_errors}}</div>
+        <div ng-if="!qc.qqs.bucket_errors" id="sidebar_body" class="cbui-overflow">
           <div title="Buckets with a primary index support all queries.">
             Fully Queryable Buckets
             <ul class="bucket">

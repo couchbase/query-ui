@@ -437,6 +437,19 @@
       }
     }
 
+
+    //
+    // utility function for logging errors to the server
+    //
+
+    function logWorkbenchError(errorText) {
+      $http({
+          url: "/logClientError",
+          method: "POST",
+          data: "Query Workbench Error: " + errorText,
+      });
+    }
+
     //
     // call the proxy which handles N1QL queries
     //
@@ -548,7 +561,7 @@
           transformResponse: fixLongInts
           };
 
-
+      var originalRequest = qwQueryService.currentQueryRequest; // for debugging only
       // An alternate way to get around Angular's encoding is "isNotForm: true". But
       // that triggers bug MB-16964, where the server currently fails to parse creds
       // when they are JSON encoded.
@@ -639,7 +652,8 @@
 
       })
       .error(function(data, status, headers, config) {
-//        console.log("Error Data: " + JSON.stringify(data));
+//        console.log("Query Error Data: " + JSON.stringify(data));
+//        console.log("Original request: " + JSON.stringify(originalRequest));
 //        console.log("Error Status: " + JSON.stringify(status));
 //        console.log("Error Headers: " + JSON.stringify(headers));
 //        console.log("Error Config: " + JSON.stringify(config));
@@ -748,6 +762,7 @@
 
       qwQueryService.gettingBuckets.busy = true;
       qwQueryService.buckets.length = 0;
+      qwQueryService.bucket_errors = null;
 
       // use a query to get buckets with a primary index
       //var queryText = "select distinct indexes.keyspace_id from system:indexes where is_primary = true order by indexes.keyspace_id ;";
@@ -819,7 +834,8 @@
         else if (status)
           error = error + ", contacting query service returned status: " + status;
 
-        qwQueryService.buckets.push({id: error, schema: []});
+        logWorkbenchError(error);
+        qwQueryService.bucket_errors = error;
         qwQueryService.gettingBuckets.busy = false;
       });
 
