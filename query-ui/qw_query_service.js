@@ -746,7 +746,7 @@
       if (qwConstantsService.sendCreds) {
         var credArray = [];
 
-        for (var i = 0; i < qwQueryService.buckets.length; i++) {
+        if (!qwQueryService.bucket_errors) for (var i = 0; i < qwQueryService.buckets.length; i++) {
           var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
           credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
         }
@@ -1043,7 +1043,9 @@
         /* error response from $http */
         function error(resp) {
           var data = resp.data, status = resp.status;
-          //console.log("Explain error Data: " + JSON.stringify(data));
+          console.log("Explain error Data: " + JSON.stringify(data));
+          console.log("Request was: " + JSON.stringify(explain_request));
+
           //console.log("Explain error Status: " + JSON.stringify(status));
           //console.log("Explain error Headers: " + JSON.stringify(headers));
 
@@ -1235,7 +1237,8 @@
       /* error response from $http */
       function error(resp) {
         var data = resp.data, status = resp.status;
-//      console.log("Error Data: " + JSON.stringify(data));
+        console.log("Error Data: " + JSON.stringify(data));
+        console.log("Request was: " + JSON.stringify(request));
 //      console.log("Error Status: " + JSON.stringify(status));
 //      console.log("Error Headers: " + JSON.stringify(headers));
       //console.log("Error Config: " + JSON.stringify(config));
@@ -1499,6 +1502,7 @@
 
         // initialize the data structure for holding all the buckets
         qwQueryService.buckets.length = 0;
+        qwQueryService.bucket_errors = null;
         qwQueryService.bucket_names.length = 0;
         qwQueryService.autoCompleteTokens = {};
 
@@ -1558,7 +1562,7 @@
           },
 
           // error status from query about indexes
-          function (resp) {
+          function index_error(resp) {
             var data = resp.data, status = resp.status;
 
             //console.log("Ind Error Data: " + JSON.stringify(data));
@@ -1600,7 +1604,6 @@
         qwQueryService.buckets.length = 0;
         qwQueryService.autoCompleteTokens = {};
         qwQueryService.bucket_errors = error;
-        qwQueryService.buckets.push({id: error, schema: []});
       });
 
 
