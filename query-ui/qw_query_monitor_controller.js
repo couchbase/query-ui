@@ -154,6 +154,13 @@
     //
 
     function activate() {
+      // if we were here before, remember if monitoring was updating or not
+      if (qwQueryService.userAutoUpdate)
+        qwQueryService.monitoringAutoUpdate = qwQueryService.userAutoUpdate;
+      // otherwise remember the current state
+      else
+        qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate;
+
       // if we haven't been here before, initialize the monitoring data
       if (qwQueryService.monitoringTab == 0) {
         qmc.selectTab(1); // default is 1st tab
@@ -209,6 +216,8 @@
         qwQueryService.monitoringAutoUpdate = true;
         update();
       }
+
+      qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate;
     }
 
     function get_toggle_label() {
