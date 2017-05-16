@@ -14,7 +14,8 @@
            name="response"
            value="{{$index}}"
            id="for-{{$index}}"
-           ng-model="$parent.selected.item">
+           ng-model="$parent.selected.item"
+           ng-checked="$index==0">
         <label
            for="for-{{$index}}"
            class="checkbox">
@@ -22,7 +23,7 @@
         </label>
       </span>
     </div>
-    <div class="formrow" ng-hide="safari">
+    <div class="formrow">
       <label>Filename</label>
       <span  class="input-append">
         <input type="text" ng-model="file.name">
@@ -30,7 +31,9 @@
       </span>
     </div>
     <div class="formrow" ng-show="safari">
-      Safari will show the output in a new tab, you can use File > Save As to save it to a .txt file from there.
+      Older versions of Safari do not support SaveAs, and will show the output in a new tab, 
+      you can use File > Save As to save it to a specific file. For queries, use a .txt file if 
+      you wish to reload it into the Query Workbench.
     </div>
   </div>
 

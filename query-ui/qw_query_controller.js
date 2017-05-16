@@ -849,9 +849,10 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.file;
-      dialogScope.file_options = [{kind: "json", label: "Query Results"},{kind: "txt", label: "Query Statement"}];
+      dialogScope.file_options = [{kind: "json", label: "Query Results"}];
+      if (qc.lastResult.query && qc.lastResult.query.length > 0)
+        dialogScope.file_options.push({kind: "txt", label: "Query Statement"});
       dialogScope.selected = {item: 0};
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_query_unified_file_dialog.html',
@@ -862,7 +863,6 @@
       promise.then(function success(res) {
         var file;
         var file_extension;
-        console.log("Got selected: " + dialogScope.selected.item + " isString: " + _.isString(dialogScope.selected.item));
 
         if (dialogScope.selected.item == 0) {
           file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
@@ -877,11 +877,11 @@
 
 
         // safari does'nt support saveAs
-        if (dialogScope.safari) {
-          saveAs(file,dialogScope.query_file.name + file_extension);
-          return;
-        }
-        else
+        //if (dialogScope.safari) {
+        //  saveAs(file,dialogScope.query_file.name + file_extension);
+        //  return;
+        //}
+        //else
           saveAs(file,dialogScope.file.name + file_extension);
       });
 
