@@ -1027,6 +1027,8 @@
           // if we're doing explain only, copy the explain results to the regular results as well
 
           if (explainOnly) {
+            newResult.status = "Explain success";
+            newResult.resultSize = null;
             newResult.data = newResult.explainResult;
             newResult.result = newResult.explainResultText;
           }
@@ -1079,9 +1081,7 @@
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone || explainOnly) {
-            // when we have errors, don't show the plan tabs
-            //if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
-            //  qwQueryService.selectTab(1);
+            newResult.status = "Explain error";
             finishQuery();
           }
         });
