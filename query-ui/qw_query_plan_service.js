@@ -479,6 +479,7 @@
 
       // iterate over fields, look for "#operator" field
       var operatorName = plan['#operator'];
+      //console.log("Analyzing plan node: " + operatorName);
 
       // at this point we should have an operation name and a field array
       //console.log("  after analyze, got op name: " + operatorName);
@@ -640,8 +641,10 @@
       if (plan.limit)
         getFieldsFromExpression(plan.limit,lists);
 
-      if (plan.as && plan.keyspace)
+      if (plan.as && plan.keyspace) {
         lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
+        //console.log("Got alias " + plan.as + " for " + plan.keyspace);
+      }
       if (plan.result_terms && _.isArray(plan.result_terms))
         for (var i=0; i< plan.result_terms.length; i++) if (plan.result_terms[i].expr )
           if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
@@ -656,7 +659,7 @@
     //
     // pull bucket and field names out of arbitrary expressions
     //
-    // field names are expressed in nested parents, the simplest case is:
+    // field names are expressed in nested parens, the simplest case is:
     //    (`bucket`.`field`)
     // but if there is a subfield, it looks like:
     //    ((`bucket`.`field`).`subfield`)
@@ -667,9 +670,9 @@
     // field, then building as we go out.
     //
 
-    function getFieldsFromExpression(expression,lists) {
+    function getFieldsFromExpression_old(expression,lists) {
 
-      //console.log("Got field expr: " + expression);
+      console.log("Getting fields for expr: " + expression);
 
       var quotation = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/ig;
       var coreFieldRef = /\(`((?:[^`\\]|\\.)+)`\.`((?:[^`\\]|\\.)+)`\)/i;
@@ -710,7 +713,116 @@
           expr = expr.replace(innerFieldRef,"inner");
         }
         lists.fields[bucket + "." + field] = true;
-        //console.log("got field: " + bucket + "." + field);
+        console.log("    got field1: " + bucket + "." + field);
+      }
+
+      var  lists2 = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0};
+      getFieldsFromExpression2(expression,lists2);
+    }
+
+    function getFieldsFromExpression(expression,lists) {
+      var len = expression.length;
+      var prev = null;
+      var prev_prev = null;
+      var cur = null;
+      var next = null;
+      var bracketDepth = 0;
+      var curLoc = 0;     // current char offset
+      var startBackTick = 0;
+      var endBackTick = 0;
+      var insideSingleQuote = false;
+      var insideDoubleQuote = false;
+      var insideBackTick = false;
+      var currentFieldStack = [];
+
+      //console.log("E2: " + expression + ', len: ' + len + ", curLoc: " + curLoc);
+
+      while (curLoc < len) {
+        cur = expression.charAt(curLoc++);
+        next = (curLoc < len ? expression.charAt(curLoc) : null);
+
+        //console.log((curLoc-1) + ":" + cur + ", isq: " + insideSingleQuote + ", idq: " + insideDoubleQuote +
+        //    ", ibt: " + insideBackTick + ", bd: " + bracketDepth + ", next: " + next);
+
+        // if we are inside a quoted string, we don't care about the character unless it closes the string
+
+        if (insideSingleQuote) {
+          if (cur == "'" && prev != '\\')
+            insideSingleQuote = false;
+        }
+        else if (insideDoubleQuote) {
+          if (cur == '"' && prev != '\\')
+            insideDoubleQuote = false;
+        }
+
+        // unlike regular quotes, backticks are quoted by another backtick. weird!
+        else if (insideBackTick) {
+          // ignore pairs of back-ticks
+          if (cur == '`' && next == '`')
+            curLoc++; // skip the second back-tick
+          else if (cur == '`') {
+            insideBackTick = false;
+            endBackTick = curLoc-1;
+            //console.log("endBackTick, next: " + next);
+            // only time back-tick is followed by '.' is with bucket name
+            if (next == '.') {
+              // get the bucket name, and see if there is an alias for it
+              var bucket = expression.substring(startBackTick,endBackTick);
+              //console.log("Bucket: " + bucket);
+              for (var i=0; i < lists.aliases.length; i++) {
+                //console.log("   comparing to: " + lists.aliases[i].as);
+                if (lists.aliases[i].as == bucket) {
+                  bucket = lists.aliases[i].keyspace;
+                  break;
+                }
+              }
+              currentFieldStack[bracketDepth] = bucket;
+              lists.buckets[bucket] = true;
+            }
+            else
+              currentFieldStack[bracketDepth] += "." + expression.substring(startBackTick,endBackTick);
+          }
+        }
+
+        // otherwise we are not inside any type of quotes, let's see what we have
+        else switch (cur) {
+        case '`':
+          insideBackTick = true;
+          startBackTick = curLoc;
+          break;
+        case "'":
+          insideSingleQuote = true; break;
+        case '"':
+          insideDoubleQuote = true; break;
+
+        case '[':
+          bracketDepth++;
+          break;
+
+        case ']':
+          if (bracketDepth > 0) {
+            bracketDepth--;
+            // if we are part of a field expression, add [0] to it
+            if (currentFieldStack[bracketDepth])
+              currentFieldStack[bracketDepth] += '[0]';
+          }
+          break;
+
+          // if we are in a field expression, and see a close paren not followed by '.' or '[',
+          // then we have reached the end of the expression
+        case ')':
+          if ((next != '.') && (next != '[') && currentFieldStack[bracketDepth] != null) {
+            lists.fields[currentFieldStack[bracketDepth]] = true;
+            //console.log("    got field2: " + currentFieldStack[bracketDepth]);
+            currentFieldStack[bracketDepth] = null;
+          }
+          break;
+
+        default: // ignore other characters
+        }
+
+        prev_prev = prev;
+        prev = cur;
       }
 
     }
@@ -724,60 +836,6 @@
     {
       var timeNumber = convertTimeStringToFloat(timeValue);
       return(convertTimeFloatToFormattedString(timeNumber));
-
-//      // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
-//      // groups: 1: minutes, 2: secs, 3: fractional secs, 4: millis, 5: fract millis
-//      var durationExpr = /(?:(\d+)m)?(?:(\d+)\.(\d+)s)?(?:(\d+)\.(\d+)ms)?(?:(\d+)\.(\d+)µs)?/;
-//
-//      var m = timeValue.match(durationExpr);
-//      //console.log(m[0]);
-//
-//      if (m) {
-//        // minutes
-//        var minutes = "00";
-//        if (m[1]) // minutes value, should be an int
-//          if (m[1].length > 1)
-//            minutes = m[1];
-//          else
-//            minutes = '0' + m[1];
-//
-//        // seconds
-//        var seconds = "00";
-//        if (m[2])
-//          if (m[2].length > 1)
-//            seconds = m[2];
-//          else
-//            seconds = '0' + m[2];
-//
-//        // milliseconds
-//        var millis = "0000";
-//        if (m[3])
-//          if (m[3].length > 4)
-//            millis = m[3].substring(0,4);
-//          else
-//            millis = m[3];
-//
-//        if (m[4] && m[5]) {
-//          // pad millis if necessary
-//          millis = m[4];
-//          while (millis.length < 3)
-//            millis = '0' + millis;
-//
-//          // add remaining digits and trim
-//          millis = millis + m[5];
-//          millis = millis.substring(0,4);
-//        }
-//
-//        // ooh, microseconds!
-//        if (m[6] && m[7]) {
-//          millis = "000" + m[6];
-//        }
-//
-//        return(minutes + ":" + seconds + "." + millis);
-
-        //for (var j=0; j < m.length; j++)
-        // console.log("  m[" + j + "] = " + m[j]);
-//      }
     }
 
     //

@@ -696,25 +696,40 @@
       var markerIds = [];
       var session = qc.inputEditor.getSession();
 
-      //console.log("Explain result: " + JSON.stringify(qc.lastResult.explainResult.problem_fields));
+      //console.log("Explain result: " + JSON.stringify(qc.lastResult.explainResult));
+      //console.log("Explain result probs: " + JSON.stringify(qc.lastResult.explainResult.problem_fields));
 
       if (qc.lastResult && qc.lastResult.explainResult && qc.lastResult.explainResult.problem_fields &&
           qc.lastResult.explainResult.problem_fields.length > 0) {
         var lines = session.getLines(0,session.getLength()-1);
         var fields = qc.lastResult.explainResult.problem_fields;
 
+        var allFields = "";
+        var field_names = [];
+
+        for (var i=0;i<fields.length;i++) {
+          allFields += " " + fields[i].bucket + "." + fields[i].field.replace(/\[0\]/gi,"[]") + "\n";
+          // find the final name in the field path, extracting any array expr
+          var field = fields[i].field.replace(/\[0\]/gi,"");
+          var lastDot = field.lastIndexOf(".");
+          if (lastDot > -1)
+            field = field.substring(lastDot);
+          field_names.push(field);
+        }
+
+        // one generic warning for all unknown fields
+        annotations.push(
+            {row: 0,column: 0,
+            text: "This query contains the following fields not found in the inferred schema for their bucket: \n"+ allFields,
+            type: "warning"});
+
         // for each line, for each problem field, find all matches and add an info annotation
         for (var l=0; l < lines.length; l++)
-          for (var f=0; f < fields.length; f++) {
+          for (var f=0; f < field_names.length; f++) {
             var startFrom = 0;
             var curIdx = -1;
-            while ((curIdx = lines[l].indexOf(fields[f].field,startFrom)) > -1) {
-              annotations.push(
-                  {row: l,column: curIdx,
-                  text: "Field `"+ fields[f].field + "` not found in inferred schema for bucket `" +
-                         fields[f].bucket + "`",
-                  type: "warning"});
-              markers.push({start_row: l, end_row: l, start_col: curIdx, end_col: curIdx + fields[f].field.length});
+            while ((curIdx = lines[l].indexOf(field_names[f],startFrom)) > -1) {
+              markers.push({start_row: l, end_row: l, start_col: curIdx, end_col: curIdx + field_names[f].length});
               startFrom = curIdx + 1;
             }
           }
