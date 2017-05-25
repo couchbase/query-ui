@@ -668,10 +668,11 @@
 
         // sanity check - if there was an error put a message in the console.
         function error(resp) {
-          var data = resp.data, status = resp.status;
-          console.log("Error cancelling query.");
-          console.log("    Data: " + JSON.stringify(data));
-          console.log("    Status: " + JSON.stringify(status));
+//          var data = resp.data, status = resp.status;
+          logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
+//          console.log("Error cancelling query.");
+//          console.log("    Data: " + JSON.stringify(data));
+//          console.log("    Status: " + JSON.stringify(status));
         });
 
       }
@@ -696,10 +697,11 @@
 
       // sanity check - if there was an error put a message in the console.
       function error(resp) {
-        var data = resp.data, status = resp.status;
-        console.log("Error cancelling query.");
-        console.log("    Data: " + JSON.stringify(data));
-        console.log("    Status: " + JSON.stringify(status));
+          logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
+//        var data = resp.data, status = resp.status;
+//        console.log("Error cancelling query: " + query);
+//        console.log("    Response: " + JSON.stringify(resp));
+//        console.log("    Status: " + JSON.stringify(status));
       });
     }
 
@@ -731,6 +733,14 @@
       }
 
       return($http(request));
+    }
+
+    function logWorkbenchError(errorText) {
+      $http({
+          url: "/logClientError",
+          method: "POST",
+          data: errorText,
+      });
     }
 
     function buildQueryRequest(queryText, is_user_query, queryOptions) {
@@ -830,7 +840,7 @@
         if (queryData.creds)
           queryData.creds = JSON.stringify(queryData.creds);
         var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-        queryRequest = {url: "/_p/query/query/service",
+        queryRequest = {url: qwConstantsService.queryURL,
             method: "POST",
             headers: {'Content-Type': 'application/x-www-form-urlencoded',
                       'ns-server-proxy-timeout':timeout*1000,'CB-User-Agent': userAgent},
@@ -901,6 +911,7 @@
       var newResult;
 
       //console.log("Got query to execute: " + queryText);
+      //logWorkbenchError("Got query to execute: " + queryText);
 
       // if the current query is part of the history,
       // or current query is "not yet run",
@@ -1045,8 +1056,8 @@
         /* error response from $http */
         function error(resp) {
           var data = resp.data, status = resp.status;
-          console.log("Explain error Data: " + JSON.stringify(data));
-          console.log("Request was: " + JSON.stringify(explain_request));
+          //console.log("Explain error Data: " + JSON.stringify(data));
+          //console.log("Request was: " + JSON.stringify(explain_request));
 
           //console.log("Explain error Status: " + JSON.stringify(status));
           //console.log("Explain error Headers: " + JSON.stringify(headers));
@@ -1237,8 +1248,8 @@
       /* error response from $http */
       function error(resp) {
         var data = resp.data, status = resp.status;
-        console.log("Error Data: " + JSON.stringify(data));
-        console.log("Request was: " + JSON.stringify(request));
+//        console.log("Error Data: " + JSON.stringify(data));
+//        console.log("Request was: " + JSON.stringify(request));
 //      console.log("Error Status: " + JSON.stringify(status));
 //      console.log("Error Headers: " + JSON.stringify(headers));
       //console.log("Error Config: " + JSON.stringify(config));
@@ -1439,8 +1450,8 @@
         var headers = response.headers;
         var config = response.config;
 
-        console.log("Mon Error Data: " + JSON.stringify(data));
-        console.log("Mon Error Status: " + JSON.stringify(status));
+        //console.log("Mon Error Data: " + JSON.stringify(data));
+        //console.log("Mon Error Status: " + JSON.stringify(status));
         //console.log("Mon Error Headers: " + JSON.stringify(headers));
         //console.log("Mon Error Config: " + JSON.stringify(config));
         var error = "Error with query monitoring";
@@ -1452,7 +1463,8 @@
         else if (status)
           error = error + ", query service returned status: " + status;
 
-        console.log("Got error: " + error);
+        logWorkbenchError(error);
+//        console.log("Got error: " + error);
 
         switch (category) {
         case 1:
@@ -1512,7 +1524,9 @@
           bucket.schema = [];
           //bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
           bucket.indexes = [];
-          bucket.validated = !validateQueryService.validBuckets || _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1;
+          bucket.validated = !validateQueryService.validBuckets ||
+            _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1 ||
+            _.indexOf(validateQueryService.validBuckets(),".") != -1;
           bucket.count = bucket_counts[bucket.id];
           //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
           if (bucket.validated) {
@@ -1579,7 +1593,8 @@
 //          if (response && response.statusText)
 //          error = error + ", " + response.statusText;
 
-            console.log(error);
+//            console.log(error);
+            logWorkbenchError(error);
 
             qwQueryService.index_error = error;
           }
@@ -1604,6 +1619,7 @@
         qwQueryService.buckets.length = 0;
         qwQueryService.autoCompleteTokens = {};
         qwQueryService.bucket_errors = error;
+        logWorkbenchError(error);
       });
 
 

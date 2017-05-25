@@ -564,7 +564,7 @@
       if (editor_size > 1000)
         editor_size = 1000;
       if (current_ui)
-        editor_size += 70;
+        editor_size += 150;//70;
       else
         editor_size += 140;
       if (editor_size < 0)

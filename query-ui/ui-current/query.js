@@ -135,6 +135,7 @@
         var queryData = {statement: "select keyspaces.name from system:keyspaces;"};
         $http.post("/_p/query/query/service",queryData)
         .then(function success(resp) {
+          //var data = resp.data, status = resp.status;
           //console.log("Got bucket list data: " + JSON.stringify(data));
           mnPermissions.check().then(function() {
             updateValidBuckets();

@@ -60,8 +60,9 @@
           <div ng-if="!qc.executingQuery.busy">Execute</div>
           <div ng-if="qc.executingQuery.busy" class="icon-button">Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
         </button>
-        <button ng-click="qc.query(true)" class="outline tight">
-          Explain
+        <button ng-disabled="qc.executingQuery.busy" ng-click="qc.query(true)" class="outline tight">
+           Explain
+           <span  ng-if="qc.executingQuery.busy" class="icon fa-spinner fa-spin fa-pulse"></span>
         </button>
       </span>
 
