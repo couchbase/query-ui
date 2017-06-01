@@ -1675,20 +1675,32 @@
         }
 
         // data might have authorization error
-        else if (data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
-          bucket.passwordNeeded = true;
+        else if (data.errors && _.isArray(data.errors) && data.errors.length > 0 &&
+            (data.errors[0].code == 10000 || data.errors[0].code == 13014)) {
+          bucket.schema_error = data.errors[0].msg;
+          // passwords only supported 4.5 and below
+          if (mnPoolDefault.export.compat && !mnPoolDefault.export.compat.atLeast50)
+            bucket.passwordNeeded = true;
           failure();
         }
+
+        // otherwise, failure
+        else
+          failure();
       },
 
       // error status from query about indexes
       function errorCallback(resp) {
         var data = resp.data, status = resp.status;
         // for 4.5+, auth errors come back here
-        if (data && data.errors && _.isArray(data.errors) && data.errors.length > 0 && data.errors[0].code == 10000) {
-          bucket.passwordNeeded = true;
-          failure();
+        if (data && data.errors && _.isArray(data.errors) && data.errors.length > 0 &&
+            (data.errors[0].code == 10000 || data.errors[0].code == 13014)) {
+          // passwords only supported 4.5 and below
+          if (mnPoolDefault.export.compat && !mnPoolDefault.export.compat.atLeast50)
+            bucket.passwordNeeded = true;
+          bucket.schema_error = data.errors[0].msg;
         }
+        failure();
       });
     }
 
