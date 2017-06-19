@@ -137,7 +137,9 @@
       if (_.isDate(result)) {
         var minutes = result.getMinutes() > 9 ? result.getMinutes() : "0" + result.getMinutes();
         var seconds = result.getSeconds() > 9 ? result.getSeconds() : "0" + result.getSeconds();
-        result = " " + result.getHours() + ":" + minutes + ":" + seconds;
+        var dateStr = result.toString();
+        var zone = dateStr.substring(dateStr.length-4,dateStr.length-1);
+        result = " " + result.getHours() + ":" + minutes + ":" + seconds + " " + zone;
       }
 
       return result;

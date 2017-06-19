@@ -155,7 +155,7 @@
             {{result.state}}</span>
           <span class="cbui-table-cell" uib-tooltip="{{result.requestTime}}"
             tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
-            {{result.requestTime | limitTo:8:11}}</span>
+            {{result.requestTime | limitTo:8:11}} {{result.requestTime | limitTo:3:-3}}</span>
           <span class="cbui-table-cell" uib-tooltip="{{result.users}}"
             tooltip-placement="top" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true">
             {{result.users}}</span>
