@@ -751,7 +751,7 @@
       // protected buckets
       //
 
-      var queryData = {statement: queryText};
+      var queryData = {statement: queryText, pretty: true};
 
       if (qwConstantsService.sendCreds) {
         var credArray = [];
@@ -1880,10 +1880,10 @@
         while (matchArray != null) {
           if (matchArray[1]) { // group 1, a non-quoted long int
             //console.log("  Got longInt: " + matchArray[1] + " with lastMatch: " + matchNonQuotedLongInts.lastIndex);
-            //console.log("  remainder: " + rawBytes.substring(matchNonQuotedLongInts.lastIndex));
+            //console.log("  remainder: " + rawBytes.substring(matchNonQuotedLongInts.lastIndex,matchNonQuotedLongInts.lastIndex + 10));
             var matchLen = matchArray[1].length;
-            newBytes += curBytes.substring(0,matchNonQuotedLongInts.lastIndex - matchLen - 1) + '"' +
-              matchArray[1] + '"';
+            newBytes += curBytes.substring(0,matchNonQuotedLongInts.lastIndex - matchLen) + '"' +
+              matchArray[1].substring(1) + '"';
             curBytes = curBytes.substring(matchNonQuotedLongInts.lastIndex - 1);
             matchNonQuotedLongInts.lastIndex = 0;
           }
