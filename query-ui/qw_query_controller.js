@@ -2,9 +2,9 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','qwConstantsService', 'mnPoolDefault', 'mnServersService'];
+  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault', 'mnServersService'];
 
-  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, qwConstantsService, mnPoolDefault, mnServersService) {
+  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault, mnServersService) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());
@@ -1156,6 +1156,21 @@
           event.preventDefault();
         }
       });
+
+      //
+      // check bucket counts every 5 seconds
+      //
+
+      if (!qwQueryService.pollSizes) {
+        qwQueryService.pollSizes = $interval(function () {
+        $rootScope.$broadcast("checkBucketCounts");
+      }, 5000);
+
+      $scope.$on('$destroy', function () {
+        $interval.cancel(qwQueryService.pollSizes);
+        qwQueryService.pollSizes = null;
+      });
+      }
 
       // get the list of buckets
       //qc.updateBuckets();

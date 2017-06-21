@@ -70,6 +70,7 @@
     qwQueryService.bucket_names = [];
     qwQueryService.indexes = [];
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
+    qwQueryService.updateBucketCounts = updateBucketCounts;   // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     qwQueryService.testAuth = testAuth; // check passward
 
@@ -1490,9 +1491,14 @@
 
     $rootScope.$on("indexStatusURIChanged",updateBuckets);
     $rootScope.$on("bucketUriChanged",updateBuckets);
+    $rootScope.$on("checkBucketCounts",updateBucketCounts);
 
     function updateBuckets(event,data) {
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
+    }
+
+    function updateBucketCounts(event,data) {
+      getInfoForBucketBackground(qwQueryService.buckets,0,true); // update bucket counts after each successful query
     }
 
     function updateBucketsCallback() {
@@ -1633,7 +1639,7 @@
     // we have the count information, and validate access, we get the schema for the bucket
     //
 
-    function getInfoForBucketBackground(bucketList,currentIndex) {
+    function getInfoForBucketBackground(bucketList,currentIndex,countsOnly) {
       // if we've run out of buckets, nothing more to do
       if (currentIndex < 0 || currentIndex >= bucketList.length)
         return;
@@ -1641,17 +1647,20 @@
       //console.log("Getting info for: " + bucketList[currentIndex].id);
 
       testAuth(bucketList[currentIndex],
-      function() { // authentication succeeded, get the schema for the bucket
-        var res = getSchemaForBucket(bucketList[currentIndex]);
+      function() { // authentication succeeded, get the schema for the bucket unless we're doing counts only
+        var res = countsOnly ? null : getSchemaForBucket(bucketList[currentIndex]);
         if (res && res.then)
           res.then(function successCallback(response) {
             getInfoForBucketBackground(bucketList,currentIndex+1);
           }, function errorCallback(response) {
             getInfoForBucketBackground(bucketList,currentIndex+1);
           });
+        // if they wanted counts only, just get the count for the next one
+        else
+          getInfoForBucketBackground(bucketList,currentIndex+1,countsOnly);
       },
       function() { // authentication failed, just move on to the next bucket
-        getInfoForBucketBackground(bucketList,currentIndex+1);
+        getInfoForBucketBackground(bucketList,currentIndex+1,countsOnly);
       });
     }
 
