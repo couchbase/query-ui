@@ -30,8 +30,8 @@
         name: 'Query',
         state: 'app.admin.query.workbench',
         plugIn: 'adminTab',
-        after: 'buckets',
-        ngShow: "rbac.cluster.admin.internal.all"
+        after: 'buckets'//,
+        //ngShow: "rbac.cluster.admin.internal.all"
       });
     })
     .run(function(jQuery, $timeout, $http) {

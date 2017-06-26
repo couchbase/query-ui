@@ -556,7 +556,7 @@
       var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
       qwQueryService.currentQueryRequest = {url: "/_p/query/query/service",
           method: "POST",
-          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000},
+          headers: {'Content-Type': 'application/x-www-form-urlencoded','ns-server-proxy-timeout':timeout*1000,'ignore-401':'true'},
           data: encodedQuery,
           transformResponse: fixLongInts
           };
