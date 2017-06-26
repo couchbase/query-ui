@@ -97,7 +97,7 @@
   algebra.NewExecute = function(expression)                                {var a = new expr("Execute"); a.ops.expression = expression; return a;};
   algebra.NewExplain = function(statement)                                 {var a = new expr("Explain"); a.ops.statement = statement; return a;};
   algebra.NewExpressionTerm = function(expression, opt_as_alias, opt_use)  {var a = new expr("ExpressionTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; a.ops.opt_use = opt_use; return a;};
-  algebra.NewGrantRole = function(role_list,user_list)                     {var a = new expr("GrantRole"); a.ops.role_list = role_list; a.ops.user_list = user_list; return a;};
+  algebra.NewGrantRole = function(role_list,user_list,keyspace_list)       {var a = new expr("GrantRole"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
   algebra.NewGroup = function(expression,opt_letting,opt_having)           {var a = new expr("Group"); a.ops.expression = expression; a.ops.opt_letting = opt_letting; a.ops.opt_having = opt_having; return a;};
   algebra.NewIndexJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
   algebra.NewIndexKeyTerm = function(index_term,opt_dir)                   {var a = new expr("IndexKeyTerm"); a.ops.index_term = index_term; a.ops.opt_dir = opt_dir; return a;};
@@ -128,7 +128,7 @@
   algebra.NewProjection = function(distinct,projects)                      {var a = new expr("Projection"); a.ops.distinct = distinct; a.ops.projects = projects; return a;};
   algebra.NewRawProjection = function(distinct,expression,as_alias)        {var a = new expr("RawProjection"); a.ops.distinct = distinct; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
   algebra.NewResultTerm = function(expression,star,as_alias)               {var a = new expr("ResultTerm"); a.ops.expression = expression; a.ops.star = star; a.ops.as_alias = as_alias; return a;};
-  algebra.NewRevokeRule = function(role_list,user_list)                    {var a = new expr("RevokeRule"); a.ops.role_list = role_list; a.ops.user_list = user_list; return a;};
+  algebra.NewRevokeRule = function(role_list,user_list,keyspace_list)      {var a = new expr("RevokeRule"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
   algebra.NewSelect = function(select_terms,order_by,offset,limit)         {var a = new expr("Select"); a.ops.select_terms = select_terms; a.ops.order_by = order_by; a.ops.offset = offset; a.ops.limit = limit; return a;};
   algebra.NewSelectTerm = function(term)                                   {var a = new expr("SelectTerm"); a.ops.term = term; return a;};
   algebra.NewSet = function(set_terms)                                     {var a = new expr("Set"); a.ops.set_terms = set_terms; return a;};
@@ -451,6 +451,10 @@ qid			    [`](([`][`])|[^`])+[`]
 %%
 
 input_list:
+inputs {return $1;}
+;
+
+inputs:
 input EOF
 {
     $$ = [$1];
@@ -468,18 +472,15 @@ input:
 stmt 
 {
     $$ = $1;
-    console.log("Got statement: " + ++statement_count/* + " - " + JSON.stringify($1)*/);
 }
 |
 expr_input 
 {
     $$ = $1;
-    console.log("Got expr: " + JSON.stringify($1));
 }
 |
 /* empty is o.k. *
 {
-    console.log("Got empty ");
     $$ = expression.NewEmpty();
 }
 ;
@@ -1770,43 +1771,88 @@ GRANT ROLE role_list TO user_list
 {
 	$$ = algebra.NewGrantRole($3, $5)
 }
+|
+GRANT role_list ON keyspace_list TO user_list
+{
+    $$ = algebra.NewGrantRole($2, $6, $4)
+}
 ;
 
 role_list:
-role_spec
+role_name
 {
 	$$ = [$1];
 }
 |
-role_list COMMA role_spec
+role_list COMMA role_name
 {
 	$1.push($3);
 	$$ = $1;
 }
 ;
 
-role_spec:
+role_name:
 IDENT
 {
-	$$ = { Role: $1 }
+    $$ = $1
 }
 |
-IDENT LPAREN IDENT RPAREN
+SELECT
 {
-	$$ = { Role: $1, Bucket: $3 }
+    $$ = "select"
+}
+|
+INSERT
+{
+    $$ = "insert"
+}
+|
+UPDATE
+{
+    $$ = "update"
+}
+|
+DELETE
+{
+    $$ = "delete"
+}
+;
+
+keyspace_list:
+IDENT
+{
+    $$ = [$1];
+}
+|
+keyspace_list COMMA IDENT
+{
+    $1.push($3);
+    $$ = $1;
 }
 ;
 
 user_list:
-IDENT
+user
 {
-	$$ = [$1]
+    $$ = [$1]
 }
 |
-user_list COMMA IDENT
+user_list COMMA user
 {
-        $1.push($3);
-	$$ = $1;
+    $1.push($3);
+    $$ = $1;
+}
+;
+
+user:
+IDENT
+{
+    $$ = $1;
+}
+|
+IDENT COLON IDENT
+{
+    $$ = $1 + ":" + $3;
 }
 ;
 
@@ -1817,9 +1863,14 @@ user_list COMMA IDENT
  *************************************************/
 
 revoke_role:
-REVOKE ROLE role_list FROM user_list
+REVOKE role_list FROM user_list
 {
-	$$ = algebra.NewRevokeRole($3, $5)
+    $$ = algebra.NewRevokeRole($2, $4);
+}
+|
+REVOKE role_list ON keyspace_list FROM user_list
+{
+    $$ = algebra.NewRevokeRole($2, $6, $4);
 }
 ;
 

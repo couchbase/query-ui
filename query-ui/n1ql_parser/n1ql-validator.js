@@ -11,10 +11,10 @@ for (var i=0; i< queries.length; i++) {
     var query = queries[i];
     try {
 	var result = parser.parse(query);
-	console.log("Parse result for `" + query + "` is: " + result);
+	console.log("\n\nParse result for \n\n" + query + "\n\nis: \n\n" + JSON.stringify(result,null,2));
     }
     catch (err) {
-	console.log("Parse error for `" + query + "` is: " + err.message);
+	console.log("\n\nParse error for \n\n" + query + "\n\nis: " + err.message);
     }
 }
 
