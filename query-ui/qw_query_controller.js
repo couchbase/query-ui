@@ -1184,7 +1184,7 @@
       // now let's make sure the window is the right size
       //
 
-      $timeout(updateEditorSizes(),100);
+      $timeout(updateEditorSizes,100);
     }
 
   }
