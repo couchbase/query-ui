@@ -125,7 +125,8 @@
         max_parallelism: "",
         scan_consistency: "not_bounded",
         positional_parameters: [],
-        named_parameters: []
+        named_parameters: [],
+        query_timeout: 600
     };
 
     // clone options so we can have a scratch copy for the dialog box
@@ -135,7 +136,8 @@
           max_parallelism: qwQueryService.options.max_parallelism,
           scan_consistency: qwQueryService.options.scan_consistency,
           positional_parameters: qwQueryService.options.positional_parameters.slice(),
-          named_parameters: qwQueryService.options.named_parameters.slice()
+          named_parameters: qwQueryService.options.named_parameters.slice(),
+          query_timeout: qwQueryService.options.query_timeout
         };
     };
 
@@ -820,7 +822,7 @@
         var queryRequest = {
             url: qwConstantsService.queryURL,
             method: "POST",
-            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':timeout*1000,
+            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':qwQueryService.options.query_timeout*1000,
                       'ignore-401':'true','CB-User-Agent': userAgent},
             data: queryData,
             mnHttp: {
@@ -844,7 +846,7 @@
         queryRequest = {url: qwConstantsService.queryURL,
             method: "POST",
             headers: {'Content-Type': 'application/x-www-form-urlencoded',
-                      'ns-server-proxy-timeout':timeout*1000,'CB-User-Agent': userAgent},
+                      'ns-server-proxy-timeout':qwQueryService.options.query_timeout*1000,'CB-User-Agent': userAgent},
             data: encodedQuery,
             mnHttp: {
               group: "global"
@@ -905,8 +907,6 @@
     //
     // executeQuery
     //
-
-    var timeout = 600; // query timeout in seconds
 
     function executeQuery(queryText, userQuery, queryOptions, explainOnly) {
       var newResult;
@@ -1307,8 +1307,9 @@
           newResult.data = {status: data};
           if (status && status == 504) {
             newResult.data.status_detail =
-              "The query workbench only supports queries running for " + timeout +
-              " seconds. Use cbq from the command-line for longer running queries. " +
+              "The query workbench only supports queries running for " + qwQueryService.options.query_timeout +
+              " seconds. This value can be changed in the preferences dialog. You can also use cbq from the " +
+              "command-line for longer running queries. " +
               "Certain DML queries, such as index creation, will continue in the " +
               "background despite the user interface timeout.";
           }
