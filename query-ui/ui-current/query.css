@@ -221,6 +221,14 @@
   color: #fff;
   font-size: inherit;
 }
+/* monitoring tables --------------- */
+#active_table .cbui-table-header,
+#completed_table .cbui-table-header,
+#prepareds_table .cbui-table-header {
+  cursor: pointer;
+}
+
+
 
 /* monitoring statistics --------------- */
 #query_stats {
