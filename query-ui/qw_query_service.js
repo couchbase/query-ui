@@ -1158,8 +1158,15 @@
         if (data.status == "success") {
           // if the results are empty, show some of the surrounding data
           if (_.isArray(data.results) && data.results.length == 0) {
-            result = {};
-            result.results = data.results;
+            // did we get warnings?
+            if (data.warnings)
+              result = data.warnings;
+
+            // otherwise show some context, make it obvious that results are empty
+            else {
+              result = {};
+              result.results = data.results;
+            }
             //result.metrics = data.metrics;
           }
           // otherwise, use the results
@@ -1190,6 +1197,7 @@
         if (!data.metrics) {
           data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
         }
+
 
         newResult.status = data.status;
         newResult.elapsedTime = data.metrics.elapsedTime;
