@@ -810,6 +810,10 @@
       if (mnPoolDefault.export.thisNode && mnPoolDefault.export.thisNode.version)
         userAgent += ' (' + mnPoolDefault.export.thisNode.version + ')';
 
+      if (!_.isNumber(qwQueryService.options.query_timeout) ||
+          qwQueryService.options.query_timeout == 0)
+          qwQueryService.options.query_timeout = 600;
+
       if (mnPoolDefault.export.compat && mnPoolDefault.export.compat.atLeast45) {
 
         // An alternate way to get around Angular's encoding is "isNotForm: true". But
