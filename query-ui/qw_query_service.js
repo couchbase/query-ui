@@ -114,7 +114,8 @@
         lastResult.status == 'errors' ||
         lastResult.status == '500' ||
         lastResult.status == '404' ||
-        lastResult.status == 'stopped');}
+        lastResult.status == 'stopped' ||
+        lastResult.status == 'Explain error');}
 
     //
     // here are some options we use while querying
@@ -1010,6 +1011,7 @@
         explain_promise = $http(explain_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
+          //console.log("explain success: " + JSON.stringify(data));
 
           // now check the status of what came back
           if (data && data.status == "success" && data.results && data.results.length > 0) {
@@ -1089,6 +1091,7 @@
           if (explainOnly) {
             newResult.data = newResult.explainResult;
             newResult.result = newResult.explainResultText;
+            newResult.status = "Explain error";
           }
 
           lastResult.copyIn(newResult);
@@ -1097,7 +1100,6 @@
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone || explainOnly) {
-            newResult.status = "Explain error";
             finishQuery();
           }
         });
