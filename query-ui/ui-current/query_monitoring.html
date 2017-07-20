@@ -73,7 +73,8 @@
              class="cbui-table-cell flex-grow-3 wrap cursor-pointer"
              uib-tooltip="{{result.statement}}"
              tooltip-placement="top"
-             tooltip-append-to-body="true">
+             tooltip-append-to-body="true"
+             tooltip-class="break-word">
             {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}
           </span>
           <span class="cbui-table-cell">
@@ -144,7 +145,8 @@
              class="cbui-table-cell flex-grow-3 wrap cursor-pointer"
              uib-tooltip="{{result.statement}}"
              tooltip-placement="top"
-             tooltip-append-to-body="true">
+             tooltip-append-to-body="true"
+             tooltip-class="break-word">
             {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}
           </span>
           <span class="cbui-table-cell">
