@@ -70,12 +70,12 @@
         ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
-             class="cbui-table-cell flex-grow-3 wrap cursor-pointer"
+             class="cbui-table-cell flex-grow-3 cursor-pointer"
              uib-tooltip="{{result.statement}}"
              tooltip-placement="top"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
-            {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}
+            {{result.statement}}
           </span>
           <span class="cbui-table-cell">
             {{result.node}}
@@ -142,12 +142,12 @@
       <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
-             class="cbui-table-cell flex-grow-3 wrap cursor-pointer"
+             class="cbui-table-cell flex-grow-3 cursor-pointer"
              uib-tooltip="{{result.statement}}"
              tooltip-placement="top"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
-            {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}
+            {{result.statement}}
           </span>
           <span class="cbui-table-cell">
             {{result.node}}
@@ -201,11 +201,12 @@
       <section ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
-           class="cbui-table-cell flex-grow-3 wrap"
+           class="cbui-table-cell flex-grow-3 cursor-pointer"
            uib-tooltip="{{result.statement}}"
            tooltip-placement="top"
-           tooltip-append-to-body="true">
-            {{result.statement | limitTo: 200}}{{result.statement.length > 200 ? '...' : ''}}
+           tooltip-append-to-body="true"
+           tooltip-class="break-word">
+            {{result.statement}}
           </span>
           <span class="cbui-table-cell">
             {{result.node}}
