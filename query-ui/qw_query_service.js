@@ -163,7 +163,7 @@
     //
 
     function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult,mutationCount) {
+        data,query,requestID,explainResult,mutationCount,warnings) {
       this.status = status;
       this.resultCount = resultCount;
       this.resultCount = mutationCount;
@@ -180,6 +180,7 @@
 
       this.elapsedTime = truncateTime(elapsedTime);
       this.executionTime = truncateTime(executionTime);
+      this.warnings = warnings;
     };
 
 
@@ -204,7 +205,8 @@
     QueryResult.prototype.clone = function()
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
-          this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,this.mutationCount);
+          this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
+          this.mutationCount,this.warnings);
     };
     QueryResult.prototype.copyIn = function(other)
     {
@@ -220,6 +222,7 @@
       this.requestID = other.requestID;
       this.explainResult = other.explainResult;
       this.explainResultText = other.explainResultText;
+      this.warnings = other.warnings;
     };
 
 
@@ -1200,8 +1203,13 @@
           data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
         }
 
+        // did the query return any warnings?
+
+        if (data.warnings)
+          newResult.warnings = JSON.stringify(data.warnings);
 
         newResult.status = data.status;
+
         newResult.elapsedTime = data.metrics.elapsedTime;
         newResult.executionTime = data.metrics.executionTime;
         newResult.resultCount = data.metrics.resultCount;
