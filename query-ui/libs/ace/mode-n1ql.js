@@ -71,16 +71,16 @@
             start : "/\\*",
             end : "\\*/"
           }, {
-            token : "string",           // " string
+            token : "constant.numeric",   // " string, make blue like numbers
             regex : '".*?"'
           }, {
-            token : "string",           // ' string
+            token : "constant.numeric",   // ' string, make blue like numbers
             regex : "'.*?'"
           }, {
-//          token : "string",
-//          regex : "[`]?\\w+(\\.\\w+)*[`]?"
-//          }, {
-            token : "constant.numeric", // float
+            token : "identifier",         // ` quoted identifier, make like identifiers
+            regex : "[`](([`][`])|[^`])+[`]"
+          }, {
+            token : "constant.numeric",   // float
             regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
           }, {
             token : keywordMapper,
