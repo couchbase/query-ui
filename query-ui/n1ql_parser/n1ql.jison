@@ -1,181 +1,279 @@
-%{
-  // to make this grammar similar to the golang N1QL grammar, we need to implement some of the convenience functions
-  // in golang that are used in the parser productions.
-  
-  function expr(type,ex) {
-    this.type = type;
-    this.ops = {};
-    //console.log("Creating expression type: " + type + (ex ? (" (" + ex + ")") : ""));
-  }
+ %{
+     // to make this grammar similar to the golang N1QL grammar, we need to implement some of the convenience functions
+     // in golang that are used in the parser productions.
+     
+     function expr(type,ex) {
+	       this.type = type;
+	       this.ops = {};
+	       //console.log("Creating expression type: " + type + (ex ? (" (" + ex + ")") : ""));
+     }
 
-  expr.prototype.Alias = function() {return this.ops.name;};
-  expr.prototype.Select = function() {return this.ops.select;};
-  expr.prototype.Subquery = function() {return this.ops.subquery;};
-  expr.prototype.Keys = function() {return this.ops.keys;};
-  expr.prototype.Indexes = function() {return this.ops.indexes;};
+     expr.prototype.Alias = function() {return this.ops.name;};
+     expr.prototype.Select = function() {return this.ops.select;};
+     expr.prototype.Subquery = function() {return this.ops.subquery;};
+     expr.prototype.Keys = function() {return this.ops.keys;};
+     expr.prototype.Indexes = function() {return this.ops.indexes;};
+     
+     //
+     // return all the fields found in the parse tree. Each field will be an array of terms
+     //
+     
+     expr.prototype.getFields = function(fieldArray) {
+	       //console.log("getting fields for item type: " + this.type);
+	       if (!fieldArray) fieldArray = [];
+	       
+	       // if this has type "Field" or "Element", extract the path
+	       if (this.type == "Field" || this.type == "Element" /* || this.type == "ResultTerm"*/ || this.type == "Identifier") {
+	           var path = [];
+	           this.getFieldPath(path,fieldArray);
+	           if (path.length > 0)
+		             fieldArray.push(path);
+	       }
+	       
+	       // otherwise, go through the "ops" object and call recursively on 
+	       // our children if they have type "expr"
+	       
+	       else for (var name in this.ops) {
+	           var child = this.ops[name];
+	           if (!child)
+		             continue;
+             
+	           //console.log("  got child: " + name + "(" + (child.type && child.ops) + ") = " + JSON.stringify(child));
+	           
+	           if (child.getFields)  {
+		             //console.log("  got child type: " + child.type);
+		             child.getFields(fieldArray);
+	           }
 
-  var expression = {};
-  expression.Bindings = [];
-  expression.Expressions = [];
-  expression.FALSE_EXPR = "FALSE";
-  expression.MISSING_EXPR = "MISSING";
-  expression.NULL_EXPR = "NULL";
-  expression.TRUE_EXPR = "TRUE";
-  
-  expression.NewAdd = function(first, second)                     {var e = new expr("Add"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewAll = function(all_expr, distinct)                {var e = new expr("All"); e.ops.all_expr = all_expr; return e;};
-  expression.NewAnd = function(first, second)                     {var e = new expr("And"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewAny = function(bindings, satisfies)               {var e = new expr("Any"); e.ops.bindings = bindings; e.ops.satisfies = satisfies; return e;};
-  expression.NewAnyEvery = function(bindings, satisfies)          {var e = new expr("AnyEvery"); e.ops.bindings = bindings; e.ops.satisfies = satisfies;return e;};
-  expression.NewArray = function(mapping, bindings, when)         {var e = new expr("Array"); e.ops.mapping = mapping; e.ops.bindings = bindings; e.ops.when = when; return e;};
-  expression.NewArrayConstruct = function(elements)               {var e = new expr("ArrayConstruct"); e.ops.elements = elements; return e;};
-  expression.NewArrayStar = function(operand)                     {var e = new expr("ArrayStar"); e.ops.operand = operand; return e;};
-  expression.NewBetween = function(item, low, high)               {var e = new expr("Between"); e.ops.item = item; e.ops.low = low; e.ops.high = high; return e;};
-  expression.NewBinding = function(name_variable, variable, binding_expr, descend)
-  			  			  	          {var e = new expr("Binding"); e.ops.name_variable = name_variable; e.ops.variable = variable; e.ops.binding_expr = binding_expr; e.ops.descend = descend; return e;};
-  expression.NewConcat = function(first, second)                  {var e = new expr("Concat"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewConstant = function(value)                        {var e = new expr("Constant"); e.ops.value = value; return e;};
-  expression.NewCover = function(covered)                         {var e = new expr("Cover"); e.ops.covered = covered; return e;};
-  expression.NewDiv = function(first, second)                     {var e = new expr("Div"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewElement = function(first, second)                 {var e = new expr("Element"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewEq = function(first, second)                      {var e = new expr("Eq"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewEmpty = function()                                {var e = new expr("Empty"); return e;};
-  expression.NewEvery = function(bindings, satisfies)             {var e = new expr("Every"); e.ops.bindings = bindings; e.ops.satisfies = satisfies; return e;};
-  expression.NewExists = function(operand)                        {var e = new expr("Exists"); e.ops.operand = operand; return e;};
-  expression.NewField = function(first,second)                    {var e = new expr("Field"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewFieldName = function(field_name,case_insensitive) {var e = new expr("FieldName",field_name); e.ops.field_name = field_name; e.ops.case_insensitive = case_insensitive; return e;};
-  expression.NewFirst = function(expression,coll_bindings,when)   {var e = new expr("Field"); e.ops.expression = expression; e.ops.coll_bindings = coll_bindings; e.ops.when = when; return e;};
-  expression.NewGE = function(first, second)                      {var e = new expr("GE"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewGT = function(first, second) 			  {var e = new expr("GT"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewIdentifier = function(identifier) 		  {var e = new expr("Identifier",identifier); e.ops.identifier = identifier; return e;};
-  expression.NewIn = function(first, second) 			  {var e = new expr("In"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewIsMissing = function(operand) 			  {var e = new expr("IsMissing"); e.ops.operand = operand; return e;};
-  expression.NewIsNotNull = function(operand) 			  {var e = new expr("IsNotNull"); e.ops.operand = operand; return e;};
-  expression.NewIsNotMissing = function(operand) 		  {var e = new expr("IsNotMissing"); e.ops.operand = operand; return e;};
-  expression.NewIsNotValued = function(operand) 		  {var e = new expr("IsNotValued"); e.ops.operand = operand; return e;};
-  expression.NewIsNull = function(operand) 			  {var e = new expr("IsNull"); e.ops.operand = operand; return e;};
-  expression.NewIsValued = function(operand) 			  {var e = new expr("IsValued"); e.ops.operand = operand; return e;};
-  expression.NewLE = function(first, second) 			  {var e = new expr("LE"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewLT = function(first, second) 			  {var e = new expr("LT"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewLike = function(first, second) 			  {var e = new expr("Like"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewMod = function(first, second) 			  {var e = new expr("Mod"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewMult = function(first, second) 			  {var e = new expr("Multi"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewNE = function(first, second) 			  {var e = new expr("NE"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewNeg = function(operand) 			  {var e = new expr("Neg"); e.ops.operand = operand; return e;};
-  expression.NewNot = function(operand) 			  {var e = new expr("Not"); e.ops.operand = operand; return e;};
-  expression.NewNotBetween = function(iteem, low, high) 	  {var e = new expr("NotBetween"); e.ops.item = item; e.ops.low = low; e.ops.high = high; return e;};
-  expression.NewNotIn = function(first, second)   		  {var e = new expr("NotIn"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewNotLike = function(first, second) 		  {var e = new expr("NotLike"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewNotWithin = function(first, second) 		  {var e = new expr("NotWithin"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewObject = function(name_mapping, value_mapping, bindings, when)
-  		       	 				          {var e = new expr("Object"); e.ops.name_mapping = name_mapping; e.ops.value_mapping = value_mapping; e.ops.bindings = bindings; e.ops.when = when; return e;};
-  expression.NewObjectConstruct = function(mapping)               {var e = new expr("ObjectConstruct"); e.ops.mapping = mapping; return e;};
-  expression.NewOr = function(first, second)                      {var e = new expr("Or"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewSearchedCase = function(when_terms, else_term) 	  {var e = new expr("SearchedCase"); e.ops.when_terms = when_terms; e.ops.else_term = else_term; return e;};
-  expression.NewSelf = function() 		   		  {var e = new expr("Self"); return e;};
-  expression.NewSimpleBinding = function(variable, binding_expr)  {var e = new expr("SimpleBinding"); e.ops.variable = variable; e.ops.binding_expr = binding_expr; return e;};
-  expression.NewSimpleCase = function(search_term, when_terms, else_term)
-  			     			   	          {var e = new expr("SimpleCase"); e.ops.search_term = search_term; e.ops.when_terms = when_term; e.ops.else_term = else_term; return e;};
-  expression.NewSlice = function(first, second, third)            {var e = new expr("Slice"); e.ops.first = first; e.ops.second = second; e.ops.third = third; return e;};
-  expression.NewFunction = function(fname, param_expr, distinct)  {var e = new expr("Function"); e.ops.fname = fname; e.ops.param_expr = param_expr; e.ops.distinct = distinct; return e;};
-  expression.NewSub = function(first, second) 	       		  {var e = new expr("Sub"); e.ops.first = first; e.ops.second = second; return e;};
-  expression.NewWithin = function(first, second) 		  {var e = new expr("Within"); e.ops.first = first; e.ops.second = second; return e;};
+	           // some children are arrays
+	           else if (child.length) for (var i=0; i< child.length; i++) if (child[i] && child[i].getFields) {
+		             //console.log("  got child[" + i + "] type: " + child[i].type);
+		             child[i].getFields(fieldArray);
+             }
+	           
+	       }
+     };
+     
+     //
+     // if we have a field, we can build its list of path elements
+     // Field expressions come in a variety of forms
+     //   - "Field" -> "Identifier" (first item in path), "FieldName" (next item in path) 
+     //   - "Element" -> "Field" (array expr prefix), expr (array expression)
+     // 
+     // We expect currentPath to be an array into which we put the elements in the path
+     // 
+     
+     expr.prototype.getFieldPath = function(currentPath,fieldArray) {
+	       //console.log("Getting field path for type: " + this.type);
+         // error checking: must have ops
+         if (!this.ops)
+             return;
 
-  //
+         // Field type - first might be Identifier, first element in path
+         //            - might be Element, meaning array expression
+         //  first might also be Field, needing recursive call
+         //  second is usually next item in path
+         
+         if ((this.type == "Field" || this.type == "Element") && this.ops.first) {
+             if (this.ops.first.type == "Identifier") 
+                 currentPath.push(this.ops.first.ops.identifier);
+             else if (this.ops.first.type == "Field" || this.ops.first.type == "Element")
+                 this.ops.first.getFieldPath(currentPath,fieldArray);
+         }
 
-  var algebra = {};
-  algebra.EMPTY_USE = new expr("EMPTY_USE");
-  algebra.MapPairs = function(pairs)                                       {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
-  algebra.NewAlterIndex = function(keyspace, index_name, opt_using, rename){var a = new expr("AlterIndex"); a.ops.keyspace = keyspace; a.ops.index_name = index_name; a.ops.opt_using = opt_using; a.ops.rename = rename; return a;};
-  algebra.NewBuildIndexes = function(keyspace,opt_index,index_names)       {var a = new expr("BuildIndexes"); a.ops.keyspace = keyspace; a.opt_index = opt_index; a.ops.index_names = index_names; return a;};
-  algebra.NewCreateIndex = function(index_name,keyspace,index_terms,index_partition,index_where,index_using,index_with) {var a = new expr("CreateIndex"); a.ops.index_name = index_name; a.ops.keyspace = keyspace; a.ops.index_terms - index_terms; a.ops.index_partition = index-partition; a.ops.index_where = index_where; a.ops.index_using = index_using; a.ops.index_where = index_where; return a;};
-  algebra.NewCreatePrimaryIndex = function(opt_name,keyspace,index_using,index_with) {var a = new expr("CreatePrimateIndex"); a.ops.opt_name = opt_name; a.ops.keyspace = keyspace; a.ops.index_using = index_using; a.ops.index_with = index_with; return a;};
-  algebra.NewDelete = function(keyspace,opt_use_keys,opt_use_indexes,opt_where,opt_limit,opt_returning) {var a = new expr("Delete"); a.ops.keyspace = keyspace; a.ops.opt_use_keys = opt_use_keys; a.ops.opt_use_indexes = opt_use_indexes; a.ops.opt_where = opt_where; a.ops.opt_limit = opt_limit; return a;};
-  algebra.NewDropIndex = function(keyspace, opt_using)                     {var a = new expr("DropIndex"); a.ops.keyspace = keyspace; a.ops.opt_using = opt_using; return a;};
-  algebra.NewExcept = function(first,except)                               {var a = new expr("Except"); a.ops.first = first; a.ops.except = except; return a;};
-  algebra.NewExceptAll = function(first,except)                            {var a = new expr("ExceptAll"); a.ops.first = first; a.ops.except = except; return a;};
-  algebra.NewExecute = function(expression)                                {var a = new expr("Execute"); a.ops.expression = expression; return a;};
-  algebra.NewExplain = function(statement)                                 {var a = new expr("Explain"); a.ops.statement = statement; return a;};
-  algebra.NewExpressionTerm = function(expression, opt_as_alias, opt_use)  {var a = new expr("ExpressionTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; a.ops.opt_use = opt_use; return a;};
-  algebra.NewGrantRole = function(role_list,user_list,keyspace_list)       {var a = new expr("GrantRole"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
-  algebra.NewGroup = function(expression,opt_letting,opt_having)           {var a = new expr("Group"); a.ops.expression = expression; a.ops.opt_letting = opt_letting; a.ops.opt_having = opt_having; return a;};
-  algebra.NewIndexJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
-  algebra.NewIndexKeyTerm = function(index_term,opt_dir)                   {var a = new expr("IndexKeyTerm"); a.ops.index_term = index_term; a.ops.opt_dir = opt_dir; return a;};
-  algebra.NewIndexNest = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
-  algebra.NewIndexRef = function(index_name,opt_using)                     {var a = new expr("IndexRef"); a.ops.index_name = index_name; a.ops.opt_using = opt_using; return a;};
-  algebra.NewInferKeyspace = function(keyspace,infer_using,infer_with)     {var a = new expr("InferKeyspace"); a.ops.keyspace = keyspace; a.ops.infer_using = infer_using; a.ops.infer_with = infer_with; return a;};
-  algebra.NewInsertSelect = function(keyspace,key_expr,value_expr,fullselect,returning) {var a = new expr("InsertSelect"); a.ops.keyspace = keyspace; a.ops.key_expr = key_expr; a.ops.value_expr = value_expr; return a;};
-  algebra.NewInsertValues = function(keyspace,values_header,values_list,returning) {var a = new expr("InsertValues"); a.ops.values_header = values_header, a.ops.values_list = values_list; a.ops.returning = returning; return a;};
-  algebra.NewIntersect = function(select_terms,intersect_term)             {var a = new expr("Intersect"); a.ops.elect_terms = elect_terms; a.ops.intersect_term = intersect_term; return a;};
-  algebra.NewIntersectAll = function(select_terms,intersect_term)          {var a = new expr("IntersectAll"); a.ops.select_terms = select_terms; a.ops.intersect_term = intersect_term; return a;};
-  algebra.NewJoin = function(from,join_type,join_term)                     {var a = new expr("Join"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
-  algebra.NewKeyspaceRef = function(namespace,keyspace,alias)              {var a = new expr("KeyspaceRef"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
-  algebra.NewKeyspaceTerm = function(namespace,keyspace,as_alias,opt_use)  {var a = new expr("KeyspaceTerm",keyspace); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.as_alias = as_alias; a.ops.opt_use = opt_use; return a;};
-  algebra.NewMerge = function(keyspace,merge_source,key,merge_actions,opt_limit,returning) {var a = new expr("Merge"); a.ops.keyspace = keyspace; a.ops.merge_source = merge_source; a.ops.key = key; a.ops.merge_actions = merge_actions; a.ops.opt_limit = opt_limit; a.ops.returning = returning; return a;};
-  algebra.NewMergeActions = function(update,del,insert)                    {var a = new expr("MergeActions"); a.ops.update = update; a.ops.del = del; a.ops.insert = insert; return a;};
-  algebra.NewMergeDelete = function(where)                                 {var a = new expr("MergeDelete"); a.ops.where = where; return a;};
-  algebra.NewMergeInsert = function(expression,where)                      {var a = new expr("MergeInsert"); a.ops.expression = expression; a.ops.where = where; return a;};
-  algebra.NewMergeSourceExpression = function(expression,alias)            {var a = new expr("MergeSourceSelect"); a.ops.expression = expression; a.ops.alias = alias; return a;};
-  algebra.NewMergeSourceFrom = function(from,alias)                        {var a = new expr("MergeSourceSelect"); a.ops.from = from; a.ops.alias = alias; return a;};
-  algebra.NewMergeSourceSelect = function(from,alias)                      {var a = new expr("MergeSourceSelect"); a.ops.from = from; a.ops.alias = alias; return a;};
-  algebra.NewMergeUpdate = function(set,unset,where)                       {var a = new expr("MergeUpdate"); a.ops.set = set; a.ops.unset = unset; a.ops.where = where; return a;};
-  algebra.NewNamedParameter = function(named_param)                        {var a = new expr("NamedParameter"); a.ops.named_param = named_param; return a;};
-  algebra.NewNest = function(from,join_type,join_term)                     {var a = new expr("Nest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
-  algebra.NewOrder = function(sort_terms)                                  {var a = new expr("Order"); a.ops.sort_terms = sort_terms; return a;};
-  algebra.NewPair = function(first,second)                                 {var a = new expr("Pair"); a.ops.first = first; a.ops.second = second; return a;};
-  algebra.NewPositionalParameter = function(positional_param)              {var a = new expr("PositionalParameter"); a.ops.positional_param = positional_param; return a;};
-  algebra.NewPrepare = function(name,statement)                            {var a = new expr("Prepare"); a.ops.name = name; a.ops.statement = statement; return a;};
-  algebra.NewProjection = function(distinct,projects)                      {var a = new expr("Projection"); a.ops.distinct = distinct; a.ops.projects = projects; return a;};
-  algebra.NewRawProjection = function(distinct,expression,as_alias)        {var a = new expr("RawProjection"); a.ops.distinct = distinct; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
-  algebra.NewResultTerm = function(expression,star,as_alias)               {var a = new expr("ResultTerm"); a.ops.expression = expression; a.ops.star = star; a.ops.as_alias = as_alias; return a;};
-  algebra.NewRevokeRule = function(role_list,user_list,keyspace_list)      {var a = new expr("RevokeRule"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
-  algebra.NewSelect = function(select_terms,order_by,offset,limit)         {var a = new expr("Select"); a.ops.select_terms = select_terms; a.ops.order_by = order_by; a.ops.offset = offset; a.ops.limit = limit; return a;};
-  algebra.NewSelectTerm = function(term)                                   {var a = new expr("SelectTerm"); a.ops.term = term; return a;};
-  algebra.NewSet = function(set_terms)                                     {var a = new expr("Set"); a.ops.set_terms = set_terms; return a;};
-  algebra.NewSetTerm = function(path,expression,update_for)                {var a = new expr("SetTerm"); a.ops.path = path; a.ops.expression = expression; a.ops.update_for = update_for; return a;};
-  algebra.NewSortTerm = function(expression,desc)                          {var a = new expr("SortTerm"); a.ops.expression = expression; a.ops.desc = desc; return a;};
-  algebra.NewSubquery = function(fullselect)                               {var a = new expr("Subquery"); a.ops.fullselect = fullselect; return a;};
-  algebra.NewSubqueryTerm = function(select_term,as_alias)                 {var a = new expr("SubqueryTerm"); a.ops.select_term = select_term; a.ops.as_alias = as_alias; return a;};
-  algebra.NewSubselect = function(from,let,where,group,select)             {var a = new expr("Subselect"); a.ops.from = from; a.ops.let = let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
-  algebra.NewUnion = function(first,second)                                {var a = new expr("Union"); a.ops.first = first; a.ops.second = second; return a;};
-  algebra.NewUnionAll = function(first,second)                             {var a = new expr("UnionAll"); a.ops.first = first; a.ops.second = second; return a;};
-  algebra.NewUnnest = function(from,join_type,expression,as_alias)         {var a = new expr("Unnest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
-  algebra.NewUnset = function(unset_terms)                                 {var a = new expr("Unset"); a.ops.unset_terms = unset_terms; return a;};
-  algebra.NewUnsetTerm = function(path,update_for)                         {var a = new expr("UnsetTerm"); a.ops.path = path; a.ops.update_for = update_for; return a;};
-  algebra.NewUpdate = function(keyspace,use_keys,use_indexes,set,unset,where,limit,returning) {var a = new expr("Update"); a.ops.keyspace = keyspace; a.ops.use_keys = use_keys; a.ops.use_indexes = use_indexes; a.ops.set = set; a.ops.unset = unset; a.ops.where = where; a.ops.limit = limit; a.ops.returning = returning; return a;};
-  algebra.NewUpdateFor = function(update_dimensions,when)                  {var a = new expr("UpdateFor"); a.ops.update_dimensions = update_dimensions; a.ops.when = when; return a;};
-  algebra.NewUpsertSelect = function(keyspace,key_expr,value_expr,fullselect,returning) {var a = new expr("UpsertSelect"); a.ops.keyspace = keyspace; a.ops.key_expr = key_expr; a.ops.value_expr = value_expr; a.ops.fullselect = fullselect; a.ops.returning = returning; return a;};
-  algebra.NewUpsertValues = function(keyspace,values_list,returning)       {var a = new expr("UpsertValues"); a.ops.keyspace = keyspace; a.ops.values_list = values_list; a.ops.returning = returning; return a;};
-  algebra.NewUse = function(keys,index)                                    {var a = new expr("Use"); a.ops.keys = keys; a.ops.index = index; return a;};
+         else if (this.type == "Identifier" && this.ops.identifier) {
+             currentPath.push(this.ops.identifier);
+         }
+         
+         else if (this.type == "FieldName" && this.ops.field_name) {
+             currentPath.push(this.ops.identifier);
+         }
 
-  algebra.SubqueryTerm = "SubqueryTerm";
-  algebra.ExpressionTerm = "ExpressionTerm";
-  algebra.KeyspaceTerm = "KeyspaceTerm";
+         // if we have type "Field", the "second" field may be part of the path expression
+         
+         if (this.type == "Field" && this.ops.second && this.ops.second.type == "FieldName")
+             currentPath.push(this.ops.second.ops.field_name);
+         
+         // if we have type "Element", second is unconnected expression that should 
+         // none-the-less be scanned for other field names
+         
+         if (this.type == "Element" && this.ops.second.getFields) {
+             currentPath.push("[]"); // indicate the array reference in the path
+             this.ops.second.getFields(fieldArray);
+         }
+     };
+     
 
-  var value = {};
-  value.NewValue = function(val) {var a = new expr("Value"); a.value = val; return a;};
+     var expression = {};
+     expression.Bindings = [];
+     expression.Expressions = [];
+     expression.FALSE_EXPR = "FALSE";
+     expression.MISSING_EXPR = "MISSING";
+     expression.NULL_EXPR = "NULL";
+     expression.TRUE_EXPR = "TRUE";
+     
+     expression.NewAdd = function(first, second)                     {var e = new expr("Add"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewAll = function(all_expr, distinct)                {var e = new expr("All"); e.ops.all_expr = all_expr; return e;};
+     expression.NewAnd = function(first, second)                     {var e = new expr("And"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewAny = function(bindings, satisfies)               {var e = new expr("Any"); e.ops.bindings = bindings; e.ops.satisfies = satisfies; return e;};
+     expression.NewAnyEvery = function(bindings, satisfies)          {var e = new expr("AnyEvery"); e.ops.bindings = bindings; e.ops.satisfies = satisfies;return e;};
+     expression.NewArray = function(mapping, bindings, when)         {var e = new expr("Array"); e.ops.mapping = mapping; e.ops.bindings = bindings; e.ops.when = when; return e;};
+     expression.NewArrayConstruct = function(elements)               {var e = new expr("ArrayConstruct"); e.ops.elements = elements; return e;};
+     expression.NewArrayStar = function(operand)                     {var e = new expr("ArrayStar"); e.ops.operand = operand; return e;};
+     expression.NewBetween = function(item, low, high)               {var e = new expr("Between"); e.ops.item = item; e.ops.low = low; e.ops.high = high; return e;};
+     expression.NewBinding = function(name_variable, variable, binding_expr, descend)
+     {var e = new expr("Binding"); e.ops.name_variable = name_variable; e.ops.variable = variable; e.ops.binding_expr = binding_expr; e.ops.descend = descend; return e;};
+     expression.NewConcat = function(first, second)                  {var e = new expr("Concat"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewConstant = function(value)                        {var e = new expr("Constant"); e.ops.value = value; return e;};
+     expression.NewCover = function(covered)                         {var e = new expr("Cover"); e.ops.covered = covered; return e;};
+     expression.NewDiv = function(first, second)                     {var e = new expr("Div"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewElement = function(first, second)                 {var e = new expr("Element"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewEq = function(first, second)                      {var e = new expr("Eq"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewEmpty = function()                                {var e = new expr("Empty"); return e;};
+     expression.NewEvery = function(bindings, satisfies)             {var e = new expr("Every"); e.ops.bindings = bindings; e.ops.satisfies = satisfies; return e;};
+     expression.NewExists = function(operand)                        {var e = new expr("Exists"); e.ops.operand = operand; return e;};
+     expression.NewField = function(first,second)                    {var e = new expr("Field"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewFieldName = function(field_name,case_insensitive) {var e = new expr("FieldName",field_name); e.ops.field_name = field_name; e.ops.case_insensitive = case_insensitive; return e;};
+     expression.NewFirst = function(expression,coll_bindings,when)   {var e = new expr("First"); e.ops.expression = expression; e.ops.coll_bindings = coll_bindings; e.ops.when = when; return e;};
+     expression.NewGE = function(first, second)                      {var e = new expr("GE"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewGT = function(first, second)                      {var e = new expr("GT"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewIdentifier = function(identifier)                 {var e = new expr("Identifier",identifier); e.ops.identifier = identifier; return e;};
+     expression.NewIn = function(first, second)                      {var e = new expr("In"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewIsMissing = function(operand)                     {var e = new expr("IsMissing"); e.ops.operand = operand; return e;};
+     expression.NewIsNotNull = function(operand)                     {var e = new expr("IsNotNull"); e.ops.operand = operand; return e;};
+     expression.NewIsNotMissing = function(operand)                  {var e = new expr("IsNotMissing"); e.ops.operand = operand; return e;};
+     expression.NewIsNotValued = function(operand)                   {var e = new expr("IsNotValued"); e.ops.operand = operand; return e;};
+     expression.NewIsNull = function(operand)                        {var e = new expr("IsNull"); e.ops.operand = operand; return e;};
+     expression.NewIsValued = function(operand)                      {var e = new expr("IsValued"); e.ops.operand = operand; return e;};
+     expression.NewLE = function(first, second)                      {var e = new expr("LE"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewLT = function(first, second)                      {var e = new expr("LT"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewLike = function(first, second)                    {var e = new expr("Like"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewMod = function(first, second)                     {var e = new expr("Mod"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewMult = function(first, second)                    {var e = new expr("Multi"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewNE = function(first, second)                      {var e = new expr("NE"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewNeg = function(operand)                           {var e = new expr("Neg"); e.ops.operand = operand; return e;};
+     expression.NewNot = function(operand)                           {var e = new expr("Not"); e.ops.operand = operand; return e;};
+     expression.NewNotBetween = function(iteem, low, high)           {var e = new expr("NotBetween"); e.ops.item = item; e.ops.low = low; e.ops.high = high; return e;};
+     expression.NewNotIn = function(first, second)                   {var e = new expr("NotIn"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewNotLike = function(first, second)                 {var e = new expr("NotLike"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewNotWithin = function(first, second)               {var e = new expr("NotWithin"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewObject = function(name_mapping, value_mapping, bindings, when)
+     {var e = new expr("Object"); e.ops.name_mapping = name_mapping; e.ops.value_mapping = value_mapping; e.ops.bindings = bindings; e.ops.when = when; return e;};
+     expression.NewObjectConstruct = function(mapping)               {var e = new expr("ObjectConstruct"); e.ops.mapping = mapping; return e;};
+     expression.NewOr = function(first, second)                      {var e = new expr("Or"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewSearchedCase = function(when_terms, else_term)    {var e = new expr("SearchedCase"); e.ops.when_terms = when_terms; e.ops.else_term = else_term; return e;};
+     expression.NewSelf = function()                                 {var e = new expr("Self"); return e;};
+     expression.NewSimpleBinding = function(variable, binding_expr)  {var e = new expr("SimpleBinding"); e.ops.variable = variable; e.ops.binding_expr = binding_expr; return e;};
+     expression.NewSimpleCase = function(search_term, when_terms, else_term)
+     {var e = new expr("SimpleCase"); e.ops.search_term = search_term; e.ops.when_terms = when_term; e.ops.else_term = else_term; return e;};
+     expression.NewSlice = function(first, second, third)            {var e = new expr("Slice"); e.ops.first = first; e.ops.second = second; e.ops.third = third; return e;};
+     expression.NewFunction = function(fname, param_expr, distinct)  {var e = new expr("Function"); e.ops.fname = fname; e.ops.param_expr = param_expr; e.ops.distinct = distinct; return e;};
+     expression.NewSub = function(first, second)                     {var e = new expr("Sub"); e.ops.first = first; e.ops.second = second; return e;};
+     expression.NewWithin = function(first, second)                  {var e = new expr("Within"); e.ops.first = first; e.ops.second = second; return e;};
 
-  var datastore = {
-    INF_DEFAULT : "INF_DEFAULT",
-    DEFAULT : "DEFAULT",
-    VIEW : "VIEW",
-    GSI : "GSI",
-    FTS : "FTS"    
-  };
-  
-  var nil = null;
+     //
 
-  var statement_count = 0;
+     var algebra = {};
+     algebra.EMPTY_USE = new expr("EMPTY_USE");
+     algebra.MapPairs = function(pairs)                                       {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
+     algebra.NewAlterIndex = function(keyspace, index_name, opt_using, rename){var a = new expr("AlterIndex"); a.ops.keyspace = keyspace; a.ops.index_name = index_name; a.ops.opt_using = opt_using; a.ops.rename = rename; return a;};
+     algebra.NewBuildIndexes = function(keyspace,opt_index,index_names)       {var a = new expr("BuildIndexes"); a.ops.keyspace = keyspace; a.opt_index = opt_index; a.ops.index_names = index_names; return a;};
+     algebra.NewCreateIndex = function(index_name,keyspace,index_terms,index_partition,index_where,index_using,index_with) 
+       {var a = new expr("CreateIndex"); 
+       a.ops.index_name = index_name; 
+       a.ops.keyspace = keyspace; 
+       a.ops.index_terms = index_terms; 
+       a.ops.index_partition = index_partition; 
+       a.ops.index_where = index_where; 
+       a.ops.index_using = index_using; 
+       a.ops.index_where = index_where; return a;};
+     algebra.NewCreatePrimaryIndex = function(opt_name,keyspace,index_using,index_with) {var a = new expr("CreatePrimateIndex"); a.ops.opt_name = opt_name; a.ops.keyspace = keyspace; a.ops.index_using = index_using; a.ops.index_with = index_with; return a;};
+     algebra.NewDelete = function(keyspace,opt_use_keys,opt_use_indexes,opt_where,opt_limit,opt_returning) {var a = new expr("Delete"); a.ops.keyspace = keyspace; a.ops.opt_use_keys = opt_use_keys; a.ops.opt_use_indexes = opt_use_indexes; a.ops.opt_where = opt_where; a.ops.opt_limit = opt_limit; return a;};
+     algebra.NewDropIndex = function(keyspace, opt_using)                     {var a = new expr("DropIndex"); a.ops.keyspace = keyspace; a.ops.opt_using = opt_using; return a;};
+     algebra.NewExcept = function(first,except)                               {var a = new expr("Except"); a.ops.first = first; a.ops.except = except; return a;};
+     algebra.NewExceptAll = function(first,except)                            {var a = new expr("ExceptAll"); a.ops.first = first; a.ops.except = except; return a;};
+     algebra.NewExecute = function(expression)                                {var a = new expr("Execute"); a.ops.expression = expression; return a;};
+     algebra.NewExplain = function(statement)                                 {var a = new expr("Explain"); a.ops.statement = statement; return a;};
+     algebra.NewExpressionTerm = function(expression, opt_as_alias, opt_use)  {var a = new expr("ExpressionTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; a.ops.opt_use = opt_use; return a;};
+     algebra.NewGrantRole = function(role_list,user_list,keyspace_list)       {var a = new expr("GrantRole"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
+     algebra.NewGroup = function(expression,opt_letting,opt_having)           {var a = new expr("Group"); a.ops.expression = expression; a.ops.opt_letting = opt_letting; a.ops.opt_having = opt_having; return a;};
+     algebra.NewIndexJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
+     algebra.NewIndexKeyTerm = function(index_term,opt_dir)                   {var a = new expr("IndexKeyTerm"); a.ops.index_term = index_term; a.ops.opt_dir = opt_dir; return a;};
+     algebra.NewIndexNest = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
+     algebra.NewIndexRef = function(index_name,opt_using)                     {var a = new expr("IndexRef"); a.ops.index_name = index_name; a.ops.opt_using = opt_using; return a;};
+     algebra.NewInferKeyspace = function(keyspace,infer_using,infer_with)     {var a = new expr("InferKeyspace"); a.ops.keyspace = keyspace; a.ops.infer_using = infer_using; a.ops.infer_with = infer_with; return a;};
+     algebra.NewInsertSelect = function(keyspace,key_expr,value_expr,fullselect,returning) {var a = new expr("InsertSelect"); a.ops.keyspace = keyspace; a.ops.key_expr = key_expr; a.ops.value_expr = value_expr; return a;};
+     algebra.NewInsertValues = function(keyspace,values_header,values_list,returning) {var a = new expr("InsertValues"); a.ops.values_header = values_header, a.ops.values_list = values_list; a.ops.returning = returning; return a;};
+     algebra.NewIntersect = function(select_terms,intersect_term)             {var a = new expr("Intersect"); a.ops.elect_terms = elect_terms; a.ops.intersect_term = intersect_term; return a;};
+     algebra.NewIntersectAll = function(select_terms,intersect_term)          {var a = new expr("IntersectAll"); a.ops.select_terms = select_terms; a.ops.intersect_term = intersect_term; return a;};
+     algebra.NewJoin = function(from,join_type,join_term)                     {var a = new expr("Join"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
+     algebra.NewKeyspaceRef = function(namespace,keyspace,alias)              {var a = new expr("KeyspaceRef"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
+     algebra.NewKeyspaceTerm = function(namespace,keyspace,as_alias,opt_use)  {var a = new expr("KeyspaceTerm",keyspace); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.as_alias = as_alias; a.ops.opt_use = opt_use; return a;};
+     algebra.NewMerge = function(keyspace,merge_source,key,merge_actions,opt_limit,returning) {var a = new expr("Merge"); a.ops.keyspace = keyspace; a.ops.merge_source = merge_source; a.ops.key = key; a.ops.merge_actions = merge_actions; a.ops.opt_limit = opt_limit; a.ops.returning = returning; return a;};
+     algebra.NewMergeActions = function(update,del,insert)                    {var a = new expr("MergeActions"); a.ops.update = update; a.ops.del = del; a.ops.insert = insert; return a;};
+     algebra.NewMergeDelete = function(where)                                 {var a = new expr("MergeDelete"); a.ops.where = where; return a;};
+     algebra.NewMergeInsert = function(expression,where)                      {var a = new expr("MergeInsert"); a.ops.expression = expression; a.ops.where = where; return a;};
+     algebra.NewMergeSourceExpression = function(expression,alias)            {var a = new expr("MergeSourceSelect"); a.ops.expression = expression; a.ops.alias = alias; return a;};
+     algebra.NewMergeSourceFrom = function(from,alias)                        {var a = new expr("MergeSourceSelect"); a.ops.from = from; a.ops.alias = alias; return a;};
+     algebra.NewMergeSourceSelect = function(from,alias)                      {var a = new expr("MergeSourceSelect"); a.ops.from = from; a.ops.alias = alias; return a;};
+     algebra.NewMergeUpdate = function(set,unset,where)                       {var a = new expr("MergeUpdate"); a.ops.set = set; a.ops.unset = unset; a.ops.where = where; return a;};
+     algebra.NewNamedParameter = function(named_param)                        {var a = new expr("NamedParameter"); a.ops.named_param = named_param; return a;};
+     algebra.NewNest = function(from,join_type,join_term)                     {var a = new expr("Nest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
+     algebra.NewOrder = function(sort_terms)                                  {var a = new expr("Order"); a.ops.sort_terms = sort_terms; return a;};
+     algebra.NewPair = function(first,second)                                 {var a = new expr("Pair"); a.ops.first = first; a.ops.second = second; return a;};
+     algebra.NewPositionalParameter = function(positional_param)              {var a = new expr("PositionalParameter"); a.ops.positional_param = positional_param; return a;};
+     algebra.NewPrepare = function(name,statement)                            {var a = new expr("Prepare"); a.ops.name = name; a.ops.statement = statement; return a;};
+     algebra.NewProjection = function(distinct,projects)                      {var a = new expr("Projection"); a.ops.distinct = distinct; a.ops.projects = projects; return a;};
+     algebra.NewRawProjection = function(distinct,expression,as_alias)        {var a = new expr("RawProjection"); a.ops.distinct = distinct; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
+     algebra.NewResultTerm = function(expression,star,as_alias)               {var a = new expr("ResultTerm"); a.ops.expression = expression; a.ops.star = star; a.ops.as_alias = as_alias; return a;};
+     algebra.NewRevokeRule = function(role_list,user_list,keyspace_list)      {var a = new expr("RevokeRule"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
+     algebra.NewSelect = function(select_terms,order_by,offset,limit)         {var a = new expr("Select"); a.ops.select_terms = select_terms; a.ops.order_by = order_by; a.ops.offset = offset; a.ops.limit = limit; return a;};
+     algebra.NewSelectTerm = function(term)                                   {var a = new expr("SelectTerm"); a.ops.term = term; return a;};
+     algebra.NewSet = function(set_terms)                                     {var a = new expr("Set"); a.ops.set_terms = set_terms; return a;};
+     algebra.NewSetTerm = function(path,expression,update_for)                {var a = new expr("SetTerm"); a.ops.path = path; a.ops.expression = expression; a.ops.update_for = update_for; return a;};
+     algebra.NewSortTerm = function(expression,desc)                          {var a = new expr("SortTerm"); a.ops.expression = expression; a.ops.desc = desc; return a;};
+     algebra.NewSubquery = function(fullselect)                               {var a = new expr("Subquery"); a.ops.fullselect = fullselect; return a;};
+     algebra.NewSubqueryTerm = function(select_term,as_alias)                 {var a = new expr("SubqueryTerm"); a.ops.select_term = select_term; a.ops.as_alias = as_alias; return a;};
+     algebra.NewSubselect = function(from,let,where,group,select)             {var a = new expr("Subselect"); a.ops.from = from; a.ops.let = let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
+     algebra.NewUnion = function(first,second)                                {var a = new expr("Union"); a.ops.first = first; a.ops.second = second; return a;};
+     algebra.NewUnionAll = function(first,second)                             {var a = new expr("UnionAll"); a.ops.first = first; a.ops.second = second; return a;};
+     algebra.NewUnnest = function(from,join_type,expression,as_alias)         {var a = new expr("Unnest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
+     algebra.NewUnset = function(unset_terms)                                 {var a = new expr("Unset"); a.ops.unset_terms = unset_terms; return a;};
+     algebra.NewUnsetTerm = function(path,update_for)                         {var a = new expr("UnsetTerm"); a.ops.path = path; a.ops.update_for = update_for; return a;};
+     algebra.NewUpdate = function(keyspace,use_keys,use_indexes,set,unset,where,limit,returning) {var a = new expr("Update"); a.ops.keyspace = keyspace; a.ops.use_keys = use_keys; a.ops.use_indexes = use_indexes; a.ops.set = set; a.ops.unset = unset; a.ops.where = where; a.ops.limit = limit; a.ops.returning = returning; return a;};
+     algebra.NewUpdateFor = function(update_dimensions,when)                  {var a = new expr("UpdateFor"); a.ops.update_dimensions = update_dimensions; a.ops.when = when; return a;};
+     algebra.NewUpsertSelect = function(keyspace,key_expr,value_expr,fullselect,returning) {var a = new expr("UpsertSelect"); a.ops.keyspace = keyspace; a.ops.key_expr = key_expr; a.ops.value_expr = value_expr; a.ops.fullselect = fullselect; a.ops.returning = returning; return a;};
+     algebra.NewUpsertValues = function(keyspace,values_list,returning)       {var a = new expr("UpsertValues"); a.ops.keyspace = keyspace; a.ops.values_list = values_list; a.ops.returning = returning; return a;};
+     algebra.NewUse = function(keys,index)                                    {var a = new expr("Use"); a.ops.keys = keys; a.ops.index = index; return a;};
 
-  var yylex = {
-    Error: function(message) {console.log(message);}
-  };
+     algebra.SubqueryTerm = "SubqueryTerm";
+     algebra.ExpressionTerm = "ExpressionTerm";
+     algebra.KeyspaceTerm = "KeyspaceTerm";
+
+     var value = {};
+     value.NewValue = function(val) {var a = new expr("Value"); a.value = val; return a;};
+
+     var datastore = {
+         INF_DEFAULT : "INF_DEFAULT",
+         DEFAULT : "DEFAULT",
+         VIEW : "VIEW",
+         GSI : "GSI",
+         FTS : "FTS"    
+     };
+     
+     var nil = null;
+
+     var statement_count = 0;
+
+     var yylex = {
+         Error: function(message) {console.log(message);}
+     };
 %}
 
 %lex
 
-qidi			    [`](([`][`])|[^`])+[`][i]
-qid			    [`](([`][`])|[^`])+[`]
+qidi                        [`](([`][`])|[^`])+[`][i]
+qid                         [`](([`][`])|[^`])+[`]
 
 %options flex case-insensitive
 
@@ -189,7 +287,7 @@ qid			    [`](([`][`])|[^`])+[`]
 {qidi}              { yytext = yytext.substring(1,yytext.length -2).replace("``","`"); return 'IDENT_ICASE'; }
 
 {qid}               { yytext = yytext.substring(1,yytext.length -1).replace("``","`"); return 'IDENT'; }
-		      	     	      
+                                      
 (0|[1-9][0-9]*)\.[0-9]+([eE][+\-]?[0-9]+)? { return 'NUM'; }
 
 (0|[1-9][0-9]*)[eE][+\-]?[0-9]+ { return 'NUM';  }
@@ -198,218 +296,218 @@ qid			    [`](([`][`])|[^`])+[`]
 
 (\/\*)([^\*]|(\*)+[^\/])*((\*)+\/) /* eat up block comment */ 
 
-"--"[^\n\r]*	  /* eat up line comment */ 
+"--"[^\n\r]*      /* eat up line comment */ 
 
-[ \t\n\r\f]+	  /* eat up whitespace */ 
+[ \t\n\r\f]+      /* eat up whitespace */ 
 
-"."		  { return ("DOT"); }
-"+"		  { return ("PLUS"); }
-"*"		  { return ("STAR"); }
-"/"		  { return ("DIV"); }
-"-"		  { return ("MINUS"); }
-"%"		  { return ("MOD"); }
-"=="		  { return ("DEQ"); }
-"="		  { return ("EQ"); }
-"!="		  { return ("NE"); }
-"<>"		  { return ("NE"); }
-"<"		  { return ("LT"); }
-"<="		  { return ("LE"); }
-">"		  { return ("GT"); }
-">="		  { return ("GE"); }
-"||"		  { return ("CONCAT"); }
-"("		  { return ("LPAREN"); }
-")"		  { return ("RPAREN"); }
-"{"		  { return ("LBRACE"); }
-"}"		  { return ("RBRACE"); }
-","		  { return ("COMMA"); }
-":"		  { return ("COLON"); }
-"["		  { return ("LBRACKET"); }
-"]"		  { return ("RBRACKET"); }
-"]i"		  { return ("RBRACKET_ICASE"); }
-";"		  { return ("SEMI"); }
-"!"		  { return ("NOT_A_TOKEN"); }
+"."               { return ("DOT"); }
+"+"               { return ("PLUS"); }
+"*"               { return ("STAR"); }
+"/"               { return ("DIV"); }
+"-"               { return ("MINUS"); }
+"%"               { return ("MOD"); }
+"=="      { return ("DEQ"); }
+"="               { return ("EQ"); }
+"!="      { return ("NE"); }
+"<>"      { return ("NE"); }
+"<"               { return ("LT"); }
+"<="      { return ("LE"); }
+">"               { return ("GT"); }
+">="      { return ("GE"); }
+"||"      { return ("CONCAT"); }
+"("               { return ("LPAREN"); }
+")"               { return ("RPAREN"); }
+"{"               { return ("LBRACE"); }
+"}"               { return ("RBRACE"); }
+","               { return ("COMMA"); }
+":"               { return ("COLON"); }
+"["               { return ("LBRACKET"); }
+"]"               { return ("RBRACKET"); }
+"]i"      { return ("RBRACKET_ICASE"); }
+";"               { return ("SEMI"); }
+"!"               { return ("NOT_A_TOKEN"); }
 
-<<EOF>>           { return 'EOF'; }
+<<EOF>>   { return 'EOF'; }
 
  
 \$[a-zA-Z_][a-zA-Z0-9_]*   { return 'NAMED_PARAM'; }
 
-\$[1-9][0-9]*		   { return 'POSITIONAL_PARAM'; }
+\$[1-9][0-9]*              { return 'POSITIONAL_PARAM'; }
 
-\?			   { return 'NEXT_PARAM'; }
+\?                         { return 'NEXT_PARAM'; }
 
 
-"all" 	    			{ return("ALL"); }
-"alter"				{ return("ALTER"); }
-"analyze"			{ return("ANALYZE"); }
-"and"				{ return("AND"); }
-"any"				{ return("ANY"); }
-"array"				{ return("ARRAY"); }
-"as"				{ return("AS"); }
-"asc"				{ return("ASC"); }
-"begin"				{ return("BEGIN"); }
-"between"			{ return("BETWEEN"); }
-"binary"			{ return("BINARY"); }
-"boolean"			{ return("BOOLEAN"); }
-"break"				{ return("BREAK"); }
-"bucket"			{ return("BUCKET"); }
-"build"				{ return("BUILD"); }
-"by"				{ return("BY"); }
-"call"				{ return("CALL"); }
-"case"				{ return("CASE"); }
-"cast"				{ return("CAST"); }
-"cluster"			{ return("CLUSTER"); }
-"collate"			{ return("COLLATE"); }
-"collection"	 		{ return("COLLECTION"); }
-"commit"			{ return("COMMIT"); }
-"connect"			{ return("CONNECT"); }
-"continue"		 	{ return("CONTINUE"); }
-"correlate"		 	{ return("CORRELATE"); }
-"cover"				{ return("COVER"); }
-"create"			{ return("CREATE"); }
-"database"			{ return("DATABASE"); }
-"dataset"			{ return("DATASET"); }
-"datastore"			{ return("DATASTORE"); }
-"declare"			{ return("DECLARE"); }
-"decrement"			{ return("DECREMENT"); }
-"delete"			{ return("DELETE"); }
-"derived"			{ return("DERIVED"); }
-"desc"				{ return("DESC"); }
-"describe"			{ return("DESCRIBE"); }
-"distinct"			{ return("DISTINCT"); }
-"do"				{ return("DO"); }
-"drop"				{ return("DROP"); }
-"each"				{ return("EACH"); }
-"element"			{ return("ELEMENT"); }
-"else"				{ return("ELSE"); }
-"end"				{ return("END"); }
-"every"				{ return("EVERY"); }
-"except"			{ return("EXCEPT"); }
-"exclude"			{ return("EXCLUDE"); }
-"execute"			{ return("EXECUTE"); }
-"exists"			{ return("EXISTS"); }
-"explain"			{ return("EXPLAIN") }
-"false"				{ return("FALSE"); }
-"fetch"				{ return("FETCH"); }
-"first"				{ return("FIRST"); }
-"flatten"			{ return("FLATTEN"); }
-"for"				{ return("FOR"); }
-"force"				{ return("FORCE"); }
-"from"				{ return("FROM"); }
-"fts"				{ return("FTS"); }
-"function"			{ return("FUNCTION"); }
-"grant"				{ return("GRANT"); }
-"group"				{ return("GROUP"); }
-"gsi"				{ return("GSI"); }
-"having"			{ return("HAVING"); }
-"if"				{ return("IF"); }
-"ignore"			{ return("IGNORE"); }
-"ilike"				{ return("ILIKE"); }
-"in"				{ return("IN"); }
-"include"			{ return("INCLUDE"); }
-"increment"			{ return("INCREMENT"); }
-"index"				{ return("INDEX"); }
-"infer"				{ return("INFER"); }
-"inline"			{ return("INLINE"); }
-"inner"				{ return("INNER"); }
-"insert"			{ return("INSERT"); }
-"intersect"			{ return("INTERSECT"); }
-"into"				{ return("INTO"); }
-"is"				{ return("IS"); }
-"join"				{ return("JOIN"); }
-"key"				{ return("KEY"); }
-"keys"				{ return("KEYS"); }
-"keyspace"			{ return("KEYSPACE"); }
-"known"				{ return("KNOWN"); }
-"last"				{ return("LAST"); }
-"left"				{ return("LEFT"); }
-"let"				{ return("LET"); }
-"letting"			{ return("LETTING"); }
-"like"				{ return("LIKE"); }
-"limit"				{ return("LIMIT"); }
-"lsm"				{ return("LSM"); }
-"map"				{ return("MAP"); }
-"mapping"			{ return("MAPPING"); }
-"matched"			{ return("MATCHED"); }
-"materialized" 			{ return("MATERIALIZED"); }
-"merge"				{ return("MERGE"); }
-"minus"				{ return("MINUS"); }
-"missing"			{ return("MISSING"); }
-"namespace"			{ return("NAMESPACE"); }
-"nest"				{ return("NEST"); }
-"not"				{ return("NOT"); }
-"null"				{ return("NULL"); }
-"number"			{ return("NUMBER"); }
-"object"			{ return("OBJECT"); }
-"offset"			{ return("OFFSET"); }
-"on"				{ return("ON"); }
-"option"			{ return("OPTION"); }
-"or"				{ return("OR"); }
-"order"				{ return("ORDER"); }
-"outer"				{ return("OUTER"); }
-"over"				{ return("OVER"); }
-"parse"				{ return("PARSE"); }
-"partition"			{ return("PARTITION"); }
-"password"			{ return("PASSWORD"); }
-"path"				{ return("PATH"); }
-"pool"				{ return("POOL"); }
-"prepare"			{ return("PREPARE") }
-"primary"			{ return("PRIMARY"); }
-"private"			{ return("PRIVATE"); }
-"privilege"			{ return("PRIVILEGE"); }
-"procedure"			{ return("PROCEDURE"); }
-"public"			{ return("PUBLIC"); }
-"raw"				{ return("RAW"); }
-"realm"				{ return("REALM"); }
-"reduce"			{ return("REDUCE"); }
-"rename"			{ return("RENAME"); }
-"return"			{ return("RETURN"); }
-"returning"			{ return("RETURNING"); }
-"revoke"			{ return("REVOKE"); }
-"right"				{ return("RIGHT"); }
-"role"				{ return("ROLE"); }
-"rollback"			{ return("ROLLBACK"); }
-"satisfies"			{ return("SATISFIES"); }
-"schema"			{ return("SCHEMA"); }
-"select"			{ return("SELECT"); }
-"self"				{ return("SELF"); }
-"set"				{ return("SET"); }
-"show"				{ return("SHOW"); }
-"some"				{ return("SOME"); }
-"start"				{ return("START"); }
-"statistics"			{ return("STATISTICS"); }
-"string"			{ return("STRING"); }
-"system"			{ return("SYSTEM"); }
-"then"				{ return("THEN"); }
-"to"				{ return("TO"); }
-"transaction"			{ return("TRANSACTION"); }
-"trigger"			{ return("TRIGGER"); }
-"true"				{ return("TRUE"); }
-"truncate"			{ return("TRUNCATE"); }
-"under"				{ return("UNDER"); }
-"union"				{ return("UNION"); }
-"unique"			{ return("UNIQUE"); }
-"unknown"			{ return("UNKNOWN"); }
-"unnest"			{ return("UNNEST"); }
-"unset"				{ return("UNSET"); }
-"update"			{ return("UPDATE"); }
-"upsert"			{ return("UPSERT"); }
-"use"				{ return("USE"); }
-"user"				{ return("USER"); }
-"using"				{ return("USING"); }
-"validate"			{ return("VALIDATE"); }
-"value"				{ return("VALUE"); }
-"valued"			{ return("VALUED"); }
-"values"			{ return("VALUES"); }
-"via"				{ return("VIA"); }
-"view"				{ return("VIEW"); }
-"when"				{ return("WHEN"); }
-"where"				{ return("WHERE"); }
-"while"				{ return("WHILE"); }
-"with"				{ return("WITH"); }
-"within"			{ return("WITHIN"); }
-"work"				{ return("WORK"); }
-"xor"				{ return("XOR"); }
+"all"                           { return("ALL"); }
+"alter"                         { return("ALTER"); }
+"analyze"                       { return("ANALYZE"); }
+"and"                           { return("AND"); }
+"any"                           { return("ANY"); }
+"array"                         { return("ARRAY"); }
+"as"                            { return("AS"); }
+"asc"                           { return("ASC"); }
+"begin"                         { return("BEGIN"); }
+"between"                       { return("BETWEEN"); }
+"binary"                        { return("BINARY"); }
+"boolean"                       { return("BOOLEAN"); }
+"break"                         { return("BREAK"); }
+"bucket"                        { return("BUCKET"); }
+"build"                         { return("BUILD"); }
+"by"                            { return("BY"); }
+"call"                          { return("CALL"); }
+"case"                          { return("CASE"); }
+"cast"                          { return("CAST"); }
+"cluster"                       { return("CLUSTER"); }
+"collate"                       { return("COLLATE"); }
+"collection"            { return("COLLECTION"); }
+"commit"                        { return("COMMIT"); }
+"connect"                       { return("CONNECT"); }
+"continue"                      { return("CONTINUE"); }
+"correlate"                     { return("CORRELATE"); }
+"cover"                         { return("COVER"); }
+"create"                        { return("CREATE"); }
+"database"                      { return("DATABASE"); }
+"dataset"                       { return("DATASET"); }
+"datastore"                     { return("DATASTORE"); }
+"declare"                       { return("DECLARE"); }
+"decrement"                     { return("DECREMENT"); }
+"delete"                        { return("DELETE"); }
+"derived"                       { return("DERIVED"); }
+"desc"                          { return("DESC"); }
+"describe"                      { return("DESCRIBE"); }
+"distinct"                      { return("DISTINCT"); }
+"do"                            { return("DO"); }
+"drop"                          { return("DROP"); }
+"each"                          { return("EACH"); }
+"element"                       { return("ELEMENT"); }
+"else"                          { return("ELSE"); }
+"end"                           { return("END"); }
+"every"                         { return("EVERY"); }
+"except"                        { return("EXCEPT"); }
+"exclude"                       { return("EXCLUDE"); }
+"execute"                       { return("EXECUTE"); }
+"exists"                        { return("EXISTS"); }
+"explain"                       { return("EXPLAIN") }
+"false"                         { return("FALSE"); }
+"fetch"                         { return("FETCH"); }
+"first"                         { return("FIRST"); }
+"flatten"                       { return("FLATTEN"); }
+"for"                           { return("FOR"); }
+"force"                         { return("FORCE"); }
+"from"                          { return("FROM"); }
+"fts"                           { return("FTS"); }
+"function"                      { return("FUNCTION"); }
+"grant"                         { return("GRANT"); }
+"group"                         { return("GROUP"); }
+"gsi"                           { return("GSI"); }
+"having"                        { return("HAVING"); }
+"if"                            { return("IF"); }
+"ignore"                        { return("IGNORE"); }
+"ilike"                         { return("ILIKE"); }
+"in"                            { return("IN"); }
+"include"                       { return("INCLUDE"); }
+"increment"                     { return("INCREMENT"); }
+"index"                         { return("INDEX"); }
+"infer"                         { return("INFER"); }
+"inline"                        { return("INLINE"); }
+"inner"                         { return("INNER"); }
+"insert"                        { return("INSERT"); }
+"intersect"                     { return("INTERSECT"); }
+"into"                          { return("INTO"); }
+"is"                            { return("IS"); }
+"join"                          { return("JOIN"); }
+"key"                           { return("KEY"); }
+"keys"                          { return("KEYS"); }
+"keyspace"                      { return("KEYSPACE"); }
+"known"                         { return("KNOWN"); }
+"last"                          { return("LAST"); }
+"left"                          { return("LEFT"); }
+"let"                           { return("LET"); }
+"letting"                       { return("LETTING"); }
+"like"                          { return("LIKE"); }
+"limit"                         { return("LIMIT"); }
+"lsm"                           { return("LSM"); }
+"map"                           { return("MAP"); }
+"mapping"                       { return("MAPPING"); }
+"matched"                       { return("MATCHED"); }
+"materialized"                  { return("MATERIALIZED"); }
+"merge"                         { return("MERGE"); }
+"minus"                         { return("MINUS"); }
+"missing"                       { return("MISSING"); }
+"namespace"                     { return("NAMESPACE"); }
+"nest"                          { return("NEST"); }
+"not"                           { return("NOT"); }
+"null"                          { return("NULL"); }
+"number"                        { return("NUMBER"); }
+"object"                        { return("OBJECT"); }
+"offset"                        { return("OFFSET"); }
+"on"                            { return("ON"); }
+"option"                        { return("OPTION"); }
+"or"                            { return("OR"); }
+"order"                         { return("ORDER"); }
+"outer"                         { return("OUTER"); }
+"over"                          { return("OVER"); }
+"parse"                         { return("PARSE"); }
+"partition"                     { return("PARTITION"); }
+"password"                      { return("PASSWORD"); }
+"path"                          { return("PATH"); }
+"pool"                          { return("POOL"); }
+"prepare"                       { return("PREPARE") }
+"primary"                       { return("PRIMARY"); }
+"private"                       { return("PRIVATE"); }
+"privilege"                     { return("PRIVILEGE"); }
+"procedure"                     { return("PROCEDURE"); }
+"public"                        { return("PUBLIC"); }
+"raw"                           { return("RAW"); }
+"realm"                         { return("REALM"); }
+"reduce"                        { return("REDUCE"); }
+"rename"                        { return("RENAME"); }
+"return"                        { return("RETURN"); }
+"returning"                     { return("RETURNING"); }
+"revoke"                        { return("REVOKE"); }
+"right"                         { return("RIGHT"); }
+"role"                          { return("ROLE"); }
+"rollback"                      { return("ROLLBACK"); }
+"satisfies"                     { return("SATISFIES"); }
+"schema"                        { return("SCHEMA"); }
+"select"                        { return("SELECT"); }
+"self"                          { return("SELF"); }
+"set"                           { return("SET"); }
+"show"                          { return("SHOW"); }
+"some"                          { return("SOME"); }
+"start"                         { return("START"); }
+"statistics"                    { return("STATISTICS"); }
+"string"                        { return("STRING"); }
+"system"                        { return("SYSTEM"); }
+"then"                          { return("THEN"); }
+"to"                            { return("TO"); }
+"transaction"                   { return("TRANSACTION"); }
+"trigger"                       { return("TRIGGER"); }
+"true"                          { return("TRUE"); }
+"truncate"                      { return("TRUNCATE"); }
+"under"                         { return("UNDER"); }
+"union"                         { return("UNION"); }
+"unique"                        { return("UNIQUE"); }
+"unknown"                       { return("UNKNOWN"); }
+"unnest"                        { return("UNNEST"); }
+"unset"                         { return("UNSET"); }
+"update"                        { return("UPDATE"); }
+"upsert"                        { return("UPSERT"); }
+"use"                           { return("USE"); }
+"user"                          { return("USER"); }
+"using"                         { return("USING"); }
+"validate"                      { return("VALIDATE"); }
+"value"                         { return("VALUE"); }
+"valued"                        { return("VALUED"); }
+"values"                        { return("VALUES"); }
+"via"                           { return("VIA"); }
+"view"                          { return("VIEW"); }
+"when"                          { return("WHEN"); }
+"where"                         { return("WHERE"); }
+"while"                         { return("WHILE"); }
+"with"                          { return("WITH"); }
+"within"                        { return("WITHIN"); }
+"work"                          { return("WORK"); }
+"xor"                           { return("XOR"); }
 
 [a-zA-Z_][a-zA-Z0-9_]*     { return 'IDENT'; }
 
@@ -442,7 +540,7 @@ qid			    [`](([`][`])|[^`])+[`]
 /* Override precedence */
 %left           LPAREN RPAREN
 
-%start		input_list
+%start          input_list
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -451,18 +549,36 @@ qid			    [`](([`][`])|[^`])+[`]
 %%
 
 input_list:
-inputs {return $1;}
+     inputs { /*console.log("Got input list: " + JSON.stringify($1));*/ return $1;}
 ;
 
 inputs:
 input EOF
 {
-    $$ = [$1];
+    if ($1 && $1.getFields) {
+        var fields = [];
+        $1.getFields(fields);
+        $1.pathsUsed = fields;
+    }
+
+    // ignore empty expressions
+    if ($$.type == "Empty")
+      $$ = [];
+    else
+      $$ = [$1];
 }
 |
-input SEMI input_list
+input SEMI inputs
 {
-    $3.push($1);
+    if ($1 && $1.getFields) {
+        var fields = [];
+        $1.getFields(fields);
+        $1.pathsUsed = fields;
+    }
+
+    // ignore empty expressions
+    if ($$.type != "Empty")
+      $3.push($1);
     $$ = $3;
 }
 ;
@@ -472,26 +588,28 @@ input:
 stmt 
 {
     $$ = $1;
+    /*console.log("Got statement: " + JSON.stringify($1));*/
 }
 |
 expr_input 
 {
     $$ = $1;
+    /*console.log("Got expression: " + JSON.stringify($1));*/
 }
 |
-/* empty is o.k. *
+/* empty is o.k. */
 {
     $$ = expression.NewEmpty();
 }
 ;
 
-opt_trailer:
-{
+/*opt_trailer:*/
+/*{*/
   /* nothing */
-}
-|
-opt_trailer SEMI
-;
+/*}*/
+/*|*/
+/*opt_trailer SEMI*/
+/*;*/
 
 stmt:
 select_stmt
@@ -930,11 +1048,11 @@ expr opt_as_alias opt_use
                    yylex.Error("FROM Subquery cannot have USE KEYS or USE INDEX.");
               }
               $$ = algebra.NewSubqueryTerm(other.Select(), $2);
-	      break;
+              break;
          case "Identifier":
               var ksterm = algebra.NewKeyspaceTerm("", other.Alias(), $2, $3.Keys(), $3.Indexes());
               $$ = algebra.NewExpressionTerm(other, $2, ksterm);
-	      break;
+              break;
          default:
               if ($3 != algebra.EMPTY_USE) {
                   yylex.Error("FROM Expression cannot have USE KEYS or USE INDEX.")
@@ -1673,7 +1791,7 @@ MERGE INTO keyspace_ref USING simple_from_term ON key_expr merge_actions opt_lim
               var source = algebra.NewMergeSourceFrom($5, "")
               $$ = algebra.NewMerge($3, source, $7, $8, $9, $10)
          default:
-	      yylex.Error("MERGE source term is UNKNOWN.")
+              yylex.Error("MERGE source term is UNKNOWN.")
      }
 }
 ;
@@ -1769,7 +1887,7 @@ expr opt_where
 grant_role:
 GRANT ROLE role_list TO user_list
 {
-	$$ = algebra.NewGrantRole($3, $5)
+        $$ = algebra.NewGrantRole($3, $5)
 }
 |
 GRANT role_list ON keyspace_list TO user_list
@@ -1781,13 +1899,13 @@ GRANT role_list ON keyspace_list TO user_list
 role_list:
 role_name
 {
-	$$ = [$1];
+        $$ = [$1];
 }
 |
 role_list COMMA role_name
 {
-	$1.push($3);
-	$$ = $1;
+        $1.push($3);
+        $$ = $1;
 }
 ;
 
@@ -1970,7 +2088,7 @@ WITH expr
 {
     $$ = $2.Value()
     if ($$ == nil) {
-	yylex.Error("WITH value must be static.")
+        yylex.Error("WITH value must be static.")
     }
 }
 ;
@@ -2018,9 +2136,9 @@ index_expr:
 expr
 {
     var exp = $1
-    if (exp != nil && (!exp.Indexable() || exp.Value() != nil)) {
-        yylex.Error(fmt.Sprintf("Expression not indexable: %s", exp.String()))
-    }
+    //if (exp != nil && (!exp.Indexable() || exp.Value() != nil)) {
+    //    yylex.Error(fmt.Sprintf("Expression not indexable: %s", exp.String()))
+    //}
 
     $$ = exp
 }

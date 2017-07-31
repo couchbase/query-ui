@@ -2,19 +2,53 @@
 
 var parser = require("./n1ql").parser;
 
-var queries = [
-    "select * from foo",
-    "select select from from"
-];
+function queryArray() {
+  var queries = [
+    //  "select * from foo order by boo.moo.goo",
+    //"select foo.moo.goo[a.b.c].boo from loo",
+    //"foo < bar",
+    //"foo < bar; foo > bar;"
+    //"update beer set type = 'foo' where othertype = 'bar'",
+    //"select foo.bar.boo[z.y.x].moo from foo where a.b.c.d > 0",
+    "distinct array i for i in address when i < 10 END"
+    //"create index idx6 on `beer-sample`(distinct array i for i in address END);"
+    // "select select from from"
+    ];
 
-for (var i=0; i< queries.length; i++) {
+
+  for (var i=0; i< queries.length; i++) {
     var query = queries[i];
     try {
-	var result = parser.parse(query);
-	console.log("\n\nParse result for \n\n" + query + "\n\nis: \n\n" + JSON.stringify(result,null,2));
+      console.log("\n\nParsing: \n\n" + query + "\n");
+      var result = parser.parse(query);
+      console.log("\nresult is: \n\n" + JSON.stringify(result,null,2));
     }
     catch (err) {
-	console.log("\n\nParse error for \n\n" + query + "\n\nis: " + err.message);
+      console.log("\n\nParse error for \n\n" + query + "\n\nis: " + err.message);
     }
+  }
 }
 
+function queryFile() {
+  var lineReader = require('readline').createInterface({
+//    input: require('fs').createReadStream('/Users/eben/src/jison/examples/query.txt')
+    input: require('fs').createReadStream('/Users/eben/src/jison/examples/queries.txt')
+  });
+
+  lineReader.on('line', function (line) {
+
+    try {
+      var result = parser.parse(line);
+      console.log("\n\nParsed:" + line + "\n\n");
+      if (result && result[0])
+        console.log("paths used: \n\n" + JSON.stringify(result[0].pathsUsed,null,2));
+    }
+    catch (err) {
+      console.log("\n\nParse error for \n\n" + line + "\n\nis: " + err.message);
+    }
+  });
+}
+
+
+//queryFile();
+queryArray();
