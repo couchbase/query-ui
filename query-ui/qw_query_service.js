@@ -1052,6 +1052,14 @@
             newResult.resultSize = null;
             newResult.data = newResult.explainResult;
             newResult.result = newResult.explainResultText;
+
+            if (data.metrics) {
+              newResult.elapsedTime = data.metrics.elapsedTime;
+              newResult.executionTime = data.metrics.executionTime;
+              newResult.resultCount = data.metrics.resultCount;
+              newResult.mutationCount = data.metrics.mutationCount;
+              newResult.resultSize = data.metrics.resultSize;
+            }
           }
 
           // all done
@@ -1095,6 +1103,16 @@
             newResult.data = newResult.explainResult;
             newResult.result = newResult.explainResultText;
             newResult.status = "Explain error";
+          }
+
+          // include any metrics, so they know how long it took before the error
+
+          if (data.metrics) {
+            newResult.elapsedTime = data.metrics.elapsedTime;
+            newResult.executionTime = data.metrics.executionTime;
+            newResult.resultCount = data.metrics.resultCount;
+            newResult.mutationCount = data.metrics.mutationCount;
+            newResult.resultSize = data.metrics.resultSize;
           }
 
           lastResult.copyIn(newResult);
