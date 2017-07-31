@@ -601,11 +601,6 @@
       }
 
 
-
-
-
-
-
       // UNION operators will have an array of predecessors drawn from their "children".
       // we expect predecessor to be null if we see a UNION
       else if ((operatorName == "Union" || operatorName === "UnionAll") && plan['~children']) {
@@ -613,6 +608,27 @@
           analyzePlan(plan['~children'][i],lists);
 
         return(lists);
+      }
+
+      //
+      // The Order operator has an array of expressions
+      //
+
+      else if (operatorName == "Order") for (var i = 0; i < plan.sort_terms.length; i++) {
+        getFieldsFromExpression(plan.sort_terms[i].expr,lists);
+      }
+
+
+      //
+      // the CreateIndex operator has keys, which are expressions we need to parse
+      //
+
+      else if (operatorName == "CreateIndex") {
+        //if (plan.keys && plan.keys.length)
+          // TBD - Parse expression to extract fields used
+          //for (var i = 0; i < plan.keys.length; i++) {
+          //  console.log("Index expr: " + plan.keys[i].expr);
+          //}
       }
 
       // for all other operators, certain fields will tell us stuff:
