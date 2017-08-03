@@ -31,6 +31,20 @@
         }
       });
 
+      $stateProvider
+      .state('app.admin.doc_editor', {
+        url: '/doc_editor',
+        views: {
+          "main@app.admin": {
+            controller: 'qwDocEditorController',
+            templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
+          }
+        },
+        data: {
+          title: "Query"
+        }
+      });
+
       addQueryStates("app.admin.query");
 
       function addQueryStates(parent) {
@@ -45,11 +59,11 @@
           controller: 'qwQueryController',
           templateUrl: '../_p/ui/query/ui-current/query.html'
         })
-        .state(parent + '.doc_editor', {
-          url: '/doc_editor',
-          controller: 'qwDocEditorController',
-          templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
-        })
+//        .state(parent + '.doc_editor', {
+//          url: '/doc_editor',
+//          controller: 'qwDocEditorController',
+//          templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
+//        })
         ;
       }
 

@@ -1,7 +1,8 @@
 <div ng-controller="qwDocEditorController as dec"
-  ng-show="dec.validated.valid()" id="doc_editor_tabular">
+  id="doc_editor_tabular">
+  <!-- ng-show="dec.validated.valid()" --> 
 
-  <h4>Document Editor</h4>
+  <h4>Document Editor <span ng-if="dec.use_n1ql()">(Query-Based)</span></h4>
 
 <!-- row of controls for the query *********** -->
   <div class="row flex-left controls">
@@ -13,8 +14,8 @@
     <input type="number" ng-model="dec.options.limit" style="width: 4rem;">
     Offset:
     <input type="number" ng-model="dec.options.offset" style="width: 4rem;">
-    Where:
-    <input type="text" ng-model="dec.options.where_clause">
+    <span ng-if="dec.use_n1ql()">Where:
+    <input type="text" ng-model="dec.options.where_clause"></span>
   </div>
 
 <!-- Buttons to get the documents -->

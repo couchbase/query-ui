@@ -179,7 +179,7 @@
           var item = object[row].data[key];
           var childSize = {width: 1};
           var childHTML = (item || item === 0 || item === "") ?
-              makeHTMLtable(item,'[' + row + '].data.'+ key, childSize) : '&nbsp;';
+              makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize) : '&nbsp;';
           result += '<span class="cbui-table-cell" style="flex-grow: ' + columnWidths[key]  + ';">'
             + childHTML + '</span>';
         });
@@ -197,6 +197,7 @@
     else if (_.isString(object)) // error messages show up as strings
       result = '<div class="ajtd-key">' + object + '</div>';
 
+    //console.log("Made table: " + result);
     return(result);
   }
 
@@ -354,14 +355,14 @@
             // for objects and arrays, make a recursive call
             if (_.isArray(value) || _.isPlainObject(value)) {
               var childSize = {width: 1};
-              var childHTML = makeHTMLtable(value,prefix + '[' + index + '].'+ key,childSize);
+              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize);
               result += '<span style="flex-grow: '+ childSize.width + ';">' + childHTML + '</span>';
             }
 
             // primitive values also use an input form generated recursively
             else {
               var childSize = {width: 1};
-              var childHTML = makeHTMLtable(value,prefix + '[' + index + '].'+ key,childSize);
+              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize);
               result += '<span style="flex-grow: '+ childSize.width + ';">' + childHTML
                  + '</span>';
             }
@@ -406,7 +407,7 @@
       // figure out the widths of each column
       _.forIn(object, function(value,key) {
         var childSize = {width: 1};
-        dataRow += '<span>' + makeHTMLtable(value,prefix + "." + key,childSize) + '</span><br>';
+        dataRow += '<span>' + makeHTMLtable(value,prefix + "['" + key + "']",childSize) + '</span><br>';
         if (!columnWidths[key] || childSize.width > columnWidths[key])
           columnWidths[key] = childSize.width;
       });

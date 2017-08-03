@@ -7,9 +7,9 @@
 
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
-  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', 'qwQueryService', 'validateQueryService'];
+  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', 'qwQueryService', 'validateQueryService'];
 
-  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, qwQueryService, validateQueryService) {
+  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, qwQueryService, validateQueryService) {
 
     var dec = this;
 
@@ -26,7 +26,9 @@
     dec.options = qwQueryService.doc_editor_options;
     dec.currentDocs = [];
     dec.buckets = [];
-    dec.use_n1ql = function() {return(validateQueryService.valid())};
+    dec.use_n1ql = validateQueryService.valid();
+
+    console.log("Use N1QL: " + dec.use_n1ql);
 
     //
     //
@@ -36,7 +38,7 @@
     dec.nextBatch = nextBatch;
     dec.prevBatch = prevBatch;
 
-    //dec.clickedOn = function(row) {console.log("clicked on: " + row);};
+    dec.clickedOn = function(row) {console.log("clicked on: " + row);};
     dec.updateDoc = updateDoc;
     dec.copyDoc = copyDoc;
     dec.deleteDoc = deleteDoc;
@@ -112,7 +114,7 @@
       promise.then(function success(resp) {
         dec.updatingRow = row;
 
-        var promise = saveDoc(row,JSON.stringify(dec.options.current_result[row].data),dialogScope.file.name);
+        var promise = saveDoc(row,JSON.stringify(dec.options.current_result[row].data),true);
 
         // did the query succeed?
         promise.then(function success(resp) {
@@ -157,7 +159,7 @@
         dec.updatingRow = row;
 
         var promise;
-        if (dec.use_n1ql())
+        if (dec.use_n1ql)
           promise = deleteDoc_n1ql(row);
         else
           promise = deleteDoc_rest(row);
@@ -260,15 +262,15 @@
     // functions to save the document back to the server
     //
 
-    function saveDoc(row,newJson,newKey) {
+    function saveDoc(row,newJson,insertOnly) {
       dec.updatingRow = row;
 
       var promise;
 
-      if (dec.use_n1ql())
-        promise = saveDoc_n1ql(row,newJson,newKey);
+      if (dec.use_n1ql)
+        promise = saveDoc_n1ql(row,newJson,insertOnly);
       else
-        promise = saveDoc_rest(row,newJson,newKey);
+        promise = saveDoc_rest(row,newJson,insertOnly);
 
       promise
       // did the query succeed?
@@ -283,7 +285,7 @@
 
         $timeout(retrieveDocs,200);
         var dialogScope = $rootScope.$new(true);
-        if (newKey)
+        if (insertOnly)
           dialogScope.error_title = "Error Inserting New Document";
         else
           dialogScope.error_title = "Error Updating Document";
@@ -299,49 +301,26 @@
     }
 
 
-    function saveDoc_n1ql(row,newJson,newKey) {
+    function saveDoc_n1ql(row,newJson,insertOnly) {
       var query;
-      if (newKey)
-        query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-          newKey + '", ' + newJson + ')';
+      if (insertOnly)
+        query = "INSERT INTO `";
       else
-        query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-          dec.options.current_result[row].id + '", ' + newJson + ')';
+        query = "UPSERT INTO `";
 
+      query += dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
+      dec.options.current_result[row].id + '", ' + newJson + ')';
       //console.log("Updating with query: " + query);
 
       return qwQueryService.executeQueryUtil(query,false);
      }
 
 
-    function saveDoc_rest(row,newJson,newKey) {
-      var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
-        "/docs/" + (newKey ? newKey : encodeURIComponent(dec.options.current_result[row].id));
+    function saveDoc_rest(row,newJson,insertOnly) {
+      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
+      "/docs/" + encodeURIComponent(dec.options.current_result[row].id);
 
-
-      // with newKey, we need to check if the document exists first by that key
-
-      if (newKey) {
-        return $http({
-          method: "GET",
-          url: Url
-        }).then(function success(resp) {
-          return($q.reject({data: "Can't save document, key '" + newKey + "' already exists."}));
-        },
-        function fail(resp) {
-          return $http({
-            method: "POST",
-            url: Url,
-            data: {
-              flags: 0x02000006,
-              value: newJson
-            }
-          });
-        });
-      }
-
-      // otherwise just save the doc using the REST api
-      else return $http({
+      return $http({
         method: "POST",
         url: Url,
         data: {
@@ -358,7 +337,7 @@
     function retrieveDocs() {
       qwQueryService.saveStateToStorage();
 
-      if (dec.use_n1ql())
+      if (dec.use_n1ql)
         retrieveDocs_n1ql();
       else
         retrieveDocs_rest();
@@ -458,7 +437,7 @@
           }
         },function error(resp) {
           var data = resp.data, status = resp.status;
-          //console.log("Got status: " + status + ", data: " + JSON.stringify(data));
+          console.log("Got status: " + status + ", data: " + JSON.stringify(data));
 
           if (data && data.errors) {
             dec.options.current_result = JSON.stringify(data.errors);
@@ -480,7 +459,7 @@
     //
 
     function getBuckets() {
-      if (dec.use_n1ql())
+      if (dec.use_n1ql)
         getBuckets_n1ql();
       else
         getBuckets_rest();
@@ -527,11 +506,6 @@
 
     function activate() {
       getBuckets();
-
-      validateQueryService.getBucketsAndNodes(function() {
-        getBuckets();
-      });
-
     }
 
     //
