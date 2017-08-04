@@ -624,11 +624,25 @@
       //
 
       else if (operatorName == "CreateIndex") {
-        //if (plan.keys && plan.keys.length)
-          // TBD - Parse expression to extract fields used
-          //for (var i = 0; i < plan.keys.length; i++) {
-          //  console.log("Index expr: " + plan.keys[i].expr);
-          //}
+        if (plan.keys && plan.keys.length)
+          // CreateIndex keys are un-parsed N1QL expressions, we need to parse
+          for (var i = 0; i < plan.keys.length; i++) {
+            var parseTree = n1ql.parse(plan.keys[i].expr);
+
+            // parse tree has array of array of strings, we will build
+            if (parseTree && plan.keyspace) for (var p=0;p<parseTree.length; p++) {
+              for (var j=0; j<parseTree[p].pathsUsed.length; j++) {
+                if (parseTree[p].pathsUsed[j]) {
+                  var field = plan.keyspace;
+                  for (var k=0; k<parseTree[p].pathsUsed[j].length; k++) {
+                    field += "." + parseTree[p].pathsUsed[j][k];
+                  }
+
+                  lists.fields[field] = true;
+                }
+              }
+            }
+          }
       }
 
       // for all other operators, certain fields will tell us stuff:

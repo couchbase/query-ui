@@ -1335,36 +1335,53 @@ parse: function parse(input) {
 	       //console.log("getting fields for item type: " + this.type);
 	       if (!fieldArray) fieldArray = [];
 	       
-	       // if this has type "Field" or "Element", extract the path
-	       if (this.type == "Field" || this.type == "Element" /* || this.type == "ResultTerm"*/ || this.type == "Identifier") {
-	           var path = [];
-	           this.getFieldPath(path,fieldArray);
-	           if (path.length > 0)
-		             fieldArray.push(path);
-	       }
-	       
-	       // otherwise, go through the "ops" object and call recursively on 
-	       // our children if they have type "expr"
-	       
-	       else for (var name in this.ops) {
-	           var child = this.ops[name];
-	           if (!child)
-		             continue;
+	       switch (this.type) {
+             // if this has type "Field" or "Element", extract the path	       
+	       case "Field":
+	       case "Element": {
+             var path = [];
+             this.getFieldPath(path,fieldArray);
+             if (path.length > 0)
+                 fieldArray.push(path);
              
-	           //console.log("  got child: " + name + "(" + (child.type && child.ops) + ") = " + JSON.stringify(child));
-	           
-	           if (child.getFields)  {
-		             //console.log("  got child type: " + child.type);
-		             child.getFields(fieldArray);
-	           }
+             break;
+         }
+             
+             // any ExpressionTerm or ResultTerm can have an Identifier child that indicates
+             // a field or bucket
+         case "ExpressionTerm":
+         case "ResultTerm":
+             if (this.ops.expression && this.ops.expression.type == "Identifier")
+                 fieldArray.push([this.ops.expression.ops.identifier]);
+             break;
 
-	           // some children are arrays
-	           else if (child.length) for (var i=0; i< child.length; i++) if (child[i] && child[i].getFields) {
-		             //console.log("  got child[" + i + "] type: " + child[i].type);
-		             child[i].getFields(fieldArray);
+             // SimpleBindings are similar, where the binding_expr may be a field
+
+         case "SimpleBinding":
+             if (this.ops.binding_expr && this.ops.binding_expr.type == "Identifier")
+                 fieldArray.push([this.ops.binding_expr.ops.identifier]);
+             break;
+         }
+
+         // regardless, go through the "ops" object and call recursively on  our children
+         for (var name in this.ops) {
+             var child = this.ops[name];
+             if (!child)
+                 continue;
+             
+             //console.log("  got child: " + name + "(" + (child.type && child.ops) + ") = " + JSON.stringify(child));
+             
+             if (child.getFields)  {
+                 //console.log("  got child type: " + child.type);
+                 child.getFields(fieldArray);
              }
-	           
-	       }
+
+             // some children are arrays
+             else if (child.length) for (var i=0; i< child.length; i++) if (child[i] && child[i].getFields) {
+                 //console.log("  got child[" + i + "] type: " + child[i].type);
+                 child[i].getFields(fieldArray);
+             }
+         }
      };
      
      //
