@@ -182,24 +182,33 @@
 
 /* Tabular Document Editor ------------------- */
 #doc_editor_tabular .controls {
-  margin: .5rem 0 .5rem 0;
+  margin: 0 0 1.5rem 0;
   font-size: .875rem;
 }
-#doc_editor_tabular .controls > input {
-  margin: 0 2rem 0 .25rem;
-}
-#doc_editor_tabular .controls > input:last-child {
-  margin: 0 0 0 .25rem;
-  width: 100%;
-}
-#doc_editor_tabular .controls > select {
-  margin: 0 2rem 0 0;
+#doc_editor_tabular .controls .column {
+  margin-right: .5rem;
 }
 #doc_editor_tabular .doc-editor-results {
   overflow: auto;
 }
-
-.cbui-input.ng-invalid {
+#doc_editor_tabular .cbui-table-cell {
+  min-width: 140px;
+  padding-right: .25rem;
+}
+#doc_editor_tabular .cbui-tablerow.padding-tight {
+  padding: .25rem 0 0 .75rem;
+}
+#doc_editor_tabular .cbui-table-cell input,
+#doc_editor_tabular .cbui-table-cell textarea {
+  width: 98%;
+}
+#doc_editor_tabular .cbui-table-header-filled {
+  padding-right: 1rem;
+}
+#doc_editor_tabular .cbui-table-header-filled.padding-right-0 {
+  padding-right: 0;
+}
+input.ng-invalid {
   background-color: #f9e9ea; /* red-7 */
 }
 
@@ -221,14 +230,13 @@
   color: #fff;
   font-size: inherit;
 }
+
 /* monitoring tables --------------- */
 #active_table .cbui-table-header,
 #completed_table .cbui-table-header,
 #prepareds_table .cbui-table-header {
   cursor: pointer;
 }
-
-
 
 /* monitoring statistics --------------- */
 #query_stats {

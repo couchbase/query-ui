@@ -1,44 +1,51 @@
-<div ng-controller="qwDocEditorController as dec"
-  id="doc_editor_tabular">
-  <!-- ng-show="dec.validated.valid()" --> 
+<div ng-controller="qwDocEditorController as dec" id="doc_editor_tabular">
 
-  <h4>Document Editor DP <span ng-if="dec.use_n1ql()">(Query-Based)</span></h4>
-
-<!-- row of controls for the query *********** -->
-  <div class="row flex-left controls">
-    <select
+<!-- row of controls for the query ***************************************** -->
+  <div class="row flex-left items-bottom controls">
+    <div class="column">Bucket:<br>
+      <select
        ng-model="dec.options.selected_bucket"
        ng-options="bucket for bucket in dec.buckets">
     </select>
-    Limit:
-    <input type="number" ng-model="dec.options.limit" style="width: 4rem;">
-    Offset:
-    <input type="number" ng-model="dec.options.offset" style="width: 4rem;">
-    <span ng-if="dec.use_n1ql()">Where:
-    <input type="text" ng-model="dec.options.where_clause"></span>
   </div>
-
-<!-- Buttons to get the documents -->
-  <div class="row margin-bottom1">
-    <button ng-click="dec.retrieveDocs()" class="qw-doc-editor button-exec">
+    <div class="column">Limit:<br>
+    <input type="number" ng-model="dec.options.limit" class="input-short-1">
+  </div>
+  <div class="column">Offset:<br>
+    <input type="number" ng-model="dec.options.offset" class="input-short-1">
+  </div>
+  <div ng-if="dec.use_n1ql()" class="column flex-grow-2">
+    Where:<br>
+    <input type="text" ng-model="dec.options.where_clause" class="width-12">
+  </div>
+  <div ng-if="!dec.use_n1ql()" class="column">
+    Document ID:<br>
+    <input type="text" ng-model="">
+  </div>
+    <button ng-click="dec.retrieveDocs()" class="">
       <div ng-if="!dec.options.queryBusy">Retrieve Docs</div>
       <div ng-if="dec.options.queryBusy" class="icon-button">
-        Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span></div>
+        Cancel <span class="icon fa-spinner fa-spin fa-pulse"></span>
+    </div>
     </button>
+  </div>
+
+<!-- Row for result query & next/previous buttons ************************** -->
+  <div ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0" class="row margin-bottom-half">
+    <div class="text-small">
+      Results for: &nbsp; <em>{{dec.options.current_query}}</em>
+    </div>
     <span>
-      <button ng-click="dec.prevBatch()" class="outline" ng-disabled="dec.options.offset <= 0">
+      <button ng-click="dec.prevBatch()" class="outline text-small" ng-disabled="dec.options.offset <= 0">
         < Prev Batch
       </button>
-      <button ng-click="dec.nextBatch()" class="outline" >
+      <button ng-click="dec.nextBatch()" class="outline text-small" >
         Next Batch >
       </button>
     </span>
   </div>
 
-<!-- RESULTS ************* -->
-  <div class="text-small" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
-    Results for: &nbsp; <span class="success semi-bold margin-bottom-half">{{dec.options.current_query}}</span>
-  </div>
+<!-- RESULTS *************************************************************** -->
 
   <div class="doc-editor-results" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
     <qw-json-table-editor data="dec.options.current_result" controller="dec"></div>

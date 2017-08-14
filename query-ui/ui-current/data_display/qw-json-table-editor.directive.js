@@ -121,7 +121,7 @@
       // We have widths for each column, so we can create the header row
       //
       var totalWidth = 0;
-      var columnHeaders = '<div class="cbui-table-header-filled padding-left">';
+      var columnHeaders = '<div class="cbui-table-header-filled">';
       columnHeaders += '<span class="cbui-table-cell flex-grow-1-25"></span>';
       columnHeaders += '<span class="cbui-table-cell flex-grow-2">id</span>';
 
@@ -191,7 +191,7 @@
 
 
       // done with array, close the table
-      result = '<div class="cbui-table" style="width: ' + (totalWidth+3)*columnWidth + 'px; overflow: auto">' + columnHeaders + result + '</div>';
+      result = '<div class="cbui-table" style="width: ' + (totalWidth+3)*(columnWidth+10) + 'px; overflow: auto">' + columnHeaders + result + '</div>';
     }
 
     else if (_.isString(object)) // error messages show up as strings
@@ -201,8 +201,7 @@
     return(result);
   }
 
-
-  // The data we are showing can contain objects nested inside objects inside objects, turtles
+  // The data we are showing can contain objects nested inside objects inside objects: turtles
   // all the way down. When making a table, a piece of data could be 1 column wide, or 100, or 1000.
   // This function recursively traverses a piece of data to figure out how many columns wide it
   // will need.
@@ -367,7 +366,6 @@
                  + '</span>';
             }
 
-            result += '</td>'; // end the cell
           });
 
         }
@@ -402,12 +400,12 @@
 
       var columnWidths = {};
 
-      var dataRow = '<div class="cbui-tablerow padding-left">';
+      var dataRow = '<div class="cbui-tablerow padding-tight">';
 
       // figure out the widths of each column
       _.forIn(object, function(value,key) {
         var childSize = {width: 1};
-        dataRow += '<span>' + makeHTMLtable(value,prefix + "['" + key + "']",childSize) + '</span><br>';
+        dataRow += '<span class="cbui-table-cell">' + makeHTMLtable(value,prefix + "['" + key + "']",childSize) + '</span>';
         if (!columnWidths[key] || childSize.width > columnWidths[key])
           columnWidths[key] = childSize.width;
       });
@@ -415,7 +413,7 @@
 
       // row of field names
       var totalWidth = 0;
-      var columnHeaders = '<div class="cbui-table-header-filled padding-left">';
+      var columnHeaders = '<div class="cbui-table-header-filled padding-left padding-right-0">';
       _.forIn(object, function(value,key) {
         columnHeaders += '<span class="cbui-table-cell" style="flex-grow: ' +
           columnWidths[key] + ';">' + mySanitize(key) +'</span>';
@@ -431,12 +429,10 @@
 
     else {
       var model = ' ng-model="results' + prefix + '" ';
-      var inputStyle = ' style="width: ' + (columnWidth-10) + 'px; margin-left: 5px"';
-
       if (_.isNumber(object))
-        result += '<input class="cbui-input" type="number" ' + model + inputStyle + '>';
+        result += '<input type="number" ' + model + '>';
       else
-        result += '<textarea class="cbui-input ajtd-editor"' + model + inputStyle + '></textarea>';
+        result += '<textarea ' + model + '></textarea>';
     }
 
     return(result);
