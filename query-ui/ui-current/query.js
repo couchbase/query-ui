@@ -4,6 +4,7 @@
   angular
   .module('qwQuery', ["ui.router", "mnPluggableUiRegistry", "mnJquery",
     'qwJsonTree',
+    'qwJsonDataTable',
     'qwJsonTable',
     'qwJsonTableEditor',
     'qwExplainViz',

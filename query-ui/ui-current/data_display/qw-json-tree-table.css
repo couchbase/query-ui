@@ -96,18 +96,21 @@ td.ajtd-type-array {
   vertical-align: baseline;
 }
 
+
 /* striping alternate 'rows' for TREES and TABLES ---------- */
 .ajtd-root > tbody > tr:nth-child(odd),
 .ajtd-table > tbody > tr:nth-child(odd),
 .ajtd-type-object > li:nth-child(odd),
-.ajtd-type-array > li:nth-child(odd) {
+.ajtd-type-array > li:nth-child(odd),
+.data-table-wrapper > div:nth-child(odd) {
   background-color: #f6f7f9;
 }
 
 .ajtd-root > tbody > tr:nth-child(even),
 .ajtd-table > tbody > tr:nth-child(even),
 .ajtd-type-object > li:nth-child(even),
-.ajtd-type-array > li:nth-child(even) {
+.ajtd-type-array > li:nth-child(even),
+.data-table-wrapper > div:nth-child(even) {
   background-color: #fff;
 }
 
@@ -132,3 +135,117 @@ td.ajtd-type-array {
 .ajtd-cell {
   word-wrap: break-word;
 }
+
+/*
+ * the data-table-header is a separate div that holds the column headers, so 
+ * they stay visible even when the table is scrolled. This div is programatically
+ * scrolled horizontally to stay in sync with the table contents.
+ *
+ * the spacing and font should be set the same as the table contents, since the
+ * size of all the columns are specified in 'ch', and when the font changes the
+ * size of a 'ch' also changes.
+ */
+
+.data-table-header-row {
+  white-space: nowrap;            /* keep as a single row */
+  overflow-x: scroll;             /* horizontal scroll with data */
+  overflow: -moz-scrollbars-none; /* hide scrollbar in firefox */
+  border-bottom: solid 1px #d1d1d1;
+  background-color: #eceff2 !important;
+  cursor: default;
+  color: #555;
+  height: 26px;
+}
+
+.data-table-header-row::-webkit-scrollbar {
+    display: none;
+}
+
+.data-table-header-cell {
+  display: inline-block;
+  white-space: normal; 
+  text-align:center;   
+  font-size: .875rem;
+  /*padding: .1ch;*/
+  border-right: solid 1px #d1d1d1;
+}
+
+/*
+ * the data-table-wrapper is a div holding the table contents. We want it to show scrollbars
+ * all the time. We also need it to have relative positioning, since the table rows are
+ * set with absolute positioning, allowing big un-rendered gaps where the user hasn't looked
+ */
+
+.data-table-wrapper {
+  width: 100%;
+  height: calc(100% - 26px);
+  overflow: scroll;
+  position: relative;
+}
+
+.data-table-wrapper::-webkit-scrollbar {
+   width: 10px; /* force scrollbars to appear with this size */
+   height: 10px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-track { /* force track to appear*/
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.4); 
+    border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-thumb { /* force thumb to appear */
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    background: rgba(100,100,100,0.8); 
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+
+/*
+ * inside the wrapper is the table div, which contains row divs and 
+ * cell spans. Make sure that the fonts and spacing are kept the same with
+ * the header above, or the two won't line up.
+ */
+ 
+.data-table {
+    border: 1px solid #ececec; 
+}
+
+.data-table-row {
+  position: absolute;
+  white-space: nowrap;
+  border-left: solid 1px #d1d1d1;
+  border-right: solid 1px #d1d1d1;
+}
+
+.data-table-cell {
+  display: inline-block;
+  overflow:hidden;
+  overflow-wrap:break-word;
+  white-space: normal;
+  vertical-align: top;
+  font-size: .875rem;
+  padding: .1ch;
+}
+
+.data-table-special-value {
+  font-style: italic;
+  color: #2ca01c;
+}
+
+.data-table-array {
+    border: 1px solid #ececec; 
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+.data-table-inner-header-row {
+  white-space: nowrap;
+  top: 0px;
+  border-bottom: solid 1px #d1d1d1;
+  /*font-size: .75rem;*/
+  background-color: #eceff2 !important;
+  cursor: default;
+  color: #555;
+}
+
