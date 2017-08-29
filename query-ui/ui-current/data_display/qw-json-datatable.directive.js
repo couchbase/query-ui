@@ -34,54 +34,43 @@
 			    }
 
 			    // start with an empty div, if we have data convert it to HTML
-			    var header;
 			    var wrapper = '<div class="data-table-wrapper">{}</div>';
 			    var table;
-			    var header;
+			    htmlElement = element;
 
 			    if (json) {
+			      data = json;
 			      var usingDataTable = true;
 
 			      wrapper = '<div class="data-table-wrapper"></div>';
-			      // analyze the data to see if we can make a datatable
-			      //console.log("Starting analysis...");
-			      //var pre_analyze_ms = new Date().getTime(); // when did we start?
 
 			      // we must have an array, if it's not, wrap it in an array
-			      if (!_.isArray(json))
-			        json = [json];
+			      if (!_.isArray(data))
+			        data = [data];
 
-			      var meta = getMetaDataAndSizes(json);
+                  // analyze the data to see if we can make a datatable
+			      meta = getMetaDataAndSizes(data);
 
 			      if (meta) {
 			        usingDataTable = true;
-			        //console.log("Got json meta: ");
-			        //console.log(JSON.stringify(meta,null,4));
 
 			        // make the table header with the top-level fields
 			        header = angular.element(createHTMLheader(meta));
+	                for (var i=0; i < header[0].childNodes.length; i++) {
+	                  header[0].childNodes[i].addEventListener("click",function() {
+	                    sortTable(this);
+	                  },false);
+	                }
 
-			        //var pre_create_ms = new Date().getTime(); // when did we start?
-
-			        // add the first 2500px of table
+	                // start with a dummy empty div as big vertically as we need it to be
                     var tableHTML = '<div class="data-table" style="height: ' +
                       meta.offsets[meta.offsets.length - 1] + 'px"></div>';
 
-			        tableHTML += createHTMLForVisibleRegion(json,meta,0,2500);
-
-			        // close the outer data-table div
-			        tableHTML += '</div>';
-
-			        //var pre_render_ms = new Date().getTime(); // when did we start?
+                    // add the first 2500px of table
+			        tableHTML += createHTMLForVisibleRegion(data,meta,0,2500);
 
 			        // create the HTML element
 			        table = angular.element(tableHTML);
-
-			        //var post_render_ms = new Date().getTime(); // when did we start?
-
-			       // console.log("Analyze: " + (pre_create_ms - pre_analyze_ms));
-			        //console.log("Create:  " + (pre_render_ms - pre_create_ms));
-			        //console.log("Render:  " + (post_render_ms - pre_render_ms));
 			      }
 
 			      //
@@ -91,18 +80,27 @@
 			      else {
 			        wrapper = '<div class="data-table-wrapper">Unable to process data, see log.</div>';
 			        console.log("Unable to create tabular view for data:");
-			        console.log(JSON.stringify(json,null,4));
+			        console.log(JSON.stringify(data,null,4));
 			      }
 			    }
 
-			    var wrapperElement = angular.element(wrapper);
+			    // even if the json was empty, we have a wrapper element
+			    wrapperElement = angular.element(wrapper);
 			    if (table)
 			      wrapperElement.append(table);
 
-			    // set our element to use this new HTML
-			    element.empty();
-			    if (header) element.append(header);
-			    element.append(wrapperElement);
+			    // clear out our element. If we have a header add it, then add the wrapper
+			    htmlElement.empty();
+			    if (header) {
+			      htmlElement.append(header);
+			    }
+			    htmlElement.append(wrapperElement);
+
+			    //
+			    // callback for sorting the data by one of the columns
+			    //
+
+			    var sortColumn;
 
 			    //
 			    // listen for scrolling, with a delay, and update the rendered portion of the screen
@@ -121,9 +119,9 @@
 
 			        timeoutHandle = setTimeout(function() {
 			          //console.log("Scrolling to: " + el[0].scrollTop);
-			          var newHTML = createHTMLForVisibleRegion(json,meta,wrapperElement[0].scrollTop,
+			          var newHTML = createHTMLForVisibleRegion(data,meta,wrapperElement[0].scrollTop,
 			              wrapperElement[0].clientHeight);
-			          if (newHTML.length > 0 && table)
+			          if (newHTML.length > 0)
 			            wrapperElement.append(angular.element(newHTML));
 			        }, 50); // 50ms delay
 			      });
@@ -132,12 +130,173 @@
 			      if (header) header[0].addEventListener("scroll",function() {
 			        wrapperElement[0].scrollLeft = header[0].scrollLeft
 			      });
+
+
 			    }
 			  });
 			}
 		};
 	});
 
+
+
+	var data;           // all our data
+	var meta;           // metadata on data sizing
+	var htmlElement;    // the html element, which we need to change after sorting
+	var header;         // the html element for the table header
+	var wrapperElement; // the element that wraps the table (but not the header)
+
+	//
+	// utility function to sort two items based on a field
+	// since fields may have different types, we need to handle this.
+	//
+
+	var sortField;      // field to sort by, if any
+	var prevSortElem;   // previous header element, for changing sort style
+	var sortForward = true;
+
+	function sortTable(spanElem) {
+	  //console.log("sortBy: " + spanElem.innerText);
+	  // if it's a new field, sort forward by that field
+	  if (spanElem !== prevSortElem) {
+	    if (prevSortElem)
+	      prevSortElem.classList.remove("icon", "fa-caret-down", "fa-caret-up");
+
+	    prevSortElem = spanElem;
+
+	    sortForward = true;
+	    sortField = spanElem.innerText;
+	    spanElem.classList.add("icon", "fa-caret-down");
+	  }
+
+	  // if they clicked the same field, reverse the sort direction
+	  else {
+	    if (sortForward) {
+          spanElem.classList.remove("fa-caret-down");
+          spanElem.classList.add("fa-caret-up");
+	    }
+	    else {
+          spanElem.classList.remove("fa-caret-up");
+          spanElem.classList.add("fa-caret-down");
+	    }
+	    sortForward = !sortForward;
+
+	  }
+
+	  // now sort the data, clear the div, and render the visible region
+
+	  data.sort(compare);
+      meta.rendered = [];
+      computeRowOffsets();
+
+      // remember old scroll location
+      var oldTop = wrapperElement[0].scrollTop;
+      var oldLeft = wrapperElement[0].scrollLeft;
+
+	  wrapperElement.empty();
+      var newHTML = '<div class="data-table" style="height: ' +
+        meta.offsets[meta.offsets.length - 1] + 'px"></div>' +
+        createHTMLForVisibleRegion(data,meta,wrapperElement[0].scrollTop,
+          wrapperElement[0].clientHeight);
+      if (newHTML.length > 0) {
+        wrapperElement.append(angular.element(newHTML));
+        wrapperElement[0].scrollTop = oldTop;
+        wrapperElement[0].scrollLeft = oldLeft;
+      }
+	}
+
+	// compare two rows based on the sort field
+	function compare(a,b) {
+	  return(myCompare(a,b,sortField,meta));
+	}
+
+	// since we may need to sort subobjects, make our comparison general
+	function myCompare(a,b,sortField,meta) {
+	  var val1,val2;
+
+	  if (meta && meta.outerKey) {
+        val1 = a[meta.outerKey][sortField];
+        val2 = b[meta.outerKey][sortField];
+	  }
+	  else {
+        val1 = a[sortField];
+        val2 = b[sortField];
+	  }
+
+	  var direction = (sortForward ? 1 : -1);
+
+//	  console.log("Got sortField: *" + sortField + "*");
+//      console.log("Comparing a: " + JSON.stringify(a));
+//      console.log("  to b: " + JSON.stringify(b));
+//      console.log("  val1: " + JSON.stringify(val1) + " type: " + (typeof val1));
+//      console.log("  val2: " + JSON.stringify(val2) + " type: " + (typeof val2));
+
+	  // if one is undefined and the other is not, undefined always goes last
+      if (typeof val1 === 'undefined' && typeof val2 !== 'undefined')
+        return 1 * direction;
+
+      if (typeof val1 !== 'undefined' && typeof val2 === 'undefined')
+        return -1 * direction;
+
+      if (typeof val1 === 'undefined' && typeof val2 === 'undefined')
+        return 0;
+
+	  // do they have the same type? then we can compare
+	  if (typeof val1 === typeof val2) {
+	    if (_.isNumber(val1))
+	      return((val1 - val2) * direction);
+	    if (_.isBoolean(val1))
+	      return(val1 == val2 ? 0 : (val1 ? direction : 0));
+	    if (_.isString(val1))
+	      return (val1.localeCompare(val2) * direction);
+
+	    // typeof array and object is the same, need to see which it is
+	    if (_.isArray(val1)) {
+	      if (!_.isArray(val2)) // put objects before arrays
+	        return(-1 * direction);
+	      else {
+	        // how to compare arrays? compare each element until a difference
+	        for (var i=0; i < Math.min(val1.length,val2.length); i++) {
+	          var res = myCompare(val1,val2,i);
+	          if (res != 0)
+	            return(res);
+	        }
+	        // if one array was shorter, put it first
+	        if (i < val2.length)
+	          return(1 * direction);
+	        else if (i < val1.length)
+	          return(-1 * direction);
+	        else
+	          return(0); // two were entirely equal
+	      }
+	    }
+	    if (_.isPlainObject(val1)) { // to compare objects, compare the fields
+	      for (var key in val1) {
+	        var res = myCompare(val1,val2,key);
+	        if (res != 0)
+	          return(res);
+	      }
+	      return(0);
+	    }
+	    console.log("shouldn't get here: " + JSON.stringify(val1) + "," + JSON.stringify(val2));
+	    return(0);
+	  }
+
+	  // types of two values are not equal. Order by bool, number, string, object, array
+	  if (_.isBoolean(val1))
+	    return(-1 * direction);
+	  if (_.isNumber(val1))
+	    return(-1 * direction);
+	  if (_.isString(val1))
+	    return(-1 * direction);
+	  if (_.isPlainObject(val1))
+	    return(-1 * direction);
+
+	  console.log("shouldn't get here2" +
+	  		": " + JSON.stringify(val1) + "," + JSON.stringify(val2));
+
+	  return(0);
+	}
 
 	//
 	// create the html for a header based on the metadata
@@ -205,6 +364,10 @@
       if (Math.trunc(startRow/2)*2 != startRow) startRow--;
       if (Math.trunc(endRow/2)*2 == endRow && endRow < data.length-1) endRow++;
 
+      var prefix = "results";
+      if (sortField)
+        prefix = "sorted_results";
+
       // create the HTML for the rows in question
       var html = "";
       var rowCount = 0;
@@ -217,17 +380,22 @@
         if (meta.arrayInnerObjects)
           for (var fieldName in meta.arrayInnerObjects.innerKeys) { // for each possible field
             var value;
-            if (meta.outerKey)
+            var path = prefix +"[" + row + "]";
+            if (meta.outerKey) {
               value = data[row][meta.outerKey][fieldName];
-            else
+              path += "." + meta.outerKey + "." + fieldName;
+            }
+            else {
               value = data[row][fieldName];
+              path += "." + fieldName;
+            }
 
-            rowHTML += createHTMLforValue(value,meta.arrayInnerObjects.innerKeys[fieldName]);
+            rowHTML += createHTMLforValue(value,meta.arrayInnerObjects.innerKeys[fieldName],path);
           }
 
         // if we have non-fields, add them as well
         if (meta.arrayInnerPrims && !_.isPlainObject(data[row]))
-          rowHTML += createHTMLforValue(data[row],meta.arrayInnerPrims);
+          rowHTML += createHTMLforValue(data[row],meta.arrayInnerPrims,prefix + "[" + row + "]");
 
         // if no fields at all, empty object
         if (_.isPlainObject(data[row]) && Object.keys(data[row]).length == 0)
@@ -250,9 +418,13 @@
     // given a value and info about the field, create HTML for it
     //
 
-    function createHTMLforValue(item,fieldData) {
+    function createHTMLforValue(item,fieldData,path) {
       var html = '<span style="max-width:' + fieldData.size + 'ch;min-width:' + fieldData.size +
-        'ch;" class="data-table-cell">';
+        'ch;" class="data-table-cell cursor-pointer"';
+      if (path)
+        html += ' title="' + path + '" ';
+      html += '>';
+
       //
       // for numbers and bool, use toString()
       if (_.isNumber(item)|| _.isBoolean(item))
@@ -277,12 +449,15 @@
               html += '<div>'; // one div for each row
               // for each inner key...
               for (var innerKey in fieldData.arrayInnerObjects.innerKeys) {
-                html += createHTMLforValue(item[i][innerKey],fieldData.arrayInnerObjects.innerKeys[innerKey]);
+                html += createHTMLforValue(item[i][innerKey],
+                    fieldData.arrayInnerObjects.innerKeys[innerKey],
+                    path + "[" + i + "]." + innerKey);
               }
 
               // if we have non-objects in the array as well, output them here
               if (!_.isPlainObject(item[i]) && fieldData.arrayInnerPrims)
-                html += createHTMLforValue(item[i],fieldData.arrayInnerPrims);
+                html += createHTMLforValue(item[i],fieldData.arrayInnerPrims,
+                                           path + "[" + i + "]");
 
               // finish the row
               html += '</div>';
@@ -291,7 +466,9 @@
 
           // if no subobjects, just output the values from the array
           else for (var i=0; i< item.length; i++)
-            html += '<div>' + createHTMLforValue(item[i],fieldData.arrayInnerPrims) + '</div>';
+            html += '<div>' +
+              createHTMLforValue(item[i],fieldData.arrayInnerPrims,path + "[" + i + "]") +
+              '</div>';
         }
         // if array is empty, mark it as such
         else
@@ -311,7 +488,7 @@
         //console.log("Inner keys: " + JSON.stringify(fieldData.innerKeys));
         for (var key in fieldData.innerKeys) {
           //console.log(" for key: " + key + ", got HTML: " + getValueHTML(item[key],fieldData.innerKeys[key]));
-          html += createHTMLforValue(item[key],fieldData.innerKeys[key]);
+          html += createHTMLforValue(item[key],fieldData.innerKeys[key],path + "." + key);
         }
 
         html += '</div>';
@@ -363,7 +540,7 @@
 
       // since we checked above that 'data' is an array, the fieldInfo will contain
       // all the field details inside meta.arrayInnerKeys.
-      var meta = fieldInfo;
+      meta = fieldInfo;
       meta.offsets = [];       // offsets for each row
       meta.rendered = [];      // have we rendered each row?
 
@@ -386,6 +563,17 @@
         }
       }
 
+      computeRowOffsets();
+
+      // we now have a width for every column of every field.
+      return(meta);
+    }
+
+    //
+    // compute the vertical offset for each row, based on the data and column widths
+    //
+
+    function computeRowOffsets() {
       // now we know the width of every column, compute the height/offset of
       // every row so we know where to render each row
 
@@ -422,11 +610,7 @@
         //console.log("row: " + index + " has lineHeight: " + lineHeight + " size: " +
         // ((lineHeight * lineHeightPixels) + lineSpacingPixels));
       }
-
-      // we now have a width for every column of every field.
-      return(meta);
     }
-
 
     /////////////////////////////////////////////////////////////////////////////
     // given an data item, figure out how much size it needs in the table.
@@ -436,7 +620,7 @@
     // a running tally of the max size seen, the types seen, and the average size
     //
     var maxFieldWidth = 80; // wrap if a field is longer than this many chars
-    var characterPadding = 2; // make fields this many characters bigger for padding
+    var characterPadding = 3; // make fields this many characters bigger for padding
     var lineHeightPixels = 22;
     var lineSpacingPixels = 5;
 
@@ -456,13 +640,18 @@
       // for numbers, convert to string
       if (_.isNumber(item)) {
         fieldData.types.num = true;
-        size = item.toString().length + characterPadding;
+        size = (item.toString().length*1.1) + characterPadding; // numbers are slightly bigger than average
       }
 
       // for strings, use the length
       else if (_.isString(item)) {
         fieldData.types.str = true;
-        size = item.length + characterPadding;
+        // for short strings with many capital letters, we need slightly more space
+        if (item.length < (maxFieldWidth*0.8) ) {
+          size = item.length*1.2 + characterPadding;
+        }
+        else
+          size = item.length + characterPadding;
       }
 
       // boolean values get 5 characters ("false")
@@ -600,11 +789,11 @@
 
         // because the 'ch' measure in html doesn't correspond with the number of characters
         // in big blocks of regular English text, if we have 6 or more lines then reduce the
-        // line count by 20%
+        // line count slightly
 
         var lines = Math.ceil(item.length/fieldData.size);
         if (lines > 5)
-          lines = Math.ceil((item.length*0.85)/fieldData.size);
+          lines = Math.ceil((item.length*0.95)/fieldData.size);
 
         //console.log("String " + item.substring(0,10) + " lines: " + lines);
         return(lines);

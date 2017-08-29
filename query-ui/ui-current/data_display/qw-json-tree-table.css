@@ -155,6 +155,7 @@ td.ajtd-type-array {
   cursor: default;
   color: #555;
   height: 26px;
+  width: calc(100% - 10px); // since the table always has a 10px scrollbar, leave space for it here also
 }
 
 .data-table-header-row::-webkit-scrollbar {
@@ -165,9 +166,9 @@ td.ajtd-type-array {
   display: inline-block;
   white-space: normal; 
   text-align:center;   
-  font-size: .875rem;
-  /*padding: .1ch;*/
   border-right: solid 1px #d1d1d1;
+  font-size: .875rem;       /* make sure font and size are the same as the data cells */
+  font-family: FontAwesome; /* need to use this font so sorting carets show up right */
 }
 
 /*
@@ -224,7 +225,8 @@ td.ajtd-type-array {
   overflow-wrap:break-word;
   white-space: normal;
   vertical-align: top;
-  font-size: .875rem;
+  font-size: .875rem; /* make sure font and size are the same as the header */
+  font-family: FontAwesome;
   padding: .1ch;
 }
 
@@ -243,7 +245,6 @@ td.ajtd-type-array {
   white-space: nowrap;
   top: 0px;
   border-bottom: solid 1px #d1d1d1;
-  /*font-size: .75rem;*/
   background-color: #eceff2 !important;
   cursor: default;
   color: #555;
