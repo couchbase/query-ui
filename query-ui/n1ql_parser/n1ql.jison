@@ -18,55 +18,88 @@
      // return all the fields found in the parse tree. Each field will be an array of terms
      //
      
-     expr.prototype.getFields = function(fieldArray) {
+     expr.prototype.getFields = function(fieldArray, aliases) {
 	       //console.log("getting fields for item type: " + this.type);
+		       
 	       if (!fieldArray) fieldArray = [];
+	       if (!aliases) aliases = {};
 	       
 	       switch (this.type) {
-             // if this has type "Field" or "Element", extract the path	       
+	       
+	       // Subselect indicates a keyspace, and possibly an alias
+	       case "Subselect": {
+	         if (this.ops.from && this.ops.from.type == "KeyspaceTerm") {
+	           if (this.ops.from.ops.keyspace)
+	             fieldArray.push(this.ops.from.ops.keyspace);
+
+               // if we see an alias, create a new alias object to included it	           
+               if (this.ops.from.ops.as_alias) {
+                 aliases = JSON.parse(JSON.stringify(aliases));
+                 aliases[this.ops.from.ops.as_alias] = this.ops.from.ops.keyspace;
+               }
+	         }
+	       }
+	       break;
+	       
+           // if this has type "Field" or "Element", extract the path	       
 	       case "Field":
 	       case "Element": {
              var path = [];
-             this.getFieldPath(path,fieldArray);
+             this.getFieldPath(path,fieldArray,aliases);
              if (path.length > 0)
                  fieldArray.push(path);
              
              break;
-         }
+            }
              
-             // any ExpressionTerm or ResultTerm can have an Identifier child that indicates
-             // a field or bucket
-         case "ExpressionTerm":
-         case "ResultTerm":
+           // any ExpressionTerm or ResultTerm can have an Identifier child that indicates
+           // a field or bucket
+           case "ExpressionTerm":
+           case "ResultTerm":
              if (this.ops.expression && this.ops.expression.type == "Identifier")
                  fieldArray.push([this.ops.expression.ops.identifier]);
              break;
 
-             // SimpleBindings are similar, where the binding_expr may be a field
+           // KeyspaceTerm gives bucket names in the from clause
 
-         case "SimpleBinding":
-             if (this.ops.binding_expr && this.ops.binding_expr.type == "Identifier")
-                 fieldArray.push([this.ops.binding_expr.ops.identifier]);
+           case "KeyspaceTerm":
+             if (this.ops.keyspace)
+                 fieldArray.push([this.ops.keyspace]);
              break;
-         }
+           }
 
          // regardless, go through the "ops" object and call recursively on  our children
          for (var name in this.ops) {
              var child = this.ops[name];
              if (!child)
                  continue;
+                 
+             // if we are an array op, ignore the "mapping" and "when" fields
+             if (this.type == "Array" && (name == "mapping" || name == "when"))
+                 continue;
+                 
+             // the "satisfies" term for ANY, EVERY, etc., contains references to the bound variables,
+             // and as such we can't find any useful field information             
+             if (name == "satisfies")
+                 continue;
+                 
+             // the "FIRST" operator has an expression based on bindings, which we must ignore
+             if (this.type == "First" && (name == "expression" || name == "when"))
+                 continue;
+             
+                 
              
              //console.log("  got child: " + name + "(" + (child.type && child.ops) + ") = " + JSON.stringify(child));
              
              if (child.getFields)  {
                  //console.log("  got child type: " + child.type);
-                 child.getFields(fieldArray);
+                 child.getFields(fieldArray,aliases);
              }
 
              // some children are arrays
              else if (child.length) for (var i=0; i< child.length; i++) if (child[i] && child[i].getFields) {
                  //console.log("  got child[" + i + "] type: " + child[i].type);
-                 child[i].getFields(fieldArray);
+                 child[i].getFields(fieldArray,aliases);
              }
          }
      };
@@ -80,7 +113,7 @@
      // We expect currentPath to be an array into which we put the elements in the path
      // 
      
-     expr.prototype.getFieldPath = function(currentPath,fieldArray) {
+     expr.prototype.getFieldPath = function(currentPath,fieldArray,aliases) {
 	       //console.log("Getting field path for type: " + this.type);
          // error checking: must have ops
          if (!this.ops)
@@ -92,10 +125,14 @@
          //  second is usually next item in path
          
          if ((this.type == "Field" || this.type == "Element") && this.ops.first) {
-             if (this.ops.first.type == "Identifier") 
-                 currentPath.push(this.ops.first.ops.identifier);
+             if (this.ops.first.type == "Identifier") {
+                 var id = this.ops.first.ops.identifier; // if the first element is an alias, resolve it
+                 if (aliases && aliases[id])
+                     id = aliases[id];
+                 currentPath.push(id);
+             }
              else if (this.ops.first.type == "Field" || this.ops.first.type == "Element")
-                 this.ops.first.getFieldPath(currentPath,fieldArray);
+                 this.ops.first.getFieldPath(currentPath,fieldArray,aliases);
          }
 
          else if (this.type == "Identifier" && this.ops.identifier) {
@@ -115,7 +152,8 @@
          // none-the-less be scanned for other field names
          
          if (this.type == "Element" && this.ops.second.getFields) {
-             currentPath.push("[]"); // indicate the array reference in the path
+             if (currentPath.length > 0)
+                 currentPath.push("[]"); // indicate the array reference in the path
              this.ops.second.getFields(fieldArray);
          }
      };
@@ -225,7 +263,7 @@
      algebra.NewIntersectAll = function(select_terms,intersect_term)          {var a = new expr("IntersectAll"); a.ops.select_terms = select_terms; a.ops.intersect_term = intersect_term; return a;};
      algebra.NewJoin = function(from,join_type,join_term)                     {var a = new expr("Join"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
      algebra.NewKeyspaceRef = function(namespace,keyspace,alias)              {var a = new expr("KeyspaceRef"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
-     algebra.NewKeyspaceTerm = function(namespace,keyspace,as_alias,opt_use)  {var a = new expr("KeyspaceTerm",keyspace); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.as_alias = as_alias; a.ops.opt_use = opt_use; return a;};
+     algebra.NewKeyspaceTerm = function(namespace,keyspace,as_alias,opt_use)  {var a = new expr("KeyspaceTerm"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.as_alias = as_alias; a.ops.opt_use = opt_use; return a;};
      algebra.NewMerge = function(keyspace,merge_source,key,merge_actions,opt_limit,returning) {var a = new expr("Merge"); a.ops.keyspace = keyspace; a.ops.merge_source = merge_source; a.ops.key = key; a.ops.merge_actions = merge_actions; a.ops.opt_limit = opt_limit; a.ops.returning = returning; return a;};
      algebra.NewMergeActions = function(update,del,insert)                    {var a = new expr("MergeActions"); a.ops.update = update; a.ops.del = del; a.ops.insert = insert; return a;};
      algebra.NewMergeDelete = function(where)                                 {var a = new expr("MergeDelete"); a.ops.where = where; return a;};
@@ -573,6 +611,7 @@ inputs:
 input EOF
 {
     if ($1 && $1.getFields) {
+        //console.log("Getting fields for: " + JSON.stringify($1,null,4));
         var fields = [];
         $1.getFields(fields);
         $1.pathsUsed = fields;
@@ -1067,8 +1106,9 @@ expr opt_as_alias opt_use
               $$ = algebra.NewSubqueryTerm(other.Select(), $2);
               break;
          case "Identifier":
-              var ksterm = algebra.NewKeyspaceTerm("", other.Alias(), $2, $3.Keys(), $3.Indexes());
-              $$ = algebra.NewExpressionTerm(other, $2, ksterm);
+              var ksterm = algebra.NewKeyspaceTerm("", other.ops.identifier, $2, $3.Keys(), $3.Indexes());
+              //$$ = algebra.NewExpressionTerm(other, $2, ksterm);
+              $$ = ksterm;
               break;
          default:
               if ($3 != algebra.EMPTY_USE) {

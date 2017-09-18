@@ -569,10 +569,10 @@
           analyzePlan(plan['update'],lists);
 
         if (plan.keyspace)
-          getFieldsFromExpression(plan.keyspace,lists);
+          getFieldsFromExpressionWithParser(plan.keyspace,lists);
 
         if (plan.key)
-          getFieldsFromExpression(plan.key,lists);
+          getFieldsFromExpressionWithParser(plan.key,lists);
 
         return(lists);
       }
@@ -615,7 +615,7 @@
       //
 
       else if (operatorName == "Order") for (var i = 0; i < plan.sort_terms.length; i++) {
-        getFieldsFromExpression(plan.sort_terms[i].expr,lists);
+        getFieldsFromExpressionWithParser(plan.sort_terms[i].expr,lists);
       }
 
 
@@ -663,13 +663,13 @@
       if (plan.group_keys) for (var i=0; i < plan.group_keys.length; i++)
         lists.fields[plan.group_keys[i]] = true;
       if (plan.condition)
-        getFieldsFromExpression(plan.condition,lists);
+        getFieldsFromExpressionWithParser(plan.condition,lists);
       if (plan.expr)
-        getFieldsFromExpression(plan.expr,lists);
+        getFieldsFromExpressionWithParser(plan.expr,lists);
       if (plan.on_keys)
-        getFieldsFromExpression(plan.on_keys,lists);
+        getFieldsFromExpressionWithParser(plan.on_keys,lists);
       if (plan.limit)
-        getFieldsFromExpression(plan.limit,lists);
+        getFieldsFromExpressionWithParser(plan.limit,lists);
 
       if (plan.as && plan.keyspace) {
         lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
@@ -680,8 +680,9 @@
           if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
               lists.currentKeyspace)
             lists.fields[lists.currentKeyspace + '.*'] = true;
-          else
-            getFieldsFromExpression(plan.result_terms[i].expr,lists);
+          else {
+            getFieldsFromExpressionWithParser(plan.result_terms[i].expr,lists);
+          }
 
       return(lists);
     }
@@ -700,54 +701,41 @@
     // field, then building as we go out.
     //
 
-    function getFieldsFromExpression_old(expression,lists) {
+    function getFieldsFromExpressionWithParser(expression,lists) {
 
-      console.log("Getting fields for expr: " + expression);
+      //console.log("Got expr: "+ expression);
 
-      var quotation = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/ig;
-      var coreFieldRef = /\(`((?:[^`\\]|\\.)+)`\.`((?:[^`\\]|\\.)+)`\)/i;
-      var innerFieldRef = /\(inner(?:\.`((?:[^`\\]|\\.)+)`|(\[[^\]]*\]))\)/i;
+      var parseTree = n1ql.parse(expression);
 
-      // remove anything in quotes, since we want to ignore user strings
-      var expr = expression.replace(quotation,"");
+      // parse tree has array of array of strings, we will build
+      if (parseTree) for (var p=0;p<parseTree.length; p++) {
+        for (var j=0; j<parseTree[p].pathsUsed.length; j++) {
+          //console.log("Got path p: " + p + ", j: " + j + ", " + JSON.stringify(parseTree[p].pathsUsed[j]));
+          if (parseTree[p].pathsUsed[j]) {
+            var field = "";
+            for (var k=0; k<parseTree[p].pathsUsed[j].length; k++) {
+              var pathElement = parseTree[p].pathsUsed[j][k];
+              
+              // check for bucket aliases
+              if (k==0 && lists.aliases) for (var a=0; a<lists.aliases.length; a++)
+                if (lists.aliases[a].as === pathElement) {
+                  pathElement = lists.aliases[a].keyspace;
+                  break;
+                }
+              
+              // first item in path should go into buckets
+              if (k==0)
+                lists.buckets[pathElement] = true;
+              
+              field += (k > 0 ? "." : "") + pathElement;
+            }
 
-      // now look for core field references, record the bucket name, and look
-      // for subfield or array references
-      var match;
-      while ((match = expr.match(coreFieldRef)) != null) {
-
-        // get the bucket name, and see if there is an alias for it
-        var bucket = match[1];
-        for (var i=0; i < lists.aliases.length; i++)
-          if (lists.aliases[i].as == bucket) {
-            bucket = lists.aliases[i].keyspace;
-            break;
+            //console.log("  Got field: " + field);
+            if (k > 1)
+              lists.fields[field] = true;
           }
-        lists.buckets[bucket] = true;
-
-        // get the first field name
-        var field = match[2];
-
-        if (field.indexOf(' ') >= 0 || field.indexOf('-') >= 0)
-          field = '`' + field + '`';
-
-        expr = expr.replace(coreFieldRef,"inner");
-        while (match = expr.match(innerFieldRef)) {
-          if (match[1]) {
-            if (match[1].indexOf(' ') >= 0 || match[1].indexOf('-') >= 0)
-              field = field + '.`' + match[1] + '`';
-            else
-              field = field + '.' + match[1];
-          }
-          else if (match[2]) field = field + "[0]";
-          expr = expr.replace(innerFieldRef,"inner");
         }
-        lists.fields[bucket + "." + field] = true;
-        console.log("    got field1: " + bucket + "." + field);
       }
-
-      var  lists2 = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0};
-      getFieldsFromExpression2(expression,lists2);
     }
 
     function getFieldsFromExpression(expression,lists) {
