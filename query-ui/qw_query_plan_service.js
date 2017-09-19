@@ -715,19 +715,19 @@
             var field = "";
             for (var k=0; k<parseTree[p].pathsUsed[j].length; k++) {
               var pathElement = parseTree[p].pathsUsed[j][k];
-              
+
               // check for bucket aliases
               if (k==0 && lists.aliases) for (var a=0; a<lists.aliases.length; a++)
                 if (lists.aliases[a].as === pathElement) {
                   pathElement = lists.aliases[a].keyspace;
                   break;
                 }
-              
+
               // first item in path should go into buckets
               if (k==0)
                 lists.buckets[pathElement] = true;
-              
-              field += (k > 0 ? "." : "") + pathElement;
+
+              field += ((k > 0 && pathElement !== "[]") ? "." : "") + pathElement;
             }
 
             //console.log("  Got field: " + field);
