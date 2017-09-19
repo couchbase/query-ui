@@ -465,10 +465,11 @@
               return true;
 
             var field = schema[i]['properties'][field_name];
-            // if we had an array expr, check subfields against the array schema
-            if (arrayIndex > -1 && field['items'] && field['items'].subtype &&
-                isFieldNameInSchema([field['items'].subtype],fieldSuffix))
-              return true;
+            // if we had an array expr, check each subtype's subfields against the array schema
+            if (arrayIndex > -1 && _.isArray(field['items']))
+              for (var arrType = 0; arrType < field['items'].length; arrType++)
+                if (isFieldNameInSchema([field['items'][arrType].subtype],fieldSuffix))
+                  return true;
 
             // if we have a non-array, check the subschema
             if (arrayIndex == -1 && field['properties'] &&
