@@ -109,6 +109,8 @@
   -webkit-box-flex: 0;
   flex: 0 0 auto;
   padding-left: 2rem;
+  height: calc(100vh - 150px);
+  overflow: auto;
 }
 #sidebar_body {
   border-left: 1px solid #d1d1d1;
@@ -188,9 +190,30 @@
 #doc_editor_tabular .controls .column {
   margin-right: .5rem;
 }
-#doc_editor_tabular .doc-editor-results {
+
+.doc-editor-results {
   overflow: auto;
+  height: calc(100vh - 250px);
 }
+.show-scrollbar::-webkit-scrollbar {
+   width: 10px; /* force scrollbars to appear with this size */
+   height: 10px;
+}
+
+.show-scrollbar::-webkit-scrollbar-track { /* force track to appear*/
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.4); 
+    border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
+
+.show-scrollbar::-webkit-scrollbar-thumb { /* force thumb to appear */
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    background: rgba(100,100,100,0.8); 
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+
+
 #doc_editor_tabular .cbui-table-cell {
   min-width: 140px;
   padding-right: .25rem;

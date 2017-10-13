@@ -152,6 +152,7 @@
         limit: 10,
         offset: 0,
         where_clause: '',
+        doc_id: '',
         current_query: '',
         current_bucket: '',
         current_result: []
@@ -1544,6 +1545,10 @@
     }
 
     function updateBucketsCallback() {
+      // make sure we have a query node
+      if (!validateQueryService.valid())
+        return;
+      
       //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 

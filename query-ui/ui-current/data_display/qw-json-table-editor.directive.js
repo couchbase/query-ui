@@ -73,7 +73,7 @@
   var lt = /</gi;
   var gt = />/gi;
   var mySanitize = function(str) {
-    return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+    if (!str) return (''); else return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
   };
 
   //
@@ -172,8 +172,17 @@
           '</span>';
 
         // put the meta().id in the next column
-        result += '<span class="cbui-table-cell wrap break-word flex-grow-2">' +
-        mySanitize(object[row].id) + '</span>';
+        var meta = "";
+        
+        result += '<span class="cbui-table-cell wrap break-word flex-grow-2" ';
+        if (object[row].meta)
+          result += 'uib-tooltip-html="\'' + 
+          (object[row].meta.cas ? 'cas: ' + object[row].meta.cas + '<br>' : '') +
+          'expiration: ' + object[row].meta.expiration + '<br>' +
+          'flags: ' + object[row].meta.flags + '<br>' +
+          (object[row].meta.type ? 'type: ' + mySanitize(object[row].meta.type) : '') + '\'" ' +
+            'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';        
+        result += '>' + mySanitize(object[row].id) + '</span>';
 
         _.forIn(topLevelKeys, function (value, key) {
           var item = object[row].data[key];

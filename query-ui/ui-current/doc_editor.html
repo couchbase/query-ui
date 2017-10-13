@@ -18,9 +18,9 @@
     Where:<br>
     <input type="text" ng-model="dec.options.where_clause" class="width-12">
   </div>
-  <div ng-if="!dec.use_n1ql()" class="column">
+  <div ng-if="!dec.use_n1ql()" class="column flex-grow-2">
     Document ID:<br>
-    <input type="text" ng-model="">
+    <input type="text" ng-model="dec.options.doc_id" class="width-12">
   </div>
     <button ng-click="dec.retrieveDocs()" class="">
       <div ng-if="!dec.options.queryBusy">Retrieve Docs</div>
@@ -36,17 +36,18 @@
       Results for: &nbsp; <em>{{dec.options.current_query}}</em>
     </div>
     <span>
-      <button ng-click="dec.prevBatch()" class="outline text-small" ng-disabled="dec.options.offset <= 0">
+      <button ng-click="dec.prevBatch()" class="outline text-small" ng-disabled="dec.options.offset <= 0 || dec.options.doc_id">
         < Prev Batch
       </button>
-      <button ng-click="dec.nextBatch()" class="outline text-small" >
+      <button ng-click="dec.nextBatch()" class="outline text-small" ng-disabled="dec.options.doc_id">
         Next Batch >
       </button>
     </span>
   </div>
-
+  
 <!-- RESULTS *************************************************************** -->
 
-  <div class="doc-editor-results" ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
+  <div class="doc-editor-results show-scrollbar" 
+  ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
     <qw-json-table-editor data="dec.options.current_result" controller="dec"></div>
 </div>

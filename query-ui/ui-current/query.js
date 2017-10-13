@@ -34,7 +34,7 @@
 
       $stateProvider
       .state('app.admin.doc_editor', {
-        url: '/doc_editor',
+        url: '/doc_editor?bucket',
         views: {
           "main@app.admin": {
             controller: 'qwDocEditorController',
@@ -164,6 +164,7 @@
           _valid = false; _bucketsInProgress = false;
           _otherStatus = status;
           _otherError = data;
+          if (callback) callback();
         });
       }
 

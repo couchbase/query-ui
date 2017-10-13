@@ -7,9 +7,9 @@
 
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
-  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', 'qwQueryService', 'validateQueryService'];
+  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams', 'qwQueryService', 'validateQueryService'];
 
-  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, qwQueryService, validateQueryService) {
+  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService, validateQueryService) {
 
     var dec = this;
 
@@ -24,6 +24,8 @@
     //
 
     dec.options = qwQueryService.doc_editor_options;
+    dec.options.doc_id = null;
+    dec.options.current_result = [];
     dec.currentDocs = [];
     dec.buckets = [];
     dec.use_n1ql = function() {return(validateQueryService.valid())};
@@ -303,20 +305,20 @@
       var query;
       if (newKey)
         query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-          newKey + '", ' + newJson + ')';
+        newKey + '", ' + newJson + ')';
       else
         query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-          dec.options.current_result[row].id + '", ' + newJson + ')';
+        dec.options.current_result[row].id + '", ' + newJson + ')';
 
       //console.log("Updating with query: " + query);
 
       return qwQueryService.executeQueryUtil(query,false);
-     }
+    }
 
 
     function saveDoc_rest(row,newJson,newKey) {
       var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
-        "/docs/" + (newKey ? newKey : encodeURIComponent(dec.options.current_result[row].id));
+      "/docs/" + (newKey ? newKey : encodeURIComponent(dec.options.current_result[row].id));
 
 
       // with newKey, we need to check if the document exists first by that key
@@ -355,6 +357,8 @@
     // build a query from the current options, and get the results
     //
 
+    dec.options.queryBusy = false;
+
     function retrieveDocs() {
       qwQueryService.saveStateToStorage();
 
@@ -365,7 +369,10 @@
     }
 
     function retrieveDocs_n1ql() {
-      //console.log("Retrieving docs...");
+      if (dec.options.queryBusy) // don't have 2 retrieves going at once
+        return;
+
+      //console.log("Retrieving docs via N1QL...");
 
       // create a query based on either limit/skip or where clause
 
@@ -374,8 +381,8 @@
         return;
 
       // start making a query
-      var query = 'select meta().id, * from `' + dec.options.selected_bucket +
-        '` data ';
+      var query = 'select meta().id, meta() meta, * from `' + dec.options.selected_bucket +
+      '` data ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
@@ -388,6 +395,7 @@
       dec.options.current_bucket = dec.options.selected_bucket;
       dec.options.current_result = [];
 
+      dec.options.queryBusy = true;
       qwQueryService.executeQueryUtil(query,false)
 
       // did the query succeed?
@@ -400,6 +408,7 @@
         if (data && data.status && data.status == 'success')
           dec.options.current_result = data.results;
 
+        dec.options.queryBusy = false;
         //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
       },
 
@@ -418,8 +427,10 @@
             templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
             scope: dialogScope
           });
-        //console.log("Got error: " + dec.options.current_result);
+
+          //console.log("Got error: " + dec.options.current_result);
         }
+        dec.options.queryBusy = false;
       });
 
     }
@@ -430,47 +441,76 @@
 
     function retrieveDocs_rest() {
 
-        dec.options.current_query = dec.options.selected_bucket + ", limit: " +
+      if (dec.options.queryBusy) // don't have 2 retrieves going at once
+        return;
+
+      //console.log("Retrieving docs via REST...");
+
+      dec.options.current_query = dec.options.selected_bucket;
+      
+      if (dec.options.doc_id)
+        dec.options.current_query += ', document id: ' + dec.options.doc_id;
+      
+      else
+        dec.options.current_query += ", limit: " +
           dec.options.limit + ", offset: " + dec.options.offset;
 
-        // get the stats from the Query service
-        $http({
-          url: "../pools/default/buckets/" + dec.options.selected_bucket +
-               "/docs?skip=" + dec.options.offset + "&include_docs=true&limit=" +
-               dec.options.limit,
-          method: "GET"
-        }).then(function success(resp) {
-          if (resp && resp.status == 200 && resp.data) {
-            dec.options.current_bucket = dec.options.selected_bucket;
+      // get the stats from the Query service
+      dec.options.queryBusy = true;
+      var rest_url;
+      
+      // we use a different URL if they specified a doc_id
+      if (dec.options.doc_id && dec.options.doc_id.length)
+        rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
+          "/docs/" + dec.options.doc_id;
+      else
+        rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
+          "/docs?skip=" + dec.options.offset + "&include_docs=true&limit=" +
+          dec.options.limit;
+      
+      $http({
+        url: rest_url,
+        method: "GET"
+      }).then(function success(resp) {
+        if (resp && resp.status == 200 && resp.data) {
+          dec.options.current_bucket = dec.options.selected_bucket;
 
-            var data = resp.data;
-            dec.options.current_result = [];
-            if (!data || !data.rows)
-              return;
-
-            // convert the REST format to what we need
+          var data = resp.data;
+          //console.log(JSON.stringify(data));
+          dec.options.current_result = [];
+          dec.options.current_result.length = 0;
+          // did we get a single doc back?
+          if (data && data.json && data.meta) {
+            dec.options.current_result.push({id: data.meta.id, data: data.json, meta: data.meta});
+          }
+          
+          // or maybe an array of docs?
+          else if (data && data.rows)
             for (var i=0; i< data.rows.length; i++) {
               dec.options.current_result.push(
                   {id: data.rows[i].id, data: data.rows[i].doc.json});
             }
 
-            //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
-          }
-        },function error(resp) {
-          var data = resp.data, status = resp.status;
-          //console.log("Got status: " + status + ", data: " + JSON.stringify(data));
+          dec.options.queryBusy = false;
+          //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
+        }
+      },function error(resp) {
+        var data = resp.data, status = resp.status;
+        //console.log("Got status: " + status + ", data: " + JSON.stringify(data));
 
-          if (data && data.errors) {
-            dec.options.current_result = JSON.stringify(data.errors);
-            var dialogScope = $rootScope.$new(true);
-            dialogScope.error_title = "Error with document retrieval.";
-            dialogScope.error_detail = dec.options.current_result;
-            $uibModal.open({
-              templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-              scope: dialogScope
-            });
-          }
-        });
+        if (data && data.errors) {
+          dec.options.current_result = JSON.stringify(data.errors);
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error with document retrieval.";
+          dialogScope.error_detail = dec.options.current_result;
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
+        }
+
+        dec.options.queryBusy = false;
+      });
 
     }
 
@@ -481,28 +521,35 @@
 
     function getBuckets() {
       if (dec.use_n1ql())
-        getBuckets_n1ql();
+        return getBuckets_n1ql();
       else
-        getBuckets_rest();
+        return getBuckets_rest();
     }
 
     function getBuckets_n1ql() {
-      dec.buckets = qwQueryService.bucket_names;
+      var bucketList = validateQueryService.validBuckets(); 
+      dec.buckets.length = 0; 
+      for (var i=0; i < bucketList.length; i++) if (bucketList[i] != ".")
+        dec.buckets.push(bucketList[i]);
+      
+      //console.log("Got buckets1: " + JSON.stringify(dec.buckets));
     }
 
     function getBuckets_rest() {
 
-      // get the stats from the Query service
-      $http({
+      // get the buckets from the REST API
+      var promise = $http({
         url: "../pools/default/buckets/",
         method: "GET"
       }).then(function success(resp) {
         if (resp && resp.status == 200 && resp.data) {
           // get the bucket names
-          dec.buckets = [];
+          dec.buckets.length = 0;
           for (var i=0; i < resp.data.length; i++) if (resp.data[i])
             dec.buckets.push(resp.data[i].name);
         }
+        //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
+        
       },function error(resp) {
         var data = resp.data, status = resp.status;
 
@@ -518,20 +565,39 @@
         }
       });
 
+      return(promise);
     }
 
+    function handleBucketParam() {
+      if (_.isString($stateParams.bucket) && $stateParams.bucket.length > 0) {
+        //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " +
+        //    JSON.stringify(dec.buckets));
+        dec.options.selected_bucket = $stateParams.bucket;
+        dec.options.where_clause = ''; // reset the where clause
+        $timeout(retrieveDocs,50);
+      }      
+    }
+    
     //
     // when we activate, check with the query service to see if we have a query node. If
     // so, we can use n1ql, if not, use the regular mode.
     //
 
     function activate() {
-      getBuckets();
-
+      getBuckets(); // for some reason this extra call is needed, otherwise the menu doesn't populate
+      
+      // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
-        getBuckets();
+        var promise = getBuckets();
+        
+        // wait until after the buckets are retrieved to set the bucket name, if it was passed to us
+        if (promise)
+          promise.then(handleBucketParam);
+        else {
+          handleBucketParam();
+        }
       });
-
+      
     }
 
     //
