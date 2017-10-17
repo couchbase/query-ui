@@ -150,21 +150,21 @@
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
         'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +
-        '><span class="icon fa-save qw-editor-btn"></span></a>' +
+        'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.copyDoc(' + row +')" ' +
-        '><span class="icon fa-copy qw-editor-btn"></span></a>' +
+        'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.editDoc(' + row +')" ' +
-        '><span class="icon fa-edit qw-editor-btn"></span></a>' +
+        'title="Edit document as JSON"><span class="icon fa-edit qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
-        '><span class="icon fa-trash qw-editor-btn"></span></a>' +
+        'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
 
         //        '<span ng-if="!dec.options.queryBusy">Update</span>' +
 //        '<span ng-if="dec.options.queryBusy">Updating</span>' +

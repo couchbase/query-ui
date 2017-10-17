@@ -35,6 +35,7 @@
     //
 
     dec.retrieveDocs = retrieveDocs;
+    dec.createBlankDoc = createBlankDoc;
     dec.nextBatch = nextBatch;
     dec.prevBatch = prevBatch;
 
@@ -88,7 +89,71 @@
       dec.updatingRow = -1;
 
     }
+    
+    //
+    // create a blank document
+    //
+    
+    function createBlankDoc() {
+      // bring up a dialog to get the new key
 
+      var dialogScope = $rootScope.$new(true);
+
+      // default names for save and save_query
+      dialogScope.file = {name: ''};
+      dialogScope.header_message = "Document ID";
+      dialogScope.body_message = "New Document ID ";
+
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_input_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      promise.then(function success(resp) {
+        var innerScope = $rootScope.$new(true);
+
+        // use an ACE editor for editing the JSON document
+        innerScope.ace_options = {
+            mode: 'json',
+            showGutter: true,
+            useWrapMode: true,
+            onLoad: function(_editor) { innerScope.editor = _editor;},
+            $blockScrolling: Infinity
+        };
+        innerScope.doc_id = dialogScope.file.name;
+        innerScope.doc_json = 
+          '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}';
+
+        // are there any syntax errors in the editor?
+        innerScope.errors = function() {
+          if (innerScope.editor) {
+            var annot_list = innerScope.editor.getSession().getAnnotations();
+            if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
+              if (annot_list[i].type == "error")
+                return true;
+          }
+          return false;
+        };
+
+
+        //
+        // put up a dialog box with the JSON in it, if they hit SAVE, save the doc, otherwise
+        // revert
+        //
+
+        var promise = $uibModal.open({
+          templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
+          scope: innerScope
+        }).result;
+
+        promise.then(function success(res) {
+          var newJson = innerScope.editor.getSession().getValue();
+          saveDoc(-1,newJson,innerScope.doc_id);
+        });
+
+      });
+    }
+    
     //
     // function to save a document with a different key
     //
