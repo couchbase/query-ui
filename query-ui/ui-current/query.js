@@ -42,7 +42,7 @@
           }
         },
         data: {
-          title: "Query"
+          title: "Documents"
         }
       });
 
