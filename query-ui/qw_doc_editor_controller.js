@@ -89,11 +89,11 @@
       dec.updatingRow = -1;
 
     }
-    
+
     //
     // create a blank document
     //
-    
+
     function createBlankDoc() {
       // bring up a dialog to get the new key
 
@@ -101,7 +101,7 @@
 
       // default names for save and save_query
       dialogScope.file = {name: ''};
-      dialogScope.header_message = "Document ID";
+      dialogScope.header_message = "Add Document";
       dialogScope.body_message = "New Document ID ";
 
       var promise = $uibModal.open({

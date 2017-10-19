@@ -96,7 +96,7 @@
     if (_.isArray(object)) {
       // if the array is empty, say so
       if (object.length == 0)
-        return('<div class="ajtd-key">No Results</div>');
+        return('<p class="error">No Results</p>');
 
       //
       // traverse the data to figure out what fields are present in every row, and
@@ -173,16 +173,16 @@
 
         // put the meta().id in the next column
         var meta = "";
-        
-        result += '<span class="cbui-table-cell wrap break-word flex-grow-2" ';
+
+        result += '<span class="cbui-table-cell wrap break-word flex-grow-2"><span class="cursor-pointer" ';
         if (object[row].meta)
-          result += 'uib-tooltip-html="\'' + 
+          result += 'uib-tooltip-html="\'' +
           (object[row].meta.cas ? 'cas: ' + object[row].meta.cas + '<br>' : '') +
           'expiration: ' + object[row].meta.expiration + '<br>' +
           'flags: ' + object[row].meta.flags + '<br>' +
           (object[row].meta.type ? 'type: ' + mySanitize(object[row].meta.type) : '') + '\'" ' +
-            'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';        
-        result += '>' + mySanitize(object[row].id) + '</span>';
+            'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
+        result += '>' + mySanitize(object[row].id) + '</span></span>';
 
         _.forIn(topLevelKeys, function (value, key) {
           var item = object[row].data[key];
