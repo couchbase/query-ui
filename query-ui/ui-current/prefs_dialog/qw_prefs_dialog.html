@@ -3,7 +3,7 @@
     <h2>Run-Time Preferences</h2>
   </div>
 
-  <form class="forms">
+  <form class="forms" name="prefs_form" novalidate>
     <div class="panel-content">
       <div class="formrow">
         <input id="for-collect-timings" type="checkbox" ng-model="options.timings">
@@ -35,12 +35,12 @@
             <button class="outline btn-small" title="Remove parameter" ng-click="options.positional_parameters.splice(-1,1)" ng-disabled="options.positional_parameters.length < 1">-</button>
           </span>
         </div>
-        <div style="margin:.5rem 0;" ng-repeat="param in options.positional_parameters track by $index">
-          <span class="input-prepend">
-            ${{$index}} = &nbsp;
-            <input type="text" ng-model="options.positional_parameters[$index]">
-          </span>
-        </div>
+          <div style="margin:.5rem 0;" ng-repeat="param in options.positional_parameters track by $index">
+            <span class="input-prepend">
+              ${{$index + 1}} = &nbsp;
+              <input type="text" name="position_{{$index}}" ng-model="options.positional_parameters[$index]" qw-valid-json>
+            </span>
+          </div>
       </div>
       <div class="formrow">
         <div class="row">
@@ -59,7 +59,7 @@
           </div>
           <div class="column width-6" style="margin-bottom:.5rem">
             <label>value</label>
-            <input type="text" ng-model="options.named_parameters[$index].value">
+            <input type="text" ng-model="options.named_parameters[$index].value"  qw-valid-json>
           </div>
         </div>
       </div>
@@ -77,7 +77,8 @@
          ng-click="$dismiss('cancel')">
         Cancel
       </a>
-      <button type="submit" ng-click="$close('ok')">Save Preferences</button>
+      <button type="submit" ng-click="$close('ok')" ng-disabled="prefs_form.$invalid">
+      Save Preferences</button>
     </div>
   </form>
 </div>

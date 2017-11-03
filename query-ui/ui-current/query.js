@@ -9,6 +9,7 @@
     'qwJsonTableEditor',
     'qwExplainViz',
     'qwLongPress',
+    'qwValidJson',
     'mnPendingQueryKeeper',
     'mnServersService',
     'mnPoolDefault',
