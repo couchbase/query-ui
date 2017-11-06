@@ -274,3 +274,8 @@
 #query_stats hr {
   margin: .5rem 0;
 }
+
+input.ng-invalid {
+  background-color: #f9e9ea; /* red-7 */
+}
+

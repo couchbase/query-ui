@@ -136,8 +136,8 @@
           timings: qwQueryService.options.timings,
           max_parallelism: qwQueryService.options.max_parallelism,
           scan_consistency: qwQueryService.options.scan_consistency,
-          positional_parameters: qwQueryService.options.positional_parameters.slice(),
-          named_parameters: qwQueryService.options.named_parameters.slice(),
+          positional_parameters: qwQueryService.options.positional_parameters.slice(0),
+          named_parameters: qwQueryService.options.named_parameters.slice(0),
           query_timeout: qwQueryService.options.query_timeout
         };
     };
@@ -788,6 +788,7 @@
         if (queryOptions.scan_consistency)
           queryData.scan_consistency = queryOptions.scan_consistency;
 
+        // named and positional parameters
         if (queryOptions.positional_parameters && queryOptions.positional_parameters.length > 0)
           queryData.args = queryOptions.positional_parameters;
 

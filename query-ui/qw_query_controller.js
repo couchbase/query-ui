@@ -2,9 +2,13 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault', 'mnServersService'];
+  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 
+    'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault',
+    'mnServersService'];
 
-  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault, mnServersService) {
+  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
+      validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault,
+      mnServersService) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());
@@ -767,7 +771,24 @@
     function options() {
       var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
       dialogScope.options = qwQueryService.clone_options();
+      dialogScope.options.positional_parameters = [];
+      dialogScope.options.named_parameters = [];
 
+      // the named & positional parameters are values, convert to JSON
+      if (qwQueryService.options.positional_parameters)
+        for (var i=0; i < qwQueryService.options.positional_parameters.length; i++)
+          dialogScope.options.positional_parameters[i] = 
+            JSON.stringify(qwQueryService.options.positional_parameters[i]);
+
+      if (qwQueryService.options.named_parameters)
+        for (var i=0; i < qwQueryService.options.named_parameters.length; i++) {
+          dialogScope.options.named_parameters.push({
+            name: qwQueryService.options.named_parameters[i].name,
+            value: JSON.stringify(qwQueryService.options.named_parameters[i].value)
+          });
+        }
+
+      // bring up the dialog
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
                      '/prefs_dialog/qw_prefs_dialog.html',
@@ -776,6 +797,18 @@
 
       // now save it
       promise.then(function success(res) {
+        // any named or positional parameters are entered as JSON, and must be parsed into
+        // actual values
+        if (dialogScope.options.positional_parameters)
+          for (var i=0; i < dialogScope.options.positional_parameters.length; i++)
+            dialogScope.options.positional_parameters[i] = 
+              JSON.parse(dialogScope.options.positional_parameters[i]);
+
+        if (dialogScope.options.named_parameters)
+          for (var i=0; i < dialogScope.options.named_parameters.length; i++) 
+            dialogScope.options.named_parameters[i].value = 
+              JSON.parse(dialogScope.options.named_parameters[i].value);
+
         qwQueryService.options = dialogScope.options;
       });
 
