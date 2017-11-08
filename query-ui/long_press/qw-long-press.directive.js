@@ -17,6 +17,10 @@
 			scope: { qwLongPress: '&' },
 			link: function (scope, element, $attrs) {
               element.bind('mousedown',function(event) {
+                // ignore right-click
+                if (event.button != 0)
+                  return;
+
                 scope.longPress = true;
 
                 // let's see if we're still pressing after a certain amount of time
