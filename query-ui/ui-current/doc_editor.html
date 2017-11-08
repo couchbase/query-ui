@@ -96,7 +96,7 @@
       <button
          ng-click="dec.nextBatch()"
          class="outline text-small"
-         ng-disabled="dec.options.doc_id">
+         ng-disabled="dec.options.doc_id || dec.options.current_result.length == 0">
         Next Batch >
       </button>
     </span>
