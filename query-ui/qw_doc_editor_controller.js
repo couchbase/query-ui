@@ -487,7 +487,12 @@
           dec.options.current_result = JSON.stringify(data.errors);
           var dialogScope = $rootScope.$new(true);
           dialogScope.error_title = "Error with document retrieval query.";
-          dialogScope.error_detail = dec.options.current_result;
+          var errorText = "";
+          for (var i=0; i< data.errors.length; i++)
+            errorText += "Code: " + data.errors[i].code + ', Message: "' + data.errors[i].msg + '"    \n';
+          console.log("Got errors: " + JSON.stringify(data.errors));
+          dialogScope.error_detail = errorText;
+          dialogScope.hide_cancel = true;
           $uibModal.open({
             templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
             scope: dialogScope
