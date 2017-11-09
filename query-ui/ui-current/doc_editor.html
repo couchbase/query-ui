@@ -11,6 +11,7 @@
   </mn-element-cargo>
 
 <!-- row of controls for the query ***************************************** -->
+      <form ng-submit="dec.retrieveDocs()" name="searchForm">
   <div class="row flex-left items-bottom controls">
     <div class="column">
       <label>Bucket</label>
@@ -30,14 +31,14 @@
     <div class="column">
       <label>Limit</label>
       <input
-         type="number"
+         type="number" min="1"
          ng-model="dec.options.limit"
          class="input-short-1">
     </div>
     <div class="column">
       <label>Offset</label>
       <input
-         type="number"
+         type="number" min="0" 
          ng-model="dec.options.offset"
          class="input-short-1">
     </div>
@@ -45,26 +46,22 @@
        ng-if="dec.use_n1ql()"
        class="column flex-grow-2">
       <label>Where</label>
-      <form ng-submit="dec.retrieveDocs()">
         <input
            type="text"
            ng-model="dec.options.where_clause"
            class="width-12"
            placeholder="e.g., 'meta().id = &quot;thisIsAnId&quot; and type = &quot;aType&quot;'"
            ng-submit="dec.retrieveDocs()">
-      </form>
     </div>
     <div
        ng-if="!dec.use_n1ql()"
        class="column flex-grow-2">
       <label>Document ID</label>
-      <form ng-submit="dec.retrieveDocs()">
         <input type="text"
            ng-model="dec.options.doc_id"
            class="width-12">
-      </form>
     </div>
-    <button
+    <button ng-disabled="searchForm.$invalid"
        ng-click="dec.retrieveDocs()"
        class="fix-width-3">
       <span ng-if="!dec.options.queryBusy && dec.use_n1ql()">
@@ -78,6 +75,7 @@
       </span>
     </button>
   </div>
+    </form>
 
 <!-- Row for result query text & next/previous buttons ********************* -->
   <div
