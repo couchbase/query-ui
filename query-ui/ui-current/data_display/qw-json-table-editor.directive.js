@@ -106,7 +106,7 @@
       var topLevelKeys = {};
       var columnWidths = {};
       for (var row=0; row < object.length; row++)
-        if (object[row].data && object[row].id) {// they'd all better have these
+        if (object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
           //console.log("row: " + row + ": " + JSON.stringify(object[row].data));
           _.forEach(object[row].data, function (value, key) {
             topLevelKeys[key] = true;
@@ -136,64 +136,91 @@
       // for each object in the array, output all the possible column values
       //
 
-      for (var row=0; row < object.length; row++) if (object[row].data && object[row].id)  {// they'd all better have these
-        var formName = 'row' + row + 'Form';
-        var pristineName = formName + '.$pristine';
-        var setPristineName = formName + '.$setPristine';
-        var invalidName = formName + '.$invalid';
-        result += '<form name="' + formName + '"' +
+      for (var row=0; row < object.length; row++) {
+        // handle JSON docs
+        if (object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json")  {// they'd all better have these
+          var formName = 'row' + row + 'Form';
+          var pristineName = formName + '.$pristine';
+          var setPristineName = formName + '.$setPristine';
+          var invalidName = formName + '.$invalid';
+          result += '<form name="' + formName + '"' +
           ' ng-submit="dec.updateDoc(' + row +',' + setPristineName + ')">' +
           '<div class="cbui-tablerow items-top padding-left-0">'; // new row for each object
 
-        // button to update record in the first column
-        result += '<span class="cbui-table-cell flex-grow-1-25"> ' +
-        '<a class="btn qw-doc-editor" ' +
-        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
-        'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +
-        'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
+          // button to update record in the first column
+          result += '<span class="cbui-table-cell flex-grow-1-25"> ' +
+          '<a class="btn qw-doc-editor" ' +
+          'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+          'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +
+          'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ' +
-        'ng-disabled="' + invalidName + '" ' +
-        'ng-click="dec.copyDoc(' + row +')" ' +
-        'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
+          '<a class="btn qw-doc-editor" ' +
+          'ng-disabled="' + invalidName + '" ' +
+          'ng-click="dec.copyDoc(' + row +')" ' +
+          'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ' +
-        'ng-disabled="' + invalidName + '" ' +
-        'ng-click="dec.editDoc(' + row +')" ' +
-        'title="Edit document as JSON"><span class="icon fa-edit qw-editor-btn"></span></a>' +
+          '<a class="btn qw-doc-editor" ' +
+          'ng-disabled="' + invalidName + '" ' +
+          'ng-click="dec.editDoc(' + row +')" ' +
+          'title="Edit document as JSON"><span class="icon fa-edit qw-editor-btn"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ' +
-        'ng-click="dec.deleteDoc(' + row +')" ' +
-        'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
+          '<a class="btn qw-doc-editor" ' +
+          'ng-click="dec.deleteDoc(' + row +')" ' +
+          'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
 
-        //        '<span ng-if="!dec.options.queryBusy">Update</span>' +
+          //        '<span ng-if="!dec.options.queryBusy">Update</span>' +
 //        '<span ng-if="dec.options.queryBusy">Updating</span>' +
-//          '</button></span>';
+//        '</button></span>';
           '</span>';
 
-        // put the meta().id in the next column
-        var meta = "";
-
-        result += '<span class="cbui-table-cell wrap break-word flex-grow-2"><span class="cursor-pointer" ';
-        if (object[row].meta)
-          result += 'uib-tooltip-html="\'' +
-          (object[row].meta.cas ? 'cas: ' + object[row].meta.cas + '<br>' : '') +
-          'expiration: ' + object[row].meta.expiration + '<br>' +
-          'flags: ' + object[row].meta.flags + '<br>' +
-          (object[row].meta.type ? 'type: ' + mySanitize(object[row].meta.type) : '') + '\'" ' +
+          // put the meta().id in the next column
+          result += '<span class="cbui-table-cell wrap break-word flex-grow-2"><span class="cursor-pointer" ';
+          if (object[row].meta)
+            result += 'uib-tooltip-html="\'' + getTooltip(object[row].meta) + '\'" ' +
             'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
-        result += '>' + mySanitize(object[row].id) + '</span></span>';
+          result += '>' + mySanitize(object[row].id) + '</span></span>';
 
-        _.forIn(topLevelKeys, function (value, key) {
-          var item = object[row].data[key];
-          var childSize = {width: 1};
-          var childHTML = (item || item === 0 || item === "") ?
-              makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize) : '&nbsp;';
-          result += '<span class="cbui-table-cell" style="flex-grow: ' + columnWidths[key]  + ';">'
-            + childHTML + '</span>';
-        });
+          _.forIn(topLevelKeys, function (value, key) {
+            var item = object[row].data[key];
+            var childSize = {width: 1};
+            var childHTML = (item || item === 0 || item === "") ?
+                makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize) : '&nbsp;';
+                result += '<span class="cbui-table-cell" style="flex-grow: ' + columnWidths[key]  + ';">'
+                + childHTML + '</span>';
+          });
 
-        result += '</div></form>'; // end of the row for the top level object
+          result += '</div></form>'; // end of the row for the top level object
+        }
+
+        // what to show for BINARY documents? They're not editable
+        else if (object[row].meta && object[row].meta.type === "base64") {
+          result += '<form name="' + formName + '">' +
+          '<div class="cbui-tablerow items-top padding-left-0">'; // new row for each object
+
+          // empty span where the buttons would go
+          result += '<span class="cbui-table-cell flex-grow-1-25"> ' +
+          '</span>';
+
+          // and the id and metadata
+          result += '<span class="cbui-table-cell wrap break-word flex-grow-2"><span class="cursor-pointer" ';
+          if (object[row].meta)
+            result += 'uib-tooltip-html="\'' + getTooltip(object[row].meta) + '\'" ' +
+            'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
+          result += '>' + mySanitize(object[row].id) + '</span></span>';
+
+          // finally a message saying that we can't edit binary objects, followed by dummy columns
+          var first = true;
+          _.forIn(topLevelKeys, function (value, key) {
+            result += '<span class="cbui-table-cell" style="flex-grow: ' + columnWidths[key] + ';">';
+            if (first) {
+              result += 'Binary Document';
+              first = false;
+            }
+            result += '</span>';
+          });
+
+          result += '</div></form>'; // end of the row for the top level object
+        }
       }
 
       //console.log("After header, loop: " + result);
@@ -208,6 +235,21 @@
 
     //console.log("Made table: " + result);
     return(result);
+  }
+
+  function getTooltip(meta) {
+    var result = "";
+
+    if (meta.cas)
+      result += 'cas: ' + meta.cas + '<br>';
+    if (meta.expiration)
+      result += 'expiration: ' + meta.expiration + '<br>';
+    if (meta.flags)
+      result += 'flags: ' + meta.flags + '<br>';
+    if (meta.type)
+      result += 'type: ' + mySanitize(meta.type);
+
+    return result;
   }
 
   // The data we are showing can contain objects nested inside objects inside objects: turtles

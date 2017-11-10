@@ -121,7 +121,7 @@
             $blockScrolling: Infinity
         };
         innerScope.doc_id = dialogScope.file.name;
-        innerScope.doc_json = 
+        innerScope.doc_json =
           '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}';
 
         // are there any syntax errors in the editor?
@@ -153,7 +153,7 @@
 
       });
     }
-    
+
     //
     // function to save a document with a different key
     //
@@ -517,10 +517,10 @@
       //console.log("Retrieving docs via REST...");
 
       dec.options.current_query = dec.options.selected_bucket;
-      
+
       if (dec.options.doc_id)
         dec.options.current_query += ', document id: ' + dec.options.doc_id;
-      
+
       else
         dec.options.current_query += ", limit: " +
           dec.options.limit + ", offset: " + dec.options.offset;
@@ -528,7 +528,7 @@
       // get the stats from the Query service
       dec.options.queryBusy = true;
       var rest_url;
-      
+
       // we use a different URL if they specified a doc_id
       if (dec.options.doc_id && dec.options.doc_id.length)
         rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
@@ -537,7 +537,7 @@
         rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
           "/docs?skip=" + dec.options.offset + "&include_docs=true&limit=" +
           dec.options.limit;
-      
+
       $http({
         url: rest_url,
         method: "GET"
@@ -546,19 +546,34 @@
           dec.options.current_bucket = dec.options.selected_bucket;
 
           var data = resp.data;
+
+          //console.log("Got results: " + JSON.stringify(data));
+
           //console.log(JSON.stringify(data));
           dec.options.current_result = [];
           dec.options.current_result.length = 0;
           // did we get a single doc back?
           if (data && data.json && data.meta) {
+            data.meta.type = "json";
             dec.options.current_result.push({id: data.meta.id, data: data.json, meta: data.meta});
           }
-          
+
+          // maybe a single binary doc?
+          else if (data && data.meta && data.base64) {
+            data.meta.type = "base64";
+            dec.options.current_result.push({id: data.meta.id, base64: data.base64, meta: data.meta});
+          }
+
           // or maybe an array of docs?
           else if (data && data.rows)
             for (var i=0; i< data.rows.length; i++) {
-              dec.options.current_result.push(
-                  {id: data.rows[i].id, data: data.rows[i].doc.json});
+              // is it binary or json data?
+              if (data.rows[i].doc.json)
+                dec.options.current_result.push(
+                    {id: data.rows[i].id, data: data.rows[i].doc.json, meta: {id: data.rows[i].id, type: "json"}});
+              else if (data.rows[i].doc.base64 === "")
+                dec.options.current_result.push(
+                    {id: data.rows[i].id, meta: {id: data.rows[i].id, type: "base64"}});
             }
 
           dec.options.queryBusy = false;
@@ -597,11 +612,11 @@
     }
 
     function getBuckets_n1ql() {
-      var bucketList = validateQueryService.validBuckets(); 
-      dec.buckets.length = 0; 
+      var bucketList = validateQueryService.validBuckets();
+      dec.buckets.length = 0;
       for (var i=0; i < bucketList.length; i++) if (bucketList[i] != ".")
         dec.buckets.push(bucketList[i]);
-      
+
       //console.log("Got buckets1: " + JSON.stringify(dec.buckets));
     }
 
@@ -619,7 +634,7 @@
             dec.buckets.push(resp.data[i].name);
         }
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
-        
+
       },function error(resp) {
         var data = resp.data, status = resp.status;
 
@@ -645,9 +660,9 @@
         dec.options.selected_bucket = $stateParams.bucket;
         dec.options.where_clause = ''; // reset the where clause
         $timeout(retrieveDocs,50);
-      }      
+      }
     }
-    
+
     //
     // when we activate, check with the query service to see if we have a query node. If
     // so, we can use n1ql, if not, use the regular mode.
@@ -655,11 +670,11 @@
 
     function activate() {
       getBuckets(); // for some reason this extra call is needed, otherwise the menu doesn't populate
-      
+
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
         var promise = getBuckets();
-        
+
         // wait until after the buckets are retrieved to set the bucket name, if it was passed to us
         if (promise)
           promise.then(handleBucketParam);
@@ -667,7 +682,7 @@
           handleBucketParam();
         }
       });
-      
+
     }
 
     //
