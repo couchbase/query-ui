@@ -789,7 +789,7 @@
         if (queryOptions.scan_consistency)
           queryData.scan_consistency = queryOptions.scan_consistency;
 
-        // named and positional parameters 
+        // named and positional parameters
         if (queryOptions.positional_parameters && queryOptions.positional_parameters.length > 0)
           queryData.args = queryOptions.positional_parameters;
 
@@ -1051,7 +1051,13 @@
           // if we're doing explain only, copy the explain results to the regular results as well
 
           if (explainOnly) {
-            newResult.status = "Explain success";
+            if (!data || data.errors || data.status != "success" || !data.results || data.results.length == 0) {
+              newResult.status = "Explain errors";
+              qwQueryService.selectTab(1);
+            }
+            else
+              newResult.status = "Explain success";
+
             newResult.resultSize = null;
             newResult.data = newResult.explainResult;
             newResult.result = newResult.explainResultText;
@@ -1229,7 +1235,10 @@
         if (data.warnings)
           newResult.warnings = JSON.stringify(data.warnings);
 
-        newResult.status = data.status;
+        if (data.errors)
+          newResult.status = "Error";
+        else
+          newResult.status = data.status;
 
         newResult.elapsedTime = data.metrics.elapsedTime;
         newResult.executionTime = data.metrics.executionTime;
@@ -1268,7 +1277,7 @@
         // if this was an explain query, change the result to show the
         // explain plan
 
-        if (queryIsExplain && qwConstantsService.autoExplain) {
+        if (queryIsExplain && qwConstantsService.autoExplain && data.results && data.results[0] && data.results[0].plan) {
           var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
           newResult.explainResult =
           {explain: data.results[0],
@@ -1280,6 +1289,10 @@
           newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           qwQueryService.selectTab(4); // make the explain visible
         }
+
+        // errors should appear in the first tab
+        if (queryIsExplain && data.errors)
+          qwQueryService.selectTab(1);
 
         // make sure to only finish if the explain query is also done
         if (newResult.explainDone) {
@@ -1549,7 +1562,7 @@
       // make sure we have a query node
       if (!validateQueryService.valid())
         return;
-      
+
       //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 
