@@ -559,7 +559,7 @@
           }
 
           // maybe a single binary doc?
-          else if (data && data.meta && data.base64) {
+          else if (data && data.meta && data.base64 === "") {
             data.meta.type = "base64";
             dec.options.current_result.push({id: data.meta.id, base64: data.base64, meta: data.meta});
           }

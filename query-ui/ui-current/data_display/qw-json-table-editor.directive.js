@@ -218,6 +218,9 @@
             }
             result += '</span>';
           });
+          // if we only have binary documents, there will be no topLevelKeys, so add the binary message
+          if (_.keys(topLevelKeys).length == 0)
+            result += '<span class="cbui-table-cell" style="flex-grow: 1;">Binary Document</span>';
 
           result += '</div></form>'; // end of the row for the top level object
         }

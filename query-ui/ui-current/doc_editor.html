@@ -31,14 +31,14 @@
     <div class="column">
       <label>Limit</label>
       <input
-         type="number" min="1"
+         type="number" min="1" ng-disabled="dec.options.doc_id.length"
          ng-model="dec.options.limit"
          class="input-short-1">
     </div>
     <div class="column">
       <label>Offset</label>
       <input
-         type="number" min="0" 
+         type="number" min="0" ng-disabled="dec.options.doc_id.length"
          ng-model="dec.options.offset"
          class="input-short-1">
     </div>
@@ -67,8 +67,11 @@
       <span ng-if="!dec.options.queryBusy && dec.use_n1ql()">
         Retrieve Docs
       </span>
-      <span ng-if="!dec.options.queryBusy && !dec.use_n1ql()">
+      <span ng-if="!dec.options.queryBusy && !dec.use_n1ql() && dec.options.doc_id.length">
         Lookup ID
+      </span>
+      <span ng-if="!dec.options.queryBusy && !dec.use_n1ql() && !dec.options.doc_id.length">
+        Retrieve Docs
       </span>
       <span ng-if="dec.options.queryBusy" class="icon-button">
         <span class="icon fa-spinner fa-spin fa-pulse"></span>
