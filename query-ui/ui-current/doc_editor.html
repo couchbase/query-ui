@@ -31,16 +31,18 @@
     <div class="column">
       <label>Limit</label>
       <input
-         type="number" min="1" ng-disabled="dec.options.doc_id.length"
-         ng-model="dec.options.limit"
-         class="input-short-1">
+         type="number" min="1" max="200" ng-disabled="dec.options.doc_id.length"
+         ng-model="dec.options.limit" class="input-short-1"
+         uib-tooltip-html="'How many documents to retrieve at once (max 200).'"
+         tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <div class="column">
       <label>Offset</label>
       <input
          type="number" min="0" ng-disabled="dec.options.doc_id.length"
-         ng-model="dec.options.offset"
-         class="input-short-1">
+         ng-model="dec.options.offset" class="input-short-1"
+         uib-tooltip-html="'Start showing documents after this many in the entire set.'"
+         tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <div
        ng-if="dec.use_n1ql()"
@@ -51,7 +53,9 @@
            ng-model="dec.options.where_clause"
            class="width-12"
            placeholder="e.g., 'meta().id = &quot;thisIsAnId&quot; and type = &quot;aType&quot;'"
-           ng-submit="dec.retrieveDocs()">
+           ng-submit="dec.retrieveDocs()"
+           uib-tooltip-html="'Show only documents that satisfy this N1QL WHERE clause.'"
+           tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <div
        ng-if="!dec.use_n1ql()"
@@ -59,7 +63,8 @@
       <label>Document ID</label>
         <input type="text"
            ng-model="dec.options.doc_id"
-           class="width-12">
+           class="width-12" uib-tooltip-html="'Find the document having this ID (optional).'"
+           tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <button ng-disabled="searchForm.$invalid"
        ng-click="dec.retrieveDocs()"
