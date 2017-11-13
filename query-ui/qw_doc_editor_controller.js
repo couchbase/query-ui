@@ -527,6 +527,7 @@
 
       // get the stats from the Query service
       dec.options.queryBusy = true;
+      dec.options.current_result = [];
       var rest_url;
 
       // we use a different URL if they specified a doc_id
@@ -547,10 +548,9 @@
 
           var data = resp.data;
 
-          //console.log("Got results: " + JSON.stringify(data));
+          //console.log("Got REST results: " + JSON.stringify(data));
 
           //console.log(JSON.stringify(data));
-          dec.options.current_result = [];
           dec.options.current_result.length = 0;
           // did we get a single doc back?
           if (data && data.json && data.meta) {
@@ -581,7 +581,7 @@
         }
       },function error(resp) {
         var data = resp.data, status = resp.status;
-        //console.log("Got status: " + status + ", data: " + JSON.stringify(data));
+        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);

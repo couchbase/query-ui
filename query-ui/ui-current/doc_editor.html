@@ -104,11 +104,12 @@
   </div>
 
 <!-- Results *************************************************************** -->
+    <div ng-if="dec.options.queryBusy">Retrieving Results...</div>
   <div
      class="row"
      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
     <div class="doc-editor-results show-scrollbar">
-      <qw-json-table-editor
+      <qw-json-table-editor ng-if="!dec.options.queryBusy"
          data="dec.options.current_result"
          controller="dec">
     </div>
