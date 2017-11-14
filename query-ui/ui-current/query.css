@@ -200,12 +200,12 @@
   line-height: 2.1;
 }
 .doc-editor-results {
-  position: relative;
   overflow: auto;
+  height: calc(100vh - 250px);
 }
 
 .scroll-shadow-horizontal {
-  box-shadow: -8px 0px 8px -6px rgba(33,33,33,.5);
+  box-shadow: -8px 0px 8px -6px rgba(33,33,33,0.5);
   position: absolute;
   top: -2px;
   right: -32px;
@@ -214,18 +214,37 @@
   z-index: 100;
   background-color: #fff;
 }​
+
+
+.dummy { /* for some weird reason, if this style isn't here, the next one doesn't get picked up */
+  
+}
+
+
+.scroll-shadow-bottom {
+    position: relative;
+    z-index: 2;
+
+    box-shadow: 0px -10px 10px -10px #000 inset;
+
+    height: 20px;
+    margin-top: -20px;
+    margin-right: 5px;
+}
+
+
 .show-scrollbar::-webkit-scrollbar {
 width: 10px; /* force scrollbars to appear with this size */
 height: 10px;
 }
 .show-scrollbar::-webkit-scrollbar-track { /* force track to appear*/
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
-  border-radius: 8px;
-  -webkit-border-radius: 8px;
+  border-radius: 6px;
+  -webkit-border-radius: 6px;
 }
 .show-scrollbar::-webkit-scrollbar-thumb { /* force thumb to appear */
-  -webkit-border-radius: 8px;
-  border-radius: 8px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
   background: rgba(220,220,220,0.8);
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
 }

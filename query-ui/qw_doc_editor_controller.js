@@ -29,6 +29,7 @@
     dec.currentDocs = [];
     dec.buckets = [];
     dec.use_n1ql = function() {return(validateQueryService.valid())};
+    dec.options.show_scrollbars = true;
 
     //
     //

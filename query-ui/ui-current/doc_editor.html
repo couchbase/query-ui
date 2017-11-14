@@ -32,8 +32,8 @@
       <label>Limit</label>
       <input
          type="number" min="1" max="200" ng-disabled="dec.options.doc_id.length"
-         ng-model="dec.options.limit" class="input-short-1"
-         uib-tooltip-html="'How many documents to retrieve at once (max 200).'"
+         ng-model="dec.options.limit" class="input-short-1" 
+         uib-tooltip-html="'How many documents to retrieve at once (max 200).'" 
          tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <div class="column">
@@ -41,7 +41,7 @@
       <input
          type="number" min="0" ng-disabled="dec.options.doc_id.length"
          ng-model="dec.options.offset" class="input-short-1"
-         uib-tooltip-html="'Start showing documents after this many in the entire set.'"
+         uib-tooltip-html="'Start showing documents after this many in the entire set.'" 
          tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <div
@@ -54,7 +54,7 @@
            class="width-12"
            placeholder="e.g., 'meta().id = &quot;thisIsAnId&quot; and type = &quot;aType&quot;'"
            ng-submit="dec.retrieveDocs()"
-           uib-tooltip-html="'Show only documents that satisfy this N1QL WHERE clause.'"
+           uib-tooltip-html="'Show only documents that satisfy this N1QL WHERE clause.'" 
            tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <div
@@ -63,7 +63,7 @@
       <label>Document ID</label>
         <input type="text"
            ng-model="dec.options.doc_id"
-           class="width-12" uib-tooltip-html="'Find the document having this ID (optional).'"
+           class="width-12" uib-tooltip-html="'Find the document having this ID (optional).'" 
            tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
     </div>
     <button ng-disabled="searchForm.$invalid"
@@ -108,20 +108,30 @@
     </span>
   </div>
 
-<!-- Results *************************************************************** -->
-    <div ng-if="dec.options.queryBusy">Retrieving Results...</div>
-  <div
-     class="row"
-     ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
-    <div class="doc-editor-results show-scrollbar">
-      <qw-json-table-editor ng-if="!dec.options.queryBusy"
-         data="dec.options.current_result"
-         controller="dec">
-    </div>
-    <div
-       class="scroll-shadow-horizontal"
-       ng-if="dec.options.current_result.length > 0">
+  <!-- Results *************************************************************** -->
+  <div ng-if="dec.options.queryBusy">Retrieving Results...</div>
+  <!-- div class="doc-editor-results show-scrollbar" -->
+  <div ng-if="dec.options.show_scrollbars">
+    <div class="row"
+      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
+      <div class="doc-editor-results show-scrollbar">
+        <qw-json-table-editor ng-if="!dec.options.queryBusy"
+          data="dec.options.current_result" controller="dec">
+      </div>
     </div>
   </div>
-
+  <div ng-if="!dec.options.show_scrollbars">
+    <div class="row"
+      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
+      <div class="doc-editor-results">
+        <qw-json-table-editor ng-if="!dec.options.queryBusy"
+          data="dec.options.current_result" controller="dec">
+      </div>
+      <div class="scroll-shadow-horizontal"
+        ng-if="dec.options.current_result.length > 0"></div>
+    </div>
+    <div
+      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0 && !dec.options.queryBusy"
+      class="scroll-shadow-bottom"></div>
+  </div>
 </div>

@@ -483,10 +483,12 @@
 
     else {
       var model = ' ng-model="results' + prefix + '" ';
+      var inputStyle = ' style="width: ' + (columnWidth-10) + 'px; margin-left: 5px"';
+
       if (_.isNumber(object))
-        result += '<input type="number" ' + model + '>';
+        result += '<input type="number" ' + model + inputStyle + '>';
       else
-        result += '<textarea ' + model + '></textarea>';
+        result += '<textarea ' + model + inputStyle + '></textarea>';
     }
 
     return(result);
