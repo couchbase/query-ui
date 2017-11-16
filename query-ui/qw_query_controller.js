@@ -545,7 +545,7 @@
       //if (navigator.userAgent.match(/safari/i))
       //	constant = 10;
       var windowHeight = window.innerHeight;
-      var pageFooterHeight =  96; //$('#page_footer').height();
+      var pageFooterHeight = 115;//96; //$('#page_footer').height();
       var pageHeaderHeight = 42;
       var headerNavHeight =  $('#headerNav').height();
       if (headerNavHeight == null)

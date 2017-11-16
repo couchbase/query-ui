@@ -213,13 +213,7 @@
   height: 100%;
   z-index: 100;
   background-color: #fff;
-}​
-
-
-.dummy { /* for some weird reason, if this style isn't here, the next one doesn't get picked up */
-  
 }
-
 
 .scroll-shadow-bottom {
     position: relative;
@@ -230,6 +224,10 @@
     height: 20px;
     margin-top: -20px;
     margin-right: 5px;
+}
+
+.main-content {
+  margin-bottom:  -1rem !important; 
 }
 
 

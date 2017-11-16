@@ -42,7 +42,7 @@
 			      data = json;
 			      var usingDataTable = true;
 
-			      wrapper = '<div class="data-table-wrapper"></div>';
+			      wrapper = '<div class="data-table-wrapper show-scrollbar"></div>';
 
 			      // we must have an array, if it's not, wrap it in an array
 			      if (!_.isArray(data))
