@@ -144,19 +144,20 @@
           var setPristineName = formName + '.$setPristine';
           var invalidName = formName + '.$invalid';
           result += '<form name="' + formName + '"' +
-          ' ng-submit="dec.updateDoc(' + row +',' + setPristineName + ')">' +
-          '<div class="cbui-tablerow items-top padding-left-0">'; // new row for each object
+          ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
+          '<div class="cbui-tablerow items-top padding-left-0" ' +
+          'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
           // button to update record in the first column
           result += '<span class="cbui-table-cell flex-grow-1-25"> ' +
           '<a class="btn qw-doc-editor" ' +
           'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
-          'ng-click="dec.updateDoc(' + row +',' + setPristineName + ')" ' +
+          'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
           'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
 
           '<a class="btn qw-doc-editor" ' +
           'ng-disabled="' + invalidName + '" ' +
-          'ng-click="dec.copyDoc(' + row +')" ' +
+          'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
           'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
 
           '<a class="btn qw-doc-editor" ' +
@@ -188,6 +189,10 @@
                 result += '<span class="cbui-table-cell" style="flex-grow: ' + columnWidths[key]  + ';">'
                 + childHTML + '</span>';
           });
+
+          // for some reason I couldn't get the form from $scope, so the following acts as a sentinel that I can search for
+          // to see if anything changed in any form of the editor
+          result +=  '<span id="somethingChangedInTheEditor" ng-if="!' + pristineName + '"></span>';
 
           result += '</div></form>'; // end of the row for the top level object
         }

@@ -59,22 +59,27 @@
     //
 
     function prevBatch() {
-      dec.options.offset -= dec.options.limit;
-      if (dec.options.offset < 0)
-        dec.options.offset = 0;
-      retrieveDocs();
+      checkUnsavedChanges(function() {
+        dec.options.offset -= dec.options.limit;
+        if (dec.options.offset < 0)
+          dec.options.offset = 0;
+        retrieveDocs_inner();
+      });
     }
 
     function nextBatch() {
-      dec.options.offset += dec.options.limit;
-      retrieveDocs();
+      // don't fetch data if unsaved changes
+      checkUnsavedChanges(function() {
+        dec.options.offset += dec.options.limit;
+        retrieveDocs_inner();
+      });
     }
 
     //
     // function to update a document given what the user typed
     //
 
-    function updateDoc(row, makePristine) {
+    function updateDoc(row, form) {
       if (dec.updatingRow >= 0)
         return;
 
@@ -84,11 +89,22 @@
       var promise = saveDoc(row,newJson);
 
       // if it succeeded, mark the row as clean
-      promise.then(function success() {makePristine();});
+      promise.then(function success() {
+        form.$setPristine();
+      },
+      function error(resp) { // what to do if it fails?
+        var data = resp.data, status = resp.status;
 
-      //console.log("failed updating row: " + row);
+        var dialogScope = $rootScope.$new(true);
+        dialogScope.error_title = "Error Copying Document";
+        dialogScope.error_detail = JSON.stringify(data);
+        $uibModal.open({
+          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+          scope: dialogScope
+        });
+       });
+
       dec.updatingRow = -1;
-
     }
 
     //
@@ -159,7 +175,7 @@
     // function to save a document with a different key
     //
 
-    function copyDoc(row, makePristine) {
+    function copyDoc(row, form) {
       if (dec.updatingRow >= 0)
         return;
 
@@ -186,13 +202,22 @@
         promise.then(function success(resp) {
           //console.log("successfully copied row: " + row);
           dec.updatingRow = -1;
-          $timeout(retrieveDocs,200);
+          form.$setPristine();
         },
 
         // ...or fail?
         function error(resp) {
+          var data = resp.data, status = resp.status;
+
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error Copying Document";
+          dialogScope.error_detail = JSON.stringify(data);
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
+
           dec.updatingRow = -1;
-          $timeout(retrieveDocs,200);
         });
 
       });
@@ -234,14 +259,12 @@
         promise.then(function(resp) {
           //console.log("successfully deleted row: " + row);
           dec.updatingRow = -1;
-          $timeout(retrieveDocs,200);
+          dec.options.current_result[row].deleted = true;
         },
 
         // ...or fail?
         function error(resp) {
           var data = resp.data, status = resp.status;
-
-          $timeout(retrieveDocs,200);
 
           var dialogScope = $rootScope.$new(true);
           dialogScope.error_title = "Error Deleting Document";
@@ -341,7 +364,6 @@
       promise
       // did the query succeed?
       .then(function(resp) {
-        $timeout(retrieveDocs,200);
         dec.updatingRow = -1;
       },
 
@@ -349,7 +371,6 @@
       function error(resp) {
         var data = resp.data, status = resp.status;
 
-        $timeout(retrieveDocs,200);
         var dialogScope = $rootScope.$new(true);
         if (newKey)
           dialogScope.error_title = "Error Inserting New Document";
@@ -420,12 +441,41 @@
     }
 
     //
+    // warn the user about unsaved changes, if any
+    //
+
+    function checkUnsavedChanges(ifOk,ifCancel) {
+      // warn the user if they try to get more data when unsaved changes
+      if ($('#somethingChangedInTheEditor')[0]) {
+        var dialogScope = $rootScope.$new(true);
+        dialogScope.error_title = "Warning: Unsaved Changes";
+        dialogScope.error_detail = "You have unsaved changes. Continue and lose them?";
+
+        var promise = $uibModal.open({
+          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+          scope: dialogScope
+        }).result;
+
+        // they clicked yes, so go ahead
+        promise.then(function success() {
+          ifOk();
+        },function cancel() {if (ifCancel) ifCancel();});
+      }
+      // if there are no unsaved changes, just go ahead
+      else
+        ifOk();
+    }
+    //
     // build a query from the current options, and get the results
     //
 
     dec.options.queryBusy = false;
 
     function retrieveDocs() {
+      checkUnsavedChanges(retrieveDocs_inner);
+    }
+
+    function retrieveDocs_inner() {
       qwQueryService.saveStateToStorage();
 
       if (dec.use_n1ql())
@@ -433,6 +483,7 @@
       else
         retrieveDocs_rest();
     }
+
 
     function retrieveDocs_n1ql() {
       if (dec.options.queryBusy) // don't have 2 retrieves going at once
@@ -660,7 +711,7 @@
         //    JSON.stringify(dec.buckets));
         dec.options.selected_bucket = $stateParams.bucket;
         dec.options.where_clause = ''; // reset the where clause
-        $timeout(retrieveDocs,50);
+        $timeout(retrieveDocs_inner,50);
       }
     }
 
