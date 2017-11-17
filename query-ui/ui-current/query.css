@@ -1,5 +1,5 @@
 #currentUI {
-  margin: 0;
+  margin: 0 0 -50px 0;
   padding: 0;
 }
 #query_wrapper {}
@@ -183,6 +183,10 @@
 }
 
 /* Tabular Document Editor ------------------------------------------- */
+#doc_editor_tabular {
+  margin-bottom: -50px;
+}
+
 #doc_editor_tabular .controls {
   margin: 0 0 1.5rem 0;
   font-size: .875rem;
@@ -224,10 +228,6 @@
     height: 20px;
     margin-top: -20px;
     margin-right: 5px;
-}
-
-.main-content {
-  margin-bottom:  -1rem !important; 
 }
 
 

@@ -607,7 +607,7 @@
         $('#result_tree').height(editor_size+15);
         $('#query_plan').height(editor_size + 15);
         $('#query_plan_text').height(editor_size + 25);
-        //$('#result_box').height(editor_size+50);
+//        $('#result_box').height(editor_size+50);
       }
 
 
