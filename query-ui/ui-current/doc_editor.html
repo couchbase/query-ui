@@ -67,33 +67,26 @@
            ng-model="dec.options.where_clause"
            ng-submit="dec.retrieveDocs()"
            class="width-12"
-           placeholder="e.g., 'meta().id = &quot;thisIsAnId&quot; and type = &quot;aType&quot;'">
+           placeholder="e.g., 'meta().id = &quot;some_id&quot; and type = &quot;a_type&quot;'">
     </div>
     <div ng-if="!dec.use_n1ql()" class="column flex-grow-2">
         <label class="inline">Document ID</label>
         <span class="fa-stack icon-info"
-            uib-tooltip-html="'Find the document having this ID (optional).'"
+            uib-tooltip-html="'Find the document with this ID or leave blank to retrieve documents based on limit and offset.'"
             tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="'mouseenter'">
           <span class="icon fa-circle-thin fa-stack-2x"></span>
           <span class="icon fa-info fa-stack-1x"></span>
-        </span> 
+        </span>
         <input type="text"
            ng-model="dec.options.doc_id"
            ng-submit="dec.retrieveDocs()"
+           placeholder="enter document ID or leave blank"
            class="width-12">
     </div>
     <button ng-disabled="searchForm.$invalid"
        ng-click="dec.retrieveDocs()"
        class="fix-width-3">
-      <span ng-if="!dec.options.queryBusy && dec.use_n1ql()">
         Retrieve Docs
-      </span>
-      <span ng-if="!dec.options.queryBusy && !dec.use_n1ql() && dec.options.doc_id.length">
-        Lookup ID
-      </span>
-      <span ng-if="!dec.options.queryBusy && !dec.use_n1ql() && !dec.options.doc_id.length">
-        Retrieve Docs
-      </span>
       <span ng-if="dec.options.queryBusy" class="icon-button">
         <span class="icon fa-spinner fa-spin fa-pulse"></span>
       </span>

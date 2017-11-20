@@ -115,6 +115,7 @@
       var _otherError;
       var _bucketList = [];
       var _bucketStatsList = [];
+      var _callbackList = [];
       var service = {
           inProgress: function()       {return !_checked || _bucketsInProgress;},
           valid: function()            {return _valid;},
@@ -135,7 +136,11 @@
 
       function getBuckets(callback) {
         //console.trace();
-        //console.log("Getting nodes and buckets, progress: " + _nodesInProgress + ", " + _bucketsInProgress);
+        //console.log("Getting nodes and buckets, progress: " + _bucketsInProgress);
+
+        // even if we're busy, accept new callbacks
+        if (callback)
+          _callbackList.push(callback);
 
         // make sure we only do this once at a time
         if (_bucketsInProgress)
@@ -152,20 +157,22 @@
         $http.post("/_p/query/query/service",queryData)
         .then(function success(resp) {
           //var data = resp.data, status = resp.status;
-          //console.log("Got bucket list data: " + JSON.stringify(data));
-          mnPermissions.check().then(function() {
+          //console.log("Got bucket list data: " + JSON.stringify(resp).substring(0,10) + " with callbacks: " + _callbackList.length);
+          mnPermissions.check().then(function success() {
             updateValidBuckets();
-            if (callback) callback();
+            while (_callbackList.length) // call each callback to let them know we're done
+              _callbackList.pop()();
           });
         },
         // Error from $http
         function error(resp) {
           var data = resp.data, status = resp.status;
-          //console.log("Error getting keyspaces: " + JSON.stringify(data));
+          //console.log("Error getting buckets: " + JSON.stringify(resp));
           _valid = false; _bucketsInProgress = false;
           _otherStatus = status;
           _otherError = data;
-          if (callback) callback();
+          while (_callbackList.length) // call each callback to let them know we're done
+            _callbackList.pop()();
         });
       }
 

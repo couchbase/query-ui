@@ -711,6 +711,7 @@
         //    JSON.stringify(dec.buckets));
         dec.options.selected_bucket = $stateParams.bucket;
         dec.options.where_clause = ''; // reset the where clause
+        dec.options.offset = 0; // start off from the beginning
         $timeout(retrieveDocs_inner,50);
       }
     }
@@ -721,10 +722,14 @@
     //
 
     function activate() {
-      getBuckets(); // for some reason this extra call is needed, otherwise the menu doesn't populate
+      //getBuckets(); // for some reason this extra call is needed, otherwise the menu doesn't populate
+
+      //console.log("Activating DocEditor, got buckets.")
 
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
+        //console.log("Query service callback, getting ready to handle bucket param: " + $stateParams.bucket);
+
         var promise = getBuckets();
 
         // wait until after the buckets are retrieved to set the bucket name, if it was passed to us
