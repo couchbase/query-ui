@@ -462,18 +462,28 @@
       for (var i=0; i< schema.length; i++) // for each flavor
         for (var field_name in schema[i]['properties']) {
           if (field_name == fieldPrefix) { // found a possible match
+            //console.log("  got match");
+
             if (fieldSuffix.length == 0)  // no subfields? we're done, yay!
               return true;
 
             var field = schema[i]['properties'][field_name];
+
+            //console.log("  looking for subproperties in field: " + JSON.stringify(field,null,2));
             // if we had an array expr, check each subtype's subfields against the array schema
-            if (arrayIndex > -1 && _.isArray(field['items']))
+            if (arrayIndex > -1 && _.isArray(field['items'])) {
               for (var arrType = 0; arrType < field['items'].length; arrType++)
                 if (isFieldNameInSchema([field['items'][arrType].subtype],fieldSuffix))
                   return true;
+            }
+
+            else if (arrayIndex > -1 && field.items.subtype) {
+              if (isFieldNameInSchema([field.items.subtype],fieldSuffix))
+                return true;
+            }
 
             // if we have a non-array, check the subschema
-            if (arrayIndex == -1 && field['properties'] &&
+            else if (arrayIndex == -1 && field['properties'] &&
                 isFieldNameInSchema([field],fieldSuffix))
               return true;
           }
@@ -904,10 +914,10 @@
         //console.log("Checking field: " + f + ", bucket: " + bucketName);
         var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
         if (bucket) {
-          //console.log("  Got bucket: " + bucket + ", bucket schema: " + bucket.schema);
           if (bucket && bucket.schema.length > 0 && !isFieldNameInSchema(bucket.schema,fieldName)) {
             problem_fields.push({field: fieldName, bucket: bucket.id});
-            //console.log("Field: " + fieldName + "is not o.k.");
+            //console.log("Field: " + fieldName + " is not o.k.");
+            //console.log("  Got bucket schema: " + JSON.stringify(bucket.schema,null,2));
           }
         }
       }
