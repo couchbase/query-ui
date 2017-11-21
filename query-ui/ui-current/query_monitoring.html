@@ -222,7 +222,7 @@
     </div>
   </div>
 
-<!-- QUERY STATISTICS ************************************** -->
+<!-- QUERY STATISTICS ****************************************************** -->
   <div id="query_stats" ng-if="qc.validated.monitoringAllowed()">
 
     <div class="column vertical-divider" ng-if="qc.validated.clusterStatsAllowed()">
@@ -233,26 +233,27 @@
     </div>
 
     <div class="column wide vertical-divider text-center" ng-if="qc.validated.clusterStatsAllowed()">
+      <div class="width-12 text-center semi-bold">Last Minute</div>
       <span class="text-center">
         <div mn-plot mn-plot-config="qmc.stats['query_requests'].config"
           is-small-graph="true" style="width: 100px; height: 25px;">
         </div>
-        <desc>{{qmc.stats["query_requests"].title}}: {{qmc.getAverageStat("query_requests") | number:1}}</desc>
+        <desc>requests per sec: {{qmc.getAverageStat("query_requests") | number:1}}</desc>
       </span>
       <span class="text-center indent-2">
         <div mn-plot mn-plot-config="qmc.stats['query_avg_req_time'].config"
           is-small-graph="true" style="width: 100px; height: 25px;">
         </div>
-        <desc>{{qmc.stats["query_avg_req_time"].title}}: {{qmc.getAverageStat("query_avg_req_time") | number:1}}</desc>
+        <desc>avg. request time: {{qmc.getAverageStat("query_avg_req_time") | number:1}} sec</desc>
       </span>
       <span class="text-center indent-2">
         <div mn-plot mn-plot-config="qmc.stats['query_avg_svc_time'].config"
           is-small-graph="true" style="width: 100px; height: 25px;" >
         </div>
-        <desc>{{qmc.stats["query_avg_svc_time"].title}}: {{qmc.getAverageStat("query_avg_svc_time") | number:1}}</desc>
+        <desc>avg. service time: {{qmc.getAverageStat("query_avg_svc_time") | number:1}} sec</desc>
       </span>
       <hr>
-      <desc>memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
+      <desc>Memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
     </div>
 
     <div class="column wide vertical-divider text-center" ng-if="!qc.validated.clusterStatsAllowed()">
@@ -264,9 +265,9 @@
     </div>
 
     <div class="column">
-      <span class="width-6">requests/sec > last minute</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}}</span><br>
-      <span class="width-6">requests/sec > last 5 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}}</span><br>
-      <span class="width-6">requests/sec > last 15 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}}</span><br>
+      <span class="width-6">requests/sec - last minute</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}}</span><br>
+      <span class="width-6">requests/sec - last 5 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}}</span><br>
+      <span class="width-6">requests/sec - last 15 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}}</span><br>
       <span class="width-6">mean request time</span> <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:1}}</span><br>
     </div>
   </div>

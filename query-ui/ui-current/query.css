@@ -311,8 +311,8 @@ input.ng-invalid {
   background-color: #fff;
   border-top: 1px solid #d1d1d1;
   width: 100vw;
-  padding: 1rem .5rem .5rem .5rem;
-  font-size: .75rem;
+  padding: .5rem;
+  font-size: .688rem;
   box-shadow: 0 -36px 28px -12px #fff;
 }
 #query_stats .column {
@@ -320,7 +320,8 @@ input.ng-invalid {
   white-space: nowrap;
   max-width: 240px;
   padding: 0 2rem 0 0;
-  line-height: 1.8;
+  line-height: 2;
+  height: 100%;
 }
 #query_stats .column.vertical-divider {
   border-right: 1px solid #d1d1d1;
@@ -336,5 +337,5 @@ input.ng-invalid {
   display: inline-block;
 }
 #query_stats hr {
-  margin: .5rem 0;
+  margin: .25rem 0;
 }
