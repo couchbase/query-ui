@@ -12,7 +12,7 @@
 
 <!-- row of controls for the query ***************************************** -->
   <form name="searchForm">
-  <div class="row flex-left items-bottom controls">
+  <div class="row resp-sml flex-left items-bottom controls">
     <div class="column">
       <label>Bucket</label>
       <ui-select
@@ -54,7 +54,7 @@
          ng-submit="dec.retrieveDocs()"
          ng-model="dec.options.offset" class="input-short-1">
     </div>
-    <div ng-if="dec.use_n1ql()" class="column flex-grow-2">
+    <div ng-if="dec.use_n1ql()" class="column margin-top-half flex-grow-2">
       <label class="inline">Where</label>
       <span class="fa-stack icon-info"
            uib-tooltip-html="'Show only documents that satisfy this N1QL WHERE clause.'"
@@ -83,6 +83,7 @@
            placeholder="enter document ID or leave blank"
            class="width-12">
     </div>
+    <div style="display:none;" class="resp-show-sml margin-top-half width-12"></div>
     <button ng-disabled="searchForm.$invalid"
        ng-click="dec.retrieveDocs()"
        class="fix-width-3">
@@ -92,16 +93,16 @@
       </span>
     </button>
   </div>
-    </form>
+  </form>
 
 <!-- Row for result query text & next/previous buttons ********************* -->
   <div
      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0"
-     class="row margin-bottom-half">
-    <div class="text-small">
+     class="row resp-sml margin-bottom-half">
+    <div class="text-small resp-margin-sml">
       <strong>Results for:</strong> &nbsp; <em>{{dec.options.current_query}}</em>
     </div>
-    <span>
+    <div class="text-right nowrap">
       <button
          ng-click="dec.prevBatch()"
          class="outline text-small"
@@ -114,7 +115,7 @@
          ng-disabled="dec.options.doc_id || dec.options.current_result.length == 0">
         Next Batch >
       </button>
-    </span>
+    </div>
   </div>
 
   <!-- Results *************************************************************** -->
