@@ -25,7 +25,7 @@
       <div id="qw_history_table" class="max-height-500">
           <section ng-repeat="query in pastQueries" ng-if="showRow($index)" class="row flex-left items-stretch">
             <span ng-if="showRow($index)" ng-class="{'selected': isRowSelected($index)}" ng-attr-id="{{'qw_history_table_' + $index}}" ng-click="select($index)" ng-dblclick="select($index);$close('ok')" class="text-small text-center width-1">{{$index + 1}}</span>
-            <span ng-if="showRow($index)" ng-class="{'selected': isRowSelected($index)}" ng-click="select($index)" ng-dblclick="select($index);$close('ok')" class="text-small width-11"
+            <span ng-if="showRow($index)" ng-class="{'selected': isRowSelected($index)}" ng-click="select($index,$event)" ng-dblclick="select($index);$close('ok')" class="text-small width-11"
               >{{query.query | limitTo: 1024}}{{query.query.length > 1024 ? '...' : ''}}</span>
           </section>
       </div>
@@ -34,8 +34,8 @@
 
     <div class="panel-footer spaced scroll-shadow">
       <button type="submit" class="outline" ng-disabled="disableDel()" ng-click="del()">Delete Selected</button>
+      <button type="submit" class="outline" ng-disabled="disableDel()" ng-click="$close('run')">Close & Run</button>
       <button type="submit" class="outline" ng-click="delAll($close)">Delete All</button>
-    <!--  <button type="submit" ng-click="$close('ok')">Close</button> -->
     </div>
   </form>
 </div>

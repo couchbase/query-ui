@@ -507,7 +507,8 @@
     //
 
     function canCreateBlankQuery() {
-      return (currentQueryIndex == pastQueries.length -1 &&
+      return (currentQueryIndex >= 0 &&
+          currentQueryIndex == pastQueries.length - 1 &&
           lastResult.query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
           lastResult.status != newQueryTemplate.status &&
           !qwQueryService.executingQuery.busy);
@@ -619,19 +620,29 @@
     }
 
     //
-    // clear the current query
+    // clear the specified query, or if none specified the current query
     //
 
-    function clearCurrentQuery() {
+    function clearCurrentQuery(index) {
       // don't clear the history if existing queries are already running
       if (qwQueryService.executingQuery.busy || pastQueries.length == 0)
         return;
 
-      pastQueries.splice(currentQueryIndex,1);
+      // did they specify an index to delete?
+      var delIndex = (index || index === 0) ? index : currentQueryIndex;
+
+      pastQueries.splice(delIndex,1);
       if (currentQueryIndex >= pastQueries.length)
         currentQueryIndex = pastQueries.length - 1;
 
-      lastResult.copyIn(pastQueries[currentQueryIndex]);
+      if (currentQueryIndex >= 0)
+        lastResult.copyIn(pastQueries[currentQueryIndex]);
+      // did they delete everything?
+      else {
+        lastResult.copyIn(dummyResult);
+        pastQueries.length = 0;
+        currentQueryIndex = 0;
+      }
 
       saveStateToStorage(); // save current history
     }

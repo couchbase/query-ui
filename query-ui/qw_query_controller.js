@@ -2,12 +2,12 @@
 
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
-  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService', 
-    'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault', 
+  queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService',
+    'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault',
     'mnServersService'];
 
-  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, 
-      validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault, 
+  function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
+      validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault,
       mnServersService) {
 
     var qc = this;
@@ -773,11 +773,11 @@
       dialogScope.options = qwQueryService.clone_options();
       dialogScope.options.positional_parameters = [];
       dialogScope.options.named_parameters = [];
-      
+
       // the named & positional parameters are values, convert to JSON
       if (qwQueryService.options.positional_parameters)
         for (var i=0; i < qwQueryService.options.positional_parameters.length; i++)
-          dialogScope.options.positional_parameters[i] = 
+          dialogScope.options.positional_parameters[i] =
             JSON.stringify(qwQueryService.options.positional_parameters[i]);
 
       if (qwQueryService.options.named_parameters)
@@ -787,7 +787,7 @@
             value: JSON.stringify(qwQueryService.options.named_parameters[i].value)
           });
         }
-      
+
       // bring up the dialog
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -801,14 +801,14 @@
         // actual values
         if (dialogScope.options.positional_parameters)
           for (var i=0; i < dialogScope.options.positional_parameters.length; i++)
-            dialogScope.options.positional_parameters[i] = 
+            dialogScope.options.positional_parameters[i] =
               JSON.parse(dialogScope.options.positional_parameters[i]);
 
         if (dialogScope.options.named_parameters)
-          for (var i=0; i < dialogScope.options.named_parameters.length; i++) 
-            dialogScope.options.named_parameters[i].value = 
+          for (var i=0; i < dialogScope.options.named_parameters.length; i++)
+            dialogScope.options.named_parameters[i].value =
               JSON.parse(dialogScope.options.named_parameters[i].value);
-        
+
         qwQueryService.options = dialogScope.options;
       });
 
@@ -944,13 +944,66 @@
 
       // history dialog needs a pointer to the query service
       dialogScope.pastQueries = qwQueryService.getPastQueries();
-      dialogScope.select = function(index) {qwQueryService.setCurrentIndex(index);};
-      dialogScope.isRowSelected = function(row) {return(row == qwQueryService.getCurrentIndexNumber());};
+      dialogScope.selected = [];
+      dialogScope.selected[qwQueryService.getCurrentIndexNumber()] = true;
+      dialogScope.select = function(index,keyEvent) {
+        // with no modifiers, create a new selection where they clicked
+        //console.log("Got select, event: " + " alt: " + keyEvent.altKey + ", ctrl: " + keyEvent.ctrlKey + ", shift: " + keyEvent.shiftKey);
+        if (!keyEvent.shiftKey) {
+          for (var i=0; i < qwQueryService.getPastQueries().length; i++)
+            dialogScope.selected[i] = false;
+          qwQueryService.setCurrentIndex(index);
+          dialogScope.selected[index] = true;
+        }
+        // otherwise select the range from the clicked row to the selected row, and make the first one
+        // the "current"
+        else {
+          var alreadySelected = dialogScope.selected[index];
+          var start = Math.min(index,qwQueryService.getCurrentIndexNumber());
+          var end = Math.max(index,qwQueryService.getCurrentIndexNumber());
+          for (var i=start; i <= end; i++)
+            dialogScope.selected[i] = true;
+          // unselect any additional queries
+          if (alreadySelected) // if they within the existing the selection, shorten it
+            for (var i=end+1; i< qwQueryService.getPastQueries().length; i++)
+              dialogScope.selected[i] = false;
+          qwQueryService.setCurrentIndex(start);
+        }
+      };
+      dialogScope.isRowSelected = function(row) {return(dialogScope.selected[row]);};
       dialogScope.isRowMatched = function(row) {return(_.indexOf(historySearchResults,row) > -1);};
       dialogScope.showRow = function(row) {return(historySearchResults.length == 0 || dialogScope.isRowMatched(row));};
-      dialogScope.del = function() {qwQueryService.clearCurrentQuery(); updateSearchResults();};
-      // disable delete button if search results don't include selected query
-      dialogScope.disableDel = function() {return searchInfo.searchText.length > 0 && !dialogScope.isRowMatched(qwQueryService.getCurrentIndexNumber());};
+      dialogScope.del = function() {
+        var origHistoryLen = qwQueryService.getPastQueries().length;
+        // delete all selected, visible queries
+        for (var i= qwQueryService.getPastQueries().length - 1; i >= 0; i--)
+          if (dialogScope.showRow(i) && dialogScope.isRowSelected(i))
+            qwQueryService.clearCurrentQuery(i);
+        // forget any previous selection
+        for (var i=0; i < origHistoryLen; i++)
+          dialogScope.selected[i] = false;
+        //console.log("after delete, selecting: " + qwQueryService.getCurrentIndexNumber());
+
+        if (qwQueryService.getCurrentIndexNumber() >= 0)
+          dialogScope.selected[qwQueryService.getCurrentIndexNumber()] = true;
+
+        updateSearchResults();
+      };
+      // disable delete button if search results don't include any selected query
+      dialogScope.disableDel = function() {
+        // can always delete if no search text, or no matching queries
+        if (searchInfo.searchText.length == 0 || historySearchResults.length == 0)
+          return false;
+        // if search text, see if any matching rows are selected
+        for (var i= qwQueryService.getCurrentIndexNumber(); i < qwQueryService.getPastQueries().length - 1; i++)
+          if (dialogScope.isRowMatched(i) && dialogScope.isRowSelected(i))
+            return(false);
+          // if we are past the selection, no need to check anything else
+          else if (!dialogScope.isRowSelected(i))
+            break;
+        // no selected items visible, return true
+        return(true);
+        };
       dialogScope.delAll = function(close) {
         var innerScope = $rootScope.$new(true);
         innerScope.error_title = "Delete All History";
@@ -963,7 +1016,7 @@
         }).result;
 
         promise.then(
-            function success() {qwQueryService.clearHistory(); close('ok');});
+            function success() {dialogScope.selected = []; qwQueryService.clearHistory(); close('ok');});
 
       };
       dialogScope.searchInfo = searchInfo;
@@ -978,6 +1031,11 @@
                      '/history_dialog/qw_history_dialog.html',
         scope: dialogScope
       }).result;
+
+      promise.then(function(result) {
+        if (result === 'run')
+          query(false);
+      });
 
       // scroll the dialog's table
       $timeout(scrollHistoryToSelected,100);
