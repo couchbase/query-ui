@@ -168,7 +168,7 @@ td.ajtd-type-array {
   text-align:center;   
   border-right: solid 1px #d1d1d1;
   font-size: .875rem;       /* make sure font and size are the same as the data cells */
-  font-family: FontAwesome; /* need to use this font so sorting carets show up right */
+  /*font-family: FontAwesome; /* need to use this font so sorting carets show up right */
 }
 
 /*
@@ -228,7 +228,7 @@ td.ajtd-type-array {
   white-space: normal;
   vertical-align: top;
   font-size: .875rem; /* make sure font and size are the same as the header */
-  font-family: FontAwesome;
+  /*font-family: FontAwesome;*/
   padding: .1ch;
 }
 

@@ -160,24 +160,24 @@
 	  // if it's a new field, sort forward by that field
 	  if (spanElem !== prevSortElem) {
 	    if (prevSortElem)
-	      prevSortElem.classList.remove("icon", "fa-caret-down", "fa-caret-up");
+	      prevSortElem.firstElementChild.classList.remove("icon", "fa-caret-down", "fa-caret-up");
 
 	    prevSortElem = spanElem;
 
 	    sortForward = true;
 	    sortField = spanElem.innerText;
-	    spanElem.classList.add("icon", "fa-caret-down");
+	    spanElem.firstElementChild.classList.add("icon", "fa-caret-down");
 	  }
 
 	  // if they clicked the same field, reverse the sort direction
 	  else {
 	    if (sortForward) {
-          spanElem.classList.remove("fa-caret-down");
-          spanElem.classList.add("fa-caret-up");
+          spanElem.firstElementChild.classList.remove("fa-caret-down");
+          spanElem.firstElementChild.classList.add("fa-caret-up");
 	    }
 	    else {
-          spanElem.classList.remove("fa-caret-up");
-          spanElem.classList.add("fa-caret-down");
+          spanElem.firstElementChild.classList.remove("fa-caret-up");
+          spanElem.firstElementChild.classList.add("fa-caret-down");
 	    }
 	    sortForward = !sortForward;
 
@@ -310,7 +310,7 @@
       if (meta.arrayInnerObjects) for (var fieldName in meta.arrayInnerObjects.innerKeys) {
         var size = meta.arrayInnerObjects.innerKeys[fieldName].size;
         headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-          size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'</span>';
+          size + 'ch"' + 'class="data-table-header-cell"><span class="caret-subspan"></span>' + mySanitize(fieldName) +'</span>';
       }
 
       // if we have arrays that include non-objects as well, leave an untitled column for them
@@ -325,7 +325,7 @@
       if (meta.innerKeys) for (var fieldName in meta.innerKeys) {
         var size = meta.innerKeys[fieldName].size;
         headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-          size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'</span>';
+          size + 'ch"' + 'class="data-table-header-cell"><span class="caret-subspan"></span>' + mySanitize(fieldName) +'</span>';
       }
 
       headerHTML += '</div>';
