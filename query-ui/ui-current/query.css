@@ -83,7 +83,7 @@
 }
 #result_editor { /* the wrapper around the JSON view */
   background-color: #f6f7f9;
-  font-size: 14px;
+  font-size: .75rem;
   font-weight: 400;
   padding: 1rem;
 }
@@ -268,7 +268,7 @@ input.ng-invalid {
   background-color: #f9e9ea; /* red-7 */
 }
 
-/* Buttons for the document editor */
+/* Buttons for the document editor -------------------------------------- */
 .flex-grow-1-25 {
   flex-grow: 1.25;
 }
@@ -287,14 +287,14 @@ input.ng-invalid {
   font-size: inherit;
 }
 
-/* monitoring tables --------------- */
+/* monitoring tables ---------------------------------------------------- */
 #active_table .cbui-table-header,
 #completed_table .cbui-table-header,
 #prepareds_table .cbui-table-header {
   cursor: pointer;
 }
 
-/* monitoring statistics --------------- */
+/* monitoring statistics ------------------------------------------------ */
 #query_stats {
   display: -webkit-box;
   display: flex;

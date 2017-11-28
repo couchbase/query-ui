@@ -27,12 +27,12 @@
   margin: 0;
   padding: .25rem;
   color: #2ca01c;
-  font-size: .875rem;
+  font-size: .75rem;
 }
 .ajtd-value {
   margin: 0;
   padding: .25rem;
-  font-size: .875rem;
+  font-size: .75rem;
 }
 .ajtd-value:first-child {
   padding: 0;
@@ -53,7 +53,7 @@
   font-size: small;
 }
 
-/* for TREES ---------------- */
+/* for TREES ------------------------------------------------------------ */
 li.ajtd-type-array,
 ul.ajtd-type-array {
   padding: 0;
@@ -76,7 +76,7 @@ ul.ajtd-type-array {
   border-bottom: 1px dashed #d1d1d1;
 }
 
-/* for TABLES ---------------- */
+/* for TABLES ---------------------------------------------------------- */
 table.ajtd-root {
   border: 0px solid #d1d1d1;
   margin: 0;
@@ -97,13 +97,13 @@ td.ajtd-type-array {
 }
 
 
-/* striping alternate 'rows' for TREES and TABLES ---------- */
+/* striping alternate 'rows' for TREES and TABLES ----------------------- */
 .ajtd-root > tbody > tr:nth-child(odd),
 .ajtd-table > tbody > tr:nth-child(odd),
 .ajtd-type-object > li:nth-child(odd),
 .ajtd-type-array > li:nth-child(odd),
 .data-table-wrapper > div:nth-child(odd) {
-  background-color: #f6f7f9;
+  background-color: #f6fafd;
 }
 
 .ajtd-root > tbody > tr:nth-child(even),
@@ -114,7 +114,7 @@ td.ajtd-type-array {
   background-color: #fff;
 }
 
-/* hide and show very long strings in TABLES --------- */
+/* hide and show very long strings in TABLES ----------------------------- */
 .ajtd-hideContent {
   overflow: hidden;
   line-height: 1.5;
@@ -137,7 +137,7 @@ td.ajtd-type-array {
 }
 
 /*
- * the data-table-header is a separate div that holds the column headers, so 
+ * the data-table-header is a separate div that holds the column headers, so
  * they stay visible even when the table is scrolled. This div is programatically
  * scrolled horizontally to stay in sync with the table contents.
  *
@@ -159,16 +159,21 @@ td.ajtd-type-array {
 }
 
 .data-table-header-row::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .data-table-header-cell {
   display: inline-block;
-  white-space: normal; 
-  text-align:center;   
   border-right: solid 1px #d1d1d1;
-  font-size: .875rem;       /* make sure font and size are the same as the data cells */
-  /*font-family: FontAwesome; /* need to use this font so sorting carets show up right */
+  padding-left: .25rem;
+  cursor: pointer;
+  font-size: .75rem; /* make sure font and size are the same as the data cells */
+}
+.data-table-header-cell:last-child {
+  border-right: solid 0px #d1d1d1;
+}
+.caret-subspan {
+  padding-left: .25rem;
 }
 
 /*
@@ -184,34 +189,8 @@ td.ajtd-type-array {
   position: relative;
 }
 
-/*
-.data-table-wrapper::-webkit-scrollbar {
-   width: 10px; 
-   height: 10px;
-}
-
-.data-table-wrapper::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.4); 
-    border-radius: 8px;
-    -webkit-border-radius: 8px;
-}
-
-.data-table-wrapper::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 8px;
-    border-radius: 8px;
-    background: rgba(100,100,100,0.8); 
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
-}
-*/
-
-/*
- * inside the wrapper is the table div, which contains row divs and 
- * cell spans. Make sure that the fonts and spacing are kept the same with
- * the header above, or the two won't line up.
- */
- 
 .data-table {
-    border: 1px solid #ececec; 
+  border: 1px solid #ececec;
 }
 
 .data-table-row {
@@ -223,13 +202,12 @@ td.ajtd-type-array {
 
 .data-table-cell {
   display: inline-block;
-  overflow:hidden;
-  overflow-wrap:break-word;
-  white-space: normal;
+  overflow: hidden;
+  overflow-wrap: break-word;
   vertical-align: top;
-  font-size: .875rem; /* make sure font and size are the same as the header */
-  /*font-family: FontAwesome;*/
-  padding: .1ch;
+  white-space: normal;
+  font-size: .75rem; /* same as the header font for alignment HACK */
+  padding: .125rem;
 }
 
 .data-table-special-value {
@@ -238,9 +216,9 @@ td.ajtd-type-array {
 }
 
 .data-table-array {
-    border: 1px solid #ececec; 
-    margin-left: 1px;
-    margin-right: 1px;
+  border: 1px solid #ececec;
+  margin: -.125rem;
+
 }
 
 .data-table-inner-header-row {
@@ -251,4 +229,3 @@ td.ajtd-type-array {
   cursor: default;
   color: #555;
 }
-

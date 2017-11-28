@@ -310,7 +310,7 @@
       if (meta.arrayInnerObjects) for (var fieldName in meta.arrayInnerObjects.innerKeys) {
         var size = meta.arrayInnerObjects.innerKeys[fieldName].size;
         headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-          size + 'ch"' + 'class="data-table-header-cell"><span class="caret-subspan"></span>' + mySanitize(fieldName) +'</span>';
+          size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
       }
 
       // if we have arrays that include non-objects as well, leave an untitled column for them
@@ -841,4 +841,3 @@
     }
 
 })();
-
