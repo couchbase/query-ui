@@ -207,7 +207,7 @@ td.ajtd-type-array {
   vertical-align: top;
   white-space: normal;
   font-size: .75rem; /* same as the header font for alignment HACK */
-  padding: .125rem;
+  padding: .1rem;
 }
 
 .data-table-special-value {

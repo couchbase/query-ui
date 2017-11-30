@@ -605,7 +605,7 @@
 
         // the height value we get above is in "lines" of text, we need to convert that to pixels.
         meta.offsets[index + 1] =
-          meta.offsets[index] + (lineHeight * lineHeightPixels) + lineSpacingPixels; // each line 21px
+          meta.offsets[index] + (lineHeight * lineHeightPixels) + lineSpacingPixels; // each line 18px
 
         //console.log("row: " + index + " has lineHeight: " + lineHeight + " size: " +
         // ((lineHeight * lineHeightPixels) + lineSpacingPixels));
@@ -619,10 +619,18 @@
     // we call this for instance of the field in each document/row, so it keeps
     // a running tally of the max size seen, the types seen, and the average size
     //
+    // *****MAGIC NUMBERS***** used to convert "lines" of text pixels
+    //
     var maxFieldWidth = 80; // wrap if a field is longer than this many chars
     var characterPadding = 3; // make fields this many characters bigger for padding
-    var lineHeightPixels = 22;
+    var lineHeightPixels = 18;
     var lineSpacingPixels = 5;
+    var longStringReduction = 0.80; // strings longer than 5 lines need a reduction since
+                                    // their average charecter width is narrower than one 'ch'.
+    // padding on top/bottom of each data-table-cell adds a bit extra per item
+    var line_padding = 0.081;
+    var line_plus_padding = 1 + line_padding;
+
 
     function getFieldInfo(item,fieldData) {
       if (!fieldData)
@@ -777,14 +785,14 @@
       // check the field type, some can wrap, others not
       // numbers and bool only get one line, since they don't wrap
       if (_.isNumber(item) || _.isBoolean(item))
-        return 1;
+        return line_plus_padding;
 
       // for strings, see how many lines they wrap based on the allowed width
       else if (_.isString(item)) {
         if (!fieldData) {
           var err = new Error();
           console.log(err.stack);
-          return(1);
+          return line_plus_padding;
         }
 
         // because the 'ch' measure in html doesn't correspond with the number of characters
@@ -793,10 +801,11 @@
 
         var lines = Math.ceil(item.length/fieldData.size);
         if (lines > 5)
-          lines = Math.ceil((item.length*0.95)/fieldData.size);
+          lines = 5 + Math.ceil(((item.length-(5*fieldData.size))*longStringReduction)/fieldData.size);
+          //lines = Math.ceil((item.length*longStringReduction)/fieldData.size);
 
         //console.log("String " + item.substring(0,10) + " lines: " + lines);
-        return(lines);
+        return(lines + line_padding);
       }
 
       // for arrays, recursively compute the number of lines needed for each element
@@ -819,7 +828,7 @@
             lineCount += getItemHeight(item[i],fieldData.arrayInnerPrims);
         }
         // add a bit for margins
-        lineCount += 0.125;
+        lineCount += line_padding;
         //console.log("Array with " + item.length + " items got lines: " + lineCount);
         return(lineCount);
       }
@@ -832,12 +841,12 @@
           if (childHeight > maxHeight)
             maxHeight = childHeight;
         }
-        return(maxHeight + 1);
+        return(maxHeight + line_plus_padding);
       }
 
       // anything else is probably null, height 1
       else
-        return(1);
+        return(line_plus_padding);
     }
 
 })();
