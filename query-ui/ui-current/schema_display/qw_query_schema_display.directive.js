@@ -87,8 +87,14 @@
           var result = "(" + field.type;
 
           // if it's an array of just one type, say it here
-          if (field.type == 'array' && field.items && field.items.type)
-            result += " of " + field.items.type;
+          if (field.type == 'array' && field.items) {
+            if (field.items.type)
+              result += " of " + field.items.type;
+            else if (field.items.length > 0)
+              result += " of subtypes";
+            else 
+              result += " of object";
+          }
 
           // if the field is indexed, say so
           if (field.indexed)
@@ -259,7 +265,12 @@
         '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +
         '    <div ng-if="field.type==\'array\' && field.items.length">' +
         '      <ul class="schema"><li ng-repeat="schema in field.items">{{name}} subtype:' +
-        '        <schema-display schema="schema.subtype" path="path + name + \'[]\' "></schema-display></li>' +
+        '        <schema-display schema="schema" path="path + name + \'[]\' "></schema-display></li>' +
+        '      </ul>' +
+        '    </div>' +
+        '    <div ng-if="field.type==\'array\' && field.items.$schema">' +
+        '      <ul class="schema"><li>{{name}} subtype:' +
+        '        <schema-display schema="field.items" path="path + name + \'[]\' "></schema-display></li>' +
         '      </ul>' +
         '    </div>' +
         '    <div ng-if="field.type==\'array\' && field.items.subtype">' +
