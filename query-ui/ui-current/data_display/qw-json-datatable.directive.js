@@ -325,7 +325,7 @@
       if (meta.innerKeys) for (var fieldName in meta.innerKeys) {
         var size = meta.innerKeys[fieldName].size;
         headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-          size + 'ch"' + 'class="data-table-header-cell"><span class="caret-subspan"></span>' + mySanitize(fieldName) +'</span>';
+          size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
       }
 
       headerHTML += '</div>';
@@ -419,8 +419,12 @@
     //
 
     function createHTMLforValue(item,fieldData,path) {
+      var defaultClass = "data-table-cell";
+      if (_.isArray(item) || _.isPlainObject(item)) // use a different cell type for arrays and objects
+          defaultClass = "data-table-cell-special";
+
       var html = '<span style="max-width:' + fieldData.size + 'ch;min-width:' + fieldData.size +
-        'ch;" class="data-table-cell cursor-pointer"';
+        'ch;" class="' + defaultClass + ' cursor-pointer"';
       if (path)
         html += ' title="' + path + '" ';
       html += '>';

@@ -207,7 +207,17 @@ td.ajtd-type-array {
   vertical-align: top;
   white-space: normal;
   font-size: .75rem; /* same as the header font for alignment HACK */
-  padding: .1rem;
+  padding-left: .25rem;
+}
+
+.data-table-cell-special { /* used for cells containing objects or arrays */
+  display: inline-block;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  vertical-align: top;
+  white-space: normal;
+  font-size: .75rem; /* same as the header font for alignment HACK */
+  padding: 0rem;
 }
 
 .data-table-special-value {
