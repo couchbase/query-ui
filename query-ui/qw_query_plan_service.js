@@ -85,18 +85,27 @@
         return(predecessor);
       }
 
-      // parallel groups are like sequences, but they need to wrap their child to mark it as parallel
+      // parallel groups are like sequences. We used to wrap them in a separate Node, but
+      // that is not really needed, we will just mark the beginning and end.
+
       else if (operatorName === "Parallel" && plan['~child']) {
-        var subsequence = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
+        //console.log("Got Parallel block, predecessor: " + JSON.stringify(predecessor));
+        var subsequence = convertPlanJSONToPlanNodes(plan['~child'],predecessor,lists);
+        var subseq_end = null;
+
         // mark the elements of a parallel subsequence for later annotation
         for (var subNode = subsequence; subNode != null; subNode = subNode.predecessor) {
           if (subNode == subsequence)
             subNode.parallelBegin = true;
-          if (subNode.predecessor == null)
+          if (subNode.predecessor == predecessor) {
             subNode.parallelEnd = true;
+            subseq_end = subNode;
+          }
           subNode.parallel = true;
         }
-        return(new PlanNode(predecessor,plan,subsequence,lists.total_time));
+        //subseqence.predecessor = predecessor;
+        return(subsequence);
+        //return(new PlanNode(predecessor,plan,subsequence,lists.total_time));
       }
 
       // Prepare operators have their plan inside prepared.operator
@@ -153,7 +162,7 @@
       // we expect predecessor to be null if we see a UNION
       else if (operatorName === "UnionAll" && plan['~children']) {
         if (predecessor != null)
-          console.log("ERROR: Union with unexpected predecessor. ");
+         console.log("ERROR: Union with unexpected predecessor. ");
 
         var unionChildren = [];
 
@@ -166,6 +175,18 @@
         //  return(new PlanNode(predecessor,plan,[unionNode],lists.total_time));
         //else
           return(unionNode);
+      }
+
+      // AnsiJoin operators have the INNER part of the join represented by a ~child field which
+      // is a sequence of operators. The OUTER is the inputs to the AnsiJoin op, which are
+      // already captured
+
+      else if (operatorName === "AnsiJoin" && plan["~child"] && plan["~child"]["~children"]) {
+        var inner = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
+        var outer = predecessor;
+        //console.log("Ansi join, inner: " + JSON.stringify(inner));
+        //console.log("Ansi join, outer: " + JSON.stringify(outer));
+        return(new PlanNode([inner,outer],plan,null,lists.total_time));
       }
 
       // Similar to UNIONs, IntersectScan, UnionScan group a number of different scans
@@ -320,6 +341,11 @@
         result.push("by: " + op.keyspace + "." + op.index);
         break;
 
+      case "IndexScan2":
+        result.push(op.keyspace + "." + op.index);
+        result.push("as: " + op.as);
+        break;
+
       case "PrimaryScan": // for primary scan, show the index name
         result.push(op.keyspace);
         break;
@@ -334,6 +360,10 @@
 
       case "Alias":
         result.push(op.as);
+        break;
+
+      case "AnsiJoin":
+        result.push("on: " + op.on_clause);
         break;
 
       case "Limit":

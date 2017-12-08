@@ -137,17 +137,14 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
   + '</div></a>';
 */
     else if (!plan.predecessor || !_.isArray(plan.predecessor)) {
-      result += '<div class="';
-      if (plan.operator)
-        result += opClass + '" title="' + JSON.stringify(plan.operator).replace(/"/g,'\'') + '">'
-        + getLabelForOperator(plan)
-        + '</div>';
+      result += getDivForNode(plan,opClass);
     }
 
     if (plan.predecessor)
      if (_.isArray(plan.predecessor)) {
         result += '</div><div class="row padding-0 qw-combi-wrapper">';
-        result += '<div class="qw-node qw-combinor">' + opName + "</div>";
+        result += getDivForNode(plan,"qw-node qw-combinor");
+        //result += '<div class="qw-node qw-combinor">' + opName + "</div>";
         result += '<div class="qw-combinor-border"></div>';
         result += '<div class="qw-rows-wrapper">';
 
@@ -162,6 +159,21 @@ else if (!plan.predecessor || !_.isArray(plan.predecessor))
       else
         result += makeTreeFromPlanNodes(plan.predecessor,hasSuccessor);
 
+    return(result);
+  }
+
+  //
+  // get the div for a node to represent a given operator
+  //
+
+  function getDivForNode(plan, opClass) {
+    var result = '<div class="' + opClass + '" title="';
+    if (plan.operator)
+      result += JSON.stringify(plan.operator).replace(/"/g,'\'');
+    else
+      result += "unknown op";
+
+    result += '">' + getLabelForOperator(plan) + '</div>';
     return(result);
   }
 
