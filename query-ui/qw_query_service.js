@@ -164,7 +164,7 @@
     //
 
     function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult,mutationCount,warnings) {
+        data,query,requestID,explainResult,mutationCount,warnings,sortCount) {
       this.status = status;
       this.resultCount = resultCount;
       this.resultCount = mutationCount;
@@ -182,6 +182,7 @@
       this.elapsedTime = truncateTime(elapsedTime);
       this.executionTime = truncateTime(executionTime);
       this.warnings = warnings;
+      this.sortCount = sortCount;
     };
 
 
@@ -207,7 +208,7 @@
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
           this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
-          this.mutationCount,this.warnings);
+          this.mutationCount,this.warnings,this.sortCount);
     };
     QueryResult.prototype.copyIn = function(other)
     {
@@ -224,6 +225,7 @@
       this.explainResult = other.explainResult;
       this.explainResultText = other.explainResultText;
       this.warnings = other.warnings;
+      this.sortCount = other.sortCount;
     };
 
 
@@ -1089,6 +1091,7 @@
               newResult.resultCount = data.metrics.resultCount;
               newResult.mutationCount = data.metrics.mutationCount;
               newResult.resultSize = data.metrics.resultSize;
+              newResult.sortCount = data.metrics.sortCount;
             }
           }
 
@@ -1143,6 +1146,7 @@
             newResult.resultCount = data.metrics.resultCount;
             newResult.mutationCount = data.metrics.mutationCount;
             newResult.resultSize = data.metrics.resultSize;
+            newResult.sortCount = data.metrics.sortCount;
           }
 
           lastResult.copyIn(newResult);
@@ -1267,6 +1271,7 @@
         if (data.metrics.mutationCount)
           newResult.mutationCount = data.metrics.mutationCount;
         newResult.resultSize = data.metrics.resultSize;
+        newResult.sortCount = data.metrics.sortCount;
         if (data.rawJSON)
           newResult.result = data.rawJSON;
         else
@@ -1428,6 +1433,7 @@
           if (data.metrics.mutationCount)
             newResult.mutationCount = data.metrics.mutationCount;
           newResult.resultSize = data.metrics.resultSize;
+          newResult.sortCount = data.metrics.sortCount;
         }
 
         if (data.requestID)

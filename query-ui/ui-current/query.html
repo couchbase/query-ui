@@ -75,7 +75,8 @@
         <span> | elapsed: {{qc.lastResult.elapsedTime}} | </span>
         <span>execution: {{qc.lastResult.executionTime}} | </span>
         <span ng-if="qc.lastResult.mutationCount">mutations: {{qc.lastResult.mutationCount}} | </span>
-        <span ng-if="!qc.lastResult.mutationCount">count: {{qc.lastResult.resultCount}} | </span>
+        <span ng-if="!qc.lastResult.mutationCount" ng-attr-title="sortCount: {{qc.lastResult.sortCount}}">
+        count: {{qc.lastResult.resultCount}} | </span>
         <span>size: {{qc.lastResult.resultSize}}</span>
       </div>
 
