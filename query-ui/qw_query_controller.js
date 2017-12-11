@@ -272,6 +272,7 @@
     //
 
     var endsWithSemi = /;\s*$/i;
+    var matchNonQuotedSmartQuotes = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([\u201C\u201D\u201E\u201F\u2033\u2036\u2018\u2019\u201A\u201B\u2032\u2035])/ig;
 
     function aceInputChanged(e) {
       //console.log("input changed, action: " + JSON.stringify(e[0]));
@@ -305,8 +306,32 @@
       qc.inputEditor.$blockScrolling = Infinity;
 
       // for inserts, by default move the cursor to the end of the insert
+      // and replace any smart quotes with dumb quotes
 
       if (e[0].action === 'insert') {
+
+        // detect and remove smart quotes, but only outside existing quoted strings. The regex
+        // pattern matches either quoted strings or smart quotes outside quoted strings. If we
+        // see any matched  for group 1, a bare smart quote, replace it.
+        var matchArray = matchNonQuotedSmartQuotes.exec(qc.lastResult.query);
+        if (matchArray != null) {
+          var newBytes = "";
+          var curBytes = qc.lastResult.query;
+          while (matchArray != null)  {
+            if (matchArray[1]) { // we want group 1
+              newBytes += curBytes.substring(0,matchNonQuotedSmartQuotes.lastIndex - 1) + '"';
+              curBytes = curBytes.substring(matchNonQuotedSmartQuotes.lastIndex);
+              matchNonQuotedSmartQuotes.lastIndex = 0;
+            }
+            matchArray = matchNonQuotedSmartQuotes.exec(curBytes);
+          }
+
+          if (newBytes.length > 0)
+            qc.lastResult.query = newBytes + curBytes;
+        }
+
+        // after past grab focus, move to end
+
         updateEditorSizes();
         qc.inputEditor.moveCursorToPosition(e[0].end);
         qc.inputEditor.focus();
