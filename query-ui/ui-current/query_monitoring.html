@@ -128,7 +128,7 @@
             <span ng-if="qmc.show_up_caret_completed('state')" class="icon fa-caret-up"></span>
             <span ng-if="qmc.show_down_caret_completed('state')" class="icon fa-caret-down"></span>
           </span>
-          <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('time')">run at
+          <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('requestTime')">run at
             <span ng-if="qmc.show_up_caret_completed('requestTime')" class="icon fa-caret-up"></span>
             <span ng-if="qmc.show_down_caret_completed('requestTime')" class="icon fa-caret-down"></span>
           </span>
@@ -161,7 +161,10 @@
           <span class="cbui-table-cell">
             {{result.state}}
           </span>
-          <span class="cbui-table-cell">
+          <span class="cbui-table-cell cursor-pointer" uib-tooltip="{{result.requestTime}}"
+             tooltip-placement="top"
+             tooltip-append-to-body="true"
+             tooltip-class="break-word">
             {{result.requestTime | limitTo:8:11}} {{result.requestTime | limitTo:3:-3}}
           </span>
           <span class="cbui-table-cell">
