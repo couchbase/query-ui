@@ -37,7 +37,7 @@
           <span class="icon fa-info fa-stack-1x"></span>
       </span></div>
       <input
-         type="number" min="1" max="200" ng-disabled="dec.options.doc_id.length"
+         type="number" min="1" max="200" required ng-disabled="dec.options.doc_id.length"
          ng-submit="dec.retrieveDocs()"
          ng-model="dec.options.limit" class="input-short-1">
     </div>
@@ -50,7 +50,7 @@
           <span class="icon fa-info fa-stack-1x"></span>
       </span></div>
       <input
-         type="number" min="0" ng-disabled="dec.options.doc_id.length"
+         type="number" min="0" required ng-disabled="dec.options.doc_id.length"
          ng-submit="dec.retrieveDocs()"
          ng-model="dec.options.offset" class="input-short-1">
     </div>
