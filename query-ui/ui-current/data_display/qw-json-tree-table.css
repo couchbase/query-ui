@@ -158,6 +158,15 @@ td.ajtd-type-array {
   width: calc(100% - 10px); // since the table always has a 10px scrollbar, leave space for it here also
 }
 
+.data-table-editor-header-row {
+  white-space: nowrap;            /* keep as a single row */
+  border-bottom: solid 1px #d1d1d1;
+  background-color: #eceff2 !important;
+  cursor: default;
+  color: #555;
+  height: 40px;
+}
+
 .data-table-header-row::-webkit-scrollbar {
   display: none;
 }
@@ -198,6 +207,14 @@ td.ajtd-type-array {
   white-space: nowrap;
   border-left: solid 1px #d1d1d1;
   border-right: solid 1px #d1d1d1;
+}
+
+.data-table-editor-row {
+  white-space: nowrap;
+  padding-top: 0.25rem;
+  display: inline-block;
+  vertical-align: top;
+  margin-bottom: 1px;
 }
 
 .data-table-cell {

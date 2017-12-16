@@ -165,7 +165,11 @@
 
         promise.then(function success(res) {
           var newJson = innerScope.editor.getSession().getValue();
-          saveDoc(-1,newJson,innerScope.doc_id);
+          saveDoc(-1,newJson,innerScope.doc_id).then(function success(res) {
+            refreshUnlessUnsaved();
+          }, function error(res) {
+            console.log("Error saving doc");;
+          });
         });
 
       });
@@ -200,9 +204,12 @@
 
         // did the query succeed?
         promise.then(function success(resp) {
-          //console.log("successfully copied row: " + row);
+          console.log("successfully copied form: " + form);
           dec.updatingRow = -1;
-          form.$setPristine();
+          if (!resp.data.errors) {
+            form.$setPristine();
+            $timeout(refreshUnlessUnsaved,100);
+          }
         },
 
         // ...or fail?
@@ -239,7 +246,6 @@
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Delete Document";
       dialogScope.error_detail = "Warning, this will delete the document: " + dec.options.current_result[row].id;
-      dialogScope.showCancel = true;
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
@@ -341,10 +347,17 @@
         scope: dialogScope
       }).result;
 
-      promise.then(function success(res) {
+      promise.then(getSaveDocClosure(dialogScope,row));
+    }
+
+    // need to remember the dialogScope and row in the promise resolution
+
+    function getSaveDocClosure(dialogScope,row) {
+      return function(res) {
         var newJson = dialogScope.editor.getSession().getValue();
         saveDoc(row,newJson);
-      });
+        refreshUnlessUnsaved();
+      }
     }
 
     //
@@ -364,29 +377,45 @@
       promise
       // did the query succeed?
       .then(function(resp) {
+        var data = resp.data, status = resp.status;
+        if (data.errors) {
+          handleSaveFailure(newKey,data.errors);
+        }
+
         dec.updatingRow = -1;
       },
 
       // ...or fail?
       function error(resp) {
-        var data = resp.data, status = resp.status;
-
-        var dialogScope = $rootScope.$new(true);
-        if (newKey)
-          dialogScope.error_title = "Error Inserting New Document";
-        else
-          dialogScope.error_title = "Error Updating Document";
-        dialogScope.error_detail = JSON.stringify(data);
-        $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-          scope: dialogScope
-        });
+        handleSaveFailure(newKey,resp.data);
         dec.updatingRow = -1;
       });
 
       return(promise);
     }
 
+    //
+    // show dialog with error message about save failure
+    //
+
+    function handleSaveFailure(newKey,errors) {
+        var dialogScope = $rootScope.$new(true);
+        if (newKey)
+          dialogScope.error_title = "Error Inserting New Document";
+        else
+          dialogScope.error_title = "Error Updating Document";
+        dialogScope.error_detail = JSON.stringify(errors);
+        dialogScope.hide_cancel = true;
+        $uibModal.open({
+          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+          scope: dialogScope
+        });
+    }
+
+
+    //
+    // save the document if we have a query service
+    //
 
     function saveDoc_n1ql(row,newJson,newKey) {
       var query;
@@ -713,6 +742,32 @@
         dec.options.where_clause = ''; // reset the where clause
         dec.options.offset = 0; // start off from the beginning
         $timeout(retrieveDocs_inner,50);
+      }
+    }
+
+    //
+    // if the user updates something, we like to refresh the results, unless
+    // there are unsaved changes
+    //
+
+    function refreshUnlessUnsaved() {
+
+      // if nothing else on screen is dirty, refresh
+      if (!$('#somethingChangedInTheEditor')[0]) {
+        retrieveDocs_inner();
+      }
+      // otherwise let the user know that updates are not yet visible
+      else {
+        var dialogScope = $rootScope.$new(true);
+        dialogScope.error_title = "Info";
+        dialogScope.error_detail = "Because you have unsaved document edits, some changes won't be shown until you retrieve docs.";
+        dialogScope.hide_cancel = true;
+
+        var promise = $uibModal.open({
+          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+          scope: dialogScope
+        }).result;
+
       }
     }
 
