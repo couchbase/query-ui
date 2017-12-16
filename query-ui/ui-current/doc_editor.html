@@ -100,7 +100,7 @@
      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0"
      class="row resp-sml margin-bottom-half">
     <div class="text-small resp-margin-sml">
-      <strong>Results for:</strong> &nbsp; <em>{{dec.options.current_query}}</em>
+      <strong><span ng-if="dec.options.current_result.length">{{dec.options.current_result.length}}</span> Results for:</strong> &nbsp; <em>{{dec.options.current_query}}</em>
     </div>
     <div class="text-right nowrap">
       <button

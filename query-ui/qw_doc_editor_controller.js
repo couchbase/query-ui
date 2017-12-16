@@ -204,7 +204,7 @@
 
         // did the query succeed?
         promise.then(function success(resp) {
-          console.log("successfully copied form: " + form);
+          //console.log("successfully copied form: " + form);
           dec.updatingRow = -1;
           if (!resp.data.errors) {
             form.$setPristine();
