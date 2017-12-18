@@ -177,15 +177,13 @@
           return(unionNode);
       }
 
-      // AnsiJoin operators have the INNER part of the join represented by a ~child field which
+      // AnsiJoin and AnsiNest operators have the INNER part of the join represented by a ~child field which
       // is a sequence of operators. The OUTER is the inputs to the AnsiJoin op, which are
       // already captured
 
-      else if (operatorName === "AnsiJoin" && plan["~child"] && plan["~child"]["~children"]) {
+      else if ((operatorName === "AnsiJoin" || operatorName === "AnsiNest") && plan["~child"] && plan["~child"]["~children"]) {
         var inner = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
         var outer = predecessor;
-        //console.log("Ansi join, inner: " + JSON.stringify(inner));
-        //console.log("Ansi join, outer: " + JSON.stringify(outer));
         return(new PlanNode([inner,outer],plan,null,lists.total_time));
       }
 
@@ -363,6 +361,7 @@
         break;
 
       case "AnsiJoin":
+      case "AnsiNest":
         result.push("on: " + op.on_clause);
         break;
 
