@@ -835,6 +835,7 @@
               JSON.parse(dialogScope.options.named_parameters[i].value);
 
         qwQueryService.options = dialogScope.options;
+        qwQueryService.saveStateToStorage();
       });
 
     }

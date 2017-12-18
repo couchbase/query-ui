@@ -16,6 +16,16 @@
         </span>
       </div>
       <div class="formrow">
+        <input id="for-auto-infer" type="checkbox" ng-model="options.auto_infer">
+        <label for="for-auto-infer" class="checkbox inline margin-right-zero">Automatically infer bucket schemas</label>
+        <span
+           class="fa-stack icon-info"
+           uib-tooltip="When you launch the query workbench, automatically infer bucket schemas to make field names available for autocompletion. In some cases this may impact server performance.">
+           <span class="icon fa-circle-thin fa-stack-2x"></span>
+           <span class="icon fa-info fa-stack-1x"></span>
+        </span>
+      </div>
+      <div class="formrow">
         <label class="inline">Max Parallelism</label>
         <input type="text" id="pwd" ng-model="options.max_parallelism"></input>
       </div>
