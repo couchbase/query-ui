@@ -127,47 +127,15 @@
       }).result;
 
       promise.then(function success(resp) {
-        var innerScope = $rootScope.$new(true);
 
-        // use an ACE editor for editing the JSON document
-        innerScope.ace_options = {
-            mode: 'json',
-            showGutter: true,
-            useWrapMode: true,
-            onLoad: function(_editor) { innerScope.editor = _editor;},
-            $blockScrolling: Infinity
-        };
-        innerScope.doc_id = dialogScope.file.name;
-        innerScope.doc_json =
-          '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}';
+        var res = showDocEditor(dialogScope.file.name,'{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
 
-        // are there any syntax errors in the editor?
-        innerScope.errors = function() {
-          if (innerScope.editor) {
-            var annot_list = innerScope.editor.getSession().getAnnotations();
-            if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
-              if (annot_list[i].type == "error")
-                return true;
-          }
-          return false;
-        };
-
-
-        //
-        // put up a dialog box with the JSON in it, if they hit SAVE, save the doc, otherwise
-        // revert
-        //
-
-        var promise = $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
-          scope: innerScope
-        }).result;
-
-        promise.then(function success(res) {
-          var newJson = innerScope.editor.getSession().getValue();
-          saveDoc(-1,newJson,innerScope.doc_id).then(function success(res) {
+        res.promise.then(function success(resp) {
+          //console.log("saving new doc...");
+          var newJson = res.scope.editor.getSession().getValue();
+          saveDoc(-1,newJson,res.scope.doc_id).then(function success(res) {
             refreshUnlessUnsaved();
-          }, function error(res) {
+          }, function error(resp) {
             console.log("Error saving doc");;
           });
         });
@@ -312,6 +280,15 @@
       if (dec.updatingRow >= 0)
         return;
 
+      var res = showDocEditor(dec.options.current_result[row].id, JSON.stringify(dec.options.current_result[row].data,null,2));
+      res.promise.then(getSaveDocClosure(res.scope,row));
+    }
+
+    //
+    // bring up the JSON editing dialog for edit or create new documents
+    //
+
+    function showDocEditor(id,json) {
       var dialogScope = $rootScope.$new(true);
 
       // use an ACE editor for editing the JSON document
@@ -319,20 +296,37 @@
           mode: 'json',
           showGutter: true,
           useWrapMode: true,
-          onLoad: function(_editor) { dialogScope.editor = _editor;},
+          onLoad: function(_editor) {
+            dialogScope.editor = _editor;
+            _editor.getSession().on("changeAnnotation", function() {
+              var annot_list = _editor.getSession().getAnnotations();
+              if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
+                if (annot_list[i].type == "error") {
+                  dialogScope.error_message = "Error on row: " + annot_list[i].row + ": " + annot_list[i].text;
+                  dialogScope.$applyAsync(function() {});
+                  return;
+                }
+              dialogScope.error_message = null; // no errors found
+              dialogScope.$applyAsync(function() {});
+            });
+            if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
+              _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
+          },
           $blockScrolling: Infinity
       };
-      dialogScope.doc_id = dec.options.current_result[row].id;
-      dialogScope.doc_json = JSON.stringify(dec.options.current_result[row].data,null,2);
+      dialogScope.doc_id = id;
+      dialogScope.doc_json = json;
 
       // are there any syntax errors in the editor?
       dialogScope.errors = function() {
         if (dialogScope.editor) {
           var annot_list = dialogScope.editor.getSession().getAnnotations();
-          if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
-            if (annot_list[i].type == "error")
-              return true;
-        }
+          if (annot_list && annot_list.length)
+            for (var i=0; i < annot_list.length; i++)
+              if (annot_list[i].type == "error") {
+                return true;
+              }
+          }
         return false;
       };
 
@@ -347,7 +341,7 @@
         scope: dialogScope
       }).result;
 
-      promise.then(getSaveDocClosure(dialogScope,row));
+      return({scope:dialogScope, promise:promise});
     }
 
     // need to remember the dialogScope and row in the promise resolution

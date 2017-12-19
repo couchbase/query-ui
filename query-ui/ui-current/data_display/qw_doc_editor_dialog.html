@@ -3,21 +3,19 @@
     <h2 class="ellipsis">Edit Document</h2>
   </div>
   <form class="forms">
-  <div class="panel-content max-height-500">
+  <div class="alert alert-warning" ng-if="error_message">{{error_message}}</div>
+  <div class="panel-content max-height-500" style="height: 600px">
     <h4 class="margin-bottom-1">{{doc_id}}</h4>
-    <div
-       id="result_editor"
-       ui-ace="ace_options"
-       ng-model="doc_json"
-       style="height:1200px;">
+      <div id="result_box" style="height: 90%; overflow: auto">
+        <div id="result_editor" ui-ace="ace_options" ng-model="doc_json" style="height:100%"></div>
+      </div>
     </div>
-  </div>
   <div class="panel-footer scroll-shadow">
     <a ng-click="$dismiss('cancel')">
       Cancel
     </a>
     <button
-       type="submit"
+       type="submit" ng-disabled="errors()"
        ng-click="!errors() && $close('ok')">Save</button>
   </div>
   </form>
