@@ -123,6 +123,7 @@
 
     qwQueryService.options = {
         timings: true,
+        auto_infer: true,
         max_parallelism: "",
         scan_consistency: "not_bounded",
         positional_parameters: [],
@@ -134,6 +135,7 @@
     qwQueryService.clone_options = function() {
         return {
           timings: qwQueryService.options.timings,
+          auto_infer: qwQueryService.options.auto_infer,
           max_parallelism: qwQueryService.options.max_parallelism,
           scan_consistency: qwQueryService.options.scan_consistency,
           positional_parameters: qwQueryService.options.positional_parameters.slice(0),
@@ -319,6 +321,10 @@
             qwQueryService.options = savedState.options;
           if (savedState.doc_editor_options) {
             qwQueryService.doc_editor_options = savedState.doc_editor_options;
+          }
+          // handle case where auto_infer is not yet defined, and set it to true
+          if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false) {
+            qwQueryService.options.auto_infer = true;
           }
         }
         else
@@ -1591,7 +1597,7 @@
         // Should we go get information for each bucket?
         //
 
-        if (qwConstantsService.showSchemas)
+        if (qwConstantsService.showSchemas && qwQueryService.options.auto_infer)
           getInfoForBucketBackground(qwQueryService.buckets,0);
 
         /////////////////////////////////////////////////////////////////////////
