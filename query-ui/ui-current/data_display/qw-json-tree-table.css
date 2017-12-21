@@ -102,7 +102,8 @@ td.ajtd-type-array {
 .ajtd-table > tbody > tr:nth-child(odd),
 .ajtd-type-object > li:nth-child(odd),
 .ajtd-type-array > li:nth-child(odd),
-.data-table-wrapper > div:nth-child(odd) {
+.data-table-wrapper > div:nth-child(odd),
+.data-table-wrapper > form:nth-child(odd) {
   background-color: #f6fafd;
 }
 
@@ -110,6 +111,7 @@ td.ajtd-type-array {
 .ajtd-table > tbody > tr:nth-child(even),
 .ajtd-type-object > li:nth-child(even),
 .ajtd-type-array > li:nth-child(even),
+.data-table-wrapper > form:nth-child(even),
 .data-table-wrapper > div:nth-child(even) {
   background-color: #fff;
 }
@@ -244,7 +246,7 @@ td.ajtd-type-array {
 
 .data-table-array {
   border: 1px solid #ececec;
-  margin: -.125rem;
+  /*margin: -.125rem;*/
 
 }
 

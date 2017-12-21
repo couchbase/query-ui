@@ -303,33 +303,64 @@
 	//
 
 	function createHTMLheader(meta, inner) {
+//	  console.log("creating header for meta: " + JSON.stringify(meta,null,4));
+//	  console.log("creating header, meta.innerKeys: " + JSON.stringify(Object.keys(meta.innerKeys)));
+//	  console.log("creating header, meta.arrayInnerPrims: " + meta.arrayInnerPrims);
+//
+//	  if (meta.arrayInnerObjects) {
+//	    console.log("creating header, meta.arrayInnerObjects.innerKeys: " + JSON.stringify(Object.keys(meta.arrayInnerObjects.innerKeys)));
+//	    console.log("creating header, meta.arrayInnerObjects.arrayInnerPrims: " + meta.arrayInnerObjects.arrayInnerPrims);
+//	  }
+//	  console.log("     ");
+
 	  // a header only is appropriate for arrays
-      var headerHTML = '<div class="data-table' + (inner?'-inner':'') + '-header-row">';
+	  var headerHTML = '<div class="data-table' + (inner?'-inner':'') + '-header-row">';
 
-      // for arrays of objects, have a header using the arrayInnerObjects keys
-      if (meta.arrayInnerObjects) for (var fieldName in meta.arrayInnerObjects.innerKeys) {
-        var size = meta.arrayInnerObjects.innerKeys[fieldName].size;
-        headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-          size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
-      }
+	  // normal case: meta has arrayInnerPrims and/or arrayKeys, indicating primitive
+	  // and/or field values for the table
 
-      // if we have arrays that include non-objects as well, leave an untitled column for them
-      if (meta.arrayInnerPrims) {
-        headerHTML += '<span style="min-width: ' +
-            meta.arrayInnerPrims.size + 'ch; max-width:' +
-            meta.arrayInnerPrims.size + 'ch"' +
-            'class="data-table-header-cell"></span>';
-      }
+	  // if we have arrays that include non-objects as well, leave an untitled column for them
+	  if (meta.arrayInnerPrims) {
+	    headerHTML += '<span style="min-width: ' +
+	    meta.arrayInnerPrims.size + 'ch; max-width:' +
+	    meta.arrayInnerPrims.size + 'ch"' +
+	    'class="data-table-header-cell"></span>';
+	  }
 
-      // for objects with inner keys, output those column
-      if (meta.innerKeys) for (var fieldName in meta.innerKeys) {
-        var size = meta.innerKeys[fieldName].size;
-        headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-          size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
-      }
+	  // for objects with inner keys, output those column
+	  if (meta.innerKeys)
+	    Object.keys(meta.innerKeys).sort().forEach(function(fieldName,index) {
+	      var size = meta.innerKeys[fieldName].size;
+	      headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
+	      size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
+	    });
 
-      headerHTML += '</div>';
-      return(headerHTML);
+	  // special case, we have arrayInnerObjects which may have innerKeys and arrayInnerPrims
+	  // for arrays of objects, have a header using the arrayInnerObjects keys
+	  if (meta.arrayInnerObjects) {
+
+	      // if we have arrays that include non-objects as well, leave an untitled column for them
+	      if (meta.arrayInnerObjects.arrayInnerPrims) {
+	        var arraySize = meta.arrayInnerObjects.arrayInnerPrims.size;
+	        //if (!inner && meta.arrayInnerObjects.arrayInnerObjects)
+	        //  arraySize += meta.arrayInnerObjects.arrayInnerObjects.size;
+	        //if (!inner)
+	        //  console.log("InnerPrims: " + JSON.stringify(meta,null,4));
+	        headerHTML += '<span style="min-width: ' + arraySize + 'ch; max-width:' + arraySize + 'ch"' +
+	        'class="data-table-header-cell">BAR!</span>';
+	      }
+
+	    if( meta.arrayInnerObjects.innerKeys) {
+	      Object.keys(meta.arrayInnerObjects.innerKeys).sort().forEach(function(fieldName,index) {
+	        var size = meta.arrayInnerObjects.innerKeys[fieldName].size;
+	        headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
+	        size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
+	      });
+	    }
+	  }
+
+	  headerHTML += '</div>';
+	  return(headerHTML);
 	}
 
 
@@ -340,7 +371,15 @@
 	function createHTMLForVisibleRegion(data,meta,scrollTop,height) {
 	  // if there is no data, output empty array symbols
 	  if (data.length == 0)
-        return('<div>[]</div>');
+	    return('<div>[]</div>');
+
+	  //console.log("creating html, meta.innerKeys: " + JSON.stringify(Object.keys(meta.innerKeys)));
+	  //console.log("creating html, meta.arrayInnerPrims: " + meta.arrayInnerPrims);
+
+//	  if (meta.arrayInnerObjects) {
+//	    console.log("creating html, meta.arrayInnerObjects.innerKeys: " + JSON.stringify(Object.keys(meta.arrayInnerObjects.innerKeys)));
+//	    console.log("creating html, meta.arrayInnerObjects.arrayInnerPrims: " + meta.arrayInnerObjects.arrayInnerPrims);
+//	  }
 
 	  // look at meta to see which rows correspond to the visible area of screen,
 	  // add elements outside visible to permit smoother scrolling without additional rendering
@@ -375,27 +414,49 @@
         rowCount++;
         var height = (meta.offsets[row+1] - meta.offsets[row]);
         var rowHTML = '<div class="data-table-row" style="top:' + meta.offsets[row] +
-        'px;max-height: ' + height + 'px;min-height: ' + height + 'px">';
+          'px;max-height: ' + height + 'px;min-height: ' + height + 'px">';
 
-        if (meta.arrayInnerObjects)
-          for (var fieldName in meta.arrayInnerObjects.innerKeys) { // for each possible field
-            var value;
-            var path = prefix +"[" + row + "]";
-            if (meta.outerKey) {
-              value = data[row][meta.outerKey][fieldName];
-              path += "." + meta.outerKey + "." + fieldName;
+        //console.log("Rendering row: " + row + ", value: " + JSON.stringify(data[row]));
+        // get a value for the current row
+        var row_value = data[row];
+        var row_path = prefix +"[" + row + "]";
+        if (meta.outerKey) {
+          row_value = data[row][meta.outerKey];
+          row_path += "." + meta.outerKey;
+        }
+
+        // if we have a top level row that is an array, need to compute metadata just for that row
+        if (_.isArray(row_value)) {
+          var row_meta = getFieldInfo([row_value]);
+          finalizeFieldWidths(row_meta);
+          //console.log("For row " + row + " value: " + JSON.stringify(row_value));
+          //console.log("  row_meta: " + JSON.stringify(row_meta));
+          rowHTML += createHTMLforValue(row_value,row_meta.arrayInnerPrims,row_path);
+        }
+
+
+        // now do handle the row value as either an object, or an array/primitive
+        else if (meta.arrayInnerObjects) {
+          // if some rows have non-object values, add them first
+          if (meta.arrayInnerObjects.arrayInnerPrims)
+            if (_.isArray(row_value) || _.isString(row_value) ||
+                  _.isNumber(row_value) || _.isBoolean(row_value))
+              rowHTML += createHTMLforValue(row_value,meta.arrayInnerObjects.arrayInnerPrims,row_path);
+            else {// regular row, output empty first column
+              //var size = meta.arrayInnerObjects.arrayInnerObjects.size + meta.arrayInnerObjects.arrayInnerPrims.size;
+              rowHTML += createHTMLforValue(null,meta.arrayInnerObjects.arrayInnerPrims,row_path);
             }
-            else {
-              value = data[row][fieldName];
-              path += "." + fieldName;
-            }
 
-            rowHTML += createHTMLforValue(value,meta.arrayInnerObjects.innerKeys[fieldName],path);
-          }
-
-        // if we have non-fields, add them as well
-        if (meta.arrayInnerPrims && !_.isPlainObject(data[row]))
-          rowHTML += createHTMLforValue(data[row],meta.arrayInnerPrims,prefix + "[" + row + "]");
+          // for each possible field
+          Object.keys(meta.arrayInnerObjects.innerKeys).sort().forEach(function(fieldName,index) {
+            //console.log("Got field: " + fieldName);
+            rowHTML += createHTMLforValue(row_value[fieldName],meta.arrayInnerObjects.innerKeys[fieldName],
+                row_path + "." + fieldName);
+          });
+        }
+        else if (meta.arrayInnerPrims) {
+          rowHTML += createHTMLforValue(row_value,meta.arrayInnerPrims,row_path);
+        }
 
         // if no fields at all, empty object
         if (_.isPlainObject(data[row]) && Object.keys(data[row]).length == 0)
@@ -419,6 +480,10 @@
     //
 
     function createHTMLforValue(item,fieldData,path) {
+      //console.log("Making html for value: " + JSON.stringify(item) /*+ ", field: " + JSON.stringify(fieldData,null,4)*/);
+      if (!fieldData)
+        return('<span class="' + defaultClass + ' cursor-pointer">NO FIELD ' + JSON.stringify(item) + '</span>');
+
       var defaultClass = "data-table-cell";
       if (_.isArray(item) || _.isPlainObject(item)) // use a different cell type for arrays and objects
           defaultClass = "data-table-cell-special";
@@ -446,22 +511,31 @@
 
           //console.log("Creating HTML for array length: " + item.length + ", fieldData: ");
           //console.log(JSON.stringify(fieldData,null,4));
+
           // does the array contain subobjects? if so, create a header
           if (fieldData.arrayInnerObjects) {
             html += createHTMLheader(fieldData, true);
             for (var i=0; i< item.length; i++) {
               html += '<div>'; // one div for each row
-              // for each inner key...
-              for (var innerKey in fieldData.arrayInnerObjects.innerKeys) {
-                html += createHTMLforValue(item[i][innerKey],
-                    fieldData.arrayInnerObjects.innerKeys[innerKey],
-                    path + "[" + i + "]." + innerKey);
+
+              //console.log("  item: " + JSON.stringify(item[i]));
+              // if we have non-objects in the array as well, output them first
+              if (fieldData.arrayInnerPrims) {
+                var primVal = null;
+                if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i]))
+                  primVal = item[i];
+                html += createHTMLforValue(primVal,fieldData.arrayInnerPrims,path + "[" + i + "]");
               }
 
-              // if we have non-objects in the array as well, output them here
-              if (!_.isPlainObject(item[i]) && fieldData.arrayInnerPrims)
-                html += createHTMLforValue(item[i],fieldData.arrayInnerPrims,
-                                           path + "[" + i + "]");
+              // now object keys
+              Object.keys(fieldData.arrayInnerObjects.innerKeys).sort().forEach(function(innerKey,index) {
+                var innerVal = null;
+                if (_.isPlainObject(item[i]))
+                  innerVal = item[i][innerKey];
+                html += createHTMLforValue(innerVal,fieldData.arrayInnerObjects.innerKeys[innerKey],
+                      path + "[" + i + "]." + innerKey);
+
+              });
 
               // finish the row
               html += '</div>';
@@ -484,16 +558,16 @@
       // for objects, output a table header in one row, plus a row of each value
       else if (_.isPlainObject(item)){
 
+        //console.log("Got object item: " + JSON.stringify(item));
+        //console.log("Inner keys: " + JSON.stringify(fieldData));
         // header
         html += createHTMLheader(fieldData,true);
 
         html += '<div>';
-        //console.log("Got object item: " + JSON.stringify(item));
-        //console.log("Inner keys: " + JSON.stringify(fieldData.innerKeys));
-        for (var key in fieldData.innerKeys) {
+        Object.keys(fieldData.innerKeys).sort().forEach(function(key,index) {
           //console.log(" for key: " + key + ", got HTML: " + getValueHTML(item[key],fieldData.innerKeys[key]));
           html += createHTMLforValue(item[key],fieldData.innerKeys[key],path + "." + key);
-        }
+        });
 
         html += '</div>';
       }
@@ -561,14 +635,18 @@
 
       if (meta.arrayInnerObjects) {
         var fieldNames = Object.keys(meta.arrayInnerObjects.innerKeys);
-        if (fieldNames.length == 1 && meta.arrayInnerObjects.innerKeys[fieldNames[0]].types.obj) {
+        if (fieldNames.length == 1 && (meta.arrayInnerObjects.innerKeys[fieldNames[0]].types.obj || meta.arrayInnerObjects.innerKeys[fieldNames[0]].types.arr)) {
+//          console.log("Before meta: " + JSON.stringify(meta,null,4));
+          meta.arrayInnerObjects = meta.arrayInnerObjects.innerKeys[fieldNames[0]];
           meta.outerKey = fieldNames[0];
-          meta.arrayInnerObjects.innerKeys = meta.arrayInnerObjects.innerKeys[fieldNames[0]].innerKeys;
+
+//        console.log("After meta: " + JSON.stringify(meta,null,4));
         }
       }
 
       computeRowOffsets();
 
+      //console.log("Got meta: " + JSON.stringify(meta,null,2));
       // we now have a width for every column of every field.
       return(meta);
     }
@@ -580,28 +658,38 @@
     function computeRowOffsets() {
       // now we know the width of every column, compute the height/offset of
       // every row so we know where to render each row
+      //console.log("Got meta: " + JSON.stringify(meta,null,4));
 
       meta.offsets[0] = 0; // first row starts at zero px from the top
 
       for (var index = 0; index < data.length; index++) { // for each data item
         var item = data[index];
         var lineHeight = 1;
+        if (meta.outerKey)
+          item = item[meta.outerKey];
 
-        if (meta.arrayInnerObjects) for (var fieldName in meta.arrayInnerObjects.innerKeys) { // for each possible field
-          var value;
-          if (meta.outerKey)
-            value = item[meta.outerKey][fieldName];
-          else
-            value = item[fieldName];
+        //console.log("Got row value: " + JSON.stringify(item));
 
-          var fieldHeight = getItemHeight(value,meta.arrayInnerObjects.innerKeys[fieldName]);
-          //console.log("Field: " + fieldName + " height: " + fieldHeight);
-          if (fieldHeight > lineHeight)
-            lineHeight = fieldHeight;
+        if (meta.arrayInnerObjects) {
+          for (var fieldName in meta.arrayInnerObjects.innerKeys) { // for each possible field
+            var value = item[fieldName];
+
+            var fieldHeight = getItemHeight(value,meta.arrayInnerObjects.innerKeys[fieldName]);
+            //console.log("Field: " + fieldName + " height: " + fieldHeight);
+            if (fieldHeight > lineHeight)
+              lineHeight = fieldHeight;
+          }
+
+          // handle any non-objects
+          if (meta.arrayInnerObjects.arrayInnerPrims && (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
+            var fieldHeight = getItemHeight(item,meta.arrayInnerObjects);
+            if (fieldHeight > lineHeight)
+              lineHeight = fieldHeight;
+          }
         }
 
         // handle any non-objects
-        if (meta.arrayInnerPrims && !_.isPlainObject(item)) {
+        if (meta.arrayInnerPrims && (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
           var fieldHeight = getItemHeight(item,meta.arrayInnerPrims);
           if (fieldHeight > lineHeight)
             lineHeight = fieldHeight;
@@ -612,7 +700,7 @@
           meta.offsets[index] + (lineHeight * lineHeightPixels) + lineSpacingPixels; // each line 18px
 
         //console.log("row: " + index + " has lineHeight: " + lineHeight + " size: " +
-        // ((lineHeight * lineHeightPixels) + lineSpacingPixels));
+        //((lineHeight * lineHeightPixels) + lineSpacingPixels));
       }
     }
 
@@ -677,10 +765,11 @@
       else if (_.isArray(item)) {
         fieldData.types.arr = true;
         for (var i=0; i < item.length; i++)
-          if (_.isPlainObject(item[i]))
-            fieldData.arrayInnerObjects = getFieldInfo(item[i],fieldData.arrayInnerObjects);
-          else
+          // handle arrays and primitives different from objects
+          if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i]))
             fieldData.arrayInnerPrims = getFieldInfo(item[i],fieldData.arrayInnerPrims);
+          else if (_.isPlainObject(item[i]))
+            fieldData.arrayInnerObjects = getFieldInfo(item[i],fieldData.arrayInnerObjects);
 
         // we show objects and primitives side-by-side, so allow space for both
         if (fieldData.arrayInnerObjects)
@@ -750,6 +839,10 @@
 
         if (!fieldInfo.size || arraySize > fieldInfo.size) // see if array is bigger than any other types
           fieldInfo.size = arraySize;
+
+        //console.log("got array, innerObjects: " + (fieldInfo.arrayInnerObjects? fieldInfo.arrayInnerObjects.size : 0) +
+        //    ", innerPrims: " + (fieldInfo.arrayInnerPrims ? fieldInfo.arrayInnerPrims.size : 0) +
+        //    ", total size: " + fieldInfo.size);
       }
 
       // for objects, sum up the size of each child
@@ -814,6 +907,7 @@
 
       // for arrays, recursively compute the number of lines needed for each element
       else if (_.isArray(item)) {
+        //console.log("Computing array height, item: " + JSON.stringify(item)/* + ", fieldData: " + JSON.stringify(fieldData)*/);
         var lineCount = 0;
         // if the array has arrayInnerKeys, we don't have a header line for each individual
         // item, just one for the whole array

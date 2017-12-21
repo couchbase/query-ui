@@ -283,6 +283,7 @@
     var totalWidth = 0;
     var hasNonObject = false;
     var unnamedWidth;
+    var rowWidths = [];
     for (var row=0; row < object.length; row++)
       if (object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
         //console.log("row: " + row + ": " + JSON.stringify(object[row].data));
@@ -292,6 +293,7 @@
         if (_.isArray(data) || _.isString(data) || _.isNumber(data) || _.isBoolean(data)) {
           hasNonObject = true;
           var width = getColumnWidth(data);
+          rowWidths[row] = width;
           if (!unnamedWidth || width > unnamedWidth)
             unnamedWidth = width;
         }
@@ -301,6 +303,7 @@
           topLevelKeys[key] = true;
           // see how much space this value requires, remember the max
           var width = getColumnWidth(value);
+          rowWidths[row] = width;
           if (!columnWidths[key] || width > columnWidths[key])
             columnWidths[key] = width;
         });
@@ -311,7 +314,7 @@
     });
 
     return({topLevelKeys: topLevelKeys, columnWidths: columnWidths, totalWidth: totalWidth,
-      hasNonObject: hasNonObject, unnamedWidth: unnamedWidth});
+      hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowWidths: rowWidths});
   }
 
   //
@@ -373,7 +376,7 @@
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
         var invalidName = formName + '.$invalid';
-        result += '<form name="' + formName + '"' +
+        result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + 3.25)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
         '<div class="data-table-editor-row" ' +
         'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
@@ -413,7 +416,7 @@
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
-          result += '<span class="data-table-cell" style="width:' + meta.unnamedWidth*columnWidthPx + 'px">';
+          result += '<span class="data-table-cell" style="width:' + meta.rowWidths[row]*columnWidthPx + 'px">';
 
           // if this row is a subarray or primitive, put it here
           var data = object[row].data;
@@ -509,24 +512,10 @@
   // will need.
 
   function getColumnWidth(item) {
-    if (_.isPlainObject(item)) { // for objects we need to sum up columns for each field
-      //console.log("Getting width for object: " + JSON.stringify(item));
-      var totalWidth = 0;
-      _.forIn(item, function (value, key) { // for each field
-        totalWidth += getColumnWidth(value);
-      });
-
-      if (totalWidth == 0)
-        totalWidth = 1;
-
-      //console.log("   got object width: " + totalWidth);
-      return(totalWidth);
-    }
-
     // arrays are complex - an array of primitives is a vertical list of values, but a mixed
     // array of objects and primitives is shown as a table, with an unnamed column for the
     // primitives
-    else if (_.isArray(item)) { // arrays will list vertically, find max width of any element
+    if (_.isArray(item)) { // arrays will list vertically, find max width of any element
       //console.log("Getting width for array: " + JSON.stringify(item));
       var namedWidth = 1;
       var unnamedWidth = 0;
@@ -546,6 +535,20 @@
 
       //console.log("   got array width: " + namedWidth + unnamedWidth);
       return(namedWidth + unnamedWidth);
+    }
+
+    else if (_.isPlainObject(item)) { // for objects we need to sum up columns for each field
+      //console.log("Getting width for object: " + JSON.stringify(item));
+      var totalWidth = 0;
+      _.forIn(item, function (value, key) { // for each field
+        totalWidth += getColumnWidth(value);
+      });
+
+      if (totalWidth == 0)
+        totalWidth = 1;
+
+      //console.log("   got object width: " + totalWidth);
+      return(totalWidth);
     }
 
     else // all primitive types just get 1 column wide.
@@ -737,6 +740,11 @@
           });
 
         }
+
+        // if the item wasn't an object, add filler cells for the empty fields
+        else _.forIn(keys, function(b,key) {
+          result += '<span class="data-table-cell empty" style="width: ' + columnWidthPx + 'px"></span>';
+        });
 
         result += '</div>'; // end the row
       });
