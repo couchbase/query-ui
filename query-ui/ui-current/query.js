@@ -8,6 +8,7 @@
     'qwJsonTable',
     'qwJsonTableEditor',
     'qwExplainViz',
+    'qwExplainVizD3',
     'qwLongPress',
     'qwValidJson',
     'mnPendingQueryKeeper',

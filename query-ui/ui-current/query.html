@@ -1,4 +1,4 @@
-<div id="currentUI"
+<div id="currentN1QLUI"
    ng-controller="qwQueryController as qc"
    ng-show="qc.validated.valid()"
    class="row items-top">
@@ -106,6 +106,8 @@
            ng-class="{selected: qc.isSelected(3)}">Tree</a>
         <a ng-click="qc.selectTab(4)" ng-if="qc.isEnterprise"
            ng-class="{selected: qc.isSelected(4)}">Plan</a>
+        <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise"
+           ng-class="{selected: qc.isSelected(6)}">Plan β</a>
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}">Plan Text</a>
       </span>
@@ -119,10 +121,10 @@
       <div id="result_editor" ui-ace="qc.aceOutputOptions"
         ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
         ng-model="qc.lastResult.result"></div>
-      <!-- div id="result_table" 
+      <!-- div id="result_table"
         ng-if="qc.isSelected(2) && (!qc.dataTooBig() || qc.showBigDatasets)"
         qw-json-table="qc.lastResult.data"></div -->
-      <div id="result_table" 
+      <div id="result_table"
         ng-if="qc.isSelected(2)"
         qw-json-data-table="qc.lastResult.data"></div>
       <div id="result_tree"
@@ -130,6 +132,8 @@
         qw-json-tree="qc.lastResult.data"></div>
       <div id="query_plan" ng-if="qc.isSelected(4)"
         qw-explain-viz="qc.lastResult.explainResult"></div>
+      <div id="query_plan_d3" ng-if="qc.isSelected(6)"
+        qw-explain-viz-d3="qc.lastResult.explainResult"></div>
       <div id="query_plan_text" ng-if="qc.isSelected(5)"
         ui-ace="qc.acePlanOptions"
         ng-model="qc.lastResult.explainResultText"></div>

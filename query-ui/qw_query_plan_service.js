@@ -224,6 +224,8 @@
       this.predecessor = predecessor; // might be an array if this is a Union node
       this.operator = operator;       // object from the actual plan
       this.subsequence = subsequence; // for parallel ops, arrays of plan nodes done in parallel
+      //if (total_query_time && operator['#time_absolute'])
+      //  this.time = Math.round(['#time_absolute']);
       if (total_query_time && operator['#time_absolute'])
         this.time_percent = Math.round(operator['#time_absolute']*1000/total_query_time)/10;
     }
@@ -407,7 +409,7 @@
       }
 
       // if there's a limit on the operator, add it here
-      if (op.limit)
+      if (op.limit && op.limit.length > 0)
         if (op.limit.length > 30)
           result.push(op.limit.slice(0,30) + "...");
         else
@@ -436,7 +438,9 @@
         var inOutStr = ((inStr.length > 0) ? inStr + ' in' : '') +
             ((inStr.length > 0 && outStr.length > 0) ? ' / ' : '') +
             ((outStr.length > 0) ? outStr + ' out' : '');
-        result.push(inOutStr);
+
+        if (inOutStr.length > 0)
+          result.push(inOutStr);
       }
 
       return(result);

@@ -1,5 +1,5 @@
-#currentUI {
-  margin: 0 0 -50px 0;
+#currentN1QLUI {
+  margin: 0 0 -150px 0;
   padding: 0;
 }
 #query_wrapper {}
@@ -206,7 +206,7 @@
 .doc-editor-results {
   overflow: auto;
   height: calc(100vh - 250px);
-  width: 100%; 
+  width: 100%;
 }
 
 .scroll-shadow-horizontal {
@@ -339,4 +339,26 @@ input.ng-invalid {
 }
 #query_stats hr {
   margin: .25rem 0;
+}
+
+/* styles for D3-based query plan viz */
+
+.node {
+    cursor: pointer;
+}
+
+.node circle {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 3px;
+}
+
+.node text {
+    font: 11px sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
 }

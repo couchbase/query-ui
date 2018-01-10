@@ -789,7 +789,7 @@
       // protected buckets
       //
 
-      var queryData = {statement: queryText, pretty: true};
+      var queryData = {statement: queryText, pretty: is_user_query};
 
       if (qwConstantsService.sendCreds) {
         var credArray = [];
@@ -1823,7 +1823,7 @@
       //console.log("Getting schema for : " + bucket.id);
 
       //return $http(inferQueryRequest)
-      return executeQueryUtil("infer `" + bucket.id + "`;", false)
+      return executeQueryUtil('infer `' + bucket.id + '`  with {"infer_timeout":5};', false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
         //console.log("Schema status: " + status);
@@ -2117,7 +2117,7 @@
     //
 
     function showErrorDialog(message) {
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Error";
@@ -2130,7 +2130,7 @@
     }
 
     function showWarningDialog(message) {
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Warning";

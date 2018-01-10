@@ -579,7 +579,7 @@
       var resultHeaderHeight =  $('#result_header').height();
       var sidebarHeaderHeight =  $('#sidebar_header').height();
       var resultSummaryHeight = $('#result_summary').height();
-      var current_ui = $('#currentUI').height() != null;
+      var current_ui = $('#currentN1QLUI').height() != null;
 
       var otherStuff = pageHeaderHeight + pageFooterHeight +
         headerNavHeight + queryBoxHeight;
@@ -631,6 +631,7 @@
         $('#result_table').height(editor_size+25);
         $('#result_tree').height(editor_size+15);
         $('#query_plan').height(editor_size + 15);
+        $('#query_plan_d3').height(editor_size);
         $('#query_plan_text').height(editor_size + 25);
 //        $('#result_box').height(editor_size+50);
       }
@@ -794,7 +795,7 @@
     dialogScope.file = {name: "output"};
 
     function options() {
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
       dialogScope.options = qwQueryService.clone_options();
       dialogScope.options.positional_parameters = [];
       dialogScope.options.named_parameters = [];
@@ -857,7 +858,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'json';
       dialogScope.file = dialogScope.data_file;
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -896,7 +897,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.query_file;
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -1050,7 +1051,7 @@
       dialogScope.selectNextMatch = selectNextMatch;
       dialogScope.selectPrevMatch = selectPrevMatch;
 
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#').height() != null) ? '/ui-current' : '/ui-classic';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -1176,7 +1177,7 @@
     //
 
     function showErrorMessage(message) {
-      var subdirectory = ($('#currentUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = ($('#').height() != null) ? '/ui-current' : '/ui-classic';
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
 
