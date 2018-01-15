@@ -20,7 +20,9 @@
 (function() {
 
   'use strict';
-  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', function () {
+  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', ['$compile', getD3Explain]);
+
+  function getD3Explain($compile) {
     return {
       restrict: 'A',
       scope: { data: '=qwExplainVizD3' },
@@ -64,128 +66,125 @@
                 content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
-
               content += "<div class='column text-right nowrap'>";
-              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)"><span class="icon fa-search"></span></a>';
-              content += '<a onclick="$(\'.qw-explain-wrapper\').addClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)"><span class="icon fa-search fa-1-5x"></span></a>';
-              content += '<a onclick="$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_1\');$(\'.qw-explain-wrapper\').removeClass(\'qw_zoom_2\');$(\'.qw-explain-wrapper\').scrollLeft(4000)"><span class="icon fa-search fa-2x"></span></a>';
+              content += '<a ng-click="zoomIn()"><span class="icon fa-search"></span></a>';
+              content += '<a ng-click="zoomOut()"><span class="icon fa-search fa-2x"></span></a>';
               content += "</div>";
 
               content += "</div>";
+
+              scope.zoomIn = zoomIn;
+              scope.zoomOut = zoomOut;
             }
-            
+
           }
 
           // set our element to use this HTML
-          element.html(content);
-          
+          var header = angular.element(content);
+          element.empty();
+          $compile(header)(scope, function(compiledHeader) {element.append(compiledHeader)});
+
+          //element.html(content);
+
           // now add the d3 content
-          
+
           if (data.plan_nodes) {
             // put the SVG inside a wrapper to allow scrolling
-            var wrapperElement = angular.element('<div class="data-table-wrapper"></div>');
+            wrapperElement = angular.element('<div class="d3-tree-wrapper"></div>');
             element.append(wrapperElement);
-
-            var simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
-            simpleTree.x0 = 50;
-            simpleTree.y0 = 0;
-            makeD3TreeFromSimpleTree(wrapperElement,simpleTree);
-            //makeD3TreeFromSimpleTree(element,treeData);
+            simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
+            makeTree();
           }
         });
       }
     };
-  });
+  }
 
-  var treeData =
-    { "x0" : 0,
-      "y0" : 100,
-      "name": "Stream",
-      "time": " 00:00",
-      "type": "#000",
-      "level": "#ccc",
-      "value": "5",
-      "parent": "null",
-      "children": [
-        {
-          "name": "Level 2: A",
-          "time": "00:00",
-          "type": "#f5a623", // orange-1 : warning : stroke
-          "level": "#4287d6", // blue-1 : has-children : fill
-          "value": "10", // radius
-          "parent": "Stream",
-          "children": [
-            {
-              "name": "Son of A",
-              "time": "00:00",
-              "type": "#000",
-              "level": "#ccc",
-              "value": "5",
-              "parent": "Level 2: A",
-              "children": [
-                {
-                  "name": "Son of son of A",
-                  "time": "00:00",
-                  "type": "#000",
-                  "level": "#ccc",
-                  "value": "5",
-                  "parent": "Son of A"
-                }
-              ]
-            },
-            {
-              "name": "Daughter of A",
-              "time": "00:00",
-              "type": "#000",
-              "level": "#ccc",
-              "value": "5",
-              "parent": "Level 2: A"
-            }
-          ]
-        },
-        {
-          "name": "Level 2: B",
-          "time": "00:00",
-          "type": "#000",
-          "level": "#ccc",
-          "value": "5",
-          "parent": "Top Level"
-        }
-      ]
-    }
-  ;
-  
+  //
+  // global so we can rebuild the tree when necessary
+  //
+
+  var wrapperElement;
+  var simpleTree; // underlying data
+
+  function makeTree() {
+
+    makeD3TreeFromSimpleTree(simpleTree);
+  }
+
+  //
+  // handle zooming
+  //
+
+//define zoom behaviour
+//  var zoom_handler = d3.zoom().on("zoom", zoom_actions);
+//
+//  function zoom_actions(){
+//    var transform = d3.zoomTransform(this);
+//    // same as  this.setAttribute("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
+//    this.setAttribute("transform", transform)
+//   }
+
+  function zoomIn() {
+    console.log("Zoom in!");
+    wrapperElement.empty();
+    orientation = orientLR;
+    makeTree();
+  }
+
+  function zoomOut() {
+    console.log("Zoom out!");
+    wrapperElement.empty();
+    orientation = orientTB;
+    makeTree();
+  }
+
   //
   // make a d3 tree
-  
-  function makeD3TreeFromSimpleTree(element,root,svg) {
+  //
+
+  // Magic numbers for layout
+  var lineHeight = 15;        // height for line of text, on which node height is based
+  var interNodeXSpacing = 25; // spacing between nodes horizonally
+  var interNodeYSpacing = 40; // spacing between nodes vertically
+
+  var orientLR = 1,
+  orientTB = 2;
+
+  var orientation = orientTB;
+
+  var width = 0; // total width for the SVG holding the tree
+  var height = 0;// total height for the SVG holding the tree
+
+  function makeD3TreeFromSimpleTree(root) {
     var margin = {top: 20, right: 120, bottom: 20, left: 120},
-    width = getTotalWidth(root,interNodeSpacing),
-    height = getTotalHeight(root),
-    duration = 750,
-    i = 0;
-    
-    var svg = d3.select(element[0]).append('svg')
+      duration = 500,
+      i = 0;
+
+    width = getTotalWidth(root,interNodeXSpacing);
+    height = getTotalHeight(root,interNodeYSpacing);
+
+    var svg = d3.select(wrapperElement[0]).append('svg')
     .attr("width", width + margin.right + margin.left)
     .attr("height", height + margin.top + margin.bottom);
 
-    console.log("Got simple tree: " + JSON.stringify(root,null,2));
+    //console.log("Got simple tree: " + JSON.stringify(root,null,2));
 
     var tree = d3.layout.tree().size([height, width]);
 
     // use nice curves between the nodes
-    var diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; });
+    var diagonal = d3.svg.diagonal().projection(getConnectionEndPoint);
 
     // add a group element to hold the nodes, text, and links
     svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
+
     // assign nodes and links
-    var nodes = tree.nodes(root).reverse();
+    var nodes = tree.nodes(root);
     var links = tree.links(nodes);
-    
-    // Normalize for fixed-depth.
-    nodes.forEach(function(d) { d.y = d.xOffset; });
-    
+
+    // We may override x/y locations due to Node width/height
+    nodes.forEach(function(d) { if (d.xOffset) d.y = d.xOffset; if (d.yOffset) d.y = d.yOffset;});
+
     // Each node needs a unique id. If id field doesn't exist, use incrementing value
     var node = svg.selectAll("g.node")
       .data(nodes, function(d) { return d.id || (d.id = ++i); });
@@ -193,8 +192,7 @@
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
     .attr("class", "node")
-    .attr("transform", function(d) { return "translate(" + root.y0 + "," + root.x0 + ")"; })
-    ;//.on("click", click);
+    .attr("transform", getRootTranslation);
 
     // ********* create node style from data *******************
     nodeEnter.append("rect")
@@ -227,7 +225,8 @@
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
     .duration(duration)
-    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+//    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+    .attr("transform", getNodeTranslation);
 
     nodeUpdate.selectAll("text").style("fill-opacity", 1);
 
@@ -278,96 +277,183 @@
 
 
   }
-  
+
+  //////////////////////////////////////////////////////////////////////////////////
+  // layout/size functions that differ based on the orientation of the tree
+  //
+
+  function getConnectionEndPoint(node) {
+    switch (orientation) {
+    case orientTB:
+      return [node.x + getWidth(node)/2, node.y];
+
+    case orientLR:
+    default:
+      return [node.y, node.x];
+    }
+  }
+
+
+  function getRootTranslation(root) {
+    switch (orientation) {
+    case orientTB:
+      root.x0 = 50;
+      root.y0 = 0;
+      break;
+
+    case orientLR:
+    default:
+      root.x0 = 50;
+      root.y0 = 0;
+      break;
+    }
+
+    return "translate(" + root.x0 + "," + root.y0 + ")";
+  }
+
+  function getNodeTranslation(node) {
+    switch (orientation) {
+    case orientTB:
+      return "translate(" + node.x + "," + node.y + ")";
+
+    case orientLR:
+    default:
+      return "translate(" + node.y + "," + node.x + ")";
+    }
+  }
+
   //
   // function to compute height for a given node based on how many lines
   // of details it has
   //
-  
-  var lineHeight = 20;
-  
+
   function getHeight(node) {
     var numLines = 2;
     if (node.details)
       numLines += node.details.length;
     return(lineHeight*numLines);
-  } 
-  
+  }
+
   //
   // compute width by finding the longest line, counting characters
   //
-  
+
   function getWidth(node) {
     var maxWidth = 20; // leave at least this much space
-    if (node.name.length > maxWidth)
+    if (node.name && node.name.length > maxWidth)
       maxWidth = node.name.length;
-    for (var i=0; i < node.details.length; i++)
+    if (node.details) for (var i=0; i < node.details.length; i++)
       if (node.details[i].length > maxWidth)
         maxWidth = node.details[i].length;
-    
+
     return(maxWidth * 5); //allow 5 units for each character
   }
 
   //
-  // recursively compute the total tree width, which is the maximum width of the children,
-  // plus our own width
+  // recursively compute the total tree width.
+  // For a horizonal tree, it is the maximum width of the children, plus our own width
+  // For a vertical tree, it is the width of all our child branches, plus our own width
   //
-  
-  var interNodeSpacing = 20;
-  
-  function getTotalWidth(node,widthSoFar) {
-    var maxChildWidth = 0;
-    var curWidth = getWidth(node);
-    node.xOffset = widthSoFar;
-    
-    for (var i=0; i<node.children.length; i++) {
-      var cWidth = getTotalWidth(node.children[i],widthSoFar+curWidth+interNodeSpacing);
-      if (cWidth > maxChildWidth)
-        maxChildWidth = cWidth;
-    }
-    
-    return getWidth(node) + interNodeSpacing + maxChildWidth;      
-  }
-  
-  //
-  // compute the height of the tree. In the horizontal orientation, this is the maxiumum height
-  // of each branch, plus interNodeSpacing between branches
-  //
-  
-  function getTotalHeight(node) {
-    var curHeight = getHeight(node); // assume max height is our height
-    
-    var childHeightSum = 0;
-    for (var i=0; i<node.children.length; i++) {
-      childHeightSum += getTotalHeight(node.children[i]);
-    }
 
-    // if only one child, our max height is the max of child size vs our size
-    if (node.children.length == 0)
-      return(curHeight);
-    else if (node.children.length == 1)
-      return(Math.max(curHeight,childHeightSum));
-    // for multiple children, height is the sum of heights
-    else
-      return(curHeight + childHeightSum + interNodeSpacing*2); 
+  function getTotalWidth(node,widthSoFar) {
+    delete node.xOffset; // make sure these aren't left over from previous orientations
+    delete node.yOffset;
+
+    var curWidth = getWidth(node);
+    if (!node || !node.children)
+      return(curWidth);
+
+    switch (orientation) {
+    case orientLR:
+      var maxChildWidth = 0;
+      node.xOffset = widthSoFar;
+
+      for (var i=0; i<node.children.length; i++) {
+        var cWidth = getTotalWidth(node.children[i],widthSoFar+curWidth+interNodeXSpacing*2);
+        if (cWidth > maxChildWidth)
+          maxChildWidth = cWidth;
+      }
+
+      return getWidth(node) + interNodeXSpacing + maxChildWidth;
+
+    case orientTB:
+    default:
+      var totalChildWidth = 0;
+
+      // we might have zero children, one child, or two children.
+        if (node.children.length == 0)      // our width alone
+          return(curWidth);
+        else if (node.children.length == 1) // maxiumum of our width or the child's width
+          return(Math.max(curWidth,getTotalWidth(node.children[0])));
+        else if (node.children.length == 2) // our width plus width of each child tree
+          return(curWidth + getTotalWidth(node.children[0]) + getTotalWidth(node.children[1]));
+    }
   }
-  
+
+  //
+  // recursively compute the height of the tree.
+  // In a horizontal tree, this is the maxiumum height of each branch, plus interNodeSpacing between branches
+  // In a vertical tree, this is our height, plus the maximum height of any children
+  //
+
+  function getTotalHeight(node,heightSoFar) {
+    var curHeight = getHeight(node); // assume max height is our height
+    if (!node)
+      return(curHeight);
+
+    switch (orientation) {
+    case orientLR:
+
+      var childHeightSum = 0;
+      if (node.children) for (var i=0; i<node.children.length; i++) {
+        childHeightSum += getTotalHeight(node.children[i]);
+      }
+
+      // if only one child, our max height is the max of child size vs our size
+      if (!node.children || node.children.length == 0)
+        return(curHeight);
+      else if (node.children.length == 1)
+        return(Math.max(curHeight,childHeightSum));
+      // for multiple children, height is the sum of heights
+      else
+        return(curHeight + childHeightSum + interNodeYSpacing);
+
+    case orientTB:
+    default:
+      var maxHeight = curHeight;
+      var maxChildHeight = 0;
+      node.yOffset = heightSoFar;
+
+      // see if we have any children, and what the max height is for them
+      if (node.children) for (var i=0; i<node.children.length; i++) {
+        var childH = getTotalHeight(node.children[i],heightSoFar + curHeight + interNodeYSpacing);
+        if (childH > maxChildHeight)
+          maxChildHeight = childH;
+      }
+
+      if (maxChildHeight > 0)
+        return curHeight + interNodeYSpacing + maxChildHeight;
+      else
+        return curHeight;
+    }
+  }
+
   //
   // recursively turn the tree of ops into a simple tree to give to d3
   //
 
   function makeSimpleTreeFromPlanNodes(plan,next,parent) {
-    // we ignore operators of nodes with subsequences, and put in the subsequence 
+    // we ignore operators of nodes with subsequences, and put in the subsequence
     if (plan.subsequence)
       return(makeSimpleTreeFromPlanNodes(plan.subsequence,plan.predecessor,parent));
 
     if (!plan || !plan.operator)
       return(null);
-    
+
     // otherwise build a node based on this operator
     var opName = (plan && plan.operator && plan.operator['#operator'])
       ? plan.operator['#operator'] : "unknown op";
-      
+
     var result = {
         name: plan.GetName(),
         details: plan.GetDetails(),
@@ -377,26 +463,26 @@
         time: plan.time,
         time_percent: plan.time_percent
     };
-    
+
     // how expensive are we? Color background by cost, if we know
     if (plan && plan.time_percent) {
-      if (plan.time_percent >= 20) 
+      if (plan.time_percent >= 20)
         result.level = "#f9ca7b";
-      else if (plan.time_percent >= 5)  
+      else if (plan.time_percent >= 5)
         result.level = "#fbebd7";
-      else if (plan.time_percent >= 1)  
+      else if (plan.time_percent >= 1)
         result.level = "#fdedd3";
     }
 
     // if the plan has a 'predecessor', it is either a single plan node that should be
     // our child, or an array marking multiple children
-    
+
     if (plan.predecessor)
       if (!_.isArray(plan.predecessor))
         result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor,next,result.name));
       else for (var i=0; i< plan.predecessor.length; i++)
         result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor[i],null,result.name));
-        
+
     return(result);
   }
 

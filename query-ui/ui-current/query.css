@@ -343,6 +343,13 @@ input.ng-invalid {
 
 /* styles for D3-based query plan viz */
 
+.d3-tree-wrapper {
+  width: 100%;
+  height: calc(100% - 58px);
+  overflow: scroll;
+  position: relative;
+}
+
 .node {
     cursor: pointer;
 }
