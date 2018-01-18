@@ -20,9 +20,9 @@
 (function() {
 
   'use strict';
-  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', ['$compile', getD3Explain]);
+  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', ['$compile', '$timeout', getD3Explain]);
 
-  function getD3Explain($compile) {
+  function getD3Explain($compile,$timeout) {
     return {
       restrict: 'A',
       scope: { data: '=qwExplainVizD3' },
@@ -67,14 +67,14 @@
               content += "</div>";
 
               content += "<div class='column text-right nowrap'>";
-              content += '<a ng-click="zoomIn()"><span class="icon fa-search"></span></a>';
-              content += '<a ng-click="zoomOut()"><span class="icon fa-search fa-2x"></span></a>';
+              content += '<a ng-click="topDown()"><span class="icon fa-caret-square-o-down fa-2x"></span></a>';
+              content += '<a ng-click="leftRight()"><span class="icon fa-caret-square-o-right fa-2x"></span></a>';
               content += "</div>";
 
               content += "</div>";
 
-              scope.zoomIn = zoomIn;
-              scope.zoomOut = zoomOut;
+              scope.topDown = topDown;
+              scope.leftRight = leftRight;
             }
 
           }
@@ -91,9 +91,15 @@
           if (data.plan_nodes) {
             // put the SVG inside a wrapper to allow scrolling
             wrapperElement = angular.element('<div class="d3-tree-wrapper"></div>');
+//            wrapperElement = angular.element('<div></div>');
             element.append(wrapperElement);
             simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
-            makeTree();
+            
+            // if we're creating the wrapper for the first time, allow a delay for it to get a size
+            if ($('.d3-tree-wrapper').height()) 
+              makeTree();
+            else
+              $timeout(makeTree,100);
           }
         });
       }
@@ -116,34 +122,36 @@
   // handle zooming
   //
 
-//define zoom behaviour
-//  var zoom_handler = d3.zoom().on("zoom", zoom_actions);
-//
-//  function zoom_actions(){
-//    var transform = d3.zoomTransform(this);
-//    // same as  this.setAttribute("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
-//    this.setAttribute("transform", transform)
-//   }
-
-  function zoomIn() {
-    console.log("Zoom in!");
+  function topDown() {changeOrient(orientTB);}
+  function leftRight() {changeOrient(orientLR);}
+  
+  function changeOrient(newOrient) {
     wrapperElement.empty();
-    orientation = orientLR;
+    orientation = newOrient;
     makeTree();
   }
+ 
+  // handle drag/zoom events
 
-  function zoomOut() {
-    console.log("Zoom out!");
-    wrapperElement.empty();
-    orientation = orientTB;
-    makeTree();
+  function zoom() {
+    var scale = d3.event.scale,
+        translation = d3.event.translate;
+    //console.log("scale: " + JSON.stringify(scale));
+    //console.log("translate: " + JSON.stringify(translation));
+    d3.select(".drawarea")
+        .attr("transform", "translate(" + translation + ")" +
+              " scale(" + scale + ")");
   }
 
-  //
+ 
+
+  //////////////////////////////////////////////////////////////////////////
   // make a d3 tree
   //
 
   // Magic numbers for layout
+  var svg, g, zoomer;
+  var svg_scale = 1.0;
   var lineHeight = 15;        // height for line of text, on which node height is based
   var interNodeXSpacing = 25; // spacing between nodes horizonally
   var interNodeYSpacing = 40; // spacing between nodes vertically
@@ -157,40 +165,86 @@
   var height = 0;// total height for the SVG holding the tree
 
   function makeD3TreeFromSimpleTree(root) {
-    var margin = {top: 20, right: 120, bottom: 20, left: 120},
-      duration = 500,
+    var duration = 500,
       i = 0;
-
+    
     width = getTotalWidth(root,interNodeXSpacing);
     height = getTotalHeight(root,interNodeYSpacing);
 
-    var svg = d3.select(wrapperElement[0]).append('svg')
-    .attr("width", width + margin.right + margin.left)
-    .attr("height", height + margin.top + margin.bottom);
+    var canvas_width = $('.d3-tree-wrapper').width();
+    var canvas_height =  $('.d3-tree-wrapper').height();
+        
+    //console.log("Svg width: " + canvas_width + ", height: " + canvas_height);
+    //console.log("Got expected width: " + width + ", height: " + height);
+        
+    svg = d3.select(wrapperElement[0]).append('svg:svg')
+        .attr("width", canvas_width)
+        .attr("height", canvas_height)
+        .attr("id", "outer_svg")
+        .style("overflow", "scroll")
+       .append("svg:g")
+          .attr("class","drawarea")
+          .attr("id", "svg_g")
+      ;
+    
+    //    console.log("Got simple tree: " + JSON.stringify(root,null,2));
 
-    //console.log("Got simple tree: " + JSON.stringify(root,null,2));
+    // minimum fixed sizes for nodes, depending on orientation, to prevent overlap
+    var minNodeSize = [125,lineHeight*6]; // for vertical
+    if (orientation == orientLR)
+      minNodeSize = [lineHeight*6,195];
 
-    var tree = d3.layout.tree().size([height, width]);
+    var tree = d3.layout.cluster()
+    //.size([height, width])
+    .nodeSize(minNodeSize)
+    ;
 
     // use nice curves between the nodes
     var diagonal = d3.svg.diagonal().projection(getConnectionEndPoint);
-
-    // add a group element to hold the nodes, text, and links
-    svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // assign nodes and links
     var nodes = tree.nodes(root);
     var links = tree.links(nodes);
 
     // We may override x/y locations due to Node width/height
-    nodes.forEach(function(d) { if (d.xOffset) d.y = d.xOffset; if (d.yOffset) d.y = d.yOffset;});
+    //nodes.forEach(function(d) { if (d.xOffset) d.y = d.xOffset; if (d.yOffset) d.y = d.yOffset;});
+    var minX = canvas_width, maxX = 0, minY = canvas_height, maxY = 0;
+    nodes.forEach(function(d) 
+        {minX = Math.min(d.x,minX); minY = Math.min(d.y,minY); maxX = Math.max(d.x,maxX);maxY = Math.max(d.y,maxY);});
+    //console.log("Actual width: " + (maxX - minX) + ", height: " + (maxY - minY));
+
+    // to make a horizontal tree, x and y are swapped
+    var vert = (orientation == orientTB);
+    var dx = (vert ? maxX - minX : maxY - minY);
+    var dy = (!vert ? maxX - minX : maxY - minY);
+    var x = (vert ? (minX + maxX)/2 : (minY + maxY)/2);
+    var y = (!vert ? (minX + maxX)/2 : (minY + maxY)/2);
+    
+    //var drawarea = d3.select("#outer_svg");
+    //var bounds = drawarea.node().getBBox();
+    //console.log("bounds2: " + bounds.width + ", " + bounds.height);
+    var scale = Math.max(0.15,Math.min(2,.9 / Math.max(dx / canvas_width, dy / canvas_height)));
+    
+    var translate = [canvas_width / 2 - scale * x, canvas_height / 2 - scale * y];
+    //console.log("Got new scale: " + scale + ", translate: " + JSON.stringify(translate));
+    
+    // set up zooming
+    d3.select(".drawarea")
+    .attr("transform","translate(" + translate + ")scale(" + scale + ")");
+
+    zoomer = d3.behavior.zoom().scaleExtent([0.1, 2.5]).on("zoom", zoom);
+    zoomer.translate(translate);
+    zoomer.scale(scale);    
+
+    d3.select("svg").call(zoomer);
+    
 
     // Each node needs a unique id. If id field doesn't exist, use incrementing value
     var node = svg.selectAll("g.node")
       .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
     // Enter any new nodes at the parent's previous position.
-    var nodeEnter = node.enter().append("g")
+    var nodeEnter = node.enter().append("svg:g")
     .attr("class", "node")
     .attr("transform", getRootTranslation);
 
@@ -200,13 +254,13 @@
     .attr("height", function(d) {return getHeight(d);})
     .attr("rx", lineHeight) // sets corner roundness
     .attr("ry", lineHeight)
+    .attr("x", function(d) {return(-1/2*getWidth(d))})
     .attr("y", function(d) {return getHeight(d)*-1/2}) // moving the object half its height centers the link lines
     .style("stroke", function(d) { return d.type; })
     .style("fill", function(d) { return d.level; });
 
     nodeEnter.append("text")
-    //.attr("x", function(d) { return d.children || d._children ? -14 : 14 })
-    .attr("x", function(d) {return getWidth(d)*1/2})
+    //.attr("x", function(d) {return getWidth(d)*1/2})
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight})
     .attr("text-anchor", "middle")
     .text(function(d) { return d.name })
@@ -215,8 +269,7 @@
     // handle up to 3 lines of details
     for (var i=0;i<3;i++)
     nodeEnter.append("text")
-    //.attr("x", function(d) { return d.children || d._children ? -14 : 14 })
-    .attr("x", function(d) {return getWidth(d)*1/2})
+    //.attr("x", function(d) {return getWidth(d)*1/2})
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight*(i+2)})
     .attr("text-anchor", "middle")
     .text(function(d) { return d.details[i] })
@@ -224,17 +277,16 @@
 
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
-    .duration(duration)
-//    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
-    .attr("transform", getNodeTranslation);
+      .duration(duration)
+      .attr("transform", getNodeTranslation);
 
     nodeUpdate.selectAll("text").style("fill-opacity", 1);
 
     //Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
-    .duration(duration)
-    .attr("transform", function(d) { return "translate(" + root.y + "," + root.x + ")"; })
-    .remove();
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + root.y + "," + root.x + ")"; })
+      .remove();
 
     nodeExit.select("rect")
     .attr("r", 1e-6);
@@ -275,9 +327,9 @@
       d.y0 = d.y;
     });
 
-
   }
 
+ 
   //////////////////////////////////////////////////////////////////////////////////
   // layout/size functions that differ based on the orientation of the tree
   //
@@ -285,7 +337,7 @@
   function getConnectionEndPoint(node) {
     switch (orientation) {
     case orientTB:
-      return [node.x + getWidth(node)/2, node.y];
+      return [node.x, node.y];
 
     case orientLR:
     default:
@@ -360,7 +412,8 @@
     delete node.yOffset;
 
     var curWidth = getWidth(node);
-    if (!node || !node.children)
+    //console.log("For node: " + node.name + " got cur: " + curWidth + ", children: " + node.children);
+    if (!node)
       return(curWidth);
 
     switch (orientation) {
@@ -368,7 +421,7 @@
       var maxChildWidth = 0;
       node.xOffset = widthSoFar;
 
-      for (var i=0; i<node.children.length; i++) {
+      if (node.children) for (var i=0; i<node.children.length; i++) {
         var cWidth = getTotalWidth(node.children[i],widthSoFar+curWidth+interNodeXSpacing*2);
         if (cWidth > maxChildWidth)
           maxChildWidth = cWidth;
@@ -381,7 +434,7 @@
       var totalChildWidth = 0;
 
       // we might have zero children, one child, or two children.
-        if (node.children.length == 0)      // our width alone
+        if (!node.children || node.children.length == 0)      // our width alone
           return(curWidth);
         else if (node.children.length == 1) // maxiumum of our width or the child's width
           return(Math.max(curWidth,getTotalWidth(node.children[0])));

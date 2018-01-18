@@ -100,8 +100,6 @@
            ng-class="{selected: qc.isSelected(1)}">JSON</a>
         <a ng-click="qc.selectTab(2)"
            ng-class="{selected: qc.isSelected(2)}">Table</a>
-        <!-- a ng-click="qc.selectTab(6)"
-           ng-class="{selected: qc.isSelected(6)}">DataTable</a-->
         <a ng-click="qc.selectTab(3)"
            ng-class="{selected: qc.isSelected(3)}">Tree</a>
         <a ng-click="qc.selectTab(4)" ng-if="qc.isEnterprise"
@@ -132,7 +130,7 @@
         qw-json-tree="qc.lastResult.data"></div>
       <div id="query_plan" ng-if="qc.isSelected(4)"
         qw-explain-viz="qc.lastResult.explainResult"></div>
-      <div id="query_plan_d3" ng-if="qc.isSelected(6)"
+      <div id="query_plan" ng-if="qc.isSelected(6)"
         qw-explain-viz-d3="qc.lastResult.explainResult"></div>
       <div id="query_plan_text" ng-if="qc.isSelected(5)"
         ui-ace="qc.acePlanOptions"
