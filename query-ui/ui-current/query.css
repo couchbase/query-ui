@@ -341,37 +341,52 @@ input.ng-invalid {
   margin: .25rem 0;
 }
 
-/* styles for D3-based query plan viz */
+/* styles for D3-based query plan viz ------------------------------------- */
 
 .d3-tree-wrapper {
   width: 100%;
   height: calc(100% - 58px);
   overflow: scroll;
   position: relative;
+  font-family: OpenSans;
 }
 
 .node {
   cursor: pointer;
-  fill: #ccc;
+  fill: #bfe2ba;
+}
+.node:hover {
+  cursor: hand;
+  fill: #b3cfef;
 }
 
 .node circle {
-    fill: #fff;
-    stroke: steelblue;
-    stroke-width: 3px;
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
 }
 
-.node text {
-    font: 11px sans-serif;
-    fill: #000;
-    fill-opacity: 1;
-    text-anchor: middle;
+.node-text {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #000;
+  fill-opacity: 1;
+  text-anchor: middle;
+}
+.node-text-details {
+  font-size: 9px;
+  fill: #000;
+  fill-opacity: 1;
+  text-anchor: middle;
 }
 
 .link {
-    fill: none;
-    stroke: #ccc;
-    stroke-width: 2px;
+  fill: none;
+  stroke: #979797;
+  stroke-width: 1px;
+}
+marker {
+  fill: #333;
 }
 
 div.svg_tooltip {
@@ -394,5 +409,5 @@ div.svg_tooltip {
 }
 
 .node-expensive-1 {
-  fill: "f9ca7b";
+  fill: #f9ca7b;
 }

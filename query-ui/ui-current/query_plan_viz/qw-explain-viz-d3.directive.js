@@ -248,10 +248,11 @@
 
     svg.append("defs").append("marker")
     .attr("id", "arrowhead")
+    .attr("viewBox", "0 0 10 12")
     .attr("refX", arrowhead_refX) /*must be smarter way to calculate shift*/
     .attr("refY", arrowhead_refY)
-    .attr("markerWidth", 6)
-    .attr("markerHeight", 4)
+    .attr("markerWidth", 20)
+    .attr("markerHeight", 20)
     .attr("orient", "auto")
     .append("path")
     .attr("d", "M 6 0 V 4 L 0 2 Z"); //this is actual shape for arrowhead
@@ -336,6 +337,41 @@
     })
     ;
 
+// *** node drop-shadows come from this filter ******************
+    // filters go in defs element
+    var defs = svg.append("defs");
+
+    // create filter with id #drop-shadow
+    // height=130% so that the shadow is not clipped
+    var filter = defs.append("filter")
+        .attr("id", "drop-shadow")
+        .attr("height", "130%");
+
+    // SourceAlpha refers to opacity of graphic that this filter will be applied to
+    // convolve that with a Gaussian with standard deviation 3 and store result
+    // in blur
+    filter.append("feGaussianBlur")
+        .attr("in", "SourceAlpha")
+        .attr("stdDeviation", 1)
+        .attr("result", "blur");
+
+    // translate output of Gaussian blur to the right and downwards with 2px
+    // store result in offsetBlur
+    filter.append("feOffset")
+        .attr("in", "blur")
+        .attr("dx", 0)
+        .attr("dy", 1)
+        .attr("result", "offsetBlur");
+
+    // overlay original SourceGraphic over translated blurred opacity by using
+    // feMerge filter. Order of specifying inputs is important!
+    var feMerge = filter.append("feMerge");
+
+    feMerge.append("feMergeNode")
+        .attr("in", "offsetBlur")
+    feMerge.append("feMergeNode")
+        .attr("in", "SourceGraphic");
+
     // ********* create node style from data *******************
     nodeEnter.append("rect")
     .attr("width", function(d) {return getWidth(d);})
@@ -345,17 +381,20 @@
     .attr("x", function(d) {return(-1/2*getWidth(d))}) // make the rect centered on our x/y coords
     .attr("y", function(d) {return getHeight(d)*-1/2})
     .attr("class", function(d) { return d.level; })
-    ;
+    // drop-shadow filter
+    .style("filter", "url(#drop-shadow)");
 
 
     nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight}) // m
+    .attr("class", "node-text")
     .text(function(d) { return d.name })
     ;
 
     // handle up to 3 lines of details
     for (var i=0;i<3;i++) nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight*(i+2)})
+    .attr("class", "node-text-details")
     .text(function(d) { return d.details[i] })
     ;
 
