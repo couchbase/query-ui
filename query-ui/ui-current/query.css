@@ -351,7 +351,8 @@ input.ng-invalid {
 }
 
 .node {
-    cursor: pointer;
+  cursor: pointer;
+  fill: #ccc;
 }
 
 .node circle {
@@ -362,10 +363,36 @@ input.ng-invalid {
 
 .node text {
     font: 11px sans-serif;
+    fill: #000;
+    fill-opacity: 1;
+    text-anchor: middle;
 }
 
 .link {
     fill: none;
     stroke: #ccc;
     stroke-width: 2px;
+}
+
+div.tooltip {
+  position: absolute;
+  text-align: left;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.node-expensive-3 {
+  fill: #fdedd3;
+}
+
+.node-expensive-2 {
+  fill: #fbebd7;
+}
+
+.node-expensive-1 {
+  fill: "f9ca7b";
 }

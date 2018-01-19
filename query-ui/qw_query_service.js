@@ -160,6 +160,10 @@
         current_result: []
     };
 
+    qwQueryService.query_plan_options = {
+        orientation: 1
+    };
+
     //
     // this structure holds the current query text, the current query result,
     // and defines the object for holding the query history
@@ -325,6 +329,9 @@
           if (savedState.doc_editor_options) {
             qwQueryService.doc_editor_options = savedState.doc_editor_options;
           }
+          if (savedState.query_plan_options) {
+            qwQueryService.query_plan_options = savedState.query_plan_options;
+          }
           // handle case where auto_infer is not yet defined, and set it to true
           if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false) {
             qwQueryService.options.auto_infer = true;
@@ -362,6 +369,10 @@
           current_query: '',
           current_bucket: qwQueryService.doc_editor_options.current_bucket,
           current_result: [] // don't want to save the results - they could be big
+      };
+
+      savedState.query_plan_options = {
+          orientation: qwQueryService.query_plan_options.orientation
       };
 
       _.forEach(pastQueries,function(queryRes,index) {

@@ -161,13 +161,13 @@
       // UNION operators will have an array of predecessors drawn from their "children".
       // we expect predecessor to be null if we see a UNION
       else if (operatorName === "UnionAll" && plan['~children']) {
-        if (predecessor != null)
-         console.log("ERROR: Union with unexpected predecessor. ");
-
         var unionChildren = [];
 
+        // if there is a predecessor, it's probably an authorize node done before everything.
+        // what to do? for now put it on every child of the Union
+
         for (var i = 0; i < plan['~children'].length; i++)
-          unionChildren.push(convertPlanJSONToPlanNodes(plan['~children'][i],null,lists));
+          unionChildren.push(convertPlanJSONToPlanNodes(plan['~children'][i],predecessor,lists));
 
         var unionNode = new PlanNode(unionChildren,plan,null,lists.total_time);
 
@@ -321,6 +321,66 @@
       }
 
       return(0);
+    }
+
+    //
+    // get an HTML formatted string to use as a tooltip
+    //
+
+    PlanNode.prototype.GetTooltip = function() {
+      var result = "";
+      var op = this.operator;
+
+      if (!op || !op['#operator'])
+        return(result);
+
+      result += '<h4>' + op['#operator'] + '</h4><ul>';
+      var childFields = getNonChildFieldList(op);
+      if (childFields.length == 0) // no fields, no tool tip
+        return("");
+      else
+        result += childFields;
+      result += '</ul>';
+
+      return(result);
+    }
+
+    // turn the fields of an operator into list elements,
+    // but ignore child operators
+
+    var childFieldNames = /#operator|\~child*|delete|update|scans|first|second/;
+
+    function getNonChildFieldList(op) {
+      var result = "";
+
+      for (var field in op) if (!field.match(childFieldNames)) {
+        var val = op[field];
+        // add the field name as a list item
+        result += '<li>' + field;
+
+        // for a primitive value, just add that as well
+        if (_.isString(val) || _.isNumber(val) || _.isBoolean(val))
+          result += " - " + val;
+
+        // if it's an array, create a sublist with a line for each item
+        else if (_.isArray(val)) {
+          result += '<ul>';
+          for (var i=0; i<val.length; i++)
+            result += getNonChildFieldList(val[i]);
+          result += '</ul>';
+        }
+
+        // if it's an object, have a sublist for it
+        else if (_.isPlainObject(val)) {
+          result += '<ul>';
+          result += getNonChildFieldList(val);
+          result += '</ul>';
+        }
+
+        result += '</li>';
+      }
+
+      return result;
     }
 
     //

@@ -20,9 +20,12 @@
 (function() {
 
   'use strict';
-  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', ['$compile', '$timeout', getD3Explain]);
+  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', ['$compile', '$timeout', 'qwQueryService', getD3Explain]);
 
-  function getD3Explain($compile,$timeout) {
+  var queryService = null;
+
+  function getD3Explain($compile,$timeout, qwQueryService) {
+    queryService = qwQueryService;
     return {
       restrict: 'A',
       scope: { data: '=qwExplainVizD3' },
@@ -67,14 +70,26 @@
               content += "</div>";
 
               content += "<div class='column text-right nowrap'>";
-              content += '<a ng-click="topDown()"><span class="icon fa-caret-square-o-down fa-2x"></span></a>';
-              content += '<a ng-click="leftRight()"><span class="icon fa-caret-square-o-right fa-2x"></span></a>';
+              content += '<a ng-click="zoomIn()"><span class="icon fa-search"></span></a>';
+              content += '<a ng-click="zoomOut()"><span class="icon fa-search fa-2x"></span></a>';
+              content += "</div>";
+
+              content += "<div class='column text-right nowrap'>";
+              content += '<a ng-click="bottomTop()"><span class="icon fa-caret-square-o-down fa-2x"></span></a>';
+              content += '<a ng-click="rightLeft()"><span class="icon fa-caret-square-o-right fa-2x"></span></a>';
+              content += '<a ng-click="topDown()"><span class="icon fa-caret-square-o-up fa-2x"></span></a>';
+              content += '<a ng-click="leftRight()"><span class="icon fa-caret-square-o-left fa-2x"></span></a>';
               content += "</div>";
 
               content += "</div>";
 
               scope.topDown = topDown;
               scope.leftRight = leftRight;
+              scope.bottomTop = bottomTop;
+              scope.rightLeft = rightLeft;
+
+              scope.zoomIn = zoomIn;
+              scope.zoomOut = zoomOut;
             }
 
           }
@@ -94,9 +109,9 @@
 //            wrapperElement = angular.element('<div></div>');
             element.append(wrapperElement);
             simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
-            
+
             // if we're creating the wrapper for the first time, allow a delay for it to get a size
-            if ($('.d3-tree-wrapper').height()) 
+            if ($('.d3-tree-wrapper').height())
               makeTree();
             else
               $timeout(makeTree,100);
@@ -122,28 +137,75 @@
   // handle zooming
   //
 
+  var orientLR = 1;
+  var orientTB = 2;
+  var orientRL = 3;
+  var orientBT = 4;
+
   function topDown() {changeOrient(orientTB);}
+  function bottomTop() {changeOrient(orientBT);}
   function leftRight() {changeOrient(orientLR);}
-  
+  function rightLeft() {changeOrient(orientRL);}
+
   function changeOrient(newOrient) {
     wrapperElement.empty();
-    orientation = newOrient;
+    queryService.query_plan_options.orientation = newOrient;
     makeTree();
   }
- 
+
   // handle drag/zoom events
 
   function zoom() {
-    var scale = d3.event.scale,
-        translation = d3.event.translate;
+    //var scale = d3.event.scale,
+    //    translation = d3.event.translate;
     //console.log("scale: " + JSON.stringify(scale));
     //console.log("translate: " + JSON.stringify(translation));
     d3.select(".drawarea")
-        .attr("transform", "translate(" + translation + ")" +
-              " scale(" + scale + ")");
+        .attr("transform", "translate(" + zoomer.translate() + ")" +
+              " scale(" + zoomer.scale() + ")");
   }
 
- 
+
+  function zoomIn()  {zoomButton(false);}
+  function zoomOut() {zoomButton(true); }
+
+  function zoomButton(zoom_in) {
+    var scale = zoomer.scale(),
+      center = [canvas_width / 2 , canvas_height / 2],
+      extent = zoomer.scaleExtent(),
+      translate = zoomer.translate(),
+      x = translate[0], y = translate[1],
+      factor = zoom_in ? 2 : 1/2,
+      target_scale = scale * factor;
+
+    //  If we're already at an extent, done
+    if (target_scale === extent[0] || target_scale === extent[1]) { return false; }
+    //  If the factor is too much, scale it down to reach the extent exactly
+    var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
+    if (clamped_target_scale != target_scale){
+      target_scale = clamped_target_scale;
+      factor = target_scale / scale;
+    }
+
+    //  Center each vector, stretch, then put back
+    x = (x - center[0]) * factor + center[0];
+    y = (y - center[1]) * factor + center[1];
+
+    //  Transition to the new view over 100ms
+    d3.transition().duration(100).tween("zoom", function () {
+      var interpolate_scale = d3.interpolate(scale, target_scale),
+      interpolate_trans = d3.interpolate(translate, [x,y]);
+      return function (t) {
+        zoomer.scale(interpolate_scale(t))
+        .translate(interpolate_trans(t));
+        zoom();
+      };
+    })
+    //.each("end", function(){
+    //  if (pressed) zoomButton(zoom_in);
+  //  })
+    ;
+  }
 
   //////////////////////////////////////////////////////////////////////////
   // make a d3 tree
@@ -156,27 +218,20 @@
   var interNodeXSpacing = 25; // spacing between nodes horizonally
   var interNodeYSpacing = 40; // spacing between nodes vertically
 
-  var orientLR = 1,
-  orientTB = 2;
-
-  var orientation = orientTB;
-
-  var width = 0; // total width for the SVG holding the tree
-  var height = 0;// total height for the SVG holding the tree
+  var canvas_width, canvas_height;
 
   function makeD3TreeFromSimpleTree(root) {
     var duration = 500,
       i = 0;
-    
-    width = getTotalWidth(root,interNodeXSpacing);
-    height = getTotalHeight(root,interNodeYSpacing);
+    var vert = (queryService.query_plan_options.orientation == orientTB ||
+        queryService.query_plan_options.orientation == orientBT);
 
-    var canvas_width = $('.d3-tree-wrapper').width();
-    var canvas_height =  $('.d3-tree-wrapper').height();
-        
+    canvas_width = $('.d3-tree-wrapper').width();
+    canvas_height =  $('.d3-tree-wrapper').height();
+
     //console.log("Svg width: " + canvas_width + ", height: " + canvas_height);
     //console.log("Got expected width: " + width + ", height: " + height);
-        
+
     svg = d3.select(wrapperElement[0]).append('svg:svg')
         .attr("width", canvas_width)
         .attr("height", canvas_height)
@@ -186,17 +241,27 @@
           .attr("class","drawarea")
           .attr("id", "svg_g")
       ;
-    
-    //    console.log("Got simple tree: " + JSON.stringify(root,null,2));
+
+    // need a definition for arrows on lines
+    var arrowhead_refX = vert ? 0 : 0;
+    var arrowhead_refY = vert ?  2 : 2;
+
+    svg.append("defs").append("marker")
+    .attr("id", "arrowhead")
+    .attr("refX", arrowhead_refX) /*must be smarter way to calculate shift*/
+    .attr("refY", arrowhead_refY)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 4)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M 6 0 V 4 L 0 2 Z"); //this is actual shape for arrowhead
 
     // minimum fixed sizes for nodes, depending on orientation, to prevent overlap
-    var minNodeSize = [125,lineHeight*6]; // for vertical
-    if (orientation == orientLR)
-      minNodeSize = [lineHeight*6,195];
+    var minNodeSize = vert ? [125,lineHeight*6] : [lineHeight*6,195];
 
     var tree = d3.layout.cluster()
     //.size([height, width])
-    .nodeSize(minNodeSize)
+    .nodeSize(minNodeSize) // give nodes enough space to avoid overlap
     ;
 
     // use nice curves between the nodes
@@ -206,38 +271,51 @@
     var nodes = tree.nodes(root);
     var links = tree.links(nodes);
 
-    // We may override x/y locations due to Node width/height
-    //nodes.forEach(function(d) { if (d.xOffset) d.y = d.xOffset; if (d.yOffset) d.y = d.yOffset;});
+    // used for tool tips
+    var div = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
+    //
+    // we want to pan/zoom so that the whole graph is visible.
+    //
+    // for some reason I can't get getBBox() to give me the bounding box for the overall
+    // graph, so instead I'll just check the coords of all the nodes to get a bounding box
+    //
+
     var minX = canvas_width, maxX = 0, minY = canvas_height, maxY = 0;
-    nodes.forEach(function(d) 
+    nodes.forEach(function(d)
         {minX = Math.min(d.x,minX); minY = Math.min(d.y,minY); maxX = Math.max(d.x,maxX);maxY = Math.max(d.y,maxY);});
     //console.log("Actual width: " + (maxX - minX) + ", height: " + (maxY - minY));
 
     // to make a horizontal tree, x and y are swapped
-    var vert = (orientation == orientTB);
     var dx = (vert ? maxX - minX : maxY - minY);
     var dy = (!vert ? maxX - minX : maxY - minY);
     var x = (vert ? (minX + maxX)/2 : (minY + maxY)/2);
     var y = (!vert ? (minX + maxX)/2 : (minY + maxY)/2);
-    
-    //var drawarea = d3.select("#outer_svg");
-    //var bounds = drawarea.node().getBBox();
-    //console.log("bounds2: " + bounds.width + ", " + bounds.height);
+
+    // if flipped, we need to flip the bounding box
+    if (queryService.query_plan_options.orientation == orientBT)
+      y = -y;
+    else if (queryService.query_plan_options.orientation == orientRL)
+      x = -x;
+
     var scale = Math.max(0.15,Math.min(2,.9 / Math.max(dx / canvas_width, dy / canvas_height)));
-    
     var translate = [canvas_width / 2 - scale * x, canvas_height / 2 - scale * y];
+
+
+
     //console.log("Got new scale: " + scale + ", translate: " + JSON.stringify(translate));
-    
-    // set up zooming
+
+    // set up zooming, including initial values to show the entire graph
     d3.select(".drawarea")
     .attr("transform","translate(" + translate + ")scale(" + scale + ")");
 
     zoomer = d3.behavior.zoom().scaleExtent([0.1, 2.5]).on("zoom", zoom);
     zoomer.translate(translate);
-    zoomer.scale(scale);    
+    zoomer.scale(scale);
 
     d3.select("svg").call(zoomer);
-    
 
     // Each node needs a unique id. If id field doesn't exist, use incrementing value
     var node = svg.selectAll("g.node")
@@ -246,7 +324,17 @@
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("svg:g")
     .attr("class", "node")
-    .attr("transform", getRootTranslation);
+    .attr("transform", getRootTranslation)
+    .on("mouseover", function(d) {
+      div.transition().duration(200).style("opacity", 0.9);
+      div.html(d.tooltip)
+        .style("left", (d3.event.pageX) + "px")
+        .style("top", (d3.event.pageY - 50) + "px");
+    })
+    .on("mouseout", function(d) {
+      div.transition().duration(500).style("opacity",0);
+    })
+    ;
 
     // ********* create node style from data *******************
     nodeEnter.append("rect")
@@ -254,33 +342,27 @@
     .attr("height", function(d) {return getHeight(d);})
     .attr("rx", lineHeight) // sets corner roundness
     .attr("ry", lineHeight)
-    .attr("x", function(d) {return(-1/2*getWidth(d))})
-    .attr("y", function(d) {return getHeight(d)*-1/2}) // moving the object half its height centers the link lines
-    .style("stroke", function(d) { return d.type; })
-    .style("fill", function(d) { return d.level; });
+    .attr("x", function(d) {return(-1/2*getWidth(d))}) // make the rect centered on our x/y coords
+    .attr("y", function(d) {return getHeight(d)*-1/2})
+    .attr("class", function(d) { return d.level; })
+    ;
+
 
     nodeEnter.append("text")
-    //.attr("x", function(d) {return getWidth(d)*1/2})
-    .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight})
-    .attr("text-anchor", "middle")
+    .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight}) // m
     .text(function(d) { return d.name })
-    .style("fill-opacity", 1e-6);
+    ;
 
     // handle up to 3 lines of details
-    for (var i=0;i<3;i++)
-    nodeEnter.append("text")
-    //.attr("x", function(d) {return getWidth(d)*1/2})
+    for (var i=0;i<3;i++) nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight*(i+2)})
-    .attr("text-anchor", "middle")
     .text(function(d) { return d.details[i] })
-    .style("fill-opacity", 1e-6);
+    ;
 
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
       .duration(duration)
       .attr("transform", getNodeTranslation);
-
-    nodeUpdate.selectAll("text").style("fill-opacity", 1);
 
     //Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
@@ -291,9 +373,6 @@
     nodeExit.select("rect")
     .attr("r", 1e-6);
 
-    nodeExit.selectAll("text")
-    .style("fill-opacity", 1e-6);
-
     // Update the links…
     var link = svg.selectAll("path.link")
     .data(links, function(d) { return d.target.id; });
@@ -302,6 +381,7 @@
     link.enter().insert("path", "g")
     .attr("class", "link")
     // .style("stroke", function(d) { return d.target.level; }) // color line with level color
+    .attr("marker-start", "url(#arrowhead)")
     .attr("d", function(d) {
       var o = {x: root.x0, y: root.y0};
       return diagonal({source: o, target: o});
@@ -329,31 +409,39 @@
 
   }
 
- 
+
   //////////////////////////////////////////////////////////////////////////////////
   // layout/size functions that differ based on the orientation of the tree
   //
 
   function getConnectionEndPoint(node) {
-    switch (orientation) {
+    switch (queryService.query_plan_options.orientation) {
     case orientTB:
-      return [node.x, node.y];
+      return [node.x, node.y + getHeight(node)/2];
+
+    case orientBT:
+      return [node.x, -node.y - getHeight(node)/2];
 
     case orientLR:
+      return [node.y + getWidth(node)/2, node.x];
+
+    case orientRL:
     default:
-      return [node.y, node.x];
+      return [-node.y - getWidth(node)/2, node.x];
     }
   }
 
 
   function getRootTranslation(root) {
-    switch (orientation) {
+    switch (queryService.query_plan_options.orientation) {
     case orientTB:
+    case orientBT:
       root.x0 = 50;
       root.y0 = 0;
       break;
 
     case orientLR:
+    case orientRL:
     default:
       root.x0 = 50;
       root.y0 = 0;
@@ -364,13 +452,19 @@
   }
 
   function getNodeTranslation(node) {
-    switch (orientation) {
+    switch (queryService.query_plan_options.orientation) {
     case orientTB:
       return "translate(" + node.x + "," + node.y + ")";
 
+    case orientBT:
+      return "translate(" + node.x + "," + -node.y + ")";
+
     case orientLR:
-    default:
       return "translate(" + node.y + "," + node.x + ")";
+
+    case orientRL:
+    default:
+      return "translate(" + -node.y + "," + node.x + ")";
     }
   }
 
@@ -401,95 +495,6 @@
     return(maxWidth * 5); //allow 5 units for each character
   }
 
-  //
-  // recursively compute the total tree width.
-  // For a horizonal tree, it is the maximum width of the children, plus our own width
-  // For a vertical tree, it is the width of all our child branches, plus our own width
-  //
-
-  function getTotalWidth(node,widthSoFar) {
-    delete node.xOffset; // make sure these aren't left over from previous orientations
-    delete node.yOffset;
-
-    var curWidth = getWidth(node);
-    //console.log("For node: " + node.name + " got cur: " + curWidth + ", children: " + node.children);
-    if (!node)
-      return(curWidth);
-
-    switch (orientation) {
-    case orientLR:
-      var maxChildWidth = 0;
-      node.xOffset = widthSoFar;
-
-      if (node.children) for (var i=0; i<node.children.length; i++) {
-        var cWidth = getTotalWidth(node.children[i],widthSoFar+curWidth+interNodeXSpacing*2);
-        if (cWidth > maxChildWidth)
-          maxChildWidth = cWidth;
-      }
-
-      return getWidth(node) + interNodeXSpacing + maxChildWidth;
-
-    case orientTB:
-    default:
-      var totalChildWidth = 0;
-
-      // we might have zero children, one child, or two children.
-        if (!node.children || node.children.length == 0)      // our width alone
-          return(curWidth);
-        else if (node.children.length == 1) // maxiumum of our width or the child's width
-          return(Math.max(curWidth,getTotalWidth(node.children[0])));
-        else if (node.children.length == 2) // our width plus width of each child tree
-          return(curWidth + getTotalWidth(node.children[0]) + getTotalWidth(node.children[1]));
-    }
-  }
-
-  //
-  // recursively compute the height of the tree.
-  // In a horizontal tree, this is the maxiumum height of each branch, plus interNodeSpacing between branches
-  // In a vertical tree, this is our height, plus the maximum height of any children
-  //
-
-  function getTotalHeight(node,heightSoFar) {
-    var curHeight = getHeight(node); // assume max height is our height
-    if (!node)
-      return(curHeight);
-
-    switch (orientation) {
-    case orientLR:
-
-      var childHeightSum = 0;
-      if (node.children) for (var i=0; i<node.children.length; i++) {
-        childHeightSum += getTotalHeight(node.children[i]);
-      }
-
-      // if only one child, our max height is the max of child size vs our size
-      if (!node.children || node.children.length == 0)
-        return(curHeight);
-      else if (node.children.length == 1)
-        return(Math.max(curHeight,childHeightSum));
-      // for multiple children, height is the sum of heights
-      else
-        return(curHeight + childHeightSum + interNodeYSpacing);
-
-    case orientTB:
-    default:
-      var maxHeight = curHeight;
-      var maxChildHeight = 0;
-      node.yOffset = heightSoFar;
-
-      // see if we have any children, and what the max height is for them
-      if (node.children) for (var i=0; i<node.children.length; i++) {
-        var childH = getTotalHeight(node.children[i],heightSoFar + curHeight + interNodeYSpacing);
-        if (childH > maxChildHeight)
-          maxChildHeight = childH;
-      }
-
-      if (maxChildHeight > 0)
-        return curHeight + interNodeYSpacing + maxChildHeight;
-      else
-        return curHeight;
-    }
-  }
 
   //
   // recursively turn the tree of ops into a simple tree to give to d3
@@ -512,19 +517,20 @@
         details: plan.GetDetails(),
         parent: parent,
         children: [],
-        level: "#ccc", // default background color
+        level: "node", // default background color
         time: plan.time,
-        time_percent: plan.time_percent
+        time_percent: plan.time_percent,
+        tooltip: plan.GetTooltip()
     };
 
     // how expensive are we? Color background by cost, if we know
     if (plan && plan.time_percent) {
       if (plan.time_percent >= 20)
-        result.level = "#f9ca7b";
+        result.level = "node-expensive-3";
       else if (plan.time_percent >= 5)
-        result.level = "#fbebd7";
+        result.level = "node-expensive-2";
       else if (plan.time_percent >= 1)
-        result.level = "#fdedd3";
+        result.level = "node-expensive-1";
     }
 
     // if the plan has a 'predecessor', it is either a single plan node that should be
