@@ -276,7 +276,13 @@
 
     function aceInputChanged(e) {
       //console.log("input changed, action: " + JSON.stringify(e[0]));
-      //console.log("current session : " + JSON.stringify(qc.inputEditor.getSession()));
+      //console.log("current text : " + JSON.stringify(qc.inputEditor.getSession().getValue()));
+      //console.log("current query: " + qc.lastResult.query);
+
+      // weird bug - sometimes the query is not up to date with the text area
+      if (qc.inputEditor.getSession().getValue() != qc.lastResult.query)
+        qc.lastResult.query = qc.inputEditor.getSession().getValue();
+
       // show a placeholder when nothing has been typed
       var curSession = qc.inputEditor.getSession();
       var noText = curSession.getValue().length == 0;
