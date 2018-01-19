@@ -374,11 +374,11 @@ input.ng-invalid {
     stroke-width: 2px;
 }
 
-div.tooltip {
+div.svg_tooltip {
   position: absolute;
   text-align: left;
   padding: 2px;
-  font: 12px sans-serif;
+  /*font: 12px sans-serif;*/
   background: lightsteelblue;
   border: 0px;
   border-radius: 8px;

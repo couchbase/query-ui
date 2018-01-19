@@ -273,7 +273,7 @@
 
     // used for tool tips
     var div = d3.select("body").append("div")
-      .attr("class", "tooltip")
+      .attr("class", "svg_tooltip")
       .style("opacity", 0);
 
     //
