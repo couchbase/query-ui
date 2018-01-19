@@ -795,7 +795,7 @@
     dialogScope.file = {name: "output"};
 
     function options() {
-      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = '/ui-current';
       dialogScope.options = qwQueryService.clone_options();
       dialogScope.options.positional_parameters = [];
       dialogScope.options.named_parameters = [];
@@ -858,7 +858,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'json';
       dialogScope.file = dialogScope.data_file;
-      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = '/ui-current';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -897,7 +897,7 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.query_file;
-      var subdirectory = ($('#').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory ='/ui-current';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -1051,7 +1051,7 @@
       dialogScope.selectNextMatch = selectNextMatch;
       dialogScope.selectPrevMatch = selectPrevMatch;
 
-      var subdirectory = ($('#').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = '/ui-current';
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query' + subdirectory +
@@ -1177,7 +1177,7 @@
     //
 
     function showErrorMessage(message) {
-      var subdirectory = ($('#').height() != null) ? '/ui-current' : '/ui-classic';
+      var subdirectory = '/ui-current';
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
 
