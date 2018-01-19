@@ -846,6 +846,11 @@
         qwQueryService.currentQueryRequestID = UUID.generate();
         queryData.client_context_id = qwQueryService.currentQueryRequestID;
       }
+      // for auditing, note that the non-user queries are "INTERNAL"
+      else
+        queryData.client_context_id = "INTERNAL-" + UUID.generate();
+
+      //console.log("Got context: " + queryData.client_context_id + ", query: " + queryText);
 
       //
       // build the query request appropriately for the server version. 4.5 and later
