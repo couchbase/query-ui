@@ -501,10 +501,19 @@
     function retrieveDocs_inner() {
       qwQueryService.saveStateToStorage();
 
-      if (dec.use_n1ql())
-        retrieveDocs_n1ql();
-      else
+      // special case - if the bucket doesn't have a primary index, and there is no "where" clause,
+      // use the REST API since N1QL won't work
+      var has_prim = true;
+      for (var i=0; i < qwQueryService.buckets.length; i++)
+        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
+          has_prim = qwQueryService.buckets[i].has_prim;
+          break;
+        }
+
+      if (!dec.use_n1ql() || (!has_prim && (dec.options.where_clause || dec.options.where_clause.length == 0)))
         retrieveDocs_rest();
+      else
+        retrieveDocs_n1ql();
     }
 
 
@@ -688,11 +697,10 @@
 
     function getBuckets_n1ql() {
       var bucketList = validateQueryService.validBuckets();
+
       dec.buckets.length = 0;
       for (var i=0; i < bucketList.length; i++) if (bucketList[i] != ".")
         dec.buckets.push(bucketList[i]);
-
-      //console.log("Got buckets1: " + JSON.stringify(dec.buckets));
     }
 
     function getBuckets_rest() {
@@ -735,7 +743,7 @@
         dec.options.selected_bucket = $stateParams.bucket;
         dec.options.where_clause = ''; // reset the where clause
         dec.options.offset = 0; // start off from the beginning
-        $timeout(retrieveDocs_inner,50);
+        $timeout(retrieveDocs_inner,1000); // allow a second to determine query service status
       }
     }
 
