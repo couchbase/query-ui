@@ -106,12 +106,11 @@
           if (data.plan_nodes) {
             // put the SVG inside a wrapper to allow scrolling
             wrapperElement = angular.element('<div class="d3-tree-wrapper"></div>');
-//            wrapperElement = angular.element('<div></div>');
             element.append(wrapperElement);
             simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
 
             // if we're creating the wrapper for the first time, allow a delay for it to get a size
-            if ($('.d3-tree-wrapper').height())
+            if ($('.d3-tree-wrapper').height() && $('.d3-tree-wrapper').height() > 50)
               makeTree();
             else
               $timeout(makeTree,100);
@@ -301,10 +300,8 @@
     else if (queryService.query_plan_options.orientation == orientRL)
       x = -x;
 
-    var scale = Math.max(0.15,Math.min(2,.9 / Math.max(dx / canvas_width, dy / canvas_height)));
+    var scale = Math.max(0.15,Math.min(2,.85 / Math.max(dx / canvas_width, dy / canvas_height)));
     var translate = [canvas_width / 2 - scale * x, canvas_height / 2 - scale * y];
-
-
 
     //console.log("Got new scale: " + scale + ", translate: " + JSON.stringify(translate));
 

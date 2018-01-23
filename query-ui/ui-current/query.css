@@ -346,7 +346,7 @@ input.ng-invalid {
 .d3-tree-wrapper {
   width: 100%;
   height: calc(100% - 58px);
-  overflow: scroll;
+  //overflow: scroll;
   position: relative;
   font-family: OpenSans;
 }
