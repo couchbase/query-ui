@@ -334,7 +334,7 @@
       if (!op || !op['#operator'])
         return(result);
 
-      result += '<h4>' + op['#operator'] + '</h4><ul>';
+      result += '<div class="row"><h5>' + op['#operator'] + '</h5><a class="ng-isolate-scope" ngclipboard="" data-clipboard-target="#tooltip_div">copy text</a></div><ul class="tooltip-list">';
       var childFields = getNonChildFieldList(op);
       if (childFields.length == 0) // no fields, no tool tip
         return("");
@@ -376,10 +376,8 @@
           result += getNonChildFieldList(val);
           result += '</ul>';
         }
-
         result += '</li>';
       }
-
       return result;
     }
 
@@ -502,7 +500,6 @@
         if (inOutStr.length > 0)
           result.push(inOutStr);
       }
-
       return(result);
     }
 

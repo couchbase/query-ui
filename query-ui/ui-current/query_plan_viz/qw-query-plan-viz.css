@@ -4,7 +4,6 @@
   position: relative;
   background-color: #fff;
   border-radius: 9px;
-  padding: .5rem;
   margin-bottom: 1rem;
   border: 1px solid #ececec;
 }
@@ -15,30 +14,6 @@
 .qw-rows-wrapper {
   min-width: 0;
   width: 100%;
-}
-.qw-explain-summary {
-  font-size: .75rem;
-  margin-bottom: 1rem;
-}
-.qw-explain-summary .column {
-  -webkit-box-flex: 1.5;
-  flex-grow: 1.5;
-  margin: 0 2rem 0 0;
-  padding: 0;
-}
-.qw-explain-summary .column:last-child {
-  -webkit-box-flex: 1;
-  flex-grow: 1;
-  margin: 0 1rem 0 0;
-  align-self: flex-end;
-}
-.qw-explain-summary a {
-  display: inline-block;
-  padding: .25rem .5rem 0 .25rem;
-  color: #4287d6;
-}
-.qw-explain-summary a:hover {
-  color: #000;
 }
 .qw-sequence {
   margin: 1rem 0;

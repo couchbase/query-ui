@@ -46,9 +46,9 @@
 
             // summarize plan in panel at the top
             if (data.analysis) {
-              content += "<div class='row items-top qw-explain-summary indent-1'>";
+              content += "<div class='row qw-explain-summary'>";
               content += "<div class='column'>";
-              content += "<h5>Indexes</h5>";
+              content += "<b>Indexes</b><br>";
 //              content += "<li>Indexes used: <ul>";
               for (var f in data.analysis.indexes)
                 if (f.indexOf("#primary") >= 0)
@@ -58,27 +58,28 @@
               content += "</div>";
 
               content += "<div class='column'>";
-              content += "<h5>Buckets</h5>";
+              content += "<b>Buckets</b><br>";
               for (var b in data.analysis.buckets)
                 content += "<em>" + b + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
               content += "<div class='column'>";
-              content += "<h5>Fields</h5>";
+              content += "<b>Fields</b><br>";
               for (var f in data.analysis.fields)
                 content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
-              content += "<div class='column text-right nowrap'>";
-              content += '<a ng-click="zoomIn()"><span class="icon fa-search"></span></a>';
-              content += '<a ng-click="zoomOut()"><span class="icon fa-search fa-2x"></span></a>';
+// TBD: the selected orientation button should receive the "selected-orient" class, but it's not working
+              content += "<div class='column row flex-grow-half flex-right'>";
+              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left plan-orient" ng-class="selected-orient : {{orientIs(1)}}"></span>';
+              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right plan-orient" ng-class="selected-orient : {{orientIs(3)}}"></span>';
+              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down plan-orient" ng-class="selected-orient : {{orientIs(4)}}"></span>';
+              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up plan-orient" ng-class="selected-orient : {{orientIs(2)}}"></span>';
               content += "</div>";
 
-              content += "<div class='column text-right nowrap'>";
-              content += '<a ng-click="bottomTop()"><span class="icon fa-caret-square-o-down fa-2x"></span></a>';
-              content += '<a ng-click="rightLeft()"><span class="icon fa-caret-square-o-right fa-2x"></span></a>';
-              content += '<a ng-click="topDown()"><span class="icon fa-caret-square-o-up fa-2x"></span></a>';
-              content += '<a ng-click="leftRight()"><span class="icon fa-caret-square-o-left fa-2x"></span></a>';
+              content += "<div class='column row flex-right'>";
+              content += '<span ng-click="zoomIn()" class="icon fa-search-minus plan-zoom"></span>';
+              content += '<span ng-click="zoomOut()" class="icon fa-search-plus plan-zoom"></span>';
               content += "</div>";
 
               content += "</div>";
@@ -88,10 +89,11 @@
               scope.bottomTop = bottomTop;
               scope.rightLeft = rightLeft;
 
+              scope.orientIs = function(val) {return queryService.query_plan_options.orientation == val;};
+
               scope.zoomIn = zoomIn;
               scope.zoomOut = zoomOut;
             }
-
           }
 
           // set our element to use this HTML
@@ -100,7 +102,6 @@
           $compile(header)(scope, function(compiledHeader) {element.append(compiledHeader)});
 
           //element.html(content);
-
           // now add the d3 content
 
           if (data.plan_nodes) {
@@ -163,7 +164,6 @@
         .attr("transform", "translate(" + zoomer.translate() + ")" +
               " scale(" + zoomer.scale() + ")");
   }
-
 
   function zoomIn()  {zoomButton(false);}
   function zoomOut() {zoomButton(true); }
@@ -271,11 +271,6 @@
     var nodes = tree.nodes(root);
     var links = tree.links(nodes);
 
-    // used for tool tips
-    var div = d3.select("body").append("div")
-      .attr("class", "svg_tooltip")
-      .style("opacity", 0);
-
     //
     // we want to pan/zoom so that the whole graph is visible.
     //
@@ -323,16 +318,17 @@
     var nodeEnter = node.enter().append("svg:g")
     .attr("class", "node")
     .attr("transform", getRootTranslation)
-    .on("mouseover", function(d) {
-      div.transition().duration(200).style("opacity", 0.9);
-      div.html(d.tooltip)
-        .style("left", (d3.event.pageX) + "px")
-        .style("top", (d3.event.pageY - 50) + "px");
-    })
-    .on("mouseout", function(d) {
-      div.transition().duration(500).style("opacity",0);
-    })
-    ;
+    .on("click", function(d) {
+      var tooltip_div = d3.select("body").append("div")
+        .attr("id", "svg_tooltip")
+        .on("click", function(d) {
+          tooltip_div.transition().duration(500).style("opacity",0);
+        });
+        tooltip_div.transition().duration(200).style("opacity", 0.95);
+        tooltip_div.html(d.tooltip)
+          .style("left", (d3.event.pageX + 40) + "px")
+          .style("top", (d3.event.pageY - 40) + "px");
+    });
 
 // *** node drop-shadows come from this filter ******************
     // filters go in defs element
@@ -345,14 +341,14 @@
         .attr("height", "130%");
 
     // SourceAlpha refers to opacity of graphic that this filter will be applied to
-    // convolve that with a Gaussian with standard deviation 3 and store result
+    // convolve that with a Gaussian with standard deviation 1 and store result
     // in blur
     filter.append("feGaussianBlur")
         .attr("in", "SourceAlpha")
         .attr("stdDeviation", 1)
         .attr("result", "blur");
 
-    // translate output of Gaussian blur to the right and downwards with 2px
+    // translate output of Gaussian blur downwards with 1px
     // store result in offsetBlur
     filter.append("feOffset")
         .attr("in", "blur")
@@ -442,9 +438,7 @@
       d.x0 = d.x;
       d.y0 = d.y;
     });
-
   }
-
 
   //////////////////////////////////////////////////////////////////////////////////
   // layout/size functions that differ based on the orientation of the tree
@@ -467,7 +461,6 @@
     }
   }
 
-
   function getRootTranslation(root) {
     switch (queryService.query_plan_options.orientation) {
     case orientTB:
@@ -483,7 +476,6 @@
       root.y0 = 0;
       break;
     }
-
     return "translate(" + root.x0 + "," + root.y0 + ")";
   }
 
@@ -530,7 +522,6 @@
 
     return(maxWidth * 5); //allow 5 units for each character
   }
-
 
   //
   // recursively turn the tree of ops into a simple tree to give to d3
