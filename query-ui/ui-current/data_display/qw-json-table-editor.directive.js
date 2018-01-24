@@ -278,12 +278,14 @@
     // how many columns are needed by each field
     //
 
+    var maxWidth = 500;
     var topLevelKeys = {};
     var columnWidths = {};
     var totalWidth = 0;
     var hasNonObject = false;
     var unnamedWidth;
     var rowWidths = [];
+    var truncated = false; // did we have to leave out
     for (var row=0; row < object.length; row++)
       if (object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
         //console.log("row: " + row + ": " + JSON.stringify(object[row].data));
@@ -313,8 +315,25 @@
       totalWidth += columnWidths[key];
     });
 
+    // if the total width is > 1000 columns, truncate the data to be presented
+    if (totalWidth > maxWidth) {
+      var truncatedKeys = {};
+      var newWidth = 0;
+      _.forIn(topLevelKeys, function(value,key) {
+        if ((newWidth + columnWidths[key]) < maxWidth) {
+          truncatedKeys[key] = true;
+          newWidth += columnWidths[key];
+        }
+      });
+
+      truncated = true;
+      totalWidth = newWidth;
+      topLevelKeys = truncatedKeys;
+    }
+
+
     return({topLevelKeys: topLevelKeys, columnWidths: columnWidths, totalWidth: totalWidth,
-      hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowWidths: rowWidths});
+      hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowWidths: rowWidths, truncated: truncated});
   }
 
   //
@@ -326,7 +345,10 @@
     // We have widths for each column, so we can create the header row
     //
     var columnHeaders = '<div class="data-table-header-row">';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px"></span>';
+    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">';
+    if (meta.truncated)
+      columnHeaders += 'Docs too large, truncated.';
+    columnHeaders += '</span>';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id</span>';
 
     // we may need an unnamed column for things that don't have field names

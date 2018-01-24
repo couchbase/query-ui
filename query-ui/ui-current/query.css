@@ -341,6 +341,15 @@ input.ng-invalid {
   margin: .25rem 0;
 }
 
+.dialog-resizable {
+  overflow: hidden;
+  resize: both;
+}
+
+.dialog-content {
+  height: calc(100% - 100px);
+}
+
 /* styles for D3-based query plan viz ------------------------------------- */
 
 .qw-explain-summary {

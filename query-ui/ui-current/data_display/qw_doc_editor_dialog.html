@@ -1,13 +1,13 @@
-<div class="dialog-lg" id="doc_editor_dialog">
+<form class="forms">
+<div class="dialog-lg dialog-resizable" id="doc_editor_dialog" style="min-height:600px">
   <div class="panel-header">
     <h2 class="ellipsis">Edit Document</h2>
   </div>
-  <form class="forms">
   <div class="alert alert-warning" ng-if="error_message">{{error_message}}</div>
-  <div class="panel-content max-height-500" style="height: 600px">
+  <div class="panel-content" style="height:calc(100% - 100px)">
     <h4 class="margin-bottom-1">{{doc_id}}</h4>
-      <div id="result_box" style="height: 90%; overflow: auto">
-        <div id="result_editor" ui-ace="ace_options" ng-model="doc_json" style="height:100%"></div>
+      <div id="result_box" style="overflow: auto;height:95%">
+        <div id="result_editor" ui-ace="ace_options" ng-model="doc_json" style="min-height:400px;height:100%"></div>
       </div>
     </div>
   <div class="panel-footer scroll-shadow">
@@ -18,5 +18,5 @@
        type="submit" ng-disabled="errors()"
        ng-click="!errors() && $close('ok')">Save</button>
   </div>
-  </form>
 </div>
+  </form>
