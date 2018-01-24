@@ -322,9 +322,9 @@
       var tooltip_div = d3.select("body").append("div")
         .attr("id", "svg_tooltip")
         .on("click", function(d) {
-          tooltip_div.transition().duration(500).style("opacity",0);
+          tooltip_div.transition().duration(500).style("display", "none");
         });
-        tooltip_div.transition().duration(200).style("opacity", 0.95);
+        tooltip_div.transition().duration(200).style("display", "block");
         tooltip_div.html(d.tooltip)
           .style("left", (d3.event.pageX + 40) + "px")
           .style("top", (d3.event.pageY - 40) + "px");
