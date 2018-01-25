@@ -7,9 +7,9 @@
 
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
-  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams', 'qwQueryService', 'validateQueryService'];
+  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams', 'qwQueryService', 'validateQueryService', 'qwConstantsService'];
 
-  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService, validateQueryService) {
+  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService, validateQueryService, qwConstantsService) {
 
     var dec = this;
 
@@ -28,6 +28,8 @@
     dec.options.current_result = [];
     dec.currentDocs = [];
     dec.buckets = [];
+    dec.buckets_prim = {};
+    dec.buckets_sec = {};
     dec.use_n1ql = function() {return(validateQueryService.valid())};
     dec.options.show_scrollbars = true;
 
@@ -280,7 +282,9 @@
       if (dec.updatingRow >= 0)
         return;
 
-      var res = showDocEditor(dec.options.current_result[row].id, JSON.stringify(dec.options.current_result[row].data,null,2));
+      var doc_string = JSON.stringify(dec.options.current_result[row].data,null,2);
+      //console.log("Got doc string length: " + doc_string.length);
+      var res = showDocEditor(dec.options.current_result[row].id, doc_string);
       res.promise.then(getSaveDocClosure(res.scope,row));
     }
 
@@ -501,19 +505,15 @@
     function retrieveDocs_inner() {
       qwQueryService.saveStateToStorage();
 
-      // special case - if the bucket doesn't have a primary index, and there is no "where" clause,
-      // use the REST API since N1QL won't work
-      var has_prim = true;
-      for (var i=0; i < qwQueryService.buckets.length; i++)
-        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
-          has_prim = qwQueryService.buckets[i].has_prim;
-          break;
-        }
+      // can only use query service if the bucket has a primary index, or that there is a secondary index and
+      // a where clause
+      var has_prim = dec.buckets_prim[dec.options.selected_bucket];
+      var has_sec = dec.buckets_sec[dec.options.selected_bucket];
 
-      if (!dec.use_n1ql() || (!has_prim && (dec.options.where_clause || dec.options.where_clause.length == 0)))
-        retrieveDocs_rest();
-      else
+      if (dec.use_n1ql() && (has_prim || (dec.options.where_clause && dec.options.where_clause.length && has_sec)))
         retrieveDocs_n1ql();
+      else
+        retrieveDocs_rest();
     }
 
 
@@ -696,11 +696,37 @@
     }
 
     function getBuckets_n1ql() {
-      var bucketList = validateQueryService.validBuckets();
+      // run a query to see which buckets have what indexes
+      return qwQueryService.executeQueryUtil(qwConstantsService.keyspaceQuery, false)
+      .then(function success(resp) {
+        var data = resp.data, status = resp.status;
 
-      dec.buckets.length = 0;
-      for (var i=0; i < bucketList.length; i++) if (bucketList[i] != ".")
-        dec.buckets.push(bucketList[i]);
+        dec.buckets.length = 0;
+        if (data && data.results) for (var i=0; i< data.results.length; i++) {
+          var bucket = data.results[i];
+          dec.buckets.push(bucket.id);
+          if (bucket.has_prim)
+            dec.buckets_prim[bucket.id] = true;
+          if (bucket.has_sec)
+            dec.buckets_sec[bucket.id] = true;
+          //qconsole.log("Got bucket: " + bucket.id + " prim: " + bucket.has_prim + ", sec: " + bucket.has_sec);
+       }
+
+      }, function error(resp) {
+        var data = resp.data;
+        if (data && data.errors) {
+          dec.options.current_result = JSON.stringify(data.errors);
+          var dialogScope = $rootScope.$new(true);
+          dialogScope.error_title = "Error getting list of buckets.";
+          dialogScope.error_detail = dec.options.current_result;
+          $uibModal.open({
+            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+            scope: dialogScope
+          });
+        }
+      }
+      );
+      
     }
 
     function getBuckets_rest() {
@@ -724,7 +750,7 @@
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
           var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error getting list of documents.";
+          dialogScope.error_title = "Error getting list of buckets.";
           dialogScope.error_detail = dec.options.current_result;
           $uibModal.open({
             templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
@@ -738,15 +764,19 @@
 
     function handleBucketParam() {
       if (_.isString($stateParams.bucket) && $stateParams.bucket.length > 0) {
-        //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " +
-        //    JSON.stringify(dec.buckets));
+        //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " + JSON.stringify(dec.buckets));
         dec.options.selected_bucket = $stateParams.bucket;
-        dec.options.where_clause = ''; // reset the where clause
+            dec.options.where_clause = ''; // reset the where clause
         dec.options.offset = 0; // start off from the beginning
-        $timeout(retrieveDocs_inner,1000); // allow a second to determine query service status
+        
+        // if we don't have any buckets yet, get the bucket list first
+        if (dec.buckets.length == 0)
+          getBucketList().then(retrieveDocs_inner);
+        else
+          retrieveDocs_inner();
       }
     }
-
+    
     //
     // if the user updates something, we like to refresh the results, unless
     // there are unsaved changes

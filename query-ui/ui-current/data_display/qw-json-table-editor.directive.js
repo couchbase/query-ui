@@ -33,6 +33,7 @@
           // start with an empty div, if we have data convert it to HTML
           var wrapper = '<div class="data-table-wrapper">{}</div>';
           var table;
+          var warning;
           htmlElement = element;
 
           var content = "<div>{}</div>";
@@ -45,6 +46,9 @@
             meta = getMetaData(json);
 
             // make the table header with the top-level fields
+            
+            if (meta.truncated)
+              warning = angular.element('<div class="error text-small" style="margin-bottom:-20px">Some documents too large for tabular editing, tabular view truncated.</div>`');
             header = angular.element(createHTMLheader(meta));
             var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
             for (var i=startSortColumn; i < header[0].childNodes.length; i++) {
@@ -78,9 +82,11 @@
 
           // clear out our element. If we have a header add it, then add the wrapper
           htmlElement.empty();
-          if (header) {
+          if (warning)
+            htmlElement.append(warning);
+          if (header)
             htmlElement.append(header);
-          }
+
           htmlElement.append(wrapperElement);
 
           // sync scrolling between the header and the main table
@@ -345,10 +351,7 @@
     // We have widths for each column, so we can create the header row
     //
     var columnHeaders = '<div class="data-table-header-row">';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">';
-    if (meta.truncated)
-      columnHeaders += 'Docs too large, truncated.';
-    columnHeaders += '</span>';
+    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px"></span>';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id</span>';
 
     // we may need an unnamed column for things that don't have field names
