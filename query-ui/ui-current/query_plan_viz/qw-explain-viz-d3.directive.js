@@ -20,7 +20,7 @@
 (function() {
 
   'use strict';
-  angular.module('qwExplainVizD3', []).directive('qwExplainVizD3', ['$compile', '$timeout', 'qwQueryService', getD3Explain]);
+  angular.module('qwExplainVizD3', ['ngclipboard']).directive('qwExplainVizD3', ['$compile', '$timeout', 'qwQueryService', getD3Explain]);
 
   var queryService = null;
 
@@ -71,10 +71,10 @@
 
 // TBD: the selected orientation button should receive the "selected-orient" class, but it's not working
               content += "<div class='column row flex-grow-half flex-right'>";
-              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left plan-orient" ng-class="selected-orient : {{orientIs(1)}}"></span>';
-              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right plan-orient" ng-class="selected-orient : {{orientIs(3)}}"></span>';
-              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down plan-orient" ng-class="selected-orient : {{orientIs(4)}}"></span>';
-              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up plan-orient" ng-class="selected-orient : {{orientIs(2)}}"></span>';
+              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left plan-orient" ng-class="{\'selected-orient\' : orientIs(1)}"></span>';
+              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right plan-orient" ng-class="{\'selected-orient\' : orientIs(3)}"></span>';
+              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down plan-orient" ng-class="{\'selected-orient\' : orientIs(4)}"></span>';
+              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up plan-orient" ng-class="{\'selected-orient\' : orientIs(2)}"></span>';
               content += "</div>";
 
               content += "<div class='column row flex-right'>";
@@ -319,15 +319,21 @@
     .attr("class", "node")
     .attr("transform", getRootTranslation)
     .on("click", function(d) {
-      var tooltip_div = d3.select("body").append("div")
+  //    if (document.getElementById('svg_tooltip').style.display === "block") {
+  //      return document.getElementById('svg_tooltip').style("display", "none");}
+       var tooltip_div = d3.select("body")
+        .append("div")
         .attr("id", "svg_tooltip")
-        .on("click", function(d) {
-          tooltip_div.transition().duration(500).style("display", "none");
+        .on("mouseover", function(event) {
+          return tooltip_div.style("display", "block");
+          })
+        .on("mouseout", function(event) {
+          return tooltip_div.style("display", "none");
         });
-        tooltip_div.transition().duration(200).style("display", "block");
-        tooltip_div.html(d.tooltip)
-          .style("left", (d3.event.pageX + 40) + "px")
-          .style("top", (d3.event.pageY - 40) + "px");
+      tooltip_div.transition().duration(300).style("display", "block");
+      tooltip_div.html(d.tooltip)
+        .style("left", (d3.event.pageX + 40) + "px")
+        .style("top", (d3.event.pageY - 40) + "px");
     });
 
 // *** node drop-shadows come from this filter ******************

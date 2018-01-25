@@ -334,7 +334,7 @@
       if (!op || !op['#operator'])
         return(result);
 
-      result += '<div class="row"><h5>' + op['#operator'] + '</h5><a class="ng-isolate-scope" ngclipboard="" data-clipboard-target="#tooltip_div">copy text</a></div><ul class="tooltip-list">';
+      result += '<div class="row"><h5>' + op['#operator'] + '</h5><a ngclipboard data-clipboard-target="#svg_tooltip">copy text</a></div><ul class="tooltip-list">';
       var childFields = getNonChildFieldList(op);
       if (childFields.length == 0) // no fields, no tool tip
         return("");
