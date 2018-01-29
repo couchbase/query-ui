@@ -4,11 +4,11 @@
 
   queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService',
     'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault',
-    'mnServersService'];
+    'mnServersService', 'qwJsonCsvService'];
 
   function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
       validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault,
-      mnServersService) {
+      mnServersService, qwJsonCsvService) {
 
     var qc = this;
     //console.log("Start controller at: " + new Date().toTimeString());
@@ -81,8 +81,6 @@
     //
 
     qc.query = query;
-    qc.save = save;
-    qc.save_query = save_query;
     qc.unified_save = unified_save;
     qc.options = options;
 
@@ -167,6 +165,8 @@
     // are we enterprise?
 
     qc.isEnterprise = mnPools.export.isEnterprise;
+
+    qc.copyResultAsCSV = function() {copyResultAsCSV();};
 
     //
     // call the activate method for initialization
@@ -847,78 +847,6 @@
 
     }
 
-    function save() {
-      // can't save empty query
-      if (qc.emptyResult())
-        return;
-
-      var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
-
-      // safari does'nt support saveAs
-      if (isSafari) {
-        var file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
-        saveAs(file,dialogScope.data_file.name);
-        return;
-      }
-
-      // but for those that do, get a name for the file
-      dialogScope.file_type = 'json';
-      dialogScope.file = dialogScope.data_file;
-      var subdirectory = '/ui-current';
-
-      var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory +
-                     '/file_dialog/qw_query_file_dialog.html',
-        scope: dialogScope
-      }).result;
-
-      // now save it
-      promise.then(function success(res) {
-        //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
-        var file = new Blob([qc.lastResult.result],{type: "text/json"});
-        saveAs(file,dialogScope.file.name);
-      });
-    };
-
-
-    //
-    // save the current query to a file. Here we need to use a scope to to send the file name
-    // to the file name dialog and get it back again.
-    //
-
-    function save_query() {
-      // can't save an empty query
-      if (qc.emptyQuery())
-        return;
-
-      var isSafari = /^((?!chrome).)*safari/i.test(navigator.userAgent);
-
-      // safari does'nt support saveAs
-      if (isSafari) {
-        var file = new Blob([qc.lastResult.query],{type: "text/json", name: "data.json"});
-        saveAs(file,dialogScope.query_file.name);
-        return;
-      }
-
-      // but for those that do, get a name for the file
-      dialogScope.file_type = 'query';
-      dialogScope.file = dialogScope.query_file;
-      var subdirectory ='/ui-current';
-
-      var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory +
-                     '/file_dialog/qw_query_file_dialog.html',
-        scope: dialogScope
-      }).result;
-
-      // now save it
-      promise.then(function success(res) {
-        //console.log("Promise, file: " + tempScope.file.name + ", res: " + res);
-        var file = new Blob([qc.lastResult.query],{type: "text/plain"});
-        saveAs(file,dialogScope.file.name);
-      });
-    };
-
     //
     // going forward we will have a single file dialog that allows the user to select
     // "Results" or "Query"
@@ -930,7 +858,10 @@
       // but for those that do, get a name for the file
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.file;
-      dialogScope.file_options = [{kind: "json", label: "Query Results"}];
+      dialogScope.file_options = [
+        {kind: "json", label: "Query Results"},
+        {kind: "txt", label: "Results as tab-separated"},
+        ];
       if (qc.lastResult.query && qc.lastResult.query.length > 0)
         dialogScope.file_options.push({kind: "txt", label: "Query Statement"});
       dialogScope.selected = {item: 0};
@@ -945,25 +876,29 @@
         var file;
         var file_extension;
 
-        if (dialogScope.selected.item == 0) {
+        switch (dialogScope.selected.item) {
+        case "0":
           file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
           file_extension = ".json";
-        }
-        else if (dialogScope.selected.item == 1) {
+          break;
+
+        case "1":
+          file = new Blob([qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data)],
+              {type: "text/plain", name: "data.txt"});
+          file_extension = ".txt";
+          break;
+
+        case "3":
           file = new Blob([qc.lastResult.query],{type: "text/plain", name: "query.txt"});
           file_extension = ".txt";
-        }
-        else
+          break;
+
+        default:
           console.log("Error, no match");
+          break;
+        }
 
-
-        // safari does'nt support saveAs
-        //if (dialogScope.safari) {
-        //  saveAs(file,dialogScope.query_file.name + file_extension);
-        //  return;
-        //}
-        //else
-          saveAs(file,dialogScope.file.name + file_extension);
+        saveAs(file,dialogScope.file.name + file_extension);
       });
 
     }
@@ -1224,6 +1159,20 @@
 
     function updateValidNodes() {
       qc.validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
+    }
+
+
+    function copyResultAsCSV() {
+      var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data);
+
+      // create temp element
+      var copyElement = document.createElement("textarea");
+      angular.element(document.body.append(copyElement));
+      copyElement.value = csv;
+      copyElement.focus();
+      copyElement.select();
+      document.execCommand('copy');
+      copyElement.remove();
     }
 
     //

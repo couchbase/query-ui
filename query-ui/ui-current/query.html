@@ -89,7 +89,8 @@
 <!-- query results -->
     <div id="result_header" class="row">
       <h4>Query Results
-      <span ng-if="qc.lastResult.warnings"
+       <a class="text-smaller" ng-click="qc.copyResultAsCSV()">copy</a>
+       <span ng-if="qc.lastResult.warnings"
             tooltip-trigger="'mouseenter'"
             tooltip-append-to-body="true"
             class="fa-warning icon orange-3 cursor-pointer"

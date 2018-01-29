@@ -15,6 +15,7 @@
     'mnServersService',
     'mnPoolDefault',
     'mnPermissions',
+    'ngclipboard',
     'ui.ace',
     'ui.bootstrap'])
     .config(function($stateProvider, $transitionsProvider, mnPluggableUiRegistryProvider, mnPermissionsProvider) {

@@ -2179,6 +2179,4 @@
     return qwQueryService;
   }
 
-
-
 })();
