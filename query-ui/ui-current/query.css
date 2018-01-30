@@ -265,7 +265,7 @@ height: 10px;
 #doc_editor_tabular .cbui-table-header-filled.padding-right-0 {
   padding-right: 0;
 }
-input.ng-invalid {
+input.ng-invalid-number {
   background-color: #f9e9ea; /* red-7 */
 }
 
