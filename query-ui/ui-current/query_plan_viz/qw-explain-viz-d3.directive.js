@@ -522,9 +522,10 @@
     var maxWidth = 20; // leave at least this much space
     if (node.name && node.name.length > maxWidth)
       maxWidth = node.name.length;
-    if (node.details) for (var i=0; i < node.details.length; i++)
-      if (node.details[i].length > maxWidth)
-        maxWidth = node.details[i].length;
+    if (node.details)
+      for (var i=0; i < node.details.length; i++)
+        if (node.details[i] && node.details[i].length > maxWidth)
+          maxWidth = node.details[i].length;
 
     return(maxWidth * 5); //allow 5 units for each character
   }

@@ -177,11 +177,13 @@
           return(unionNode);
       }
 
-      // AnsiJoin and AnsiNest operators have the INNER part of the join represented by a ~child field which
-      // is a sequence of operators. The OUTER is the inputs to the AnsiJoin op, which are
-      // already captured
+      // NestedLoopJoin and NestedLoopNest operators have the INNER part of the join represented
+      // by a ~child field which is a sequence of operators. The OUTER is the inputs to the
+      // NestedJoin op, which are already captured
 
-      else if ((operatorName === "AnsiJoin" || operatorName === "AnsiNest") && plan["~child"] && plan["~child"]["~children"]) {
+      else if ((operatorName === "NestedLoopJoin" || operatorName === "NestedLoopNest") && plan["~child"]) {
+        //&& plan["~child"]["~children"]) {
+        // do we have a
         var inner = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
         var outer = predecessor;
         return(new PlanNode([inner,outer],plan,null,lists.total_time));
@@ -366,7 +368,10 @@
         else if (_.isArray(val)) {
           result += '<ul>';
           for (var i=0; i<val.length; i++)
-            result += getNonChildFieldList(val[i]);
+            if (_.isString(val[i]))
+              result += '<li>' + val[i] + '</li>';
+            else
+              result += getNonChildFieldList(val[i]);
           result += '</ul>';
         }
 
@@ -420,9 +425,9 @@
         result.push(op.as);
         break;
 
-      case "AnsiJoin":
-      case "AnsiNest":
-        result.push("on: " + op.on_clause);
+      case "NestedLoopJoin":
+      case "NestedLoopNest":
+        result.push("on: " + truncate(30,op.on_clause));
         break;
 
       case "Limit":
@@ -431,7 +436,7 @@
         break;
 
       case "Join":
-        result.push(op.keyspace + (op.as ? " as "+op.as : "") + ' on ' + op.on_keys);
+        result.push(op.keyspace + (op.as ? " as "+op.as : "") + ' on ' + truncate(30,op.on_keys));
         break;
 
       case "Order":
@@ -459,19 +464,13 @@
 
       case "Filter":
         if (op.condition)
-          if (op.condition.length > 30)
-            result.push(op.condition.slice(0,30) + "...");
-          else
-            result.push(op.condition);
+          result.push(truncate(30,op.condition));
         break;
       }
 
       // if there's a limit on the operator, add it here
-      if (op.limit && op.limit.length > 0)
-        if (op.limit.length > 30)
-          result.push(op.limit.slice(0,30) + "...");
-        else
-          result.push(op.limit);
+      if (op.limit && op.limit.length)
+        result.push(truncate(30,op.limit));
 
       // if we get operator timings, put them at the end of the details
       if (op['#time_normal']) {
@@ -501,6 +500,20 @@
           result.push(inOutStr);
       }
       return(result);
+    }
+
+    //
+    // truncate strings longer that a given length
+    //
+
+    function truncate(length, item) {
+      if (!_.isString(item))
+        return(item);
+
+      if (item.length > length)
+        return(item.slice(0,length) + "...");
+      else
+        return(item);
     }
 
     //
