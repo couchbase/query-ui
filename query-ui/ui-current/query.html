@@ -89,13 +89,20 @@
 <!-- query results -->
     <div id="result_header" class="row">
       <h4>Query Results
-       <a class="text-smaller" ng-click="qc.copyResultAsCSV()">copy</a>
-       <span ng-if="qc.lastResult.warnings"
-            tooltip-trigger="'mouseenter'"
-            tooltip-append-to-body="true"
-            class="fa-warning icon orange-3 cursor-pointer"
-            uib-tooltip="{{qc.lastResult.warnings}}">
-      </span></h4>
+        <a
+           ng-click="qc.copyResultAsCSV()"
+           class="margin-left-half"
+           title="Copy results in tabular format">
+          <span class="icon fa-copy"></span>
+        </a>
+        <span
+           ng-if="qc.lastResult.warnings"
+           tooltip-trigger="'mouseenter'"
+           tooltip-append-to-body="true"
+           class="fa-warning icon orange-3 cursor-pointer"
+           uib-tooltip="{{qc.lastResult.warnings}}">
+        </span>
+      </h4>
       <span class="pills">
         <a ng-click="qc.selectTab(1)"
            ng-class="{selected: qc.isSelected(1)}">JSON</a>
