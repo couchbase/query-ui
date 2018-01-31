@@ -407,7 +407,8 @@
       case "IndexScan2":
       case "IndexScan3":
         result.push(op.keyspace + "." + op.index);
-        result.push("as: " + op.as);
+        if (op.as)
+          result.push("as: " + op.as);
         break;
 
       case "PrimaryScan": // for primary scan, show the index name
