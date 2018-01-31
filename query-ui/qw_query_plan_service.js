@@ -405,6 +405,7 @@
         break;
 
       case "IndexScan2":
+      case "IndexScan3":
         result.push(op.keyspace + "." + op.index);
         result.push("as: " + op.as);
         break;

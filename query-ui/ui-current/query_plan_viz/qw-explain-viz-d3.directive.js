@@ -257,7 +257,7 @@
     .attr("d", "M 6 0 V 4 L 0 2 Z"); //this is actual shape for arrowhead
 
     // minimum fixed sizes for nodes, depending on orientation, to prevent overlap
-    var minNodeSize = vert ? [125,lineHeight*6] : [lineHeight*6,195];
+    var minNodeSize = vert ? [125,lineHeight*7] : [lineHeight*6,195];
 
     var tree = d3.layout.cluster()
     //.size([height, width])
@@ -390,8 +390,8 @@
     .text(function(d) { return d.name })
     ;
 
-    // handle up to 3 lines of details
-    for (var i=0;i<3;i++) nodeEnter.append("text")
+    // handle up to 4 lines of details
+    for (var i=0;i<4;i++) nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight*(i+2)})
     .attr("class", "node-text-details")
     .text(function(d) { return d.details[i] })
