@@ -24,7 +24,7 @@
 
   var queryService = null;
 
-  function getD3Explain($compile,$timeout, qwQueryService) {
+  function getD3Explain($compile,$timeout,qwQueryService) {
     queryService = qwQueryService;
     return {
       restrict: 'A',
@@ -41,7 +41,7 @@
 
             if (_.isString(data))
               content = '<p class="error">' + data + '</p>';
-            else if (data.data_not_cached)
+            else if (data.data_not_cached || data.errors)
               content = '<p class="error">' + JSON.stringify(data) + '</p>';
 
             // summarize plan in panel at the top
@@ -97,24 +97,26 @@
           }
 
           // set our element to use this HTML
-          var header = angular.element(content);
           element.empty();
-          $compile(header)(scope, function(compiledHeader) {element.append(compiledHeader)});
 
-          //element.html(content);
-          // now add the d3 content
+          if (content.length > 0) {
+            var header = angular.element(content);
+            $compile(header)(scope, function(compiledHeader) {element.append(compiledHeader)});
 
-          if (data.plan_nodes) {
-            // put the SVG inside a wrapper to allow scrolling
-            wrapperElement = angular.element('<div class="d3-tree-wrapper"></div>');
-            element.append(wrapperElement);
-            simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
+            // now add the d3 content
 
-            // if we're creating the wrapper for the first time, allow a delay for it to get a size
-            if ($('.d3-tree-wrapper').height() && $('.d3-tree-wrapper').height() > 50)
-              makeTree();
-            else
-              $timeout(makeTree,100);
+            if (data.plan_nodes) {
+              // put the SVG inside a wrapper to allow scrolling
+              wrapperElement = angular.element('<div class="d3-tree-wrapper"></div>');
+              element.append(wrapperElement);
+              simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
+
+              // if we're creating the wrapper for the first time, allow a delay for it to get a size
+              if ($('.d3-tree-wrapper').height() && $('.d3-tree-wrapper').height() > 50)
+                makeTree();
+              else
+                $timeout(makeTree,100);
+            }
           }
         });
       }
@@ -236,6 +238,8 @@
         .attr("height", canvas_height)
         .attr("id", "outer_svg")
         .style("overflow", "scroll")
+         .on("click",removeAllTooltips)
+
        .append("svg:g")
           .attr("class","drawarea")
           .attr("id", "svg_g")
@@ -302,7 +306,8 @@
 
     // set up zooming, including initial values to show the entire graph
     d3.select(".drawarea")
-    .attr("transform","translate(" + translate + ")scale(" + scale + ")");
+    .attr("transform","translate(" + translate + ")scale(" + scale + ")")
+    ;
 
     zoomer = d3.behavior.zoom().scaleExtent([0.1, 2.5]).on("zoom", zoom);
     zoomer.translate(translate);
@@ -318,23 +323,7 @@
     var nodeEnter = node.enter().append("svg:g")
     .attr("class", "node")
     .attr("transform", getRootTranslation)
-    .on("click", function(d) {
-  //    if (document.getElementById('svg_tooltip').style.display === "block") {
-  //      return document.getElementById('svg_tooltip').style("display", "none");}
-       var tooltip_div = d3.select("body")
-        .append("div")
-        .attr("id", "svg_tooltip")
-        .on("mouseover", function(event) {
-          return tooltip_div.style("display", "block");
-          })
-        .on("mouseout", function(event) {
-          return tooltip_div.style("display", "none");
-        });
-      tooltip_div.transition().duration(300).style("display", "block");
-      tooltip_div.html(d.tooltip)
-        .style("left", (d3.event.pageX + 40) + "px")
-        .style("top", (d3.event.pageY - 40) + "px");
-    });
+    .on("click", makeTooltip);
 
 // *** node drop-shadows come from this filter ******************
     // filters go in defs element
@@ -500,6 +489,42 @@
     default:
       return "translate(" + -node.y + "," + node.x + ")";
     }
+  }
+
+  //
+  // make the tooltip for the given node. We want the tooltip
+  // to go away when the click to dismiss
+  //
+
+  function makeTooltip(d) {
+    removeAllTooltips();
+
+    // the tooltip is relative to the query plan div, so we need to know its offset.
+    var query_plan_offset = $("#query_plan").offset();
+
+    // create the new tooltip
+    var tooltip_div = d3.select("#query_plan")
+    .append("div")
+    .attr("id", "svg_tooltip" + d.id)
+    .attr("class", "svg_tooltip")
+    .on("click", function(event) {
+      return tooltip_div.style("display", "none");
+    })
+    ;
+
+    tooltip_div.transition().duration(300).style("display", "block");
+    var header_div = tooltip_div.append("div");
+    header_div.html('<a class="ui-dialog-titlebar-close modal-close" onclick="console.log(\"click\")"> X </a>');
+    tooltip_div.html(d.tooltip)
+    .style("left", (d3.event.x + 40 - query_plan_offset.left) + "px")
+    .style("top", (d3.event.y + 40 - query_plan_offset.top) + "px");
+
+    d3.event.stopPropagation();
+  }
+
+  function removeAllTooltips() {
+    // get rid of any existing tooltips
+    d3.select("#query_plan").selectAll('.svg_tooltip').remove();
   }
 
   //

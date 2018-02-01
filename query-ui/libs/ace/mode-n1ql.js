@@ -5,28 +5,28 @@
   //
 
   var keywords = (
-      "all|alter|analyze|and|any|array|as|asc|begin|between|binary|boolean|break|bucket|build|by|call|case|cast|cluster|collate|collection|commit|connect|continue|correlate|create|database|dataset|datastore|declare|decrement|delete|derived|desc|describe|distinct|do|drop|each|element|else|end|every|except|exclude|execute|exists|explain|first|flatten|for|force|from|function|grant|group|gsi|hash|having|if|ignore|ilike|in|include|increment|index|infer|inline|inner|insert|intersect|into|is|join|key|keys|keyspace|last|left|let|letting|like|limit|lsm|map|mapping|matched|materialized|merge|minus|missing|namespace|nest|not|null|number|object|offset|on|option|or|order|outer|over|parse|partition|password|path|pool|prepare|primary|private|privilege|procedure|public|raw|realm|reduce|rename|return|returning|revoke|right|role|rollback|satisfies|schema|select|self|semi|set|show|some|start|statistics|string|then|to|transaction|trigger|truncate|under|union|unique|unnest|unset|update|upsert|use|user|using|validate|value|valued|values|via|view|when|where|while|with|within|work|xor"
+      "ALL|ALTER|ANALYZE|AND|ANY|ARRAY|AS|ASC|BEGIN|BETWEEN|BINARY|BOOLEAN|BREAK|BUCKET|BUILD|BY|CALL|CASE|CAST|CLUSTER|COLLATE|COLLECTION|COMMIT|CONNECT|CONTINUE|CORRELATE|CREATE|DATABASE|DATASET|DATASTORE|DECLARE|DECREMENT|DELETE|DERIVED|DESC|DESCRIBE|DISTINCT|DO|DROP|EACH|ELEMENT|ELSE|END|EVERY|EXCEPT|EXCLUDE|EXECUTE|EXISTS|EXPLAIN|FIRST|FLATTEN|FOR|FORCE|FROM|FUNCTION|GRANT|GROUP|GSI|HASH|HAVING|IF|IGNORE|ILIKE|IN|INCLUDE|INCREMENT|INDEX|INFER|INLINE|INNER|INSERT|INTERSECT|INTO|IS|JOIN|KEY|KEYS|KEYSPACE|LAST|LEFT|LET|LETTING|LIKE|LIMIT|LSM|MAP|MAPPING|MATCHED|MATERIALIZED|MERGE|MINUS|MISSING|NAMESPACE|NEST|NOT|NULL|NUMBER|OBJECT|OFFSET|ON|OPTION|OR|ORDER|OUTER|OVER|PARSE|PARTITION|PASSWORD|PATH|POOL|PREPARE|PRIMARY|PRIVATE|PRIVILEGE|PROCEDURE|PUBLIC|RAW|REALM|REDUCE|RENAME|RETURN|RETURNING|REVOKE|RIGHT|ROLE|ROLLBACK|SATISFIES|SCHEMA|SELECT|SELF|SEMI|SET|SHOW|SOME|START|STATISTICS|STRING|THEN|TO|TRANSACTION|TRIGGER|TRUNCATE|UNDER|UNION|UNIQUE|UNNEST|UNSET|UPDATE|UPSERT|USE|USER|USING|VALIDATE|VALUE|VALUED|VALUES|VIA|VIEW|WHEN|WHERE|WHILE|WITH|WITHIN|WORK|XOR"
   );
   var keywords_array = keywords.split('|');
 
   var sysCatalogs = (
-      "system:datastores|system:namespaces|system:keyspaces|system:indexes|system:dual|system:user_info|system:my_user_info|system:nodes|system:applicable_roles|system:prepareds|system:completed_requests|system:active_requests"
+      "SYSTEM:DATASTORES|SYSTEM:NAMESPACES|SYSTEM:KEYSPACES|SYSTEM:INDEXES|SYSTEM:DUAL|SYSTEM:USER_INFO|SYSTEM:MY_USER_INFO|SYSTEM:NODES|SYSTEM:APPLICABLE_ROLES|SYSTEM:PREPAREDS|SYSTEM:COMPLETED_REQUESTS|SYSTEM:ACTIVE_REQUESTS"
   );
   var sysCatalogs_array = sysCatalogs.split('|');
 
   var roles = (
-      "admin|ro_admin|cluster_admin|bucket_admin|bucket_admin|bucket_admin|bucket_admin|bucket_admin|bucket_sasl|bucket_sasl|bucket_sasl|bucket_sasl|bucket_sasl|views_admin|views_admin|views_admin|views_admin|views_admin|replication_admin|data_reader|data_reader|data_reader|data_reader|data_reader|data_reader_writer|data_reader_writer|data_reader_writer|data_reader_writer|data_reader_writer|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_dcp_reader|data_backup|data_backup|data_backup|data_backup|data_backup|data_monitoring|data_monitoring|data_monitoring|data_monitoring|data_monitoring|fts_admin|fts_admin|fts_admin|fts_admin|fts_admin|fts_searcher|fts_searcher|fts_searcher|fts_searcher|fts_searcher|query_select|query_select|query_select|query_select|query_select|query_update|query_update|query_update|query_update|query_update|query_insert|query_insert|query_insert|query_insert|query_insert|query_delete|query_delete|query_delete|query_delete|query_delete|query_manage_index|query_manage_index|query_manage_index|query_manage_index|query_manage_index|query_system_catalog|query_external_access"
+      "ADMIN|RO_ADMIN|CLUSTER_ADMIN|BUCKET_ADMIN|BUCKET_ADMIN|BUCKET_ADMIN|BUCKET_ADMIN|BUCKET_ADMIN|BUCKET_SASL|BUCKET_SASL|BUCKET_SASL|BUCKET_SASL|BUCKET_SASL|VIEWS_ADMIN|VIEWS_ADMIN|VIEWS_ADMIN|VIEWS_ADMIN|VIEWS_ADMIN|REPLICATION_ADMIN|DATA_READER|DATA_READER|DATA_READER|DATA_READER|DATA_READER|DATA_READER_WRITER|DATA_READER_WRITER|DATA_READER_WRITER|DATA_READER_WRITER|DATA_READER_WRITER|DATA_DCP_READER|DATA_DCP_READER|DATA_DCP_READER|DATA_DCP_READER|DATA_DCP_READER|DATA_BACKUP|DATA_BACKUP|DATA_BACKUP|DATA_BACKUP|DATA_BACKUP|DATA_MONITORING|DATA_MONITORING|DATA_MONITORING|DATA_MONITORING|DATA_MONITORING|FTS_ADMIN|FTS_ADMIN|FTS_ADMIN|FTS_ADMIN|FTS_ADMIN|FTS_SEARCHER|FTS_SEARCHER|FTS_SEARCHER|FTS_SEARCHER|FTS_SEARCHER|QUERY_SELECT|QUERY_SELECT|QUERY_SELECT|QUERY_SELECT|QUERY_SELECT|QUERY_UPDATE|QUERY_UPDATE|QUERY_UPDATE|QUERY_UPDATE|QUERY_UPDATE|QUERY_INSERT|QUERY_INSERT|QUERY_INSERT|QUERY_INSERT|QUERY_INSERT|QUERY_DELETE|QUERY_DELETE|QUERY_DELETE|QUERY_DELETE|QUERY_DELETE|QUERY_MANAGE_INDEX|QUERY_MANAGE_INDEX|QUERY_MANAGE_INDEX|QUERY_MANAGE_INDEX|QUERY_MANAGE_INDEX|QUERY_SYSTEM_CATALOG|QUERY_EXTERNAL_ACCESS"
   );
   var roles_array = roles.split('|');
 
   var builtinConstants = (
-      "true|false|indexes|keyspaces"
+      "TRUE|FALSE|INDEXES|KEYSPACES"
   );
   var builtinConstants_array = builtinConstants.split('|');
 
   // this list of functions should be updated w.r.t. https://github.com/couchbase/query/blob/master/expression/func_registry.go
   var builtinFunctions = (
-      "abs|acos|array_agg|array_append|array_avg|array_concat|array_contains|array_count|array_distinct|array_ifnull|array_length|array_max|array_min|array_position|array_prepend|array_put|array_range|array_remove|array_repeat|array_replace|array_reverse|array_sort|array_sum|asin|atan|atan2|avg|base64|ceil|clock_millis|clock_str|contains|cos|count|date_add_millis|date_add_str|date_diff_millis|date_diff_str|date_part_millis|date_part_str|date_trunc_millis|date_trunc_str|decode_json|degrees|encode_json|encoded_size|exp|floor|greatest|ifinf|ifmissing|ifmissingornull|ifnan|ifnanorinf|ifnull|initcap|is_array|is_atom|is_boolean|is_number|is_object|is_string|least|length|ln|log|lower|ltrim|max|meta|millis|millis_to_str|millis_to_utc|millis_to_zone_name|min|missingif|nanif|neginfif|now_millis|now_str|nullif|object_length|object_names|object_pairs|object_remove|object_values|pi|poly_length|posinfif|position|power|radians|random|regexp_contains|regexp_like|regexp_position|regexp_replace|repeat|replace|round|rtrim|sign|sin|split|sqrt|str_to_millis|str_to_utc|str_to_zone_name|substr|sum|tan|title|to_array|to_atom|to_boolean|to_number|to_object|to_string|trim|trunc|type|upper|uuid"
+      "ABS|ACOS|ARRAY_AGG|ARRAY_APPEND|ARRAY_AVG|ARRAY_CONCAT|ARRAY_CONTAINS|ARRAY_COUNT|ARRAY_DISTINCT|ARRAY_IFNULL|ARRAY_LENGTH|ARRAY_MAX|ARRAY_MIN|ARRAY_POSITION|ARRAY_PREPEND|ARRAY_PUT|ARRAY_RANGE|ARRAY_REMOVE|ARRAY_REPEAT|ARRAY_REPLACE|ARRAY_REVERSE|ARRAY_SORT|ARRAY_SUM|ASIN|ATAN|ATAN2|AVG|BASE64|CEIL|CLOCK_MILLIS|CLOCK_STR|CONTAINS|COS|COUNT|DATE_ADD_MILLIS|DATE_ADD_STR|DATE_DIFF_MILLIS|DATE_DIFF_STR|DATE_PART_MILLIS|DATE_PART_STR|DATE_TRUNC_MILLIS|DATE_TRUNC_STR|DECODE_JSON|DEGREES|ENCODE_JSON|ENCODED_SIZE|EXP|FLOOR|GREATEST|IFINF|IFMISSING|IFMISSINGORNULL|IFNAN|IFNANORINF|IFNULL|INITCAP|IS_ARRAY|IS_ATOM|IS_BOOLEAN|IS_NUMBER|IS_OBJECT|IS_STRING|LEAST|LENGTH|LN|LOG|LOWER|LTRIM|MAX|META|MILLIS|MILLIS_TO_STR|MILLIS_TO_UTC|MILLIS_TO_ZONE_NAME|MIN|MISSINGIF|NANIF|NEGINFIF|NOW_MILLIS|NOW_STR|NULLIF|OBJECT_LENGTH|OBJECT_NAMES|OBJECT_PAIRS|OBJECT_REMOVE|OBJECT_VALUES|PI|POLY_LENGTH|POSINFIF|POSITION|POWER|RADIANS|RANDOM|REGEXP_CONTAINS|REGEXP_LIKE|REGEXP_POSITION|REGEXP_REPLACE|REPEAT|REPLACE|ROUND|RTRIM|SIGN|SIN|SPLIT|SQRT|STR_TO_MILLIS|STR_TO_UTC|STR_TO_ZONE_NAME|SUBSTR|SUM|TAN|TITLE|TO_ARRAY|TO_ATOM|TO_BOOLEAN|TO_NUMBER|TO_OBJECT|TO_STRING|TRIM|TRUNC|TYPE|UPPER|UUID"
   );
   var builtinFunctions_array = builtinFunctions.split('|');
 
@@ -166,27 +166,12 @@
         // return anything matching from the terms structure
 
         var results = [];
+        var prefix_upper = prefix.toLocaleUpperCase();
 
         for (var i=0; i<terms.length; i++)
           for (var t=0; t<terms[i].tokens.length; t++)
-            if (_.startsWith(terms[i].tokens[t],prefix))
-              results.push({value: terms[i].tokens[t], meta: terms[i].name, score: 1});
-//
-//        for (var i=0; i<keywords_array.length; i++)
-//          if (_.startsWith(keywords_array[i],prefix))
-//            results.push({value: keywords_array[i], meta: 'keyword', score: 1});
-//
-//        for (var i=0; i<builtinConstants_array.length; i++)
-//          if (_.startsWith(builtinConstants_array[i],prefix))
-//            results.push({value: builtinConstants_array[i], meta: 'built-in', score: 1});
-//
-//        for (var i=0; i<builtinFunctions_array.length; i++)
-//          if (_.startsWith(builtinFunctions_array[i],prefix))
-//            results.push({value: builtinFunctions_array[i], meta: 'function', score: 1});
-//
-//        for (var i=0; i<dataTypes_array.length; i++)
-//          if (_.startsWith(dataTypes_array[i],prefix))
-//            results.push({value: dataTypes_array[i], meta: 'datatype', score: 1});
+              if (_.startsWith(terms[i].tokens[t],prefix_upper))
+                  results.push({value: terms[i].tokens[t], meta: terms[i].name, score: 1});
 
         return results;
       };
