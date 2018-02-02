@@ -17,10 +17,16 @@
     qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
 
 
-    qwQueryService.monitoringTab = 0;
-    qwQueryService.monitoringAutoUpdate = true;
-    qwQueryService.selectMonitoringTab = function(newTab) {qwQueryService.monitoringTab = newTab;};
-    qwQueryService.isMonitoringSelected = function(checkTab) {return qwQueryService.monitoringTab === checkTab;};
+    qwQueryService.monitoringOptions = {
+        selectedTab: 1,
+        autoUpdate: true
+    };
+    qwQueryService.selectMonitoringTab = function(newTab) {qwQueryService.monitoringOptions.selectedTab = newTab; saveStateToStorage();};
+    qwQueryService.getMonitoringSelectedTab = function() {return qwQueryService.monitoringOptions.selectedTab;};
+    qwQueryService.isMonitoringSelected = function(checkTab) {return qwQueryService.monitoringOptions.selectedTab === checkTab;};
+    qwQueryService.monitoringAutoUpdate = function() {return qwQueryService.monitoringOptions.autoUpdate;};
+    qwQueryService.setMonitoringAutoUpdate = function(newValue) {qwQueryService.monitoringOptions.autoUpdate = newValue; saveStateToStorage();};
+
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -332,6 +338,10 @@
           if (savedState.query_plan_options) {
             qwQueryService.query_plan_options = savedState.query_plan_options;
           }
+
+          if (savedState.monitoringOptions)
+            qwQueryService.monitoringOptions = savedState.monitoringOptions;
+
           // handle case where auto_infer is not yet defined, and set it to true
           if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false) {
             qwQueryService.options.auto_infer = true;
@@ -374,6 +384,8 @@
       savedState.query_plan_options = {
           orientation: qwQueryService.query_plan_options.orientation
       };
+
+      savedState.monitoringOptions = qwQueryService.monitoringOptions;
 
       _.forEach(pastQueries,function(queryRes,index) {
         var qcopy = savedResultTemplate.clone();

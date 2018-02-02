@@ -161,7 +161,7 @@
         qwQueryService.monitoringAutoUpdate = qwQueryService.userAutoUpdate;
       // otherwise remember the current state
       else
-        qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate;
+        qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate();
 
       // if we haven't been here before, initialize the monitoring data
       if (qwQueryService.monitoringTab == 0) {
@@ -235,7 +235,7 @@
 
     function update() {
       // update the currently selected tab
-      qwQueryService.updateQueryMonitoring(qwQueryService.monitoringTab);
+      qwQueryService.updateQueryMonitoring(qwQueryService.getMonitoringSelectedTab());
 
       // get the stats from the Query service
       $http({
