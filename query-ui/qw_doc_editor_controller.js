@@ -226,9 +226,9 @@
         dec.updatingRow = row;
 
         var promise;
-        if (dec.use_n1ql())
-          promise = deleteDoc_n1ql(row);
-        else
+//        if (dec.use_n1ql())
+//          promise = deleteDoc_n1ql(row);
+//        else
           promise = deleteDoc_rest(row);
 
         // did the query succeed?
@@ -256,17 +256,17 @@
       });
     }
 
-    function deleteDoc_n1ql(row) {
-      var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
-      dec.options.current_result[row].id + '"';
-      //console.log("deleting row: " + row + " with query: " + query);
-
-      return qwQueryService.executeQueryUtil(query,false);
-    }
-
+//    function deleteDoc_n1ql(row) {
+//      var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
+//      dec.options.current_result[row].id + '"';
+//      //console.log("deleting row: " + row + " with query: " + query);
+//
+//      return qwQueryService.executeQueryUtil(query,false);
+//    }
+//
     function deleteDoc_rest(row) {
       var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
-      "/docs/" + encodeURIComponent(dec.options.current_result[row].id);
+     "/docs/" + encodeURIComponent(dec.options.current_result[row].id);
 
       return $http({
         method: "DELETE",
@@ -367,9 +367,9 @@
 
       var promise;
 
-      if (dec.use_n1ql())
-        promise = saveDoc_n1ql(row,newJson,newKey);
-      else
+//      if (dec.use_n1ql())
+//        promise = saveDoc_n1ql(row,newJson,newKey);
+//      else
         promise = saveDoc_rest(row,newJson,newKey);
 
       promise
@@ -415,19 +415,19 @@
     // save the document if we have a query service
     //
 
-    function saveDoc_n1ql(row,newJson,newKey) {
-      var query;
-      if (newKey)
-        query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-        newKey + '", ' + newJson + ')';
-      else
-        query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-        dec.options.current_result[row].id + '", ' + newJson + ')';
-
-      //console.log("Updating with query: " + query);
-
-      return qwQueryService.executeQueryUtil(query,false);
-    }
+//    function saveDoc_n1ql(row,newJson,newKey) {
+//      var query;
+//      if (newKey)
+//        query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
+//        newKey + '", ' + newJson + ')';
+//      else
+//        query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
+//        dec.options.current_result[row].id + '", ' + newJson + ')';
+//
+//      //console.log("Updating with query: " + query);
+//
+//      return qwQueryService.executeQueryUtil(query,false);
+//    }
 
 
     function saveDoc_rest(row,newJson,newKey) {
@@ -505,12 +505,9 @@
     function retrieveDocs_inner() {
       qwQueryService.saveStateToStorage();
 
-      // can only use query service if the bucket has a primary index, or that there is a secondary index and
-      // a where clause
-      var has_prim = dec.buckets_prim[dec.options.selected_bucket];
-      var has_sec = dec.buckets_sec[dec.options.selected_bucket];
+      // only use query service if there is a 'where' clause
 
-      if (dec.use_n1ql() && (has_prim || (dec.options.where_clause && dec.options.where_clause.length && has_sec)))
+      if (dec.use_n1ql() && dec.options.where_clause)
         retrieveDocs_n1ql();
       else
         retrieveDocs_rest();
@@ -535,6 +532,8 @@
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
+
+      query += ' order by meta().id ';
 
       if (dec.options.limit && dec.options.limit > 0) {
         query += ' limit ' + dec.options.limit + ' offset ' + dec.options.offset;
@@ -655,9 +654,9 @@
               if (data.rows[i].doc.json)
                 dec.options.current_result.push(
                     {id: data.rows[i].id, data: data.rows[i].doc.json, meta: {id: data.rows[i].id, type: "json"}});
-              else if (data.rows[i].doc.base64 === "")
+              else if (_.isString(data.rows[i].doc.base64))
                 dec.options.current_result.push(
-                    {id: data.rows[i].id, meta: {id: data.rows[i].id, type: "base64"}});
+                    {id: data.rows[i].id, meta: {id: data.rows[i].id, type: "base64"}, base64: data.rows[i].doc.base64});
             }
 
           dec.options.queryBusy = false;

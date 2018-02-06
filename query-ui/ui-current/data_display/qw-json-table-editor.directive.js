@@ -474,11 +474,20 @@
 
       // what to show for BINARY documents? They're not editable
       else if (object[row].meta && object[row].meta.type === "base64") {
-        result += '<form name="' + formName + '">' +
-        '<div class="data-table-editor-row">'; // new row for each object
+        result += '<form name="' + formName + '">' + '<div class="data-table-editor-row" ' +
+          'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
-        // empty span where the buttons would go
-        result += '<span class="data-table-cell" style="width: ' + 1.25*columnWidthPx  + 'px;"> ' +
+        // span where the buttons would go, all disabled except include delete
+        result += '<span class="data-table-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
+        '<a class="btn qw-doc-editor" ng-disabled="true"><span class="icon fa-save qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ng-disabled="true"><span class="icon fa-copy qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ng-disabled="true"><span class="icon fa-edit qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ng-click="dec.deleteDoc(' + row +')" ' +
+        'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
+
         '</span>';
 
         // and the id and metadata
@@ -488,19 +497,13 @@
           'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
         result += '>' + mySanitize(object[row].id) + '</span></span>';
 
-        // finally a message saying that we can't edit binary objects, followed by dummy columns
-        var first = true;
-        _.forIn(topLevelKeys, function (value, key) {
-          result += '<span class="data-table-cell" style="width: ' + columnWidths[key]*columnWidthPx + 'px;">';
-          if (first) {
-            result += 'Binary Document';
-            first = false;
-          }
-          result += '</span>';
-        });
-        // if we only have binary documents, there will be no topLevelKeys, so add the binary message
-        if (_.keys(topLevelKeys).length == 0)
-          result += '<span class="data-table-cell" style="width: ' + columnWidthPx + 'px;">Binary Document</span>';
+        var binary = object[row].base64 ? object[row].base64.substring(0,150) : " not available from query service";
+        if (object[row].base64 && object[row].base64.length > 150)
+          binary += "...";
+
+        //console.log("Got row: " + JSON.stringify(object[row]));
+
+        result += '<span class="data-table-cell" style="width: 100%;">Binary Document: ' + binary + '</span>';
 
         result += '</div></form>'; // end of the row for the top level object
       }
