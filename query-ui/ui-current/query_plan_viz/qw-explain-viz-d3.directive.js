@@ -20,7 +20,7 @@
 (function() {
 
   'use strict';
-  angular.module('qwExplainVizD3', ['ngclipboard']).directive('qwExplainVizD3', ['$compile', '$timeout', 'qwQueryService', getD3Explain]);
+  angular.module('qwExplainVizD3',[]).directive('qwExplainVizD3', ['$compile', '$timeout', 'qwQueryService', getD3Explain]);
 
   var queryService = null;
 
@@ -507,9 +507,9 @@
     .append("div")
     .attr("id", "svg_tooltip" + d.id)
     .attr("class", "svg_tooltip")
-    .on("click", function(event) {
-      return tooltip_div.style("display", "none");
-    })
+    //.on("click", function(event) {
+    //  return tooltip_div.style("display", "none");
+    //})
     ;
 
     tooltip_div.transition().duration(300).style("display", "block");
@@ -605,3 +605,4 @@
   }
 
 })();
+

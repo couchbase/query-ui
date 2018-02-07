@@ -330,18 +330,22 @@
     //
 
     PlanNode.prototype.GetTooltip = function() {
-      var result = "";
       var op = this.operator;
 
       if (!op || !op['#operator'])
-        return(result);
+        return("");
 
-      result += '<div class="row"><h5>' + op['#operator'] + '</h5><a ngclipboard data-clipboard-target="#svg_tooltip">copy text</a></div><ul class="tooltip-list">';
+      // get details about the op, to see if we have info for a tool tip
       var childFields = getNonChildFieldList(op);
       if (childFields.length == 0) // no fields, no tool tip
         return("");
-      else
-        result += childFields;
+
+      // we have some results, build the tooltip
+      var result = "";
+      result += '<div class="row"><h5>' + op['#operator'] +
+      '</h5></div><ul class="tooltip-list">';
+
+      result += childFields;
       result += '</ul>';
 
       return(result);
