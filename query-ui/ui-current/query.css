@@ -48,13 +48,26 @@
   -webkit-box-flex: 1;
   flex-grow: 1;
 }
-#result_summary span:not(.success):not(.error) {
+.qw-result-status:not(.success):not(.error) {
   white-space: nowrap;
-  color: #555;
+  color: #f5a623;
+}
+.qw-result-status.success:before {
+  font-family: FontAwesome;
+  content: "\f00c";
+  font-size: 1rem;
+  color: #56b349;
+}
+.qw-result-status.error:before {
+  font-family: FontAwesome;
+  content: "\f06a";
+  font-size: 1rem;
+  color: #e07f82;
 }
 #result_summary span:first-child {
   margin-left: 0;
 }
+
 
 /* query results -------------------------------- */
 #result_header {

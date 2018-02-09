@@ -121,7 +121,7 @@
         lastResult.status == '500' ||
         lastResult.status == '404' ||
         lastResult.status == 'stopped' ||
-        lastResult.status == 'Explain error');}
+        lastResult.status == 'explain error');}
 
     //
     // here are some options we use while querying
@@ -249,8 +249,8 @@
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
     savedResultTemplate.status = "cached query";
-    savedResultTemplate.result = '{"data_not_cached": "Hit execute to rerun query"}';
-    savedResultTemplate.data = {data_not_cached: "Hit execute to rerun query"};
+    savedResultTemplate.result = "No data to display. Hit execute to rerun the query.";
+    savedResultTemplate.data = {data_not_cached: "Hit execute to rerun query."};
     savedResultTemplate.explainResult = savedResultTemplate.data;
     savedResultTemplate.explainResultText = savedResultTemplate.result;
 
@@ -1059,7 +1059,7 @@
 
         var explain_request = buildQueryRequest("explain " + queryText, false);
         if (!explain_request) {
-          newResult.result = '{"status": "Query Failed."}';
+          newResult.result = '{"status": "query failed"}';
           newResult.data = {status: "Query Failed."};
           newResult.status = "errors";
           newResult.resultCount = 0;
@@ -1109,11 +1109,11 @@
 
           if (explainOnly) {
             if (!data || data.errors || data.status != "success" || !data.results || data.results.length == 0) {
-              newResult.status = "Explain errors";
+              newResult.status = "explain errors";
               qwQueryService.selectTab(1);
             }
             else
-              newResult.status = "Explain success";
+              newResult.status = "explain success";
 
             newResult.resultSize = null;
             newResult.data = newResult.explainResult;
@@ -1169,7 +1169,7 @@
           if (explainOnly) {
             newResult.data = newResult.explainResult;
             newResult.result = newResult.explainResultText;
-            newResult.status = "Explain error";
+            newResult.status = "explain error";
           }
 
           // include any metrics, so they know how long it took before the error

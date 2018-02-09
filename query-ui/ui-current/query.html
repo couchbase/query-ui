@@ -33,7 +33,7 @@
             &larr;
           </button>
           <span class="query-history-controls-inner">
-            <a class="link-heavy text-small" ng-click="qc.historyMenu()">history</a>
+            <a class="text-small" ng-click="qc.historyMenu()">history</a>
             <small>({{qc.getCurrentIndex()}})</small>
           </span>
           <button
@@ -69,20 +69,20 @@
 <!-- query results stats -->
       <div id="result_summary" ng-hide="qc.lastResult.hide" class="text-smaller">
         <span
-          ng-class="{success: qc.status_success(), error: qc.status_fail()}"
-          class="semi-bold">
+          class="qw-result-status semi-bold"
+          ng-class="{success: qc.status_success() || qc.lastResult.status == 'explain success', error: qc.status_fail()}">
           {{qc.lastResult.status}}</span>
-        <span> | elapsed: {{qc.lastResult.elapsedTime}} | </span>
-        <span>execution: {{qc.lastResult.executionTime}} | </span>
+        <span ng-if="qc.lastResult.elapsedTime"> | elapsed: {{qc.lastResult.elapsedTime}} | </span>
+        <span ng-if="qc.lastResult.executionTime">execution: {{qc.lastResult.executionTime}} | </span>
         <span ng-if="qc.lastResult.mutationCount">mutations: {{qc.lastResult.mutationCount}} | </span>
-        <span ng-if="!qc.lastResult.mutationCount" ng-attr-title="sortCount: {{qc.lastResult.sortCount}}">
+        <span ng-if="!qc.lastResult.mutationCount && qc.lastResult.resultCount" ng-attr-title="sortCount: {{qc.lastResult.sortCount}}">
         count: {{qc.lastResult.resultCount}} | </span>
-        <span>size: {{qc.lastResult.resultSize}}</span>
+        <span ng-if="qc.lastResult.resultSize">size: {{qc.lastResult.resultSize}}</span>
       </div>
 
       <a href="" ng-if="qc.showOptions" ng-click="qc.options()" class="row">
         <span class="icon fa-cog margin-right"></span>
-        <span class="text-smaller">Preferences</span>
+        <span class="text-small">preferences</span>
       </a>
     </div>
 
