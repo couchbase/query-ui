@@ -181,7 +181,9 @@
       // by a ~child field which is a sequence of operators. The OUTER is the inputs to the
       // NestedJoin op, which are already captured
 
-      else if ((operatorName === "NestedLoopJoin" || operatorName === "NestedLoopNest") && plan["~child"]) {
+      else if ((operatorName === "NestedLoopJoin" || operatorName === "NestedLoopNest" ||
+          operatorName === "HashJoin" || operatorName === "HashNest" || 
+          operatorName === "Join" || operatorName === "Nest") && plan["~child"]) {
         //&& plan["~child"]["~children"]) {
         // do we have a
         var inner = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
@@ -433,6 +435,8 @@
 
       case "NestedLoopJoin":
       case "NestedLoopNest":
+      case "HashJoin":
+      case "HashNest":
         result.push("on: " + truncate(30,op.on_clause));
         break;
 
