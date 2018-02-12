@@ -71,15 +71,15 @@
 
 // TBD: the selected orientation button should receive the "selected-orient" class, but it's not working
               content += "<div class='column row flex-grow-half flex-right'>";
-              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left plan-orient" ng-class="{\'selected-orient\' : orientIs(1)}"></span>';
-              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right plan-orient" ng-class="{\'selected-orient\' : orientIs(3)}"></span>';
-              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down plan-orient" ng-class="{\'selected-orient\' : orientIs(4)}"></span>';
-              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up plan-orient" ng-class="{\'selected-orient\' : orientIs(2)}"></span>';
+              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left plan-orient" ng-class="{\'selected-orient\' : orientIs(1)}" title="change plan direction"></span>';
+              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right plan-orient" ng-class="{\'selected-orient\' : orientIs(3)}" title="change plan direction"></span>';
+              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down plan-orient" ng-class="{\'selected-orient\' : orientIs(4)}" title="change plan direction"></span>';
+              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up plan-orient" ng-class="{\'selected-orient\' : orientIs(2)}" title="change plan direction"></span>';
               content += "</div>";
 
               content += "<div class='column row flex-right'>";
-              content += '<span ng-click="zoomIn()" class="icon fa-search-minus plan-zoom"></span>';
-              content += '<span ng-click="zoomOut()" class="icon fa-search-plus plan-zoom"></span>';
+              content += '<span ng-click="zoomIn()" class="icon fa-search-minus plan-zoom" title="zoom out - or use scroll wheel"></span>';
+              content += '<span ng-click="zoomOut()" class="icon fa-search-plus plan-zoom" title="zoom in - or use scroll wheel"></span>';
               content += "</div>";
 
               content += "</div>";
@@ -605,4 +605,3 @@
   }
 
 })();
-
