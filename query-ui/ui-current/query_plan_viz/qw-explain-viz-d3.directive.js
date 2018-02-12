@@ -41,7 +41,7 @@
 
             if (_.isString(data))
               content = '<p class="text-small margin-left-half">' + data + '</p>';
-            else if (data.data_not_cached || data.errors)
+            else if (data["No data to display"] || data.errors)
               content = '<p class="text-small margin-left-half">' + JSON.stringify(data) + '</p>';
 
             // summarize plan in panel at the top

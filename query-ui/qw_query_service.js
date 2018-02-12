@@ -248,9 +248,9 @@
     var dummyResult = new QueryResult('','','','','','',{},'');
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
-    savedResultTemplate.status = "cached query";
-    savedResultTemplate.result = "No data to display. Hit execute to rerun the query.";
-    savedResultTemplate.data = {data_not_cached: "Hit execute to rerun query."};
+    savedResultTemplate.status = "";
+    savedResultTemplate.result = '{"No data to display": "Hit execute to rerun the query."}';
+    savedResultTemplate.data = {"No data to display": "Hit execute to rerun query."};
     savedResultTemplate.explainResult = savedResultTemplate.data;
     savedResultTemplate.explainResultText = savedResultTemplate.result;
 
