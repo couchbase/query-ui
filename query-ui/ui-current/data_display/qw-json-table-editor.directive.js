@@ -46,7 +46,7 @@
             meta = getMetaData(json);
 
             // make the table header with the top-level fields
-            
+
             if (meta.truncated)
               warning = angular.element('<div class="error text-small" style="margin-bottom:-20px">Some documents too large for tabular editing, tabular view truncated.</div>`');
             header = angular.element(createHTMLheader(meta));
@@ -70,7 +70,7 @@
           else {
             wrapper = '<div class="data-table-wrapper">Unable to process data, see log.</div>';
             console.log("Unable to create tabular view for data:");
-            console.log(JSON.stringify(data,null,4));
+            console.log(JSON.stringify(json,null,4));
           }
 
           // even if the json was empty, we have a wrapper element
@@ -267,7 +267,11 @@
   var lt = /</gi;
   var gt = />/gi;
   var mySanitize = function(str) {
-    if (!str) return (''); else return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+    if (!str) return ('');
+    else if (_.isString(str))
+      return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+    else
+      return(str);
   };
 
   //
@@ -427,17 +431,21 @@
         'ng-click="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
 
-        //        '<span ng-if="!dec.options.queryBusy">Update</span>' +
-//      '<span ng-if="dec.options.queryBusy">Updating</span>' +
-//      '</button></span>';
         '</span>';
 
         // put the meta().id in the next column
-        result += '<span class="data-table-cell" style="width:' + columnWidthPx*2 + 'px"><span class="cursor-pointer" ';
-        if (object[row].meta)
-          result += 'uib-tooltip-html="\'' + getTooltip(object[row].meta) + '\'" ' +
+        result += '<span class="data-table-cell" style="width:' + columnWidthPx*2 +
+          'px"><span class="cursor-pointer " ';
+        if (object[row].meta || object[row].xattrs)
+          result += 'uib-tooltip-html="\'' + getTooltip(object[row]) + '\'" ' +
           'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
-        result += '>' + mySanitize(object[row].id) + '</span></span>';
+        result += '>' + mySanitize(object[row].id) + '</span>';
+        if (object[row].rawJSON)
+          result += '<span class="fa-stack icon-info" ' +
+            'uib-tooltip-html="\'Document contains numbers too large for tabular editing, use JSON editor instead.\'"' +
+            'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
+            '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';
+        result += '</span>';
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
@@ -459,8 +467,9 @@
         Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
           var item = object[row].data[key];
           var childSize = {width: 1};
+          var disabled = !!object[row].rawJSON;
           var childHTML = (item || item === 0 || item === "") ?
-              makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize) : '&nbsp;';
+              makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
               result += '<span class="data-table-cell" style="width: ' + columnWidths[key]*columnWidthPx  + 'px;">'
               + childHTML + '</span>';
         });
@@ -491,7 +500,8 @@
         '</span>';
 
         // and the id and metadata
-        result += '<span class="data-table-cell" style="width: ' + 2*columnWidthPx  + 'px;"><span class="cursor-pointer" ';
+        result += '<span class="data-table-cell" style="width: ' + 2*columnWidthPx  +
+          'px;"><span class="cursor-pointer " ';
         if (object[row].meta)
           result += 'uib-tooltip-html="\'' + getTooltip(object[row].meta) + '\'" ' +
           'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
@@ -519,20 +529,59 @@
     return(result);
   }
 
-  function getTooltip(meta) {
+  function getTooltip(row) {
     var result = "";
+    if (row.meta && Object.keys(row.meta).length > 0) {
+      result += "meta: <ul>"  + xAttrsToHTML(row.meta);
+      //for (var name in row.meta)
+      //  result += '<li>' + name + ": " + mySanitize(row.meta[name]) + "</li>";
+      result += "</ul>";
+    }
 
-    if (meta.cas)
-      result += 'cas: ' + meta.cas + '<br>';
-    if (meta.expiration)
-      result += 'expiration: ' + meta.expiration + '<br>';
-    if (meta.flags)
-      result += 'flags: ' + meta.flags + '<br>';
-    if (meta.type)
-      result += 'type: ' + mySanitize(meta.type);
+    if (row.xattrs && Object.keys(row.xattrs).length > 0) {
+      result += "xattrs: <ul>" + xAttrsToHTML(row.xattrs);
+      //for (var name in row.xattrs)
+      //  result += '<li>' + name + ": " + mySanitize(row.xattrs[name]) + "</li>";
+      result += "</ul>";
+    }
 
     return result;
   }
+
+  function xAttrsToHTML(obj) {
+    var result = "";
+
+    for (var field in obj) {
+      var val = obj[field];
+      // add the field name as a list item
+      result += '<li>' + field;
+
+      // for a primitive value, just add that as well
+      if (_.isString(val) || _.isNumber(val) || _.isBoolean(val))
+        result += " - " + mySanitize(val);
+
+      // if it's an array, create a sublist with a line for each item
+      else if (_.isArray(val)) {
+        result += '<ul>';
+        for (var i=0; i<val.length; i++)
+          if (_.isString(val[i]))
+            result += '<li>' + mySanitize(val[i]) + '</li>';
+          else
+            result += xAttrsToHTML(val[i]);
+        result += '</ul>';
+      }
+
+      // if it's an object, have a sublist for it
+      else if (_.isPlainObject(val)) {
+        result += '<ul>';
+        result += xAttrsToHTML(val);
+        result += '</ul>';
+      }
+      result += '</li>';
+    }
+    return result;
+  }
+
 
   // The data we are showing can contain objects nested inside objects inside objects: turtles
   // all the way down. When making a table, a piece of data could be 1 column wide, or 100, or 1000.
@@ -589,7 +638,7 @@
   //the spririt of Angular, but it was taking 10 seconds or more to render
   //a table with tens of thousands of cells
 
-  function makeHTMLtable(object,prefix,totalSize) {
+  function makeHTMLtable(object,prefix,totalSize,disabled) {
     var result = '';
 
     // we might get a simple value to render, or an object, or an array of objects.
@@ -636,7 +685,7 @@
         var childSize = {width: 1};
 
         _.forEach(object, function (item,index) {
-          result += makeHTMLtable(item, prefix + '[' + index + ']', childSize) + '<br>';
+          result += makeHTMLtable(item, prefix + '[' + index + ']', childSize, disabled) + '<br>';
           // remember the widest element
           if (childSize.width > totalSize.width)
             totalSize.width = childSize.width;
@@ -731,7 +780,7 @@
 
           // is this row an array or primitive?
           if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))
-            result += makeHTMLtable(item,prefix + "[" + index + "]");
+            result += makeHTMLtable(item,prefix + "[" + index + "]", null, disabled);
 
           result += '</span>';
 
@@ -754,14 +803,14 @@
             // for objects and arrays, make a recursive call
             if (_.isArray(value) || _.isPlainObject(value)) {
               var childSize = {width: 1};
-              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize);
+              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize, disabled);
               result += '<span class="data-table-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
 
             // primitive values also use an input form generated recursively
             else {
               var childSize = {width: 1};
-              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize);
+              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize, disabled);
               result += '<span class="data-table-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
 
@@ -816,7 +865,7 @@
       // figure out the widths of each column
       _.forIn(object, function(value,key) {
         var childSize = {width: 1};
-        var childHTML = makeHTMLtable(value,prefix + "['" + key + "']",childSize);
+        var childHTML = makeHTMLtable(value,prefix + "['" + key + "']",childSize, disabled);
         if (!columnWidths[key] || childSize.width > columnWidths[key])
           columnWidths[key] = childSize.width;
         dataRow += '<span class="data-table-cell" style="width: ' + columnWidths[key]*columnWidthPx + 'px">' + childHTML + '</span>';
@@ -842,14 +891,15 @@
     else {
       var model = ' ng-model="results' + prefix + '" ';
       var inputStyle = ' style="width: ' + (columnWidthPx-10) + 'px; margin-left: 0px"';
+      var no_edit = disabled ? ' ng-disabled="true" ' : '';
 
       if (_.isNumber(object))
-        result += '<input type="number" ' + model + inputStyle + '>';
+        result += '<input type="number" ' + model + inputStyle + no_edit + '>';
       else if (_.isBoolean(object))
-        result += '<select ' + model + inputStyle +
+        result += '<select ' + model + inputStyle + no_edit +
         ' ng-options="opt.v as opt.n for opt in [{n: \'false\', v: false}, {n:\'true\', v: true}]"></select>';
       else
-        result += '<textarea ' + model + inputStyle + '></textarea>';
+        result += '<textarea ' + model + inputStyle + no_edit + '></textarea>';
     }
 
     return(result);

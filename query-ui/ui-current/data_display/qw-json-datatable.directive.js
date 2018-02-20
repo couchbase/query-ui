@@ -347,7 +347,7 @@
 	        //if (!inner)
 	        //  console.log("InnerPrims: " + JSON.stringify(meta,null,4));
 	        headerHTML += '<span style="min-width: ' + arraySize + 'ch; max-width:' + arraySize + 'ch"' +
-	        'class="data-table-header-cell">BAR!</span>';
+	        'class="data-table-header-cell"></span>';
 	      }
 
 	    if( meta.arrayInnerObjects.innerKeys) {
@@ -459,8 +459,10 @@
         }
 
         // if no fields at all, empty object
-        if (_.isPlainObject(data[row]) && Object.keys(data[row]).length == 0)
-          rowHTML += '<div class="data-table-special-value">empty object</div>';
+        //if (_.isPlainObject(data[row]) && Object.keys(data[row]).length == 0) {
+        //  console.log("RowHTML before: " + rowHTML);
+        //  rowHTML += '<div class="data-table-special-value">empty object</div>';
+        //}
 
         // close out the div
         rowHTML += '</div>';

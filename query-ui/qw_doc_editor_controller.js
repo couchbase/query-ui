@@ -7,9 +7,11 @@
 
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
-  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams', 'qwQueryService', 'validateQueryService', 'qwConstantsService'];
+  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams',
+    'qwQueryService', 'validateQueryService', 'qwConstantsService', 'qwFixLongNumberService'];
 
-  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService, validateQueryService, qwConstantsService) {
+  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService,
+      validateQueryService, qwConstantsService, qwFixLongNumberService) {
 
     var dec = this;
 
@@ -96,14 +98,7 @@
       },
       function error(resp) { // what to do if it fails?
         var data = resp.data, status = resp.status;
-
-        var dialogScope = $rootScope.$new(true);
-        dialogScope.error_title = "Error Copying Document";
-        dialogScope.error_detail = JSON.stringify(data);
-        $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-          scope: dialogScope
-        });
+        showErrorDialog("Error Copying Document", JSON.stringify(data));
        });
 
       dec.updatingRow = -1;
@@ -186,20 +181,77 @@
         function error(resp) {
           var data = resp.data, status = resp.status;
 
-          var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error Copying Document";
-          dialogScope.error_detail = JSON.stringify(data);
-          $uibModal.open({
-            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-            scope: dialogScope
-          });
-
+          showErrorDialog("Error Copying Document", JSON.stringify(data));
           dec.updatingRow = -1;
         });
 
       });
     }
 
+
+    //
+    // get the metadata and XATTRs for the specified document
+    //
+
+//    function getMeta(row) {
+//      console.log("showing metadata for row " + row + ", id: " + dec.options.current_result[row].id)
+//
+//      var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
+//          "/docs/" + dec.options.current_result[row].id;
+//
+//      $http({
+//        url: rest_url,
+//        method: "GET"
+//      }).then(function success(resp) {
+//        if (resp && resp.status == 200 && resp.data) {
+//          dec.options.current_bucket = dec.options.selected_bucket;
+//
+//          var data = resp.data;
+//
+//          if (!data)
+//            return;
+//
+//          console.log("Got REST results meta: " + JSON.stringify(data.meta) + ", xattrs: " + JSON.stringify(data.xattrs));
+//          var meta = {meta: data.meta, xattrs: data.xattrs};
+//
+//          var dialogScope = $rootScope.$new(true);
+//
+//          // use an ACE editor for editing the JSON document
+//          dialogScope.ace_options = {
+//              mode: 'json',
+//              showGutter: true,
+//              useWrapMode: true,
+//              onLoad: function(_editor) {_editor.setReadOnly(true); _editor.$blockScrolling = Infinity;},
+//              $blockScrolling: Infinity
+//          };
+//          dialogScope.doc_id = dec.options.current_result[row].id;
+//          dialogScope.doc_json = JSON.stringify(meta,null,4);
+//          dialogScope.readonly = true;
+//          dialogScope.header = "Metadata and XAttrs";
+//
+//          //
+//          // put up a dialog box with the JSON in it, if they hit SAVE, save the doc, otherwise
+//          // revert
+//          //
+//
+//          var promise = $uibModal.open({
+//            templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
+//            scope: dialogScope
+//          }).result;
+//
+//        }
+//      },function error(resp) {
+//        var data = resp.data, status = resp.status;
+//        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
+//
+//        if (data && data.errors) {
+//          dec.options.current_result = JSON.stringify(data.errors);
+//          showErrorDialog("Error with document retrieval.",dec.options.current_result);
+//        }
+//
+//        dec.options.queryBusy = false;
+//      });
+//    }
 
     //
     // function to delete a document
@@ -213,23 +265,13 @@
       // make sure they really want to do this
       //
 
-      var dialogScope = $rootScope.$new(true);
-      dialogScope.error_title = "Delete Document";
-      dialogScope.error_detail = "Warning, this will delete the document: " + dec.options.current_result[row].id;
-
-      var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-        scope: dialogScope
-      }).result;
+      var promise = showErrorDiaog("Delete Document",
+          "Warning, this will delete the document: " + dec.options.current_result[row].id);
 
       promise.then(function success(res) {
         dec.updatingRow = row;
 
-        var promise;
-//        if (dec.use_n1ql())
-//          promise = deleteDoc_n1ql(row);
-//        else
-          promise = deleteDoc_rest(row);
+        var promise = deleteDoc_rest(row);
 
         // did the query succeed?
         promise.then(function(resp) {
@@ -242,28 +284,13 @@
         function error(resp) {
           var data = resp.data, status = resp.status;
 
-          var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error Deleting Document";
-          dialogScope.error_detail = JSON.stringify(data);
-          $uibModal.open({
-            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-            scope: dialogScope
+          showErrorDialog("Error Deleting Document",JSON.stringify(data)).then(function() {
+            dec.updatingRow = -1;
           });
-
-          //console.log("failed deleting row: " + row);
-          dec.updatingRow = -1;
         });
       });
     }
 
-//    function deleteDoc_n1ql(row) {
-//      var query = "DELETE FROM `" + dec.options.current_bucket + '` USE KEYS "' +
-//      dec.options.current_result[row].id + '"';
-//      //console.log("deleting row: " + row + " with query: " + query);
-//
-//      return qwQueryService.executeQueryUtil(query,false);
-//    }
-//
     function deleteDoc_rest(row) {
       var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
      "/docs/" + encodeURIComponent(dec.options.current_result[row].id);
@@ -282,8 +309,16 @@
       if (dec.updatingRow >= 0)
         return;
 
-      var doc_string = JSON.stringify(dec.options.current_result[row].data,null,2);
-      //console.log("Got doc string length: " + doc_string.length);
+      var doc_string;
+
+      // if we have raw JSON with long numbers, let the user edit that
+      if (dec.options.current_result[row].rawJSON)
+        doc_string = js_beautify(dec.options.current_result[row].rawJSON,{"indent_size": 2});
+
+      // otherwise create a string from the underlying data
+      else
+        doc_string = JSON.stringify(dec.options.current_result[row].data,null,2);
+
       var res = showDocEditor(dec.options.current_result[row].id, doc_string);
       res.promise.then(getSaveDocClosure(res.scope,row));
     }
@@ -320,6 +355,7 @@
       };
       dialogScope.doc_id = id;
       dialogScope.doc_json = json;
+      dialogScope.header = "Edit Document";
 
       // are there any syntax errors in the editor?
       dialogScope.errors = function() {
@@ -365,12 +401,7 @@
     function saveDoc(row,newJson,newKey) {
       dec.updatingRow = row;
 
-      var promise;
-
-//      if (dec.use_n1ql())
-//        promise = saveDoc_n1ql(row,newJson,newKey);
-//      else
-        promise = saveDoc_rest(row,newJson,newKey);
+      var promise = saveDoc_rest(row,newJson,newKey);
 
       promise
       // did the query succeed?
@@ -397,37 +428,10 @@
     //
 
     function handleSaveFailure(newKey,errors) {
-        var dialogScope = $rootScope.$new(true);
-        if (newKey)
-          dialogScope.error_title = "Error Inserting New Document";
-        else
-          dialogScope.error_title = "Error Updating Document";
-        dialogScope.error_detail = JSON.stringify(errors);
-        dialogScope.hide_cancel = true;
-        $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-          scope: dialogScope
-        });
+      var title = newKey ? "Error Inserting New Document" : "Error Updating Document";
+
+      showErrorDialog(title, JSON.stringify(errors), true);
     }
-
-
-    //
-    // save the document if we have a query service
-    //
-
-//    function saveDoc_n1ql(row,newJson,newKey) {
-//      var query;
-//      if (newKey)
-//        query = "INSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-//        newKey + '", ' + newJson + ')';
-//      else
-//        query = "UPSERT INTO `" + dec.options.current_bucket + '` (KEY, VALUE) VALUES ("' +
-//        dec.options.current_result[row].id + '", ' + newJson + ')';
-//
-//      //console.log("Updating with query: " + query);
-//
-//      return qwQueryService.executeQueryUtil(query,false);
-//    }
 
 
     function saveDoc_rest(row,newJson,newKey) {
@@ -474,14 +478,8 @@
     function checkUnsavedChanges(ifOk,ifCancel) {
       // warn the user if they try to get more data when unsaved changes
       if ($('#somethingChangedInTheEditor')[0]) {
-        var dialogScope = $rootScope.$new(true);
-        dialogScope.error_title = "Warning: Unsaved Changes";
-        dialogScope.error_detail = "You have unsaved changes. Continue and lose them?";
 
-        var promise = $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-          scope: dialogScope
-        }).result;
+        var promise = showErrorDialog("Warning: Unsaved Changes", "You have unsaved changes. Continue and lose them?", false);
 
         // they clicked yes, so go ahead
         promise.then(function success() {
@@ -526,9 +524,8 @@
       if (!dec.options.selected_bucket || dec.options.selected_bucket.length == 0)
         return;
 
-      // start making a query
-      var query = 'select meta().id, meta() meta, * from `' + dec.options.selected_bucket +
-      '` data ';
+      // start making a query that only returns doc IDs
+      var query = 'select meta().id from `' + dec.options.selected_bucket + '` data ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
@@ -544,20 +541,31 @@
       dec.options.current_result = [];
 
       dec.options.queryBusy = true;
-      qwQueryService.executeQueryUtil(query,false)
+      qwQueryService.executeQueryUtil(query,true)
 
       // did the query succeed?
       .then(function success(resp) {
         var data = resp.data, status = resp.status;
 
-        //console.log("Editor Q Success Data Len: " + JSON.stringify(data.results.length));
+        //console.log("Editor Q Success Data: " + JSON.stringify(data.results));
         //console.log("Editor Q Success Status: " + JSON.stringify(status));
 
-        if (data && data.status && data.status == 'success')
-          dec.options.current_result = data.results;
+        dec.options.current_result = [];
+        var idArray = [];
 
-        dec.options.queryBusy = false;
-        //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
+        for (var i=0; i < data.results.length; i++)
+          idArray.push(data.results[i].id);
+
+        // we get a list of document IDs, create an array and retrieve detailed docs for each
+        if (data && data.status && data.status == 'success') {
+          getDocsForIdArray(idArray).then(function() {dec.options.queryBusy = false;});
+        }
+
+        // shouldn't get here
+        else {
+          dec.options.queryBusy = false;
+          console.log("N1ql Query Fail/Success, current Result: " + JSON.stringify(dec.options.current_result));
+        }
       },
 
       // ...or fail?
@@ -568,18 +576,12 @@
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error with document retrieval query.";
+
           var errorText = "";
           for (var i=0; i< data.errors.length; i++)
             errorText += "Code: " + data.errors[i].code + ', Message: "' + data.errors[i].msg + '"    \n';
-          console.log("Got errors: " + JSON.stringify(data.errors));
-          dialogScope.error_detail = errorText;
-          dialogScope.hide_cancel = true;
-          $uibModal.open({
-            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-            scope: dialogScope
-          });
+
+          showErrorDialog("Error with document retrieval query.", errorText)
 
           //console.log("Got error: " + dec.options.current_result);
         }
@@ -587,6 +589,93 @@
       });
 
     }
+
+    //
+    // given an array of IDs, get the documents, metadata, and xattrs for each ID, and put
+    // them into the current result
+    //
+
+    function getDocsForIdArray(idArray) {
+      var promiseArray = [];
+
+      //console.log("Getting docs for: " + JSON.stringify(idArray));
+      dec.options.current_result.length = idArray.length;
+
+      for (var i=0; i< idArray.length; i++) {
+        var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
+          "/docs/" + idArray[i];
+        //console.log("  url: " + rest_url);
+
+        promiseArray.push($http({
+          url: rest_url,
+          transformResponse: qwFixLongNumberService.fixLongInts,
+          method: "GET"
+        }).then(getDocReturnHandler(i),
+            getDocReturnErrorHandler(i,idArray[i])));
+      }
+
+      return $q.all(promiseArray);
+    }
+
+    //
+    // callback when we retrieve a document that belongs in a certain spot in the
+    // results array
+    //
+
+    function getDocReturnHandler(position) {
+      return function success(resp) {
+        if (resp && resp.status == 200 && resp.data) {
+
+          var data = resp.data;
+          //console.log("Got single doc results for " + position + ": " + JSON.stringify(data));
+
+          // did we get a json doc back?
+          if (data && data.json && data.meta) {
+            data.meta.type = "json";
+            dec.options.current_result[position] =
+              {id: data.meta.id, data: data.json, meta: data.meta, xattrs: data.xattrs, rawJSON: data.rawJSON};
+          }
+
+          // maybe a single binary doc?
+          else if (data && data.meta && (data.base64 === "" || data.base64)) {
+            data.meta.type = "base64";
+            dec.options.current_result[position] =
+              {id: data.meta.id, base64: data.base64, meta: data.meta, xattrs: data.xattrs};
+          }
+
+          else
+            console.log("Unknown document: " + JSON.stringify(data));
+        }
+      }
+    }
+
+    function getDocReturnErrorHandler(position,id) {
+      return function error(resp) {
+        var data = resp.data, status = resp.status;
+        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
+        dec.options.current_result[position] = {id: id, data: {}, meta: {}, xattrs: {}};
+
+        if (data && data.errors) {
+          dec.options.current_result = JSON.stringify(data.errors);
+          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result);
+        }
+      }
+    }
+
+    //
+    // Show an error dialog
+    //
+
+    function showErrorDialog(title, detail, hide_cancel) {
+      var dialogScope = $rootScope.$new(true);
+      dialogScope.error_title = title;
+      dialogScope.error_detail = detail;
+      dialogScope.hide_cancel = hide_cancel;
+      return $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+        scope: dialogScope
+      }).result;
+     }
 
     //
     // get the documents using the REST API
@@ -611,16 +700,21 @@
       // get the stats from the Query service
       dec.options.queryBusy = true;
       dec.options.current_result = [];
-      var rest_url;
 
-      // we use a different URL if they specified a doc_id
-      if (dec.options.doc_id && dec.options.doc_id.length)
-        rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
-          "/docs/" + dec.options.doc_id;
-      else
-        rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
-          "/docs?skip=" + dec.options.offset + "&include_docs=true&limit=" +
-          dec.options.limit;
+
+      // we just get a single ID if they specified a doc_id
+      if (dec.options.doc_id && dec.options.doc_id.length) {
+        getDocsForIdArray([dec.options.doc_id]).then(function()
+            {
+          console.log("results: " + JSON.stringify(dec.options.current_result));
+              dec.options.queryBusy = false;
+             });
+        return;
+      }
+
+      // otherwise get a list of IDs
+      var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
+        "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
 
       $http({
         url: rest_url,
@@ -628,38 +722,24 @@
       }).then(function success(resp) {
         if (resp && resp.status == 200 && resp.data) {
           dec.options.current_bucket = dec.options.selected_bucket;
+          dec.options.current_result.length = 0;
 
           var data = resp.data;
 
           //console.log("Got REST results: " + JSON.stringify(data));
 
-          //console.log(JSON.stringify(data));
-          dec.options.current_result.length = 0;
-          // did we get a single doc back?
-          if (data && data.json && data.meta) {
-            data.meta.type = "json";
-            dec.options.current_result.push({id: data.meta.id, data: data.json, meta: data.meta});
-          }
-
-          // maybe a single binary doc?
-          else if (data && data.meta && data.base64 === "") {
-            data.meta.type = "base64";
-            dec.options.current_result.push({id: data.meta.id, base64: data.base64, meta: data.meta});
-          }
-
-          // or maybe an array of docs?
-          else if (data && data.rows)
+          // we asked for a set up of document ids
+          if (data && data.rows) {
+            var idArray = [];
             for (var i=0; i< data.rows.length; i++) {
-              // is it binary or json data?
-              if (data.rows[i].doc.json)
-                dec.options.current_result.push(
-                    {id: data.rows[i].id, data: data.rows[i].doc.json, meta: {id: data.rows[i].id, type: "json"}});
-              else if (_.isString(data.rows[i].doc.base64))
-                dec.options.current_result.push(
-                    {id: data.rows[i].id, meta: {id: data.rows[i].id, type: "base64"}, base64: data.rows[i].doc.base64});
+              idArray.push(data.rows[i].id);
             }
 
-          dec.options.queryBusy = false;
+            getDocsForIdArray(idArray).then(function() {
+              //console.log("results: " + JSON.stringify(dec.options.current_result));
+              dec.options.queryBusy = false;
+              });
+          }
           //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
         }
       },function error(resp) {
@@ -668,13 +748,7 @@
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error with document retrieval.";
-          dialogScope.error_detail = dec.options.current_result;
-          $uibModal.open({
-            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-            scope: dialogScope
-          });
+          showErrorDialog("Error with document retrieval.",dec.options.current_result);
         }
 
         dec.options.queryBusy = false;
@@ -688,45 +762,45 @@
     //
 
     function getBuckets() {
-      if (dec.use_n1ql())
-        return getBuckets_n1ql();
-      else
+      //if (dec.use_n1ql())
+     //   return getBuckets_n1ql();
+      //else
         return getBuckets_rest();
     }
 
-    function getBuckets_n1ql() {
-      // run a query to see which buckets have what indexes
-      return qwQueryService.executeQueryUtil(qwConstantsService.keyspaceQuery, false)
-      .then(function success(resp) {
-        var data = resp.data, status = resp.status;
-
-        dec.buckets.length = 0;
-        if (data && data.results) for (var i=0; i< data.results.length; i++) {
-          var bucket = data.results[i];
-          dec.buckets.push(bucket.id);
-          if (bucket.has_prim)
-            dec.buckets_prim[bucket.id] = true;
-          if (bucket.has_sec)
-            dec.buckets_sec[bucket.id] = true;
-          //qconsole.log("Got bucket: " + bucket.id + " prim: " + bucket.has_prim + ", sec: " + bucket.has_sec);
-       }
-
-      }, function error(resp) {
-        var data = resp.data;
-        if (data && data.errors) {
-          dec.options.current_result = JSON.stringify(data.errors);
-          var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error getting list of buckets.";
-          dialogScope.error_detail = dec.options.current_result;
-          $uibModal.open({
-            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-            scope: dialogScope
-          });
-        }
-      }
-      );
-      
-    }
+//    function getBuckets_n1ql() {
+//      // run a query to see which buckets have what indexes
+//      return qwQueryService.executeQueryUtil(qwConstantsService.keyspaceQuery, false)
+//      .then(function success(resp) {
+//        var data = resp.data, status = resp.status;
+//
+//        dec.buckets.length = 0;
+//        if (data && data.results) for (var i=0; i< data.results.length; i++) {
+//          var bucket = data.results[i];
+//          dec.buckets.push(bucket.id);
+//          if (bucket.has_prim)
+//            dec.buckets_prim[bucket.id] = true;
+//          if (bucket.has_sec)
+//            dec.buckets_sec[bucket.id] = true;
+//          //qconsole.log("Got bucket: " + bucket.id + " prim: " + bucket.has_prim + ", sec: " + bucket.has_sec);
+//       }
+//
+//      }, function error(resp) {
+//        var data = resp.data;
+//        if (data && data.errors) {
+//          dec.options.current_result = JSON.stringify(data.errors);
+//          var dialogScope = $rootScope.$new(true);
+//          dialogScope.error_title = "Error getting list of buckets.";
+//          dialogScope.error_detail = dec.options.current_result;
+//          $uibModal.open({
+//            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+//            scope: dialogScope
+//          });
+//        }
+//      }
+//      );
+//
+//    }
 
     function getBuckets_rest() {
 
@@ -748,13 +822,7 @@
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          var dialogScope = $rootScope.$new(true);
-          dialogScope.error_title = "Error getting list of buckets.";
-          dialogScope.error_detail = dec.options.current_result;
-          $uibModal.open({
-            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-            scope: dialogScope
-          });
+          showErrorDialog("Error getting list of buckets.", dec.options.current_result);
         }
       });
 
@@ -767,7 +835,7 @@
         dec.options.selected_bucket = $stateParams.bucket;
             dec.options.where_clause = ''; // reset the where clause
         dec.options.offset = 0; // start off from the beginning
-        
+
         // if we don't have any buckets yet, get the bucket list first
         if (dec.buckets.length == 0)
           getBucketList().then(retrieveDocs_inner);
@@ -775,7 +843,7 @@
           retrieveDocs_inner();
       }
     }
-    
+
     //
     // if the user updates something, we like to refresh the results, unless
     // there are unsaved changes
@@ -789,16 +857,8 @@
       }
       // otherwise let the user know that updates are not yet visible
       else {
-        var dialogScope = $rootScope.$new(true);
-        dialogScope.error_title = "Info";
-        dialogScope.error_detail = "Because you have unsaved document edits, some changes won't be shown until you retrieve docs.";
-        dialogScope.hide_cancel = true;
-
-        var promise = $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-          scope: dialogScope
-        }).result;
-
+        showErrorDialog("Info",
+            "Because you have unsaved document edits, some changes won't be shown until you retrieve docs.",true);
       }
     }
 

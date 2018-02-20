@@ -10,7 +10,7 @@
   var keywords_array = keywords.split('|');
 
   var sysCatalogs = (
-      "SYSTEM:DATASTORES|SYSTEM:NAMESPACES|SYSTEM:KEYSPACES|SYSTEM:INDEXES|SYSTEM:DUAL|SYSTEM:USER_INFO|SYSTEM:MY_USER_INFO|SYSTEM:NODES|SYSTEM:APPLICABLE_ROLES|SYSTEM:PREPAREDS|SYSTEM:COMPLETED_REQUESTS|SYSTEM:ACTIVE_REQUESTS"
+      "system:datastores|system:namespaces|system:keyspaces|system:indexes|system:dual|system:user_info|system:my_user_info|system:nodes|system:applicable_roles|system:prepareds|system:completed_requests|system:active_requests"
   );
   var sysCatalogs_array = sysCatalogs.split('|');
 

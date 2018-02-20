@@ -1,7 +1,7 @@
 <form class="forms">
 <div class="dialog-lg dialog-resizable" id="doc_editor_dialog" style="min-height:600px">
   <div class="panel-header">
-    <h2 class="ellipsis">Edit Document</h2>
+    <h2 class="ellipsis">{{header}}</h2>
   </div>
   <div class="alert alert-warning" ng-if="error_message">{{error_message}}</div>
   <div class="panel-content" style="height:calc(100% - 100px)">
@@ -11,12 +11,13 @@
       </div>
     </div>
   <div class="panel-footer scroll-shadow">
-    <a ng-click="$dismiss('cancel')">
+    <a ng-click="$dismiss('cancel')" ng-hide="readonly">
       Cancel
     </a>
-    <button
-       type="submit" ng-disabled="errors()"
+    <button ng-hide="readonly" type="submit" ng-disabled="errors()"
        ng-click="!errors() && $close('ok')">Save</button>
+    <button ng-show="readonly" type="submit"
+       ng-click="$close('ok')">Done</button>
   </div>
 </div>
   </form>
