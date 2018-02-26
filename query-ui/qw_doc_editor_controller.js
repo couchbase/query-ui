@@ -265,7 +265,7 @@
       // make sure they really want to do this
       //
 
-      var promise = showErrorDiaog("Delete Document",
+      var promise = showErrorDialog("Delete Document",
           "Warning, this will delete the document: " + dec.options.current_result[row].id);
 
       promise.then(function success(res) {
