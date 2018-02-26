@@ -474,7 +474,7 @@
 
       case "Filter":
         if (op.condition)
-          pushTruncated(result,p.condition);
+          pushTruncated(result,op.condition);
         break;
       }
 
