@@ -506,7 +506,7 @@
     var tooltip_div = d3.select("#query_plan")
     .append("div")
     .attr("id", "svg_tooltip" + d.id)
-    .attr("class", "svg_tooltip")
+    .attr("class", "tooltip-explainplan")
     //.on("click", function(event) {
     //  return tooltip_div.style("display", "none");
     //})
@@ -524,7 +524,7 @@
 
   function removeAllTooltips() {
     // get rid of any existing tooltips
-    d3.select("#query_plan").selectAll('.svg_tooltip').remove();
+    d3.select("#query_plan").selectAll('.tooltip-explainplan').remove();
   }
 
   //
