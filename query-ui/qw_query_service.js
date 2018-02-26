@@ -1061,7 +1061,7 @@
 
         newResult.explainDone = false;
 
-        var explain_request = buildQueryRequest("explain " + queryText, false);
+        var explain_request = buildQueryRequest("explain " + queryText, false, queryOptions);
         if (!explain_request) {
           newResult.result = '{"status": "query failed"}';
           newResult.data = {status: "Query Failed."};
