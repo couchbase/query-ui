@@ -407,51 +407,51 @@
       switch (op['#operator']) {
 
       case "IndexScan": // for index scans, show the keyspace
-        result.push("by: " + op.keyspace + "." + op.index);
+        pushTruncated(result,"by: " + op.keyspace + "." + op.index);
         break;
 
       case "IndexScan2":
       case "IndexScan3":
-        result.push(op.keyspace + "." + op.index);
+        pushTruncated(result,op.keyspace + "." + op.index);
         if (op.as)
-          result.push("as: " + op.as);
+          pushTruncated(result,"as: " + op.as);
         break;
 
       case "PrimaryScan": // for primary scan, show the index name
-        result.push(op.keyspace);
+        pushTruncated(result,op.keyspace);
         break;
 
       case "InitialProject":
-        result.push(op.result_terms.length + " terms");
+        pushTruncated(result,op.result_terms.length + " terms");
         break;
 
       case "Fetch":
-        result.push(op.keyspace + (op.as ? " as "+ op.as : ""));
+        pushTruncated(result,op.keyspace + (op.as ? " as "+ op.as : ""));
         break;
 
       case "Alias":
-        result.push(op.as);
+        pushTruncated(result,op.as);
         break;
 
       case "NestedLoopJoin":
       case "NestedLoopNest":
       case "HashJoin":
       case "HashNest":
-        result.push("on: " + truncate(30,op.on_clause));
+        pushTruncated(result,"on: " + op.on_clause);
         break;
 
       case "Limit":
       case "Offset":
-        result.push(op.expr);
+        pushTruncated(result,op.expr);
         break;
 
       case "Join":
-        result.push(op.keyspace + (op.as ? " as "+op.as : "") + ' on ' + truncate(30,op.on_keys));
+        pushTruncated(result,op.keyspace + (op.as ? " as "+op.as : "") + ' on ' + op.on_keys);
         break;
 
       case "Order":
         if (op.sort_terms) for (var i = 0; i < op.sort_terms.length; i++)
-          result.push(op.sort_terms[i].expr);
+          pushTruncated(result,op.sort_terms[i].expr);
         break;
 
       case "InitialGroup":
@@ -461,31 +461,31 @@
           var aggr = "Aggrs: ";
           for (var i=0; i < op.aggregates.length; i++)
             aggr += op.aggregates[i];
-          result.push(aggr);
+          pushTruncated(result,aggr);
         }
 
         if (op.group_keys && op.group_keys.length > 0) {
           var keys = "By: ";
           for (var i=0; i < op.group_keys.length; i++)
             keys += op.group_keys[i];
-          result.push(keys);
+          pushTruncated(result,keys);
         }
         break;
 
       case "Filter":
         if (op.condition)
-          result.push(truncate(30,op.condition));
+          pushTruncated(result,p.condition);
         break;
       }
 
       // if there's a limit on the operator, add it here
       if (op.limit && op.limit.length)
-        result.push(truncate(30,op.limit));
+        pushTruncated(result,op.limit);
 
       // if we get operator timings, put them at the end of the details
       if (op['#time_normal']) {
 
-        result.push(op['#time_normal'] +
+        pushTruncated(result,op['#time_normal'] +
             ((this.time_percent && this.time_percent > 0) ?
                 ' (' + this.time_percent + '%)' : ''));
       }
@@ -507,9 +507,19 @@
             ((outStr.length > 0) ? outStr + ' out' : '');
 
         if (inOutStr.length > 0)
-          result.push(inOutStr);
+          pushTruncated(result,inOutStr);
       }
       return(result);
+    }
+
+    //
+    // convenience function to ensure that items in the result array are no longer than a fixed length
+    //
+
+    var MAX_LENGTH = 35;
+
+    function pushTruncated(array,item) {
+      array.push(truncate(MAX_LENGTH,item));
     }
 
     //
