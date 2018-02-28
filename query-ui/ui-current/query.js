@@ -79,6 +79,14 @@
         index: 1
       });
 
+      mnPluggableUiRegistryProvider.registerConfig({
+        name: 'Documents',
+        state: 'app.admin.doc_editor',
+        includedByState: 'app.admin.doc_editor',
+        plugIn: 'adminTab',
+        after: 'indexes'
+      });
+
       //
       // whenever the user logs out, we want ensure that validateQueryService knows it needs
       // to re-validate
