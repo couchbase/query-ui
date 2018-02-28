@@ -75,8 +75,8 @@
         name: 'Query',
         state: 'app.admin.query.workbench',
         includedByState: 'app.admin.query',
-        plugIn: 'adminTab',
-        after: 'indexes'
+        plugIn: 'workbenchTab',
+        index: 1
       });
 
       //
