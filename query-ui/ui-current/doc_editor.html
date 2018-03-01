@@ -4,11 +4,13 @@
      depot="actions"
      ng-if="dec.options.selected_bucket">
     <div class="header-controls">
-      <a ui-sref="app.admin.buckets.documents.control.list({bucket: dec.options.selected_bucket, statsHostname: 'all'})">
-        CLASSIC DOC EDITOR
+      <a
+         ui-sref="app.admin.buckets.documents.control.list({bucket: dec.options.selected_bucket, statsHostname: 'all'})"
+         class="resp-hide-sml">
+        SIMPLE EDITOR
       </a>
       <a ng-click="dec.createBlankDoc()">
-        ADD DOCUMENT
+        ADD <span class="resp-hide-xsml">DOCUMENT</span>
       </a>
     </div>
   </mn-element-cargo>
