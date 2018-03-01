@@ -118,25 +118,29 @@
 }
 
 /* bucket inference sidebar -------------------- */
-#metadata {
+#metadata,
+.insights-sidebar {
   -webkit-box-flex: 0;
   flex: 0 0 auto;
   padding-left: 2rem;
   height: calc(100vh - 150px);
   overflow: auto;
 }
-#sidebar_body {
+#sidebar_body,
+.sidebar-body {
   border-left: 1px solid #d1d1d1;
   padding: .25rem 0 .5rem 1rem;
   white-space: nowrap;
   overflow: auto;
 }
-#sidebar_body h5 {
+#sidebar_body h5,
+.sidebar-body h5 {
   line-height: 2rem;
   font-weight: 600;
   color: #000;
 }
-#sidebar_body .row {
+#sidebar_body .row,
+.sidebar-body .row {
   line-height: 2rem;
   margin-bottom: .25rem;
   padding-right: .5rem;
@@ -145,17 +149,21 @@
   cursor: pointer;
   color: #555;
 }
-#sidebar_body ul {
+#sidebar_body ul,
+.sidebar-body ul {
   margin: .25rem 0;
   cursor: default;
 }
-#sidebar_body ul ul {
+#sidebar_body ul ul,
+.sidebar-body ul ul {
   margin-left: .75rem;
 }
-#sidebar_body li {
+#sidebar_body li,
+.sidebar-body li {
   list-style-type: none;
 }
-#sidebar_body  section {
+#sidebar_body section,
+.sidebar-body section {
   border-width: 0;
   margin-bottom: .5rem;
 }
