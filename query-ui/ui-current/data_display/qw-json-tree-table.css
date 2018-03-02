@@ -28,11 +28,13 @@
   padding: .25rem;
   color: #2ca01c;
   font-size: .75rem;
+  word-break: break-word;
 }
 .ajtd-value {
   margin: 0;
   padding: .25rem;
   font-size: .75rem;
+  word-break: break-word;
 }
 .ajtd-value:first-child {
   padding: 0;
