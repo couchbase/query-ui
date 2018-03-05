@@ -14,6 +14,8 @@ ADD_CUSTOM_TARGET (realclean
   
 INCLUDE (FindCouchbaseGo)
 
+SET (GOVERSION 1.8.5)
+
 SET (CBQ_GUI_PROJ github.com/couchbase/query-ui)
 SET (CBQ_GUI_SRC "${CMAKE_CURRENT_SOURCE_DIR}/goproj/src/${CBQ_GUI_PROJ}")
 GoInstall (TARGET cbq-gui PACKAGE ${CBQ_GUI_PROJ}
