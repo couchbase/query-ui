@@ -161,6 +161,7 @@
     qwQueryService.doc_editor_options = {
         selected_bucket: null,
         query_busy: false,
+        show_tables: true,
         limit: 10,
         offset: 0,
         where_clause: '',
@@ -337,6 +338,8 @@
           if (savedState.options)
             qwQueryService.options = savedState.options;
           if (savedState.doc_editor_options) {
+            if (!savedState.doc_editor_options.hasOwnProperty('show_tables'))
+              savedState.doc_editor_options.show_tables = true;
             qwQueryService.doc_editor_options = savedState.doc_editor_options;
           }
           if (savedState.query_plan_options) {
@@ -376,6 +379,7 @@
 
       savedState.doc_editor_options = {
           selected_bucket: qwQueryService.doc_editor_options.selected_bucket,
+          show_tables: qwQueryService.doc_editor_options.show_tables,
           query_busy: false,
           limit: qwQueryService.doc_editor_options.limit,
           offset: qwQueryService.doc_editor_options.offset,

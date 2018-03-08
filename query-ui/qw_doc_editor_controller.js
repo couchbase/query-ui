@@ -8,10 +8,10 @@
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
   docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams',
-    'qwQueryService', 'validateQueryService', 'qwConstantsService', 'qwFixLongNumberService'];
+    'qwQueryService', 'validateQueryService', 'qwConstantsService', 'qwFixLongNumberService','$state'];
 
   function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService,
-      validateQueryService, qwConstantsService, qwFixLongNumberService) {
+      validateQueryService, qwConstantsService, qwFixLongNumberService, $state) {
 
     var dec = this;
 
@@ -51,6 +51,8 @@
     dec.editDoc = editDoc;
 
     dec.updatingRow = -1;
+    
+    dec.bucketChanged = function(item) {$state.go('app.admin.doc_editor',{bucket: item});};
 
     //
     // call the activate method for initialization
@@ -515,7 +517,7 @@
     function retrieveDocs_n1ql() {
       if (dec.options.queryBusy) // don't have 2 retrieves going at once
         return;
-
+      
       //console.log("Retrieving docs via N1QL...");
 
       // create a query based on either limit/skip or where clause
@@ -830,9 +832,10 @@
     }
 
     function handleBucketParam() {
+      dec.options.selected_bucket = $stateParams.bucket;
+
       if (_.isString($stateParams.bucket) && $stateParams.bucket.length > 0) {
         //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " + JSON.stringify(dec.buckets));
-        dec.options.selected_bucket = $stateParams.bucket;
             dec.options.where_clause = ''; // reset the where clause
         dec.options.offset = 0; // start off from the beginning
 

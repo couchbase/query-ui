@@ -24,17 +24,21 @@
     return {
       restrict: 'E',
 //    scope: { data: '=qwJsonTableEditor' },
-      scope: { data: '=data', controller: '=controller' },
+      scope: { data: '=data', controller: '=controller'},
       template: '<div></div>',
       link: function (scope, element) {
 
-        scope.$watch('data', function (json) {
+        scope.$watch('data', createEditorFromJson); 
+        
+        function createEditorFromJson(json) {
 
           // start with an empty div, if we have data convert it to HTML
           var wrapper = '<div class="data-table-wrapper">{}</div>';
           var table;
           var warning;
           htmlElement = element;
+          if (!json)
+            json = data;
 
           var content = "<div>{}</div>";
 
@@ -49,17 +53,10 @@
 
             if (meta.truncated)
               warning = angular.element('<div class="error text-small" style="margin-bottom:-20px">Some documents too large for tabular editing, tabular view truncated.</div>`');
-            header = angular.element(createHTMLheader(meta));
-            var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
-            for (var i=startSortColumn; i < header[0].childNodes.length; i++) {
-              header[0].childNodes[i].addEventListener("click",function() {
-                sortTable(this,scope,$compile,$timeout);
-              },false);
-            }
-
+            header = angular.element(createHTMLheader(meta,scope.controller));
             wrapper = '<div class="data-table-wrapper show-scrollbar"></div>';
 
-            var tableHTML = makeHTMLTopLevel(json,meta);
+            var tableHTML = makeHTMLTopLevel(json,meta,scope.dec);
             table = angular.element(tableHTML);
           }
 
@@ -84,30 +81,39 @@
           htmlElement.empty();
           if (warning)
             htmlElement.append(warning);
-          if (header)
-            htmlElement.append(header);
+          if (header) {
+            $compile(header)(scope, function(header) {
+
+              htmlElement.append(header);
+              // sync scrolling between the header and the main table
+              // listen on scrolling in the data window
+              wrapperElement[0].addEventListener("scroll",function() {
+                if (header) {
+                  header[0].scrollLeft = wrapperElement[0].scrollLeft;
+                }
+              });
+              // also listen on horizontal scrolling in the header, to keep the data in sync
+              if (header) header[0].addEventListener("scroll",function() {
+                wrapperElement[0].scrollLeft = header[0].scrollLeft
+              });
+
+              // put a sort listener on the data columns
+              var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
+              for (var i=startSortColumn; i < header[0].childNodes.length; i++) {
+                header[0].childNodes[i].addEventListener("click",function() {
+                  sortTable(this,scope,$compile,$timeout);
+                },false);
+              }
+             }); 
+            //htmlElement.append(header);
+          }
 
           htmlElement.append(wrapperElement);
-
-          // sync scrolling between the header and the main table
-          // listen on scrolling in the data window
-          wrapperElement[0].addEventListener("scroll",function() {
-            if (header) {
-              header[0].scrollLeft = wrapperElement[0].scrollLeft;
-            }
-          });
-
-          // also listen on horizontal scrolling in the header, to keep the data in sync
-          if (header) header[0].addEventListener("scroll",function() {
-            wrapperElement[0].scrollLeft = header[0].scrollLeft
-          });
-
-
-        }); // end scope watch
+        }        
       }
     };
   }
-
+  
   // globals used for sorting, etc.
 
   var data;           // all our data
@@ -355,7 +361,7 @@
     // We have widths for each column, so we can create the header row
     //
     var columnHeaders = '<div class="data-table-header-row">';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px"></span>';
+    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1 + 'px">&nbsp;</span>';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id</span>';
 
     // we may need an unnamed column for things that don't have field names
@@ -365,8 +371,11 @@
     }
 
     // if we have non-objects, leave a separate column just for them with no header
+    // header for "save" button
+    columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width:' + columnWidthPx*1 + 'px">&nbsp;</span>';
+    // header for each column
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
-      columnHeaders += '<span class="data-table-header-cell" style="width: ' +
+      columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
       meta.columnWidths[key]*columnWidthPx + 'px;">' + mySanitize(key) +'<span class="caret-subspan"></span></span>';
     });
     columnHeaders += '</div>';
@@ -383,6 +392,7 @@
 
   function makeHTMLTopLevel(object, meta) {
     var result = '';
+    var max_length = 128;
 
     // we expect an array of objects, which we turn into an HTML table.
 
@@ -405,27 +415,27 @@
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
         var invalidName = formName + '.$invalid';
-        result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + 3.25)*columnWidthPx + 'px" ' +
+        result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + 4)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
         '<div class="data-table-editor-row" ' +
         'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
         // button to update record in the first column
-        result += '<span class="data-table-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
-        '<a class="btn qw-doc-editor" ' +
-        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
-        'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
-        'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
-
-        '<a class="btn qw-doc-editor" ' +
-        'ng-disabled="' + invalidName + '" ' +
-        'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
-        'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
+        result += '<span class="data-table-cell" style="width:' + columnWidthPx*1 + 'px"> ' +
+        //'<a class="btn qw-doc-editor" ' +
+        //'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+        //'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
+        //'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.editDoc(' + row +')" ' +
         'title="Edit document as JSON"><span class="icon fa-edit qw-editor-btn"></span></a>' +
+
+        '<a class="btn qw-doc-editor" ' +
+        'ng-disabled="' + invalidName + '" ' +
+        'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
+        'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
 
         '<a class="btn qw-doc-editor" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
@@ -438,7 +448,7 @@
           'px"><span class="cursor-pointer " ';
         if (object[row].meta || object[row].xattrs)
           result += 'uib-tooltip-html="\'' + getTooltip(object[row]) + '\'" ' +
-          'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
+          'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
         result += '>' + mySanitize(object[row].id) + '</span>';
         if (object[row].rawJSON)
           result += '<span class="fa-stack icon-info" ' +
@@ -461,18 +471,33 @@
           result += '</span>';
         }
 
-        // now the field values
+        // now the field values, if we are showing tables
 
-        //_.forIn(topLevelKeys, function (value, key) {
+        result += '<span ng-show="dec.options.show_tables" class="data-table-cell ajtd-type-bool" style="width:' +
+        columnWidthPx*1 + 'px"> ' +
+        '<a class="btn qw-doc-editor" ' +
+        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+        'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
+        'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
+        '</span>';
+
         Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
           var item = object[row].data[key];
           var childSize = {width: 1};
           var disabled = !!object[row].rawJSON;
           var childHTML = (item || item === 0 || item === "") ?
               makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
-              result += '<span class="data-table-cell" style="width: ' + columnWidths[key]*columnWidthPx  + 'px;">'
-              + childHTML + '</span>';
+              result += '<span ng-show="dec.options.show_tables" class="data-table-cell" style="width: ' + 
+              columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
         });
+
+        // otherwise, a truncated version of the JSON
+        
+        var json = JSON.stringify(object[row].data);
+        if (json.length > max_length)
+          json = json.substring(0,max_length) + '...';
+        result += '<span ng-hide="dec.options.show_tables" class="data-table-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
+        + mySanitize(json) + '</span>';
 
         // for some reason I couldn't get the form from $scope, so the following acts as a sentinel that I can search for
         // to see if anything changed in any form of the editor
