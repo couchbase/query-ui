@@ -1974,27 +1974,23 @@
     //
 
     function showErrorDialog(message) {
-      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
-
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
 
       $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
+        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
         scope: dialogScope
       });
     }
 
     function showWarningDialog(message) {
-      var subdirectory = ($('#currentN1QLUI').height() != null) ? '/ui-current' : '/ui-classic';
-
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Warning";
       dialogScope.error_detail = message;
 
       $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
+        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
         scope: dialogScope
       });
     }

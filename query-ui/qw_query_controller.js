@@ -585,7 +585,6 @@
       var resultHeaderHeight =  $('#result_header').height();
       var sidebarHeaderHeight =  $('#sidebar_header').height();
       var resultSummaryHeight = $('#result_summary').height();
-      var current_ui = $('#currentN1QLUI').height() != null;
 
       var otherStuff = pageHeaderHeight + pageFooterHeight +
         headerNavHeight + queryBoxHeight;
@@ -598,10 +597,9 @@
       var editor_size = windowHeight - otherStuff - margins - resultHeaderHeight;
       if (editor_size > 1000)
         editor_size = 1000;
-      if (current_ui)
-        editor_size += 150;//70;
-      else
-        editor_size += 140;
+
+      editor_size += 150;//70;
+
       if (editor_size < 0)
         editor_size = 0;
 
@@ -612,24 +610,9 @@
 //      console.log("windowHeight: " + windowHeight);
 //      console.log("resultHeaderHeight: " + resultHeaderHeight);
 //      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
-//      console.log(" current_ui: " + current_ui);
 //      console.log(" editor_size: " + editor_size);
 
 
-      if (!current_ui) { // classic UI
-        // ignore small changes less than 1% of size
-        var change = $('#result_editor').height()/(editor_size + 9);
-        if (change < 0.99 || change > 1.01) {
-          $('#sidebar_body').height(editor_size + resultHeaderHeight - sidebarHeaderHeight + resultSummaryHeight + 25);
-          $('#result_editor').height(editor_size + 9);
-          $('#result_table').height(editor_size+25);
-          $('#result_tree').height(editor_size+ 24);
-          $('#query_plan').height(editor_size + 15);
-          $('#query_plan_text').height(editor_size + 25);
-        //$('#result_box').height(editor_size+50);
-        }
-      }
-      else {
         var sidebarHeight = windowHeight - pageHeaderHeight - pageFooterHeight -
           sidebarHeaderHeight - 80;
         $('#sidebar_body').height(sidebarHeight);
@@ -640,7 +623,6 @@
         $('#query_plan_d3').height(editor_size);
         $('#query_plan_text').height(editor_size + 25);
 //        $('#result_box').height(editor_size+50);
-      }
 
 
       //
@@ -801,7 +783,6 @@
     dialogScope.file = {name: "output"};
 
     function options() {
-      var subdirectory = '/ui-current';
       dialogScope.options = qwQueryService.clone_options();
       dialogScope.options.positional_parameters = [];
       dialogScope.options.named_parameters = [];
@@ -822,8 +803,7 @@
 
       // bring up the dialog
       var promise = $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory +
-                     '/prefs_dialog/qw_prefs_dialog.html',
+        templateUrl: '../_p/ui/query/ui-current/prefs_dialog/qw_prefs_dialog.html',
         scope: dialogScope
       }).result;
 
@@ -1096,7 +1076,6 @@
       if (!qc.analysisExpanded) {
         $("#metadata").removeClass("width-3");
         $("#metadata").addClass("width-6");
-      //  if ($('#result_box').hasClass('classic-ui')) {
           $("#query_wrapper").removeClass("width-9");
           $("#query_wrapper").addClass("width-6")
       //  }
@@ -1104,7 +1083,6 @@
       else {
         $("#metadata").removeClass("width-6");
         $("#metadata").addClass("width-3");
-      //  if ($('#result_box').hasClass('classic-ui')) {
           $("#query_wrapper").removeClass("width-6");
           $("#query_wrapper").addClass("width-9");
       //  }
@@ -1118,12 +1096,11 @@
     //
 
     function showErrorMessage(message) {
-      var subdirectory = '/ui-current';
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
 
       $uibModal.open({
-        templateUrl: '../_p/ui/query' + subdirectory + '/password_dialog/qw_query_error_dialog.html',
+        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
         scope: dialogScope
       });
     }
