@@ -635,7 +635,7 @@
           if (data && data.json && data.meta) {
             data.meta.type = "json";
             dec.options.current_result[position] =
-              {id: data.meta.id, data: data.json, meta: data.meta, xattrs: data.xattrs, rawJSON: data.rawJSON};
+              {id: data.meta.id, data: JSON.parse(data.json), meta: data.meta, xattrs: data.xattrs, rawJSON: data.rawJSON};
           }
 
           // maybe a single binary doc?
