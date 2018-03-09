@@ -182,7 +182,7 @@
       // NestedJoin op, which are already captured
 
       else if ((operatorName === "NestedLoopJoin" || operatorName === "NestedLoopNest" ||
-          operatorName === "HashJoin" || operatorName === "HashNest" || 
+          operatorName === "HashJoin" || operatorName === "HashNest" ||
           operatorName === "Join" || operatorName === "Nest") && plan["~child"]) {
         //&& plan["~child"]["~children"]) {
         // do we have a
@@ -345,7 +345,7 @@
       // we have some results, build the tooltip
       var result = "";
       result += '<div class="row"><h5>' + op['#operator'] +
-      '</h5></div><ul class="tooltip-list">';
+      '</h5></div><ul class="wb-explain-tooltip-list">';
 
       result += childFields;
       result += '</ul>';

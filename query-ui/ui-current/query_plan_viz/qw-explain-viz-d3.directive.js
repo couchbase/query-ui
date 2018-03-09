@@ -46,10 +46,10 @@
 
             // summarize plan in panel at the top
             if (data.analysis) {
-              content += "<div class='row qw-explain-summary'>";
+              content += "<div class='row wb-explain-summary'>";
               content += "<div class='column'>";
               content += "<b>Indexes</b><br>";
-//              content += "<li>Indexes used: <ul>";
+
               for (var f in data.analysis.indexes)
                 if (f.indexOf("#primary") >= 0)
                   content += "<em class='cbui-plan-expensive'>" + f + "</em>&nbsp;&nbsp; ";
@@ -71,15 +71,15 @@
 
 // TBD: the selected orientation button should receive the "selected-orient" class, but it's not working
               content += "<div class='column row flex-grow-half flex-right'>";
-              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left plan-orient" ng-class="{\'selected-orient\' : orientIs(1)}" title="change plan direction"></span>';
-              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right plan-orient" ng-class="{\'selected-orient\' : orientIs(3)}" title="change plan direction"></span>';
-              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down plan-orient" ng-class="{\'selected-orient\' : orientIs(4)}" title="change plan direction"></span>';
-              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up plan-orient" ng-class="{\'selected-orient\' : orientIs(2)}" title="change plan direction"></span>';
+              content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(1)}" title="change plan direction"></span>';
+              content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(3)}" title="change plan direction"></span>';
+              content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(4)}" title="change plan direction"></span>';
+              content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(2)}" title="change plan direction"></span>';
               content += "</div>";
 
               content += "<div class='column row flex-right'>";
-              content += '<span ng-click="zoomIn()" class="icon fa-search-minus plan-zoom" title="zoom out - or use scroll wheel"></span>';
-              content += '<span ng-click="zoomOut()" class="icon fa-search-plus plan-zoom" title="zoom in - or use scroll wheel"></span>';
+              content += '<span ng-click="zoomIn()" class="icon fa-search-minus wb-explain-plan-zoom" title="zoom out - or use scroll wheel"></span>';
+              content += '<span ng-click="zoomOut()" class="icon fa-search-plus wb-explain-plan-zoom" title="zoom in - or use scroll wheel"></span>';
               content += "</div>";
 
               content += "</div>";
@@ -107,12 +107,12 @@
 
             if (data.plan_nodes) {
               // put the SVG inside a wrapper to allow scrolling
-              wrapperElement = angular.element('<div class="d3-tree-wrapper"></div>');
+              wrapperElement = angular.element('<div class="wb-explain-d3-wrapper"></div>');
               element.append(wrapperElement);
               simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
 
               // if we're creating the wrapper for the first time, allow a delay for it to get a size
-              if ($('.d3-tree-wrapper').height() && $('.d3-tree-wrapper').height() > 50)
+              if ($('.wb-explain-d3-wrapper').height() && $('.wb-explain-d3-wrapper').height() > 50)
                 makeTree();
               else
                 $timeout(makeTree,100);
@@ -227,8 +227,8 @@
     var vert = (queryService.query_plan_options.orientation == orientTB ||
         queryService.query_plan_options.orientation == orientBT);
 
-    canvas_width = $('.d3-tree-wrapper').width();
-    canvas_height =  $('.d3-tree-wrapper').height();
+    canvas_width = $('.wb-explain-d3-wrapper').width();
+    canvas_height =  $('.wb-explain-d3-wrapper').height();
 
     //console.log("Svg width: " + canvas_width + ", height: " + canvas_height);
     //console.log("Got expected width: " + width + ", height: " + height);
@@ -321,7 +321,7 @@
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("svg:g")
-    .attr("class", "node")
+    .attr("class", "wb-explain-node")
     .attr("transform", getRootTranslation)
     .on("click", makeTooltip);
 
@@ -375,14 +375,14 @@
 
     nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight}) // m
-    .attr("class", "node-text")
+    .attr("class", "wb-explain-node-text")
     .text(function(d) { return d.name })
     ;
 
     // handle up to 4 lines of details
     for (var i=0;i<4;i++) nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight*(i+2)})
-    .attr("class", "node-text-details")
+    .attr("class", "wb-explain-node-text-details")
     .text(function(d) { return d.details[i] })
     ;
 
@@ -406,7 +406,7 @@
 
     // Enter any new links at the parent's previous position.
     link.enter().insert("path", "g")
-    .attr("class", "link")
+    .attr("class", "wb-explain-link")
     // .style("stroke", function(d) { return d.target.level; }) // color line with level color
     .attr("marker-start", "url(#arrowhead)")
     .attr("d", function(d) {
@@ -500,13 +500,13 @@
     removeAllTooltips();
 
     // the tooltip is relative to the query plan div, so we need to know its offset.
-    var query_plan_offset = $("#query_plan").offset();
+    var query_plan_offset = $(".wb-results-explain").offset();
 
     // create the new tooltip
-    var tooltip_div = d3.select("#query_plan")
+    var tooltip_div = d3.select(".wb-results-explain")
     .append("div")
     .attr("id", "svg_tooltip" + d.id)
-    .attr("class", "tooltip-explainplan")
+    .attr("class", "wb-explain-tooltip")
     //.on("click", function(event) {
     //  return tooltip_div.style("display", "none");
     //})
@@ -524,7 +524,7 @@
 
   function removeAllTooltips() {
     // get rid of any existing tooltips
-    d3.select("#query_plan").selectAll('.tooltip-explainplan').remove();
+    d3.select(".wb-results-explain").selectAll('.wb-explain-tooltip').remove();
   }
 
   //

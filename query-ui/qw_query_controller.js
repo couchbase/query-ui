@@ -401,8 +401,8 @@
       // make the query editor "catch" drag and drop files
       //
 
-      $("#query_editor")[0].addEventListener('dragover',handleDragOver,false);
-      $("#query_editor")[0].addEventListener('drop',handleFileDrop,false);
+      $(".wb-ace-editor")[0].addEventListener('dragover',handleDragOver,false);
+      $(".wb-ace-editor")[0].addEventListener('drop',handleFileDrop,false);
     };
 
     // this function is used for autocompletion of dynamically known names such
@@ -572,34 +572,22 @@
     //
 
     function updateEditorSizes() {
-      var margins = 200;
-      //if (navigator.userAgent.match(/safari/i))
-      //	constant = 10;
+      var margins = 90;
       var windowHeight = window.innerHeight;
-      var pageFooterHeight = 115;//96; //$('#page_footer').height();
-      var pageHeaderHeight = 42;
-      var headerNavHeight =  $('#headerNav').height();
-      if (headerNavHeight == null)
-        headerNavHeight = 47;
-      var queryBoxHeight = $('#query_box').height();
-      var resultHeaderHeight =  $('#result_header').height();
+      var pageFooterHeight = 115;
+      var headerNavHeight = 47;
+      var queryBoxHeight = $('.wb-query-editor').height();
       var sidebarHeaderHeight =  $('#sidebar_header').height();
-      var resultSummaryHeight = $('#result_summary').height();
 
-      var otherStuff = pageHeaderHeight + pageFooterHeight +
-        headerNavHeight + queryBoxHeight;
+      var otherStuff = pageFooterHeight + headerNavHeight + queryBoxHeight;
 
-      if (//pageHeaderHeight == null || pageFooterHeight == null ||
-          headerNavHeight == null || queryBoxHeight == null) {
+      if (headerNavHeight == null || queryBoxHeight == null) {
         return;
       }
 
-      var editor_size = windowHeight - otherStuff - margins - resultHeaderHeight;
+      var editor_size = windowHeight - otherStuff - margins;
       if (editor_size > 1000)
-        editor_size = 1000;
-
-      editor_size += 150;//70;
-
+        editor_size = 1150;
       if (editor_size < 0)
         editor_size = 0;
 
@@ -612,32 +600,28 @@
 //      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
 //      console.log(" editor_size: " + editor_size);
 
-
-        var sidebarHeight = windowHeight - pageHeaderHeight - pageFooterHeight -
+      var sidebarHeight = windowHeight - pageFooterHeight -
           sidebarHeaderHeight - 80;
-        $('#sidebar_body').height(sidebarHeight);
-        $('#result_editor').height(editor_size);
-        $('#result_table').height(editor_size+25);
-        $('#result_tree').height(editor_size+15);
-        $('#query_plan').height(editor_size + 15);
-        $('#query_plan_d3').height(editor_size);
-        $('#query_plan_text').height(editor_size + 25);
-//        $('#result_box').height(editor_size+50);
 
+      $('.insights-sidebar-body').height(sidebarHeight);
+      $('.wb-results-json').height(editor_size);
+      $('.wb-results-table').height(editor_size + 32);
+      $('.wb-results-tree').height(editor_size + 15);
+      $('.wb-results-explain').height(editor_size + 32);
+      $('.wb-results-explain-text').height(editor_size + 32);
 
-      //
       // allow the query editor to grow and shrink a certain amount based
       // on the number of lines in the query
       //
-      // as the query is edited, allow it more vertical space, but max sure it
+      // as the query is edited, allow it more vertical space, but make sure it
       // doesn't have fewer than 5 lines or more than ~50% of the window
 
       if (qc.inputEditor) {
-        var queryAreaHeight = Math.max($('#query_wrapper').height(),240);
-        var queryHeaderHeight = $('#query_header').height();
+        var queryAreaHeight = Math.max($('.wb-main-wrapper').height(),240);
+        var queryHeaderHeight = $('.wb-query-editor-header').height();
         var curSession = qc.inputEditor.getSession();
         var lines = curSession.getLength();
-        var halfScreen = queryAreaHeight/2-queryHeaderHeight*3;
+        var halfScreen = queryAreaHeight/2-queryHeaderHeight*4;
         var height = Math.max(75,((lines-1)*21)-10); // make sure height no less than 75
         if (halfScreen > 75 && height > halfScreen)
           height = halfScreen;
@@ -645,9 +629,8 @@
         //console.log("QueryAreaHeight: " + queryAreaHeight + ", queryHeaderHeight: " + queryHeaderHeight);
         //console.log("Half screen: " + halfScreen + ", Area height: " + queryAreaHeight + ", header: " + queryHeaderHeight + ", setting height to: " + height);
 
-        $("#query_editor").height(height);
+        $(".wb-ace-editor").height(height);
       }
-
 
     }
 
@@ -1069,27 +1052,24 @@
     }
 
      //
-    // toggle the size of the analysis pane
+    // toggle the size of the bucket insights pane
     //
 
     function toggleAnalysisSize() {
       if (!qc.analysisExpanded) {
-        $("#metadata").removeClass("width-3");
-        $("#metadata").addClass("width-6");
-          $("#query_wrapper").removeClass("width-9");
-          $("#query_wrapper").addClass("width-6")
-      //  }
+        $(".insights-sidebar").removeClass("width-3");
+        $(".insights-sidebar").addClass("width-6");
+        $(".wb-main-wrapper").removeClass("width-9");
+        $(".wb-main-wrapper").addClass("width-6")
       }
       else {
-        $("#metadata").removeClass("width-6");
-        $("#metadata").addClass("width-3");
-          $("#query_wrapper").removeClass("width-6");
-          $("#query_wrapper").addClass("width-9");
-      //  }
+        $(".insights-sidebar").removeClass("width-6");
+        $(".insights-sidebar").addClass("width-3");
+        $(".wb-main-wrapper").removeClass("width-6");
+        $(".wb-main-wrapper").addClass("width-9");
       }
       qc.analysisExpanded = !qc.analysisExpanded;
     }
-
 
     //
     // show an error dialog
