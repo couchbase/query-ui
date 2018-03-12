@@ -445,9 +445,9 @@
 
         // put the meta().id in the next column
         result += '<span class="data-table-cell" style="width:' + columnWidthPx*2 +
-          'px"><span class="cursor-pointer " ';
+          'px"><span  ';
         if (object[row].meta || object[row].xattrs)
-          result += 'uib-tooltip-html="\'' + getTooltip(object[row]) + '\'" ' +
+          result += ' class="cursor-pointer blue-1" uib-tooltip-html="\'' + getTooltip(object[row]) + '\'" ' +
           'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
         result += '>' + mySanitize(object[row].id) + '</span>';
         if (object[row].rawJSON)

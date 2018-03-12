@@ -770,39 +770,6 @@
         return getBuckets_rest();
     }
 
-//    function getBuckets_n1ql() {
-//      // run a query to see which buckets have what indexes
-//      return qwQueryService.executeQueryUtil(qwConstantsService.keyspaceQuery, false)
-//      .then(function success(resp) {
-//        var data = resp.data, status = resp.status;
-//
-//        dec.buckets.length = 0;
-//        if (data && data.results) for (var i=0; i< data.results.length; i++) {
-//          var bucket = data.results[i];
-//          dec.buckets.push(bucket.id);
-//          if (bucket.has_prim)
-//            dec.buckets_prim[bucket.id] = true;
-//          if (bucket.has_sec)
-//            dec.buckets_sec[bucket.id] = true;
-//          //qconsole.log("Got bucket: " + bucket.id + " prim: " + bucket.has_prim + ", sec: " + bucket.has_sec);
-//       }
-//
-//      }, function error(resp) {
-//        var data = resp.data;
-//        if (data && data.errors) {
-//          dec.options.current_result = JSON.stringify(data.errors);
-//          var dialogScope = $rootScope.$new(true);
-//          dialogScope.error_title = "Error getting list of buckets.";
-//          dialogScope.error_detail = dec.options.current_result;
-//          $uibModal.open({
-//            templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-//            scope: dialogScope
-//          });
-//        }
-//      }
-//      );
-//
-//    }
 
     function getBuckets_rest() {
 
@@ -814,8 +781,16 @@
         if (resp && resp.status == 200 && resp.data) {
           // get the bucket names
           dec.buckets.length = 0;
-          for (var i=0; i < resp.data.length; i++) if (resp.data[i])
+          var default_seen = false;
+          for (var i=0; i < resp.data.length; i++) if (resp.data[i]) {
             dec.buckets.push(resp.data[i].name);
+            if (resp.data[i].name == dec.options.selected_bucket)
+              default_seen = true;
+          }
+
+          // if we didn't see the user-selected bucket, reset selected bucket to the first one
+          if (!default_seen && dec.buckets.length > 0)
+            dec.options.selected_bucket = dec.buckets[0];
         }
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
 
@@ -832,12 +807,17 @@
     }
 
     function handleBucketParam() {
-      dec.options.selected_bucket = $stateParams.bucket;
 
-      if (_.isString($stateParams.bucket) && $stateParams.bucket.length > 0) {
-        //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " + JSON.stringify(dec.buckets));
-            dec.options.where_clause = ''; // reset the where clause
+      // if we get a bucket as a parameter, that overrides current defaults
+      if (_.isString($stateParams.bucket) && $stateParams.bucket.length > 0 && $stateParams.bucket != dec.options.selected_bucket) {
+        dec.options.selected_bucket = $stateParams.bucket;
+        dec.options.where_clause = ''; // reset the where clause
         dec.options.offset = 0; // start off from the beginning
+      }
+
+      // if we got a param, or a saved user-selected value, select it and get the docs
+      if (dec.options.selected_bucket && dec.options.selected_bucket.length > 0) {
+        //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " + JSON.stringify(dec.buckets));
 
         // if we don't have any buckets yet, get the bucket list first
         if (dec.buckets.length == 0)
