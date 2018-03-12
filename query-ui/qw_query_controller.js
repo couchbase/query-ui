@@ -827,7 +827,7 @@
         ];
       if (qc.lastResult.query && qc.lastResult.query.length > 0)
         dialogScope.file_options.push({kind: "txt", label: "Query Statement"});
-      dialogScope.selected = {item: 0};
+      dialogScope.selected = {item: "0"};
 
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_query_unified_file_dialog.html',
@@ -851,13 +851,13 @@
           file_extension = ".txt";
           break;
 
-        case "3":
+        case "2":
           file = new Blob([qc.lastResult.query],{type: "text/plain", name: "query.txt"});
           file_extension = ".txt";
           break;
 
         default:
-          console.log("Error, no match");
+          console.log("Error saving content, no match, selected item: " + dialogScope.selected.item);
           break;
         }
 
