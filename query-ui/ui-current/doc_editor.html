@@ -100,21 +100,23 @@
   </div>
   </form>
 
-<!-- Row for result query text & next/previous buttons ********************* -->
+<!-- Row for result query text, toggle, & next/previous buttons *********** -->
   <div
      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0"
      class="row resp-sml margin-bottom-half">
     <div class="text-small resp-margin-sml">
-      <strong><span ng-if="dec.options.current_result.length">{{dec.options.current_result.length}}</span> Results for:</strong> &nbsp; <em>{{dec.options.current_query}}</em>
+      <strong><span ng-if="dec.options.current_result.length">{{dec.options.current_result.length}}</span> Results for</strong> <em>{{dec.options.current_query}}</em>
     </div>
-    <div class="row text-small resp-margin-sml toggle-div"">
-    Text&nbsp;
-    <label for="show_tables" class="switch">
-        <input type="checkbox" id="show_tables"
-        ng-model="dec.options.show_tables" ng-enabled="true">
-        <span class="slider round"></span>
-        </label>
-   &nbsp;Tables
+    <div class="row text-small resp-margin-sml">
+      text
+      <label for="show_tables" class="toggle-control">
+        <input
+           type="checkbox" id="show_tables"
+           ng-model="dec.options.show_tables"
+           ng-enabled="true">
+        <span class="toggle-control-body"></span>
+      </label>
+      tables
     </div>
     <div class="text-right nowrap">
       <button
