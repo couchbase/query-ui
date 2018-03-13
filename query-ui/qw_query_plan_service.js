@@ -186,8 +186,8 @@
           operatorName === "Join" || operatorName === "Nest") && plan["~child"]) {
         //&& plan["~child"]["~children"]) {
         // do we have a
-        var inner = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
-        var outer = predecessor;
+        var inner = predecessor;
+        var outer = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
         return(new PlanNode([inner,outer],plan,null,lists.total_time));
       }
 
