@@ -92,7 +92,7 @@
               result += " of " + field.items.type;
             else if (field.items.length > 0)
               result += " of subtypes";
-            else 
+            else
               result += " of object";
           }
 
@@ -152,8 +152,8 @@
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
         ' {{bucket.id}} <span ng-if="bucket.count > -1">&nbsp;({{bucket.count}})</span></a>' +
         '  <ul class="text-small" ng-if="bucket.expanded">' +
-        '    <li class="schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
-        '    <li class="schema" ng-repeat="flavor in bucket.schema">' +
+        '    <li class="insights-sidebar-schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
+        '    <li class="insights-sidebar-schema" ng-repeat="flavor in bucket.schema">' +
 
         '      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
 
@@ -257,19 +257,19 @@
       restrict: 'E',
       scope: { schema: '=schema', path:"=path"},
       template:
-        '<ul class="schema">' +
+        '<ul class="insights-sidebar-schema">' +
         '  <li ng-repeat="(name,  field) in schema.properties">' +
         '    <div ng-class="{\'indexed\': field.indexed}" ' +
         '     ng-attr-title="{{showSamples(field)}}"> {{name}} {{showFieldType(field)}}</div>' +
         '    <div ng-if="field.type==\'object\'">' +
         '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +
         '    <div ng-if="field.type==\'array\' && field.items.length">' +
-        '      <ul class="schema"><li ng-repeat="schema in field.items">{{name}} subtype:' +
+        '      <ul class="insights-sidebar-schema"><li ng-repeat="schema in field.items">{{name}} subtype:' +
         '        <schema-display schema="schema" path="path + name + \'[]\' "></schema-display></li>' +
         '      </ul>' +
         '    </div>' +
         '    <div ng-if="field.type==\'array\' && field.items.$schema">' +
-        '      <ul class="schema"><li>{{name}} subtype:' +
+        '      <ul class="insights-sidebar-schema"><li>{{name}} subtype:' +
         '        <schema-display schema="field.items" path="path + name + \'[]\' "></schema-display></li>' +
         '      </ul>' +
         '    </div>' +

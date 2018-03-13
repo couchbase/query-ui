@@ -174,8 +174,7 @@
   cursor: pointer;
   color: #555;
 }
-.insights-sidebar-body ul,
-.sidebar-body ul {
+.insights-sidebar-body ul {
   margin: .25rem 0;
   cursor: default;
 }
@@ -189,9 +188,12 @@
   border-width: 0;
   margin-bottom: .5rem;
 }
-.schema .indexed {
-  color: #333;
-  font-weight: 600;
+.insights-sidebar-schema .indexed {
+  color: #000;
+  font-weight: 700;
+  font-style: italic;
+  font-size: .8125rem;
+  line-height: 1.7;
 }
 
 /* workbench query history -------------------------------------------------- */
