@@ -1,4 +1,4 @@
-.wb-wrapper { /* wrapper for the whole workbench */
+.wb-wrapper { /* wrapper for the whole workbench --------------------------- */
   margin: 0 0 -150px 0;
   padding: 0;
   display: flex;
@@ -7,8 +7,8 @@
   justify-content: space-between;
   position: relative;
 }
-.wb-main-wrapper {} /* wrapper for query editor and results area */
-.wb-query-editor {}
+.wb-main-wrapper {} /* wrapper for query editor and results area ----------- */
+.wb-query-editor {} /* wrapper for query editor area: header, Ace, footer -- */
 .wb-query-editor-header {
   min-height: 2rem;
   margin-bottom: .5rem;
@@ -89,7 +89,7 @@
   margin-left: 0;
 }
 
-/* query results -------------------------------- */
+/* query results ----------------------------------------------------------- */
 .wb-results-header {
   min-height: 2rem;
   margin-top: 1.5rem;
@@ -99,12 +99,12 @@
   justify-content: space-between;
   position: relative;
 }
-/* the wrapper around ALL results views...followed by the specific views */
+/* the wrapper around ALL results views...followed by the specific views --- */
 .wb-results-wrapper {
   background-color: #f6f7f9;
   margin-top: .5rem;
 }
-/* the wrappers around the various results views --- */
+/* the wrappers around the various results views --------------------------- */
 .wb-results-json,
 .wb-results-table,
 .wb-results-tree,
@@ -146,8 +146,8 @@
   text-align: right;
 }
 
-/* bucket inference sidebar -------------------- */
-.insights-sidebar { /* wrapper for sidebar area */
+/* bucket inference sidebar ------------------------------------------------- */
+.insights-sidebar { /* wrapper for sidebar area ----------------------------- */
   -webkit-box-flex: 0;
   flex: 0 0 auto;
   padding-left: 2rem;
@@ -194,35 +194,41 @@
   font-weight: 600;
 }
 
-/* query history ------------------------------------------------------------ */
+/* workbench query history -------------------------------------------------- */
 .wb-history-controls-inner {
   margin: 0 .25rem;
   font-size: .75rem;
 }
-#qw_history_table {
-  overflow: auto;
-  padding: 0 0 1rem 0;
-}
-#qw_history_dialog .panel-content .filter-input-group {
+.wb-history-dialog .panel-content .filter-input-group {
   margin-bottom: 1rem;
 }
-#qw_history_table section {
+.wb-history-table {
+  padding: 0 0 1rem 0;
+  word-break: break-word;
+}
+.wb-history-table section {
+  display: flex;
+  min-height: 1rem;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  position: relative;
   margin: 0;
   padding: 0;
 }
-#qw_history_table section:last-child {
+.wb-history-table section:last-child {
   border-width: 0;
 }
-#qw_history_table section:hover {
+.wb-history-table section:hover {
   background-color: #ecf3fa;
 }
-#qw_history_table section span {
+.wb-history-table section span {
   padding: .5rem 0;
   min-height: 2rem;
   cursor: pointer;
   line-height: 1.3;
 }
-#qw_history_table section span.selected {
+.wb-history-table section span.selected {
   background-color: #ececec;
 }
 
