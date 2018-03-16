@@ -1,101 +1,163 @@
 <!doctype html>
-<html ng-app="app">
+<html ng-app="qwQuery">
 <head>
 <title>CBQ Query DP</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-<script src="libs/jquery-1.11.3.min.js" type="text/javascript" ></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="manifest" href="../manifest.json">
+    <link rel="mask-icon" href="../safari-pinned-tab.svg" color="#4287d6">
+    <meta name="apple-mobile-web-app-title" content="Couchbase Server">
+    <meta name="application-name" content="Couchbase Server">
+    <meta name="theme-color" content="#fff">
 
-<script src="libs-standalone/angular.js"></script>
-<script src="libs-standalone/angular-ui-router-1.0.0-alpha.1.js"></script>
+    <link rel="stylesheet" type="text/css" href="app/css/cbui-base.css">
+    <link rel="stylesheet" type="text/css" href="app/css/cbui-layout.css">
+    <link rel="stylesheet" type="text/css" href="app/css/cbui-components.css">
+    <link rel="stylesheet" type="text/css" href="app/css/cbui-responsive.css">
 
-<script src="libs-standalone/angular-sanitize.js"></script>
-<script src="libs-standalone/angular-messages.js"></script>
-<script src="libs-standalone/angular-uib-stackedMap.js"></script>
-<script src="libs-standalone/angular-uib-alert.js"></script>
-<script src="libs-standalone/angular-uib-modal.js"></script>
-<script src="libs-standalone/angular-uib.js"></script>
-<script src="libs-standalone/angular-ui-select.js"></script>
-  
-<script src="libs-standalone/mn_auth/mn_auth_config.js"></script>
-<script src="libs-standalone/mn_auth/mn_auth_controller.js"></script>
-<script src="libs-standalone/mn_auth/mn_auth_service.js"></script>
+    <link rel="stylesheet" type="text/css" href="app/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="app/css/modal.css">
+    <link rel="stylesheet" type="text/css" href="app/css/tooltip.css">
+    <link rel="stylesheet" type="text/css" href="libs/selectize.default.css">
+    <link rel="stylesheet" type="text/css" href="libs/angular-ui-select.css">
+    <link rel="stylesheet" type="text/css" href="libs/codemirror.css">
 
-<script src="libs-standalone/mn_about_dialog/mn_about_dialog_controller.js"></script>
-<script src="libs-standalone/mn_about_dialog/mn_about_dialog_service.js"></script>
+    <!-- script src="libs-standalone/jquery-1.11.3.min.js" type="text/javascript" ></script-->
+    <script src="libs-standalone/jquery-3.3.1.slim.js" type="text/javascript" ></script>
 
-<script src="libs-standalone/lodash.compat.js"></script>
-<script src="libs-standalone/lodash.mixin.js"></script>
-<script src="libs/sorttable.js"></script>
+    <script src="libs/codemirror.js"></script>
+    <script src="libs/beautify.js"></script>
+    <script src="libs/codemirror.javascript.js"></script>
+    <script src="libs/angular.js"></script>
+    <script src="libs/angular-animate.js"></script>
+    <script src="libs/angular-sanitize.js"></script>
+    <script src="libs/angular-messages.js"></script>
+    <script src="libs/angular-ui-router-1.0.0-rc.1.js"></script>
+    <script src="libs/angular-uib-stackedMap.js"></script>
+    <script src="libs/angular-uib-dropdown.js"></script>
+    <script src="libs/angular-uib-multiMap.js"></script>
+    <script src="libs/angular-uib-modal.js"></script>
+    <script src="libs/angular-uib-position.js"></script>
+    <script src="libs/angular-uib-tooltip.js"></script>
+    <script src="libs/angular-uib-spock.js"></script>
+    <script src="libs/angular-ui-select.js"></script>
+    <script src="libs/angular-ui-codemirror.js"></script>
+    <script src="libs/clipboard.js"></script>
+    <script src="libs/ngclipboard.js"></script>
 
-<script src="app-standalone.js"></script>
-<script src="mn_focus_me.js"></script>
+    <script src="libs/ui-ace.js"></script>
+    <script src="libs/ace/ace.js"></script>
+    <script src="libs/ace/ext-language_tools.js"></script>
+    <script src="libs/ace/mode-json.js"></script>
+    <script src="libs/ace/mode-n1ql.js"></script>
+    <script src="libs/ace/mode-sql-plus-plus.js"></script>
+    <script src="libs/ace/mode-javascript.js"></script>
 
-<script src="libs-standalone/components/mn_buckets_stats.js"></script>
-<script src="libs-standalone/components/mn_filters.js"></script>
-<script src="libs-standalone/components/mn_http.js"></script>
-<script src="libs-standalone/components/directives/mn_autocomplete_off.js"></script>
-<script src="libs-standalone/components/directives/mn_spinner.js"></script>
-<script src="libs-standalone/components/mn_tasks_details.js"></script>
-<script src="libs-standalone/components/mn_pending_query_keeper.js"></script>
-<script src="libs-standalone/components/mn_permissions.js"></script>
-<script src="libs-standalone/components/mn_jquery.js"></script>
-<script src="libs-standalone/components/mn_pool_default.js"></script>
-<script src="libs-standalone/components/mn_pools.js"></script>
+    <script src="libs/lodash.compat.js"></script>
 
-<script src="libs-standalone/mn_admin/mn_buckets/mn_buckets_service.js"></script>
-<script src="libs-standalone/mn_admin/mn_servers/mn_servers_service.js"></script>
-<script src="libs-standalone/mn_admin/mn_settings/cluster/mn_settings_cluster_service.js"></script>
-<script src="libs-standalone/mn_admin/mn_groups/mn_groups_service.js"></script>
+    <script src="app-standalone.js"></script>
 
-<script src="qw_constants_service_standalone.js"></script>
-<script src="qw_query_controller.js"></script>
-<script src="qw_query_plan_service.js"></script>
-<script src="qw_query_service.js"></script>
-<script src="ui-current/data_display/qw-json-tree.directive.js"></script>
-<script src="ui-current/data_display/qw-json-table.directive.js"></script>
-<script src="ui-current/query_plan_viz/qw-explain-viz.directive.js"></script>
-<script src="long_press/qw-long-press.directive.js"></script>
-<script src="ui-current/schema_display/qw_query_schema_display.directive.js"></script>
+    <script src="app/components/mn_alerts.js"></script>
+    <script src="app/components/mn_buckets_stats.js"></script>
+    <script src="app/components/mn_helper.js"></script>
+    <script src="app/components/mn_filters.js"></script>
+    <script src="app/components/mn_jquery.js"></script>
+    <script src="app/components/mn_pending_query_keeper.js"></script>
+    <script src="app/components/mn_permissions.js"></script>
+    <script src="app/components/mn_pools.js"></script>
+    <script src="app/components/mn_pool_default.js"></script>
+    <script src="app/components/mn_promise_helper.js"></script>
+    <script src="app/components/mn_tasks_details.js"></script>
 
-<script src="libs/ui-ace.js" type="text/javascript" charset="utf-8"></script>
-<script src="libs/ace/ace.js" type="text/javascript" charset="utf-8"></script>
-<script src="libs/ace/ext-language_tools.js" type="text/javascript"></script>
-<script src="libs/Blob.js" type="text/javascript" charset="utf-8"></script>
-<script src="libs/FileSaver.js" type="text/javascript" charset="utf-8"></script>
- 
-<link rel="stylesheet" type="text/css" href="libs-standalone/template/alert/alert.css">
-<link rel="stylesheet" type="text/css" href="libs-standalone/template/modal/modal.css">
+    <script src="app/components/directives/mn_autocomplete_off.js"></script>
+    <script src="app/components/directives/mn_element_crane/mn_element_crane.js"></script>
 
-<link rel="stylesheet" type="text/css" href="libs-standalone/layout-default-latest.css">
-<link rel="stylesheet" type="text/css" href="libs-standalone/selectize.default.css">
+    <script src="app/mn_admin/mn_buckets/mn_buckets_service.js"></script>
+    <script src="app/mn_admin/mn_servers/mn_servers_service.js"></script>
+    <script src="app/mn_admin/mn_settings/cluster/mn_settings_cluster_service.js"></script>
+    <script src="app/mn_admin/mn_groups/mn_groups_service.js"></script>
 
-<link rel="stylesheet" type="text/css" href="app-standalone.css">
+    <script src="app/mn_auth/mn_auth_config.js"></script>
+    <script src="app/mn_auth/mn_auth_service.js"></script>
 
-<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-base.css">
-<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-layout.css">
-<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-components.css">
-<link rel="stylesheet" type="text/css" href="libs-standalone/cbui-responsive.css">
+    <script src="qw_query_controller.js"></script>
+    <script src="qw_constants_service.js"></script>
+    <script src="qw_query_plan_service.js"></script>
+    <script src="qw_json_csv_service.js"></script>
+    <script src="qw_doc_editor_controller.js"></script>
+    <script src="qw_query_monitor_controller.js"></script>
+    <script src="qw_query_service.js"></script>
+    <script src="qw_fix_long_number_service.js"></script>
 
-<link rel="stylesheet" type="text/css" href="ui-current/data_display/qw-json-tree-table.css">
-<link rel="stylesheet" type="text/css" href="ui-current/schema_display/qw_query_schema_display.css">
-<link rel="stylesheet" type="text/css" href="ui-current/query_plan_viz/qw-query-plan-viz.css">
-<link rel="stylesheet" type="text/css" href="ui-current/query.css">
+    <script src="ui-current/schema_display/qw_query_schema_display.directive.js"></script>
+    <script src="ui-current/data_display/qw-json-tree.directive.js"></script>
+    <script src="ui-current/data_display/qw-json-datatable.directive.js"></script>
+    <script src="ui-current/data_display/qw-json-table.directive.js"></script>
+    <script src="ui-current/data_display/qw-json-table-editor.directive.js"></script>
+    <script src="ui-current/query_plan_viz/qw-explain-viz.directive.js"></script>
+    <script src="ui-current/query_plan_viz/qw-explain-viz-d3.directive.js"></script>
+
+    <script src="long_press/qw-long-press.directive.js"></script>
+    <script src="ui-current/json-validator/qw-json-validator.directive.js"></script>
+
+    <script src="n1ql_parser/n1ql.js"></script>
+
+
+    <link rel="stylesheet" href="ui-current/query.css">
+    <link rel="stylesheet" href="ui-current/data_display/qw-json-tree-table.css">
+
+    <script id="template/modal/backdrop.html" type="text/ng-template">
+      <div
+         class="modal-backdrop in dialog_overlay dialog_full_screen"
+         ng-class="{in: animate}"
+         ng-style="{'z-index': 1040 + (index && 1 || 0) + index*10}">
+      </div>
+    </script>
+    <script id="template/modal/window.html" type="text/ng-template">
+      <div
+         tabindex="-1"
+         role="dialog"
+         class="row items-center items-top dialog_main_wrapper break-all-modal"
+         ng-class="windowTopClass"
+         ng-style="{'z-index': 1050 + index*10}">
+        <div class="panel dialog">
+          <a
+             class="ui-dialog-titlebar-close modal-close"
+             ng-click="$parent.$dismiss('X')">
+            X
+          </a>
+          <div ng-transclude></div>
+        </div>
+      </div>
+    </script>
+    <script id="template/tooltip/tooltip-popup.html" type="text/ng-template">
+      <div class="tooltip-inner" ng-bind="content"></div>
+    </script>
+    <script id="template/tooltip/tooltip-html-popup.html" type="text/ng-template">
+      <div class="tooltip-inner" ng-bind-html="contentExp()"></div>
+    </script>
 
 
 </head>
-<body ng-controller="qwQueryController as qc">
+<body>
   <div>
-    <div id="header_bar">
-      <h3 style="margin-left: 0.5em; margin-top: 0.750em; margin-bottom: 0em; color: black;vertical-align: middle;">
+    <header>
+      <span class="logobug-wrapper">
       <img style="vertical-align: middle; margin-right: 1em" width="140" height="32"
-          src="/images/logo.svg" />
+          src="/images/cb_logo_bug_white.svg" />
          Stand-Alone Query Workbench {{ qc.version }}
-      </h3> 
-    </div>
+      </span>
     <div id="spacer_bar"></div>
+    <div class="row flex-right">
+      <mn-element-depot name="actions"></mn-element-depot>
+    </div>
+    </header>
 
-    <div class="container">
+    <div class="container" style="margin-left:10px">
       <div ui-view></div>
     </div>
   </div>

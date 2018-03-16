@@ -18,10 +18,20 @@ SET (GOVERSION 1.7.3)
 
 SET (CBQ_GUI_PROJ github.com/couchbase/query-ui)
 SET (CBQ_GUI_SRC "${CMAKE_CURRENT_SOURCE_DIR}/goproj/src/${CBQ_GUI_PROJ}")
+SET (CORE_UI_SRC "${CMAKE_CURRENT_SOURCE_DIR}/ns_server/priv/public/ui")
+
 GoInstall (TARGET cbq-gui PACKAGE ${CBQ_GUI_PROJ}
   GOPATH "${CMAKE_CURRENT_SOURCE_DIR}/goproj" "${CMAKE_CURRENT_SOURCE_DIR}/godeps"
   INSTALL_PATH "." GOVERSION ${GOVERSION})
+  
+# move the query-ui code 
 INSTALL (DIRECTORY "${CBQ_GUI_SRC}/query-ui" DESTINATION "./static")
+
+# copy the ns_server core ui code as well
+INSTALL (DIRECTORY "${CORE_UI_SRC}/app" DESTINATION "./static/query-ui")
+INSTALL (DIRECTORY "${CORE_UI_SRC}/libs" DESTINATION "./static/query-ui")
+
+# and a license
 INSTALL (PROGRAMS "${CBQ_GUI_SRC}/LICENSE.txt" DESTINATION ".")
 IF (WIN32)
   INSTALL (PROGRAMS "${CBQ_GUI_SRC}/launch-cbq-gui.bat" DESTINATION ".")
