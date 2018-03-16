@@ -18,7 +18,7 @@
 #  You may or may not need these depending on the Couchbase version. E.g.
 #           Couchbase Server 4.1.2
 #
-export GUI_PORT=:8095
+export GUI_PORT=:8097
 export COUCHBASE_URL=http://127.0.0.1:8091
 export CBUSER=
 export CBPASS=

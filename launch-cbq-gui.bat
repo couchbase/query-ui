@@ -12,7 +12,7 @@ rem COUCHBASE_URL is the URL you would go to to see the Couchbase web console
 rem USER and PASS and the administrator login/password for the Couchbase web console. You should
 rem  not need to set them unless you run into errors.
 
-set GUI_PORT=:8095
+set GUI_PORT=:8097
 set COUCHBASE_URL=http://127.0.0.1:8091
 set USER=
 set PASS=
