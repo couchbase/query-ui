@@ -1,21 +1,24 @@
 /* document editor --------------------------------------------------------- */
-#doc_editor_tabular {
+.doc-editor {
   margin-bottom: -50px;
 }
-#doc_editor_tabular .controls {
+.doc-editor .controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
   margin: 0 0 1.5rem 0;
   font-size: .875rem;
 }
-#doc_editor_tabular .controls .column {
+.doc-editor .controls .column {
   margin-right: .5rem;
 }
-#doc_editor_tabular .controls label {
+.doc-editor .controls label {
   font-size: .875rem;
 }
-#doc_editor_tabular .ui-select-container.single {
+.doc-editor .ui-select-container.single {
   margin-bottom: -2px!important;
 }
-#doc_editor_tabular .cbui-select .selectize-input {
+.doc-editor .cbui-select .selectize-input {
   line-height: 2.1;
 }
 .doc-editor-results {
@@ -24,6 +27,41 @@
   width: 100%;
 }
 
+.doc-editor-row {
+  white-space: nowrap;
+  padding: .25rem 0;
+  vertical-align: top;
+}
+.doc-editor-cell {
+  display: inline-block;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  vertical-align: top;
+  white-space: normal;
+  font-size: .875rem;
+  padding: 0 1rem 0 .25rem;
+}
+input.ng-invalid-number {
+  background-color: #f9e9ea; /* red-7 */
+}
+
+/* small square buttons for the document editor ---------------------------- */
+.btn.square-button {
+  min-width: 1rem;
+  padding: .5rem;
+  margin-right: .25rem;
+  border-radius: 4px;
+}
+.btn.square-button[disabled] {
+  background-color: #d3ccd3;
+}
+.square-button .icon {
+  vertical-align: top;
+  color: #fff;
+  font-size: inherit;
+}
+
+/* shadows to indicate more content if you scroll  ------------------------- */
 .scroll-shadow-horizontal {
   box-shadow: -8px 0px 8px -6px rgba(33,33,33,0.5);
   position: absolute;
@@ -34,22 +72,19 @@
   z-index: 100;
   background-color: #fff;
 }
-
 .scroll-shadow-bottom {
-    position: relative;
-    z-index: 2;
-
-    box-shadow: 0px -10px 10px -10px #000 inset;
-
-    height: 20px;
-    margin-top: -20px;
-    margin-right: 5px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0px -10px 10px -10px #000 inset;
+  height: 20px;
+  margin-top: -20px;
+  margin-right: 5px;
 }
 
-
+/* force visible scrollbars   ---------------------------------------------- */
 .show-scrollbar::-webkit-scrollbar {
-width: 10px; /* force scrollbars to appear with this size */
-height: 10px;
+  width: 10px; /* force scrollbars to appear with this size */
+  height: 10px;
 }
 .show-scrollbar::-webkit-scrollbar-track { /* force track to appear*/
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
@@ -63,60 +98,21 @@ height: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
 }
 
-#doc_editor_tabular .cbui-table-cell {
-  min-width: 140px;
-  padding-right: .25rem;
-}
-#doc_editor_tabular .cbui-tablerow.padding-tight {
-  padding: .25rem 0 0 .75rem;
-}
-#doc_editor_tabular .cbui-table-cell input,
-#doc_editor_tabular .cbui-table-cell textarea {
-  width: 98%;
-}
-#doc_editor_tabular .cbui-table-header-filled {
-  padding-right: 1rem;
-}
-#doc_editor_tabular .cbui-table-header-filled.padding-right-0 {
-  padding-right: 0;
-}
-input.ng-invalid-number {
-  background-color: #f9e9ea; /* red-7 */
-}
-
-/* Buttons for the document editor ----------------------------------------- */
-.flex-grow-1-25 {
-  flex-grow: 1.25;
-}
-.btn.qw-doc-editor {
-  min-width: 1rem;
-  padding: .5rem;
-  margin-right: .25rem;
-  border-radius: 4px;
-}
-.btn.qw-doc-editor[disabled] {
-  background-color: #d3ccd3;
-}
-.btn .qw-editor-btn {
-  vertical-align: top;
-  color: #fff;
-  font-size: inherit;
-}
-/* doc editor editing dialog ----------------------------------------------- */
+/* doc editor resizable JSON editing dialog -------------------------------- */
 .dialog-resizable {
   overflow: hidden;
   resize: both;
 }
 
 /* query monitoring tables ------------------------------------------------- */
-#active_table .cbui-table-header,
-#completed_table .cbui-table-header,
-#prepareds_table .cbui-table-header {
+.qm-table-active .cbui-table-header,
+.qm-table-completed .cbui-table-header,
+.qm-table-prepared .cbui-table-header {
   cursor: pointer;
 }
 
 /* query monitoring statistics --------------------------------------------- */
-#query_stats {
+.qm-stats {
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -133,7 +129,7 @@ input.ng-invalid-number {
   font-size: .688rem;
   box-shadow: 0 -36px 28px -12px #fff;
 }
-#query_stats .column {
+.qm-stats .column {
   flex: 1 0 auto;
   white-space: nowrap;
   max-width: 240px;
@@ -141,20 +137,20 @@ input.ng-invalid-number {
   line-height: 2;
   height: 100%;
 }
-#query_stats .column.vertical-divider {
+.qm-stats .column.vertical-divider {
   border-right: 1px solid #d1d1d1;
 }
-#query_stats .column.narrow {
+.qm-stats .column.narrow {
   flex: 0 1 0;
 }
-#query_stats .column.wide {
+.qm-stats .column.wide {
   flex: 0 0 auto;
   max-width: inherit;
 }
-#query_stats .column span {
+.qm-stats .column span {
   display: inline-block;
 }
-#query_stats hr {
+.qm-stats hr {
   margin: .25rem 0;
 }
 

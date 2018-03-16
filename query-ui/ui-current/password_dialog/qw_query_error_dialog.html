@@ -1,4 +1,4 @@
-<div class="dialog-lg" id="bucket_file_dialog">
+<div class="dialog-med">
   <div class="panel-header">
     <h2 class="ellipsis">{{error_title}}</h2>
   </div>
@@ -11,13 +11,14 @@
   </div>
   <div class="panel-footer">
     <a ng-hide="{{hide_cancel}}"
-       ng-click="$dismiss('cancel')"
-       href="">
+       ng-click="$dismiss('cancel')">
       Cancel
     </a>
     <button
        type="submit"
-       ng-click="!errors() && $close('ok')">Okay</button>
+       ng-click="!errors() && $close('ok')">
+      Continue
+    </button>
   </div>
   </form>
 </div>

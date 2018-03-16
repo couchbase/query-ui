@@ -38,7 +38,7 @@
   <div id="monitoring_tables" ng-if="qc.validated.monitoringAllowed()">
 
 <!-- ACTIVE QUERIES TABLE  ************************************  -->
-    <div id="active_table" class="cbui-table" ng-if="qmc.isSelected(1)">
+    <div class="qm-table-active cbui-table" ng-if="qmc.isSelected(1)">
       <!-- table wrapper -->
       <div class="cbui-table-header padding-left">
         <!-- table header row, no <section> wrapper -->
@@ -104,9 +104,9 @@
       </section>
     </div>
 
-<!-- COMPLETED TABLE  ************************************  -->
+<!-- COMPLETED TABLE  ***************************************************  -->
 
-    <div id="completed_table" class="cbui-table" ng-if="qmc.isSelected(2)">
+    <div class="qm-table-completed cbui-table" ng-if="qmc.isSelected(2)">
       <div class="cbui-table-header padding-left">
         <span class="cbui-table-cell flex-grow-3 wrap" ng-click="qmc.update_completed_sort('statement')">query
             <span ng-if="qmc.show_up_caret_completed('statement')" class="icon fa-caret-up"></span>
@@ -179,9 +179,9 @@
       </section>
     </div>
 
-<!-- PREPARED TABLE  ************************************  -->
+<!-- PREPARED TABLE  *****************************************************  -->
 
-    <div id="prepareds_table" class="cbui-table" ng-if="qmc.isSelected(3)">
+    <div class="qm-table-prepared cbui-table" ng-if="qmc.isSelected(3)">
       <div class="cbui-table-header padding-left">
         <span  class="cbui-table-cell flex-grow-3 wrap" ng-click="qmc.update_prepared_sort('statement')">query
           <span ng-if="qmc.show_up_caret_prepared('statement')" class="icon fa-caret-up"></span>
@@ -226,7 +226,7 @@
   </div>
 
 <!-- QUERY STATISTICS ****************************************************** -->
-  <div id="query_stats" ng-if="qc.validated.monitoringAllowed()">
+  <div class="qm-stats" ng-if="qc.validated.monitoringAllowed()">
 
     <div class="column vertical-divider" ng-if="qc.validated.clusterStatsAllowed()">
       <span class="width-6">{{qmc.stats["query_requests_250ms"].title}}</span> <span class="text-right width-6">{{qmc.getAverageStat("query_requests_250ms") | number:1}}</span><br>

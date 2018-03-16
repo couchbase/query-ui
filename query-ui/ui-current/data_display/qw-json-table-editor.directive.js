@@ -361,7 +361,7 @@
     // We have widths for each column, so we can create the header row
     //
     var columnHeaders = '<div class="data-table-header-row">';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1 + 'px">&nbsp;</span>';
+    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">&nbsp;</span>';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id</span>';
 
     // we may need an unnamed column for things that don't have field names
@@ -372,7 +372,7 @@
 
     // if we have non-objects, leave a separate column just for them with no header
     // header for "save" button
-    columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width:' + columnWidthPx*1 + 'px">&nbsp;</span>';
+    // columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width:' + columnWidthPx*1 + 'px">&nbsp;</span>';
     // header for each column
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
       columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
@@ -417,34 +417,34 @@
         var invalidName = formName + '.$invalid';
         result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + 4)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
-        '<div class="data-table-editor-row" ' +
+        '<div class="doc-editor-row" ' +
         'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
-        // button to update record in the first column
-        result += '<span class="data-table-cell" style="width:' + columnWidthPx*1 + 'px"> ' +
-        //'<a class="btn qw-doc-editor" ' +
-        //'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
-        //'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
-        //'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
+        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
-        '<a class="btn qw-doc-editor" ' +
+        '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.editDoc(' + row +')" ' +
-        'title="Edit document as JSON"><span class="icon fa-edit qw-editor-btn"></span></a>' +
+        'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ' +
+        '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + '" ' +
         'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
-        'title="Make a copy of this document"><span class="icon fa-copy qw-editor-btn"></span></a>' +
+        'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ' +
+        '<a class="btn square-button" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
-        'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
+        'title="Delete this document"><span class="icon fa-trash"></span></a>' +
+
+        '<a class="btn square-button" ' +
+        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+        'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
+        'title="Save changes to document"><span class="icon fa-save"></span></a>' +
 
         '</span>';
 
         // put the meta().id in the next column
-        result += '<span class="data-table-cell" style="width:' + columnWidthPx*2 +
+        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 +
           'px"><span  ';
         if (object[row].meta || object[row].xattrs)
           result += ' class="cursor-pointer blue-1" uib-tooltip-html="\'' + getTooltip(object[row]) + '\'" ' +
@@ -459,7 +459,7 @@
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
-          result += '<span class="data-table-cell" style="width:' + meta.rowWidths[row]*columnWidthPx + 'px">';
+          result += '<span class="doc-editor-cell" style="width:' + meta.rowWidths[row]*columnWidthPx + 'px">';
 
           // if this row is a subarray or primitive, put it here
           var data = object[row].data;
@@ -473,13 +473,13 @@
 
         // now the field values, if we are showing tables
 
-        result += '<span ng-show="dec.options.show_tables" class="data-table-cell ajtd-type-bool" style="width:' +
-        columnWidthPx*1 + 'px"> ' +
-        '<a class="btn qw-doc-editor" ' +
-        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
-        'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
-        'title="Save changes to document"><span class="icon fa-save qw-editor-btn"></span></a>' +
-        '</span>';
+      //  result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell ajtd-type-bool" style="width:' +
+      //  columnWidthPx*1 + 'px"> ' +
+      //  '<a class="btn square-button" ' +
+      //  'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+      //  'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
+      //  'title="Save changes to document"><span class="icon fa-save square-button"></span></a>' +
+      //  '</span>';
 
         Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
           var item = object[row].data[key];
@@ -487,16 +487,16 @@
           var disabled = !!object[row].rawJSON;
           var childHTML = (item || item === 0 || item === "") ?
               makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
-              result += '<span ng-show="dec.options.show_tables" class="data-table-cell" style="width: ' + 
+              result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
               columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
         });
 
         // otherwise, a truncated version of the JSON
-        
+
         var json = JSON.stringify(object[row].data);
         if (json.length > max_length)
           json = json.substring(0,max_length) + '...';
-        result += '<span ng-hide="dec.options.show_tables" class="data-table-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
+        result += '<span ng-hide="dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
         + mySanitize(json) + '</span>';
 
         // for some reason I couldn't get the form from $scope, so the following acts as a sentinel that I can search for
@@ -508,24 +508,24 @@
 
       // what to show for BINARY documents? They're not editable
       else if (object[row].meta && object[row].meta.type === "base64") {
-        result += '<form name="' + formName + '">' + '<div class="data-table-editor-row" ' +
+        result += '<form name="' + formName + '">' + '<div class="doc-editor-row" ' +
           'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
         // span where the buttons would go, all disabled except include delete
-        result += '<span class="data-table-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
-        '<a class="btn qw-doc-editor" ng-disabled="true"><span class="icon fa-save qw-editor-btn"></span></a>' +
+        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
+        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-save"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ng-disabled="true"><span class="icon fa-copy qw-editor-btn"></span></a>' +
+        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-copy"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ng-disabled="true"><span class="icon fa-edit qw-editor-btn"></span></a>' +
+        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-edit"></span></a>' +
 
-        '<a class="btn qw-doc-editor" ng-click="dec.deleteDoc(' + row +')" ' +
-        'title="Delete this document"><span class="icon fa-trash qw-editor-btn"></span></a>' +
+        '<a class="btn square-button" ng-click="dec.deleteDoc(' + row +')" ' +
+        'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
         '</span>';
 
         // and the id and metadata
-        result += '<span class="data-table-cell" style="width: ' + 2*columnWidthPx  +
+        result += '<span class="doc-editor-cell" style="width: ' + 2*columnWidthPx  +
           'px;"><span class="cursor-pointer " ';
         if (object[row].meta)
           result += 'uib-tooltip-html="\'' + getTooltip(object[row].meta) + '\'" ' +
@@ -538,7 +538,7 @@
 
         //console.log("Got row: " + JSON.stringify(object[row]));
 
-        result += '<span class="data-table-cell" style="width: 100%;">Binary Document: ' + binary + '</span>';
+        result += '<span class="doc-editor-cell" style="width: 100%;">Binary Document: ' + binary + '</span>';
 
         result += '</div></form>'; // end of the row for the top level object
       }
@@ -797,11 +797,11 @@
 
       // for each object in the array, output all the column (and unnamed) values
       _.forEach(object, function (item, index) {
-        result += '<div class="data-table-editor-row">'; // new div for each row
+        result += '<div class="doc-editor-row">'; // new div for each row
 
         // if there exist unnamed objects in the array, output them in the first column
         if (unnamedWidth) {
-          result += '<span class="data-table-cell" style="width: ' + unnamedWidth*columnWidthPx + 'px">';
+          result += '<span class="doc-editor-cell" style="width: ' + unnamedWidth*columnWidthPx + 'px">';
 
           // is this row an array or primitive?
           if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))
@@ -818,7 +818,7 @@
 
           // if it's an empty object, just say so
           if (_.keys(item).length == 0)
-            result += '<span class="data-table-cell" style="width: ' + columnWidthPx + 'px">empty object</span>';
+            result += '<span class="doc-editor-cell" style="width: ' + columnWidthPx + 'px">empty object</span>';
 
           else _.forIn(keys, function(b,key) {
             var value = item ? item[key] : null;
@@ -829,14 +829,14 @@
             if (_.isArray(value) || _.isPlainObject(value)) {
               var childSize = {width: 1};
               var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize, disabled);
-              result += '<span class="data-table-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
+              result += '<span class="doc-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
 
             // primitive values also use an input form generated recursively
             else {
               var childSize = {width: 1};
               var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize, disabled);
-              result += '<span class="data-table-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
+              result += '<span class="doc-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
 
           });
@@ -845,7 +845,7 @@
 
         // if the item wasn't an object, add filler cells for the empty fields
         else _.forIn(keys, function(b,key) {
-          result += '<span class="data-table-cell empty" style="width: ' + columnWidthPx + 'px"></span>';
+          result += '<span class="doc-editor-cell empty" style="width: ' + columnWidthPx + 'px"></span>';
         });
 
         result += '</div>'; // end the row
@@ -885,7 +885,7 @@
 
       var columnWidths = {};
 
-      var dataRow = '<div class="data-table-editor-row">';
+      var dataRow = '<div class="doc-editor-row">';
 
       // figure out the widths of each column
       _.forIn(object, function(value,key) {
@@ -893,7 +893,7 @@
         var childHTML = makeHTMLtable(value,prefix + "['" + key + "']",childSize, disabled);
         if (!columnWidths[key] || childSize.width > columnWidths[key])
           columnWidths[key] = childSize.width;
-        dataRow += '<span class="data-table-cell" style="width: ' + columnWidths[key]*columnWidthPx + 'px">' + childHTML + '</span>';
+        dataRow += '<span class="doc-editor-cell" style="width: ' + columnWidths[key]*columnWidthPx + 'px">' + childHTML + '</span>';
       });
       dataRow += '</div>';
 
@@ -901,7 +901,7 @@
       var totalWidth = 0;
       var columnHeaders = '<div class="data-table-editor-header-row">';
       _.forIn(object, function(value,key) {
-        columnHeaders += '<span class="data-table-cell" style="width: ' +
+        columnHeaders += '<span class="doc-editor-cell" style="width: ' +
         columnWidths[key]*columnWidthPx + 'px;">' + mySanitize(key) +'</span>';
         totalWidth += columnWidths[key];
       });
