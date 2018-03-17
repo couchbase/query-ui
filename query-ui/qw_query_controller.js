@@ -1115,7 +1115,11 @@
     //
 
     function updateValidNodes() {
-      qc.validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
+      var pool = mnPoolDefault.latestValue();
+      if (pool.value && pool.value.nodes)
+          qc.validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
+      else
+          qc.validNodes = [];
     }
 
 
