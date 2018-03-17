@@ -26,7 +26,7 @@ export STATIC=./static/
 #
 # Check to make sure we are in the same directory as the necessary files
 #
-if ([ ! -f query-ui  ] || [ ! -d static]); then
+if ([ ! -f query-ui  ] || [ ! -d static ]); then
     echo "You must run this script in the same directory as query-ui and the static folder."
     exit 0
 fi
