@@ -1,17 +1,9 @@
-#header_bar {
-  display: inline-block; 
-  white-space: nowrap;
-  margin-bottom: 10px;
+.main-content {
+  margin: 0;
 }
-
-#spacer_bar {
-  width: 100%;
-  height: 30px;
-  background-color: rgb(102,158,224);
-  margin-bottom: 5px;
+.wb-wrapper {
+  margin: 0 !important;
 }
-
-#query_box, #query_footer, #result_header, #result_box {
-  margin-left: 20px !important;
+.logobug-wrapper {
+  line-height: 1;
 }
-
