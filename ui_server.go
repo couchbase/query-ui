@@ -1,7 +1,7 @@
 package main
 
 import (
- 	"flag"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -123,22 +123,22 @@ var serverUrl, serverUser, serverPass string
 
 func launchWebService() {
 	fmt.Printf("Launching query web service.\n")
-	
+
 	//
 	// error checking
 	//
-	
+
 	if len(*WEBCONTENT) == 0 {
-	    fmt.Printf("Unable to start proxy, -webcontent was not specified.")
-	    return
+		fmt.Printf("Unable to start proxy, -webcontent was not specified.")
+		return
 	}
-	
+
 	// if we were not given a URL for the QUERYENGINE,
 	// the datastore allows us to get /pools, find out where every service is
 	if len(*DATASTORE) > 0 {
 		fmt.Printf("    Using CB Server at: %s\n", *DATASTORE)
 
-		serverUrl = strings.TrimRight(*DATASTORE,"/")
+		serverUrl = strings.TrimRight(*DATASTORE, "/")
 		serverUser = *USER
 		serverPass = *PASS
 
@@ -225,12 +225,14 @@ func launchWebService() {
 	if len(serverHost) > 0 {
 		mgmtProxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "http", Host: serverHost})
 		mgmtProxy.Director = toMgmt
-		//mgmtProxy.ModifyResponse = fromMgmt
+		mgmtProxy.ModifyResponse = fromMgmt
 		http.Handle("/pools", mgmtProxy)
-		http.Handle("/uilogin", mgmtProxy)
-		http.Handle("/uilogout", mgmtProxy)
-		http.Handle("/whoami", mgmtProxy)
-		http.Handle("/pools/", mgmtProxy)
+		http.Handle("/pools/default", mgmtProxy)
+		http.Handle("/pools/default/buckets", mgmtProxy)
+		http.Handle("/pools/default/checkPermissions", mgmtProxy)
+		//		http.Handle("/uilogin", mgmtProxy)
+		//		http.Handle("/uilogout", mgmtProxy)
+		//		http.Handle("/whoami", mgmtProxy)
 	}
 
 	// handle queries at the service prefix
@@ -294,7 +296,7 @@ func toQuery(r *http.Request) {
 		//
 
 		if strings.EqualFold(r.Header.Get("Content-Type"), "application/json") {
-    		queryParams := new(QueryParams)
+			queryParams := new(QueryParams)
 			err := json.NewDecoder(r.Body).Decode(&queryParams)
 			if err != nil {
 				log(fmt.Sprintf("Error decoding JSON body: %v\n", err))
@@ -305,7 +307,7 @@ func toQuery(r *http.Request) {
 				//log(fmt.Sprintf("Got creds: %v\n", queryParams.Creds))
 			}
 
-    		queryParams.Creds = append(queryParams.Creds, credentials...)
+			queryParams.Creds = append(queryParams.Creds, credentials...)
 
 			newParamBytes, cerr := json.Marshal(queryParams)
 			//log(fmt.Sprintf("Got new params: %s\n", string(newParamBytes)))
@@ -335,23 +337,23 @@ func toQuery(r *http.Request) {
 			cci := values.Get("client_context_id")
 			creds := values.Get("creds")
 
-            // creds is JSON, array of Credential
-            var cred_array []Credential
+			// creds is JSON, array of Credential
+			var cred_array []Credential
 			//log(fmt.Sprintf("Got creds bytes: %v\n", creds))
-			if (len(creds) > 0) {
-			    err = json.Unmarshal([]byte(creds), &cred_array) 
-			    if (err != nil) {
-			        log(fmt.Sprintf("Error unmarshalling creds: %v\n", err))			        
-			        return
-			    }
-			    cred_array = append(cred_array, credentials...)
-			    creds_bytes, err := json.Marshal(cred_array)
-			    if (err != nil) {
-                    log(fmt.Sprintf("Error re-marshalling creds: %v\n", err))
-			        return
-			    }
-			    creds = string(creds_bytes)
-    			//log(fmt.Sprintf("Added u-creds, new bytes: %v\n", string(creds_bytes)))
+			if len(creds) > 0 {
+				err = json.Unmarshal([]byte(creds), &cred_array)
+				if err != nil {
+					log(fmt.Sprintf("Error unmarshalling creds: %v\n", err))
+					return
+				}
+				cred_array = append(cred_array, credentials...)
+				creds_bytes, err := json.Marshal(cred_array)
+				if err != nil {
+					log(fmt.Sprintf("Error re-marshalling creds: %v\n", err))
+					return
+				}
+				creds = string(creds_bytes)
+				//log(fmt.Sprintf("Added u-creds, new bytes: %v\n", string(creds_bytes)))
 			}
 
 			data := url.Values{}
@@ -361,7 +363,7 @@ func toQuery(r *http.Request) {
 			newBody := data.Encode()
 			r.Body = ioutil.NopCloser(strings.NewReader(newBody))
 			r.ContentLength = int64(len(newBody))
-		} 
+		}
 	}
 
 	//log(fmt.Sprintf("Got new request form: %v\n", r.PostForm))
@@ -384,21 +386,27 @@ func toImage(r *http.Request) {
 }
 
 func toMgmt(r *http.Request) {
-	//fmt.Printf(" pre toMgmt, host %v path %v\n", r.Host, r.URL.Path)
-	r.Host = serverHost
-	r.URL.Host = r.Host
-	r.URL.Scheme = "http"
+	//fmt.Printf(" pre toMgmt, host %v path %v\n  method: %v MethodGet %v\n\n", r.Host, r.URL.Path, r.Method, http.MethodGet)
 
-	// if we have a login/password, use it for authorization
-	if USER != nil && len(*USER) > 0 && PASS != nil && len(*PASS) > 0 {
-		//fmt.Printf(" Setting user to %s and pass to %s\n",*USER,*PASS)
-		r.SetBasicAuth(*USER, *PASS)
-	}
-	//fmt.Printf(" post toMgmt, host %v path %v\n", r.Host, r.URL.Path)
+	// for safely, we should only handle GET requests to pools and pools/default, and POST to checkPermissions
+	if r.Method == http.MethodGet || (r.Method == http.MethodPost && r.URL.Path == "/pools/default/checkPermissions") {
+		r.Host = serverHost
+		r.URL.Host = r.Host
+		r.URL.Scheme = "http"
+
+		// if we have a login/password, use it for authorization
+		if USER != nil && len(*USER) > 0 && PASS != nil && len(*PASS) > 0 {
+			//fmt.Printf(" Setting user to %s and pass to %s\n",*USER,*PASS)
+			r.SetBasicAuth(*USER, *PASS)
+		}
+		//fmt.Printf("   post toMgmt, host %v path %v\n\n", r.Host, r.URL.Path)
+	} //else {
+	//    fmt.Printf("   REJECTED!")
+	//}
 }
 
 func fromMgmt(resp *http.Response) error {
-	fmt.Printf("Got response: %v\n", resp.Header)
+	//fmt.Printf("Got response: %v\n", resp.Header)
 	delete(resp.Header, "Www-Authenticate")
 	//fmt.Printf("After got response: %v\n",resp.Header)
 	return nil

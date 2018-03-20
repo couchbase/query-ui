@@ -13,6 +13,7 @@
     'qwValidJson',
     'mnPendingQueryKeeper',
     'mnServersService',
+    'mnPools',
     'mnPoolDefault',
     'mnPermissions',
     'ngclipboard',
@@ -115,7 +116,8 @@
     // we can only work if we have a query node. This service checks for
     // a query node a reports back whether it is present.
 
-    .factory('validateQueryService', function($http,mnServersService,mnPermissions, mnPoolDefault) {
+    .factory('validateQueryService', function($http,mnServersService,mnPermissions, mnPools, mnPoolDefault) {
+      mnPools.get().then(function() {_isEnterprise = mnPools.export.isEnterprise;});
       var _checked = false;              // have we checked validity yet?
       var _valid = false;                // do we have a valid query node?
       var _bucketsInProgress = false;    // are we retrieving the list of buckets?
@@ -126,8 +128,10 @@
       var _bucketList = [];
       var _bucketStatsList = [];
       var _callbackList = [];
+      var _isEnterprise = false;
       var service = {
           inProgress: function()       {return !_checked || _bucketsInProgress;},
+          isEnterprise: function()     {return(_isEnterprise);},
           valid: function()            {return _valid;},
           validBuckets: function()     {return _bucketList;},
           otherStatus: function()      {return _otherStatus;},

@@ -164,7 +164,7 @@
 
     // are we enterprise?
 
-    qc.isEnterprise = mnPools.export.isEnterprise;
+    qc.isEnterprise = validateQueryService.isEnterprise;
 
     qc.copyResultAsCSV = function() {copyResultAsCSV();};
 
@@ -279,7 +279,21 @@
       //console.log("current text : " + JSON.stringify(qc.inputEditor.getSession().getValue()));
       //console.log("current query: " + qc.lastResult.query);
 
-      // weird bug - sometimes the query is not up to date with the text area
+      //
+      // only support auto-complete if we're in enterprise mode
+      //
+      
+      if (qc.isEnterprise() && !qc.inputEditor.getOption("enableBasicAutocompletion")) {
+        // make autocomplete work with 'tab', and auto-insert if 1 match
+        autocomplete.Autocomplete.startCommand.bindKey = "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab";
+        autocomplete.Autocomplete.startCommand.exec = autocomplete_exec;
+        // enable autocomplete
+        qc.inputEditor.setOptions({enableBasicAutocompletion: true});
+        // add completer that works with path expressions with '.'
+        langTools.setCompleters([identifierCompleter,langTools.keyWordCompleter]);
+      }
+
+     // weird bug - sometimes the query is not up to date with the text area
       if (qc.inputEditor.getSession().getValue() != qc.lastResult.query)
         qc.lastResult.query = qc.inputEditor.getSession().getValue();
 
@@ -380,20 +394,6 @@
         _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
 
       qc.inputEditor = _editor;
-
-      //
-      // only support auto-complete if we're in enterprise mode
-      //
-
-      if (mnPools.export.isEnterprise) {
-        // make autocomplete work with 'tab', and auto-insert if 1 match
-        autocomplete.Autocomplete.startCommand.bindKey = "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab";
-        autocomplete.Autocomplete.startCommand.exec = autocomplete_exec;
-        // enable autocomplete
-        _editor.setOptions({enableBasicAutocompletion: true});
-        // add completer that works with path expressions with '.'
-        langTools.setCompleters([identifierCompleter,langTools.keyWordCompleter]);
-      }
 
       focusOnInput();
 

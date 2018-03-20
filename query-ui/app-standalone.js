@@ -23,7 +23,6 @@
         .config(function($stateProvider,$urlRouterProvider) {
         $urlRouterProvider.otherwise('/standalone/workbench');
 
-        console.log("Configuring app...");
       $stateProvider
       .state('app', {
         abstract: true,
@@ -46,7 +45,7 @@
     // a query node a reports back whether it is present.
 
         .factory('validateQueryService', function($http,mnServersService,mnPermissions, mnPoolDefault, mnPools) {
-            mnPools.get();
+            mnPools.get().then(function() {_isEnterprise = mnPools.export.isEnterprise;});
             mnPoolDefault.get();
       var _checked = false;              // have we checked validity yet?
       var _valid = false;                // do we have a valid query node?
@@ -58,8 +57,10 @@
       var _bucketList = [];
       var _bucketStatsList = [];
       var _callbackList = [];
+      var _isEnterprise = false;
       var service = {
           inProgress: function()       {return !_checked || _bucketsInProgress;},
+          isEnterprise: function()     {return(_isEnterprise);},
           valid: function()            {return _valid;},
           validBuckets: function()     {return _bucketList;},
           otherStatus: function()      {return _otherStatus;},
