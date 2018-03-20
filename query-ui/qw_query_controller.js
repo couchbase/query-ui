@@ -91,7 +91,7 @@
     //
 
     qc.aceInputOptions = {
-        mode: qwConstantsService.queryMode,
+        mode: 'n1ql',
         showGutter: true,
         onLoad: qc.aceInputLoaded,
         onChange: qc.aceInputChanged,
@@ -428,7 +428,16 @@
           }
 
           callback(null,results);
-        }
+        },
+
+        /*
+         * We need to override the 'retrievePrecedingIdentifier' regex which treats path
+         * expressions separated by periods as separate identifiers, when for the purpose
+         * of autocompletion, we want to treat paths as a single identifier. We also need
+         * to recognize backtick as part of an identifier.
+         */
+
+        identifierRegexps: [/[a-z\.`:A-Z_0-9\$\-\u00A2-\uFFFF]/]
     };
 
     //
