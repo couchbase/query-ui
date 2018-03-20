@@ -7,7 +7,7 @@
                     'qwJsonTree',
                     'qwJsonDataTable',
                     'qwJsonTable',
-                    'qwExplainViz',
+                    'qwExplainVizD3',
                     'qwLongPress',
                     'mnBucketsService',
                     'mnHelper',
