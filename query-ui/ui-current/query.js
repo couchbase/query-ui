@@ -83,8 +83,8 @@
         name: 'Documents',
         state: 'app.admin.doc_editor',
         includedByState: 'app.admin.doc_editor',
-        plugIn: 'adminTab',
-        after: 'indexes'
+        plugIn: 'workbenchTab',
+        index: 0
       });
 
       //
