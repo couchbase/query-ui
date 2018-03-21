@@ -585,11 +585,11 @@
     // how expensive are we? Color background by cost, if we know
     if (plan && plan.time_percent) {
       if (plan.time_percent >= 20)
-        result.level = "node-expensive-3";
+        result.level = "wb-explain-node-expensive-3";
       else if (plan.time_percent >= 5)
-        result.level = "node-expensive-2";
+        result.level = "wb-explain-node-expensive-2";
       else if (plan.time_percent >= 1)
-        result.level = "node-expensive-1";
+        result.level = "wb-explain-node-expensive-1";
     }
 
     // if the plan has a 'predecessor', it is either a single plan node that should be
