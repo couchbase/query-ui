@@ -8,10 +8,10 @@
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
   docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams',
-    'qwQueryService', 'validateQueryService', 'qwConstantsService', 'qwFixLongNumberService','$state'];
+    'qwQueryService', 'validateQueryService', 'qwConstantsService', 'mnPermissions','qwFixLongNumberService','$state'];
 
   function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService,
-      validateQueryService, qwConstantsService, qwFixLongNumberService, $state) {
+      validateQueryService, qwConstantsService, mnPermissions, qwFixLongNumberService, $state) {
 
     var dec = this;
 
@@ -51,7 +51,7 @@
     dec.editDoc = editDoc;
 
     dec.updatingRow = -1;
-    
+
     dec.bucketChanged = function(item) {$state.go('app.admin.doc_editor',{bucket: item});};
 
     //
@@ -95,15 +95,10 @@
       var promise = saveDoc(row,newJson);
 
       // if it succeeded, mark the row as clean
-      promise.then(function success() {
+      promise.then(function success() { // errors are handled by saveDoc()
         form.$setPristine();
-      },
-      function error(resp) { // what to do if it fails?
-        var data = resp.data, status = resp.status;
-        showErrorDialog("Error Copying Document", JSON.stringify(data));
-       });
-
-      dec.updatingRow = -1;
+        dec.updatingRow = -1;
+      });
     }
 
     //
@@ -127,7 +122,8 @@
 
       promise.then(function success(resp) {
 
-        var res = showDocEditor(dialogScope.file.name,'{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
+        var res = showDocEditor(dialogScope.file.name,
+            '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
 
         res.promise.then(function success(resp) {
           //console.log("saving new doc...");
@@ -183,7 +179,7 @@
         function error(resp) {
           var data = resp.data, status = resp.status;
 
-          showErrorDialog("Error Copying Document", JSON.stringify(data));
+          showErrorDialog("Error Copying Document", JSON.stringify(data),true);
           dec.updatingRow = -1;
         });
 
@@ -321,7 +317,10 @@
       else
         doc_string = JSON.stringify(dec.options.current_result[row].data,null,2);
 
-      var res = showDocEditor(dec.options.current_result[row].id, doc_string);
+      var meta_obj = {meta: dec.options.current_result[row].meta,
+          xattrs: dec.options.current_result[row].xattrs};
+      var meta_str = "'" + JSON.stringify(meta_obj,null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;') + "'";
+      var res = showDocEditor(dec.options.current_result[row].id, doc_string,meta_str);
       res.promise.then(getSaveDocClosure(res.scope,row));
     }
 
@@ -329,7 +328,7 @@
     // bring up the JSON editing dialog for edit or create new documents
     //
 
-    function showDocEditor(id,json) {
+    function showDocEditor(id,json,meta) {
       var dialogScope = $rootScope.$new(true);
 
       // use an ACE editor for editing the JSON document
@@ -338,6 +337,8 @@
           showGutter: true,
           useWrapMode: true,
           onLoad: function(_editor) {
+            _editor.$blockScrolling = Infinity;
+            _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
             dialogScope.editor = _editor;
             _editor.getSession().on("changeAnnotation", function() {
               var annot_list = _editor.getSession().getAnnotations();
@@ -355,8 +356,10 @@
           },
           $blockScrolling: Infinity
       };
+
       dialogScope.doc_id = id;
       dialogScope.doc_json = json;
+      dialogScope.doc_meta = meta;
       dialogScope.header = "Edit Document";
 
       // are there any syntax errors in the editor?
@@ -517,7 +520,7 @@
     function retrieveDocs_n1ql() {
       if (dec.options.queryBusy) // don't have 2 retrieves going at once
         return;
-      
+
       //console.log("Retrieving docs via N1QL...");
 
       // create a query based on either limit/skip or where clause
@@ -563,10 +566,20 @@
           getDocsForIdArray(idArray).then(function() {dec.options.queryBusy = false;});
         }
 
+        else if (data.errors) {
+          var errorText = "";
+          for (var i=0; i< data.errors.length; i++)
+            errorText += "Code: " + data.errors[i].code + ', Message: "' + data.errors[i].msg + '"    \n';
+
+          showErrorDialog("Error with document retrieval query.", errorText, true);
+
+          dec.options.queryBusy = false;
+        }
+
         // shouldn't get here
         else {
           dec.options.queryBusy = false;
-          console.log("N1ql Query Fail/Success, current Result: " + JSON.stringify(dec.options.current_result));
+         console.log("N1ql Query Fail/Success, data: " + JSON.stringify(data));
         }
       },
 
@@ -583,7 +596,7 @@
           for (var i=0; i< data.errors.length; i++)
             errorText += "Code: " + data.errors[i].code + ', Message: "' + data.errors[i].msg + '"    \n';
 
-          showErrorDialog("Error with document retrieval query.", errorText)
+          showErrorDialog("Error with document retrieval query.", errorText, true);
 
           //console.log("Got error: " + dec.options.current_result);
         }
@@ -659,7 +672,7 @@
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result);
+          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);
         }
       }
     }
@@ -748,9 +761,12 @@
         var data = resp.data, status = resp.status;
         //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
 
-        if (data && data.errors) {
-          dec.options.current_result = JSON.stringify(data.errors);
-          showErrorDialog("Error with document retrieval.",dec.options.current_result);
+        if (data) {
+          if (data.errors)
+            dec.options.current_result = JSON.stringify(data.errors);
+          else
+            dec.options.current_result = JSON.stringify(data,null,2);
+          showErrorDialog("Error with document retrieval.",dec.options.current_result,true);
         }
 
         dec.options.queryBusy = false;
@@ -799,7 +815,7 @@
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          showErrorDialog("Error getting list of buckets.", dec.options.current_result);
+          showErrorDialog("Error getting list of buckets.", dec.options.current_result,true);
         }
       });
 

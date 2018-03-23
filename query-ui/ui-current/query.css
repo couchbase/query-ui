@@ -27,6 +27,12 @@
   width: 100%;
 }
 
+.doc-editor-fieldset {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 0;
+}
 .doc-editor-row {
   white-space: nowrap;
   padding: .25rem 0;

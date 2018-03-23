@@ -84,6 +84,7 @@
         state: 'app.admin.doc_editor',
         includedByState: 'app.admin.doc_editor',
         plugIn: 'workbenchTab',
+        ngShow: "rbac.cluster.bucket['.'].data.docs.read",
         index: 0
       });
 

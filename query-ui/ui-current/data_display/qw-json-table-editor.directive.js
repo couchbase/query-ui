@@ -18,9 +18,9 @@
 
   'use strict';
   angular.module('qwJsonTableEditor', [])
-  .directive('qwJsonTableEditor', ['$compile','$timeout',getTableEditor]);
+  .directive('qwJsonTableEditor', ['$compile','$timeout','mnPermissions',getTableEditor]);
 
-  function getTableEditor($compile,$timeout) {
+  function getTableEditor($compile,$timeout,mnPermissions) {
     return {
       restrict: 'E',
 //    scope: { data: '=qwJsonTableEditor' },
@@ -28,8 +28,10 @@
       template: '<div></div>',
       link: function (scope, element) {
 
-        scope.$watch('data', createEditorFromJson); 
-        
+        scope.$watch('data', createEditorFromJson);
+        scope.rbac = mnPermissions.export;
+        scope.getTooltip = getTooltip;
+
         function createEditorFromJson(json) {
 
           // start with an empty div, if we have data convert it to HTML
@@ -38,13 +40,13 @@
           var warning;
           htmlElement = element;
           if (!json)
-            json = data;
+            json = tdata;
 
           var content = "<div>{}</div>";
 
           // do we have data to work with?
           if (json && _.isArray(json)) {
-            data = json;
+            tdata = json;
             scope.results = json;
             scope.dec = scope.controller;
             meta = getMetaData(json);
@@ -56,7 +58,7 @@
             header = angular.element(createHTMLheader(meta,scope.controller));
             wrapper = '<div class="data-table-wrapper show-scrollbar"></div>';
 
-            var tableHTML = makeHTMLTopLevel(json,meta,scope.dec);
+            var tableHTML = makeHTMLTopLevel();
             table = angular.element(tableHTML);
           }
 
@@ -65,9 +67,9 @@
           //
 
           else {
-            wrapper = '<div class="data-table-wrapper">Unable to process data, see log.</div>';
-            console.log("Unable to create tabular view for data:");
-            console.log(JSON.stringify(json,null,4));
+            wrapper = '<div class="data-table-wrapper">Unable to process data.<br><br>' + json + '</div>';
+            //console.log("Unable to create tabular view for data:");
+            //console.log(JSON.stringify(json,null,4));
           }
 
           // even if the json was empty, we have a wrapper element
@@ -104,19 +106,19 @@
                   sortTable(this,scope,$compile,$timeout);
                 },false);
               }
-             }); 
+             });
             //htmlElement.append(header);
           }
 
           htmlElement.append(wrapperElement);
-        }        
+        }
       }
     };
   }
-  
+
   // globals used for sorting, etc.
 
-  var data;           // all our data
+  var tdata;           // all our data
   var meta;           // metadata on data sizing
   var htmlElement;    // the html element, which we need to change after sorting
   var header;         // the html element for the table header
@@ -162,9 +164,9 @@
     // now sort the data, clear the div, and render the visible region
 
     meta["outerKey"] = "data";
-    data.sort(compare);
+    tdata.sort(compare);
     wrapperElement.empty();
-    var tableHTML = makeHTMLTopLevel(data,meta);
+    var tableHTML = makeHTMLTopLevel();
     var table = angular.element(tableHTML);
     if (table) {
       $compile(table)(scope,function(compiledTab) {
@@ -390,14 +392,14 @@
   // MAGIC NUMBER: how many pixels wide for each column
   var columnWidthPx = 150;
 
-  function makeHTMLTopLevel(object, meta) {
+  function makeHTMLTopLevel() {
     var result = '';
     var max_length = 128;
 
     // we expect an array of objects, which we turn into an HTML table.
 
     // if the array is empty, say so
-    if (!_.isArray(object) || object.length == 0)
+    if (!_.isArray(tdata) || tdata.length == 0)
       return('<p class="error">No Results</p>');
 
 
@@ -408,15 +410,16 @@
     // for each object in the array, output all the possible column values
     //
 
-    for (var row=0; row < object.length; row++) {
+    for (var row=0; row < tdata.length; row++) {
       // handle JSON docs
-      if (object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json")  {// they'd all better have these
+      if (tdata[row].data && tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json")  {// they'd all better have these
         var formName = 'row' + row + 'Form';
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
         var invalidName = formName + '.$invalid';
         result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + 4)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
+        '<fieldset class="doc-editor-fieldset" ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.write">' +
         '<div class="doc-editor-row" ' +
         'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
@@ -428,11 +431,12 @@
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + '" ' +
+        'ng-disabled="' + invalidName + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.write" ' +
         'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ' +
+        'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.write" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
@@ -446,11 +450,11 @@
         // put the meta().id in the next column
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 +
           'px"><span  ';
-        if (object[row].meta || object[row].xattrs)
-          result += ' class="cursor-pointer blue-1" uib-tooltip-html="\'' + getTooltip(object[row]) + '\'" ' +
+        if (tdata[row].meta || tdata[row].xattrs)
+          result += ' class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
           'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
-        result += '>' + mySanitize(object[row].id) + '</span>';
-        if (object[row].rawJSON)
+        result += '>' + mySanitize(tdata[row].id) + '</span>';
+        if (tdata[row].rawJSON)
           result += '<span class="fa-stack icon-info" ' +
             'uib-tooltip-html="\'Document contains numbers too large for tabular editing, use JSON editor instead.\'"' +
             'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
@@ -462,7 +466,7 @@
           result += '<span class="doc-editor-cell" style="width:' + meta.rowWidths[row]*columnWidthPx + 'px">';
 
           // if this row is a subarray or primitive, put it here
-          var data = object[row].data;
+          var data = tdata[row].data;
           if (_.isArray(data) || _.isString(data) || _.isNumber(data) || _.isBoolean(data)) {
             var childSize = {width: 1};
             result += makeHTMLtable(data,'[' + row + '].data',childSize);
@@ -482,9 +486,9 @@
       //  '</span>';
 
         Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
-          var item = object[row].data[key];
+          var item = tdata[row].data[key];
           var childSize = {width: 1};
-          var disabled = !!object[row].rawJSON;
+          var disabled = !!tdata[row].rawJSON;
           var childHTML = (item || item === 0 || item === "") ?
               makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
               result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
@@ -493,7 +497,7 @@
 
         // otherwise, a truncated version of the JSON
 
-        var json = JSON.stringify(object[row].data);
+        var json = JSON.stringify(tdata[row].data);
         if (json.length > max_length)
           json = json.substring(0,max_length) + '...';
         result += '<span ng-hide="dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
@@ -503,11 +507,11 @@
         // to see if anything changed in any form of the editor
         result +=  '<span id="somethingChangedInTheEditor" ng-if="!' + pristineName + '"></span>';
 
-        result += '</div></form>'; // end of the row for the top level object
+        result += '</div></fieldset></form>'; // end of the row for the top level object
       }
 
       // what to show for BINARY documents? They're not editable
-      else if (object[row].meta && object[row].meta.type === "base64") {
+      else if (tdata[row].meta && tdata[row].meta.type === "base64") {
         result += '<form name="' + formName + '">' + '<div class="doc-editor-row" ' +
           'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
@@ -527,16 +531,16 @@
         // and the id and metadata
         result += '<span class="doc-editor-cell" style="width: ' + 2*columnWidthPx  +
           'px;"><span class="cursor-pointer " ';
-        if (object[row].meta)
-          result += 'uib-tooltip-html="\'' + getTooltip(object[row].meta) + '\'" ' +
-          'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'"';
-        result += '>' + mySanitize(object[row].id) + '</span></span>';
+        if (tdata[row].meta)
+          result += 'uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
+          'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
+        result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
-        var binary = object[row].base64 ? object[row].base64.substring(0,150) : " not available from query service";
-        if (object[row].base64 && object[row].base64.length > 150)
+        var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " not available from query service";
+        if (tdata[row].base64 && tdata[row].base64.length > 150)
           binary += "...";
 
-        //console.log("Got row: " + JSON.stringify(object[row]));
+        //console.log("Got row: " + JSON.stringify(data[row]));
 
         result += '<span class="doc-editor-cell" style="width: 100%;">Binary Document: ' + binary + '</span>';
 
@@ -555,56 +559,8 @@
   }
 
   function getTooltip(row) {
-    var result = "";
-    if (row.meta && Object.keys(row.meta).length > 0) {
-      result += "meta: <ul>"  + xAttrsToHTML(row.meta);
-      //for (var name in row.meta)
-      //  result += '<li>' + name + ": " + mySanitize(row.meta[name]) + "</li>";
-      result += "</ul>";
-    }
-
-    if (row.xattrs && Object.keys(row.xattrs).length > 0) {
-      result += "xattrs: <ul>" + xAttrsToHTML(row.xattrs);
-      //for (var name in row.xattrs)
-      //  result += '<li>' + name + ": " + mySanitize(row.xattrs[name]) + "</li>";
-      result += "</ul>";
-    }
-
-    return result;
-  }
-
-  function xAttrsToHTML(obj) {
-    var result = "";
-
-    for (var field in obj) {
-      var val = obj[field];
-      // add the field name as a list item
-      result += '<li>' + field;
-
-      // for a primitive value, just add that as well
-      if (_.isString(val) || _.isNumber(val) || _.isBoolean(val))
-        result += " - " + mySanitize(val);
-
-      // if it's an array, create a sublist with a line for each item
-      else if (_.isArray(val)) {
-        result += '<ul>';
-        for (var i=0; i<val.length; i++)
-          if (_.isString(val[i]))
-            result += '<li>' + mySanitize(val[i]) + '</li>';
-          else
-            result += xAttrsToHTML(val[i]);
-        result += '</ul>';
-      }
-
-      // if it's an object, have a sublist for it
-      else if (_.isPlainObject(val)) {
-        result += '<ul>';
-        result += xAttrsToHTML(val);
-        result += '</ul>';
-      }
-      result += '</li>';
-    }
-    return result;
+    var meta = {meta: tdata[row].meta, xattrs: tdata[row].xattrs};
+    return("'" + JSON.stringify(meta,null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;') + "'");
   }
 
 
