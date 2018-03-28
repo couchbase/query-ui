@@ -832,7 +832,7 @@
 
       // parse tree has array of array of strings, we will build
       if (parseTree) for (var p=0;p<parseTree.length; p++) {
-        for (var j=0; j<parseTree[p].pathsUsed.length; j++) {
+        if (parseTree[p].pathsUsed) for (var j=0; j<parseTree[p].pathsUsed.length; j++) {
           //console.log("Got path p: " + p + ", j: " + j + ", " + JSON.stringify(parseTree[p].pathsUsed[j]));
           if (parseTree[p].pathsUsed[j]) {
             var field = "";
