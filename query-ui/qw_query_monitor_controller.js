@@ -119,7 +119,7 @@
       if (qmc.cancelledQueries[requestId])
         return("cancelling");
       else
-        return("cancel");
+        return("Cancel");
     }
 
     //
