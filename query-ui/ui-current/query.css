@@ -91,17 +91,18 @@ input.ng-invalid-number {
 .show-scrollbar::-webkit-scrollbar {
   width: 10px; /* force scrollbars to appear with this size */
   height: 10px;
+
 }
 .show-scrollbar::-webkit-scrollbar-track { /* force track to appear*/
-  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+  background-color: #f5f5f5;
   border-radius: 6px;
   -webkit-border-radius: 6px;
 }
 .show-scrollbar::-webkit-scrollbar-thumb { /* force thumb to appear */
   -webkit-border-radius: 6px;
   border-radius: 6px;
-  background: rgba(220,220,220,0.8);
-  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+  background-color: #ececec;
+  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.15);
 }
 
 /* doc editor resizable JSON editing dialog -------------------------------- */
