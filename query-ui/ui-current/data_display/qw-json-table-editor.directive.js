@@ -394,7 +394,7 @@
 
   function makeHTMLTopLevel() {
     var result = '';
-    var max_length = 128;
+    var max_length = 200; // the old doc editor truncated the JSON at 200 chars, so we will also
 
     // we expect an array of objects, which we turn into an HTML table.
 
@@ -452,7 +452,7 @@
           'px"><span  ';
         if (tdata[row].meta || tdata[row].xattrs)
           result += ' class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
-          'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
+          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
         result += '>' + mySanitize(tdata[row].id) + '</span>';
         if (tdata[row].rawJSON)
           result += '<span class="fa-stack icon-info" ' +
@@ -533,7 +533,7 @@
           'px;"><span class="cursor-pointer " ';
         if (tdata[row].meta)
           result += 'uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
-          'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
+          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
         var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " not available from query service";
@@ -559,7 +559,7 @@
   }
 
   function getTooltip(row) {
-    var meta = {meta: tdata[row].meta, xattrs: tdata[row].xattrs};
+    var meta = {doc_size: JSON.stringify(tdata[row].data).length, meta: tdata[row].meta, xattrs: tdata[row].xattrs};
     return("'" + JSON.stringify(meta,null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;') + "'");
   }
 
