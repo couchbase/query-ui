@@ -623,7 +623,6 @@
 
         promiseArray.push($http({
           url: rest_url,
-          transformResponse: qwFixLongNumberService.fixLongInts,
           method: "GET"
         }).then(getDocReturnHandler(i),
             getDocReturnErrorHandler(i,idArray[i])));
@@ -641,25 +640,27 @@
       return function success(resp) {
         if (resp && resp.status == 200 && resp.data) {
 
-          var data = resp.data;
-          //console.log("Got single doc results for " + position + ": " + JSON.stringify(data));
+          var docInfo = resp.data;
+          var docId = docInfo.meta.id;
+          var doc = qwFixLongNumberService.fixLongInts('{ "data": ' + docInfo.json + '}');
+          //console.log("Got single doc results for " + position + ": " + JSON.stringify(doc));
 
           // did we get a json doc back?
-          if (data && data.json && data.meta) {
-            data.meta.type = "json";
+          if (docInfo && docInfo.json && docInfo.meta) {
+            docInfo.meta.type = "json";
             dec.options.current_result[position] =
-              {id: data.meta.id, data: JSON.parse(data.json), meta: data.meta, xattrs: data.xattrs, rawJSON: data.rawJSON};
+              {id: docId, data: doc.data, meta: docInfo.meta, xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null};
           }
 
           // maybe a single binary doc?
-          else if (data && data.meta && (data.base64 === "" || data.base64)) {
-            data.meta.type = "base64";
+          else if (docInfo && docInfo.meta && (docInfo.base64 === "" || docInfo.base64)) {
+            docInfo.meta.type = "base64";
             dec.options.current_result[position] =
-              {id: data.meta.id, base64: data.base64, meta: data.meta, xattrs: data.xattrs};
+              {id: docInfo.meta.id, base64: docInfo.base64, meta: docInfo.meta, xattrs: docInfo.xattrs};
           }
 
           else
-            console.log("Unknown document: " + JSON.stringify(data));
+            console.log("Unknown document: " + JSON.stringify(docInfo));
         }
       }
     }

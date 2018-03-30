@@ -456,7 +456,7 @@
         result += '>' + mySanitize(tdata[row].id) + '</span>';
         if (tdata[row].rawJSON)
           result += '<span class="fa-stack icon-info" ' +
-            'uib-tooltip-html="\'Document contains numbers too large for tabular editing, use JSON editor instead.\'"' +
+            'uib-tooltip-html="\'Document contains numbers too large for tabular editing, edit as JSON instead (with button to the left).\'"' +
             'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
             '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';
         result += '</span>';
@@ -530,19 +530,19 @@
 
         // and the id and metadata
         result += '<span class="doc-editor-cell" style="width: ' + 2*columnWidthPx  +
-          'px;"><span class="cursor-pointer " ';
-        if (tdata[row].meta)
-          result += 'uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
+          'px;"><span '
+        if (tdata[row].meta || tdata[row].xattrs)
+          result += 'class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
           'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
-        var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " not available from query service";
+        var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " base64 not available";
         if (tdata[row].base64 && tdata[row].base64.length > 150)
           binary += "...";
 
         //console.log("Got row: " + JSON.stringify(data[row]));
 
-        result += '<span class="doc-editor-cell" style="width: 100%;">Binary Document: ' + binary + '</span>';
+        result += '<span class="doc-editor-cell" style="width: 100%;">Binary Document, ' + binary + '</span>';
 
         result += '</div></form>'; // end of the row for the top level object
       }
@@ -559,7 +559,11 @@
   }
 
   function getTooltip(row) {
-    var meta = {doc_size: JSON.stringify(tdata[row].data).length, meta: tdata[row].meta, xattrs: tdata[row].xattrs};
+    var meta = {};
+    if (tdata[row].data)
+      meta.doc_size = JSON.stringify(tdata[row].data).length;
+    meta.meta = tdata[row].meta;
+    meta.xattrs = tdata[row].xattrs;
     return("'" + JSON.stringify(meta,null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;') + "'");
   }
 
