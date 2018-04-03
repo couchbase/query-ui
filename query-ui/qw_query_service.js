@@ -1085,7 +1085,7 @@
           //console.log("explain success: " + JSON.stringify(data));
 
           // now check the status of what came back
-          if (data && data.status == "success" && data.results && data.results.length > 0) {
+          if (data && data.status == "success" && data.results && data.results.length > 0) try {
             var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
             newResult.explainResult =
             {explain: data.results[0],
@@ -1097,6 +1097,12 @@
             var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
             if (problem_fields.length > 0)
               newResult.explainResult.problem_fields = problem_fields;
+          }
+          // need to handle any exceptions that might occur
+          catch (exception) {
+            console.log("Exception analyzing query plan: " + exception);
+            newResult.explainResult = "Internal error generating query plan: " + exception;
+            newResult.explainResultText = "Internal error generating query plan: " + exception;
           }
 
           else if (data.errors) {
@@ -1323,7 +1329,7 @@
 
         // did we get query timings in the result? If so, update the plan
 
-        if (data.profile && data.profile.executionTimings) {
+        if (data.profile && data.profile.executionTimings) try {
           var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings,null);
           newResult.explainResult =
           {explain: data.profile.executionTimings,
@@ -1339,13 +1345,19 @@
           if (problem_fields.length > 0)
             newResult.explainResult.problem_fields = problem_fields;
         }
+        
+        // need to handle any exceptions that might occur
+        catch (exception) {
+          console.log("Exception analyzing query plan: " + exception);
+          newResult.explainResult = "Internal error generating query plan: " + exception;
+        }
 
         newResult.queryDone = true;
 
         // if this was an explain query, change the result to show the
         // explain plan
 
-        if (queryIsExplain && qwConstantsService.autoExplain && data.results && data.results[0] && data.results[0].plan) {
+        if (queryIsExplain && qwConstantsService.autoExplain && data.results && data.results[0] && data.results[0].plan) try {
           var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
           newResult.explainResult =
           {explain: data.results[0],
@@ -1356,6 +1368,12 @@
               tokens: qwQueryService.autoCompleteTokens*/};
           newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           qwQueryService.selectTab(4); // make the explain visible
+        }
+        // need to handle any exceptions that might occur
+        catch (exception) {
+          console.log("Exception analyzing query plan: " + exception);
+          newResult.explainResult = "Internal error generating query plan: " + exception;
+          //newResult.explainResultText = "Internal error generating query plan: " + exception;
         }
 
         // errors should appear in the first tab

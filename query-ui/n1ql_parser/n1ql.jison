@@ -220,7 +220,7 @@
      expression.NewSelf = function()                                 {var e = new expr("Self"); return e;};
      expression.NewSimpleBinding = function(variable, binding_expr)  {var e = new expr("SimpleBinding"); e.ops.variable = variable; e.ops.binding_expr = binding_expr; return e;};
      expression.NewSimpleCase = function(search_term, when_terms, else_term)
-     {var e = new expr("SimpleCase"); e.ops.search_term = search_term; e.ops.when_terms = when_term; e.ops.else_term = else_term; return e;};
+     {var e = new expr("SimpleCase"); e.ops.search_term = search_term; e.ops.when_terms = when_terms; e.ops.else_term = else_term; return e;};
      expression.NewSlice = function(first, second, third)            {var e = new expr("Slice"); e.ops.first = first; e.ops.second = second; e.ops.third = third; return e;};
      expression.NewFunction = function(fname, param_expr, distinct)  {var e = new expr("Function"); e.ops.fname = fname; e.ops.param_expr = param_expr; e.ops.distinct = distinct; return e;};
      expression.NewSub = function(first, second)                     {var e = new expr("Sub"); e.ops.first = first; e.ops.second = second; return e;};
@@ -232,7 +232,10 @@
      algebra.EMPTY_USE = new expr("EMPTY_USE");
      algebra.MapPairs = function(pairs)                                       {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
      algebra.NewAlterIndex = function(keyspace, index_name, opt_using, rename){var a = new expr("AlterIndex"); a.ops.keyspace = keyspace; a.ops.index_name = index_name; a.ops.opt_using = opt_using; a.ops.rename = rename; return a;};
-     algebra.NewBuildIndexes = function(keyspace,opt_index,index_names)       {var a = new expr("BuildIndexes"); a.ops.keyspace = keyspace; a.opt_index = opt_index; a.ops.index_names = index_names; return a;};
+     algebra.NewAnsiJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
+     algebra.NewAnsiNest = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
+     algebra.NewAnsiRightJoin = function(keyspace,join_term,for_ident)       {var a = new expr("AnsiRightJoin"); a.ops.ks = keyspace; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
+     algebra.NewBuildIndexes = function(keyspace,opt_index,index_names)      {var a = new expr("BuildIndexes"); a.ops.keyspace = keyspace; a.opt_index = opt_index; a.ops.index_names = index_names; return a;};
      algebra.NewCreateIndex = function(index_name,keyspace,index_terms,index_partition,index_where,index_using,index_with) 
        {var a = new expr("CreateIndex"); 
        a.ops.index_name = index_name; 
@@ -413,7 +416,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "cast"                          { return("CAST"); }
 "cluster"                       { return("CLUSTER"); }
 "collate"                       { return("COLLATE"); }
-"collection"            { return("COLLECTION"); }
+"collection"                    { return("COLLECTION"); }
 "commit"                        { return("COMMIT"); }
 "connect"                       { return("CONNECT"); }
 "continue"                      { return("CONTINUE"); }
@@ -454,6 +457,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "grant"                         { return("GRANT"); }
 "group"                         { return("GROUP"); }
 "gsi"                           { return("GSI"); }
+"hash"                          { return("HASH"); }
 "having"                        { return("HAVING"); }
 "if"                            { return("IF"); }
 "ignore"                        { return("IGNORE"); }
@@ -490,6 +494,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "missing"                       { return("MISSING"); }
 "namespace"                     { return("NAMESPACE"); }
 "nest"                          { return("NEST"); }
+"nl"                            { return("NL"); }
 "not"                           { return("NOT"); }
 "null"                          { return("NULL"); }
 "number"                        { return("NUMBER"); }
@@ -511,6 +516,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "private"                       { return("PRIVATE"); }
 "privilege"                     { return("PRIVILEGE"); }
 "procedure"                     { return("PROCEDURE"); }
+"probe"                         { return("PROBE"); }
 "public"                        { return("PUBLIC"); }
 "raw"                           { return("RAW"); }
 "realm"                         { return("REALM"); }
@@ -526,6 +532,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "schema"                        { return("SCHEMA"); }
 "select"                        { return("SELECT"); }
 "self"                          { return("SELF"); }
+"semi"                          { return("SEMI"); }
 "set"                           { return("SET"); }
 "show"                          { return("SHOW"); }
 "some"                          { return("SOME"); }
@@ -1059,30 +1066,63 @@ FROM from_term
 
 from_term:
 simple_from_term
-|
-from_term opt_join_type JOIN join_term
 {
-    $$ = algebra.NewJoin($1, $2, $4)
+    $$ = $1
 }
 |
-from_term opt_join_type JOIN index_join_term FOR IDENT
+from_term opt_join_type JOIN simple_from_term on_keys
 {
-    $$ = algebra.NewIndexJoin($1, $2, $4, $6)
+    var ksterm = $4;
+    ksterm.join_keys = $5;
+    $$ = algebra.NewJoin($1, $2, ksterm)
 }
 |
-from_term opt_join_type NEST join_term
+from_term opt_join_type JOIN simple_from_term on_key FOR IDENT
 {
-    $$ = algebra.NewNest($1, $2, $4)
+    var ksterm = $4;
+    ksterm.join_keys = $5;
+    $$ = algebra.NewIndexJoin($1, $2, ksterm, $7)
 }
 |
-from_term opt_join_type NEST index_join_term FOR IDENT
+from_term opt_join_type NEST simple_from_term on_keys
 {
-    $$ = algebra.NewIndexNest($1, $2, $4, $6)
+    var ksterm = $4;
+    ksterm.join_keys = $5;
+    $$ = algebra.NewNest($1, $2, ksterm)
+}
+|
+from_term opt_join_type NEST simple_from_term on_key FOR IDENT
+{
+    var ksterm = $4;
+    ksterm.join_keys = $5;
+    $$ = algebra.NewIndexNest($1, $2, ksterm, $7)
 }
 |
 from_term opt_join_type unnest expr opt_as_alias
 {
     $$ = algebra.NewUnnest($1, $2, $4, $5)
+}
+|
+from_term opt_join_type JOIN simple_from_term ON expr
+{
+    var ksterm = $4;
+    $$ = algebra.NewAnsiJoin($1, $2, ksterm, $6)
+}
+|
+from_term opt_join_type NEST simple_from_term ON expr
+{
+    var ksterm = $4;
+    $$ = algebra.NewAnsiNest($1, $2, ksterm, $6)
+}
+|
+simple_from_term RIGHT opt_outer JOIN simple_from_term ON expr
+{
+    var ksterm = $1;
+    if (ksterm == nil) {
+        yylex.Error("Left hand side of an ANSI RIGHT OUTER JOIN must be a keyspace.")
+    }
+    //ksterm.SetAnsiJoin()  
+    $$ = algebra.NewAnsiRightJoin(ksterm, $5, $7)
 }
 ;
 
@@ -1128,31 +1168,8 @@ FLATTEN
 keyspace_term:
 namespace_term keyspace_name opt_as_alias opt_use
 {
-     $$ = algebra.NewKeyspaceTerm($1, $2, $3, $4.Keys(), $4.Indexes())
-}
-;
-
-join_term:
-keyspace_name opt_as_alias on_keys
-{
-    $$ = algebra.NewKeyspaceTerm("", $1, $2, $3, nil)
-}
-|
-namespace_term keyspace_name opt_as_alias on_keys
-{
-    $$ = algebra.NewKeyspaceTerm($1, $2, $3, $4, nil)
-}
-;
-
-index_join_term:
-keyspace_name opt_as_alias on_key
-{
-    $$ = algebra.NewKeyspaceTerm("", $1, $2, $3, nil)
-}
-|
-namespace_term keyspace_name opt_as_alias on_key
-{
-    $$ = algebra.NewKeyspaceTerm($1, $2, $3, $4, nil)
+     var ksterm = algebra.NewKeyspaceTerm($1, $2, $3, $4.Keys(), $4.Indexes())
+     $$ = ksterm
 }
 ;
 
@@ -1180,21 +1197,62 @@ opt_use:
     $$ = algebra.EMPTY_USE
 }
 |
-use_keys
+USE use_options
 {
-    $$ = algebra.NewUse($1, nil)
-}
+    $$ = $2
+};
+
+use_options:    
+use_keys
 |
 use_index
+|
+join_hint
+|
+use_index join_hint
 {
-    $$ = algebra.NewUse(nil, $1)
+    $$ = $1
+}
+|
+join_hint use_index
+{
+    $$ = $1
+}
+|
+use_keys join_hint
+{
+    $$ = $1
+}
+|
+join_hint use_keys
+{
+    $$ = $1
 }
 ;
 
 use_keys:
-USE opt_primary KEYS expr
+opt_primary KEYS expr
 {
-    $$ = $4
+    $$ = algebra.NewUse($3, nil, algebra.JOIN_HINT_NONE)
+}
+;
+
+use_index:
+INDEX LPAREN index_refs RPAREN
+{
+    $$ = algebra.NewUse(nil, $3, algebra.JOIN_HINT_NONE)
+}
+;
+
+join_hint:
+HASH LPAREN use_hash_option RPAREN
+{
+    $$ = algebra.NewUse(nil, nil, $3)
+}
+|
+NL
+{
+    $$ = algebra.NewUse(nil, nil, algebra.USE_NL)
 }
 ;
 
@@ -1204,13 +1262,6 @@ opt_primary:
 }
 |
 PRIMARY
-;
-
-use_index:
-USE INDEX LPAREN index_refs RPAREN
-{
-    $$ = $4
-}
 ;
 
 index_refs:
@@ -1230,6 +1281,28 @@ index_ref:
 index_name opt_index_using
 {
     $$ = algebra.NewIndexRef($1, $2);
+}
+;
+
+use_hash_option:
+BUILD
+{
+    $$ = algebra.USE_HASH_BUILD
+}
+|
+PROBE
+{
+    $$ = algebra.USE_HASH_PROBE
+}
+;
+
+opt_use_del_upd:
+opt_use
+{
+ //   if $1.JoinHint() != algebra.JOIN_HINT_NONE {
+ //       yylex.Error("Keyspace reference cannot have join hint (USE HASH or USE NL) in DELETE or UPDATE statement")
+ //   }
+    $$ = $1
 }
 ;
 
@@ -1664,7 +1737,7 @@ UPSERT INTO keyspace_ref LPAREN key_expr opt_value_expr RPAREN fullselect opt_re
  *************************************************/
 
 delete:
-DELETE FROM keyspace_ref opt_use opt_where opt_limit opt_returning
+DELETE FROM keyspace_ref opt_use_del_upd opt_where opt_limit opt_returning
 {
     $$ = algebra.NewDelete($3, $4.Keys(), $4.Indexes(), $5, $6, $7)
 }
@@ -1678,17 +1751,17 @@ DELETE FROM keyspace_ref opt_use opt_where opt_limit opt_returning
  *************************************************/
 
 update:
-UPDATE keyspace_ref opt_use set unset opt_where opt_limit opt_returning
+UPDATE keyspace_ref opt_use_del_upd set unset opt_where opt_limit opt_returning
 {
     $$ = algebra.NewUpdate($2, $3.Keys(), $3.Indexes(), $4, $5, $6, $7, $8)
 }
 |
-UPDATE keyspace_ref opt_use set opt_where opt_limit opt_returning
+UPDATE keyspace_ref opt_use_del_upd set opt_where opt_limit opt_returning
 {
     $$ = algebra.NewUpdate($2, $3.Keys(), $3.Indexes(), $4, nil, $5, $6, $7)
 }
 |
-UPDATE keyspace_ref opt_use unset opt_where opt_limit opt_returning
+UPDATE keyspace_ref opt_use_del_upd unset opt_where opt_limit opt_returning
 {
     $$ = algebra.NewUpdate($2, $3.Keys(), $3.Indexes(), nil, $4, $5, $6, $7)
 }
@@ -1942,14 +2015,14 @@ expr opt_where
  *************************************************/
 
 grant_role:
-GRANT ROLE role_list TO user_list
+GRANT role_list TO user_list
 {
-        $$ = algebra.NewGrantRole($3, $5)
+    $$ = algebra.NewGrantRole($2, nil, $4)
 }
 |
 GRANT role_list ON keyspace_list TO user_list
 {
-    $$ = algebra.NewGrantRole($2, $6, $4)
+    $$ = algebra.NewGrantRole($2, $4, $6)
 }
 ;
 
@@ -2040,12 +2113,12 @@ IDENT COLON IDENT
 revoke_role:
 REVOKE role_list FROM user_list
 {
-    $$ = algebra.NewRevokeRole($2, $4);
+    $$ = algebra.NewRevokeRole($2, nil, $4);
 }
 |
 REVOKE role_list ON keyspace_list FROM user_list
 {
-    $$ = algebra.NewRevokeRole($2, $6, $4);
+    $$ = algebra.NewRevokeRole($2, $4, $6);
 }
 ;
 
@@ -2057,9 +2130,9 @@ REVOKE role_list ON keyspace_list FROM user_list
  *************************************************/
 
 create_index:
-CREATE PRIMARY INDEX opt_primary_name ON named_keyspace_ref opt_index_using opt_index_with
+CREATE PRIMARY INDEX opt_primary_name ON named_keyspace_ref index_partition opt_index_using opt_index_with
 {
-    $$ = algebra.NewCreatePrimaryIndex($4, $6, $7, $8)
+    $$ = algebra.NewCreatePrimaryIndex($4, $6, $7, $8, $9)
 }
 |
 CREATE INDEX index_name ON named_keyspace_ref LPAREN index_terms RPAREN index_partition index_where opt_index_using opt_index_with
@@ -2099,9 +2172,9 @@ index_partition:
     $$ = nil
 }
 |
-PARTITION BY exprs
+PARTITION BY HASH LPAREN exprs RPAREN
 {
-    $$ = $3
+    $$ = $5
 }
 ;
 
@@ -2245,21 +2318,9 @@ DROP INDEX named_keyspace_ref DOT index_name opt_index_using
  *************************************************/
 
 alter_index:
-ALTER INDEX named_keyspace_ref DOT index_name opt_index_using rename
+ALTER INDEX named_keyspace_ref DOT index_name opt_index_using index_with
 {
     $$ = algebra.NewAlterIndex($3, $5, $6, $7)
-}
-;
-
-rename:
-/* empty */
-{
-    $$ = ""
-}
-|
-RENAME TO index_name
-{
-    $$ = $3
 }
 ;
 
@@ -2602,7 +2663,7 @@ collection_expr
 paren_expr
 |
 /* For covering indexes */
-COVER expr
+COVER LPAREN expr RPAREN
 {
     $$ = expression.NewCover($2)
 }
