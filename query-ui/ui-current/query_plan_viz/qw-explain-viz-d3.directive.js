@@ -216,8 +216,8 @@
   var svg, g, zoomer;
   var svg_scale = 1.0;
   var lineHeight = 15;        // height for line of text, on which node height is based
-  var interNodeXSpacing = 25; // spacing between nodes horizonally
-  var interNodeYSpacing = 40; // spacing between nodes vertically
+  var minNodeWidthVert = 155; // horizontal spacing for vertical trees
+  var minNodeWidth = 225;     // horizontal spacing for horizontal trees
 
   var canvas_width, canvas_height;
 
@@ -261,7 +261,7 @@
     .attr("d", "M 6 0 V 4 L 0 2 Z"); //this is actual shape for arrowhead
 
     // minimum fixed sizes for nodes, depending on orientation, to prevent overlap
-    var minNodeSize = vert ? [125,lineHeight*7] : [lineHeight*6,195];
+    var minNodeSize = vert ? [minNodeWidthVert,lineHeight*7] : [lineHeight*6,minNodeWidth];
 
     var tree = d3.layout.cluster()
     //.size([height, width])
@@ -512,12 +512,17 @@
     //})
     ;
 
+    // get the approximate linecount by looking at HTML elements
+    //var lines = d.tooltip ? (d.tooltip.match(/<h5>|<li>/gi) || []).length : 0;
+
+    if (d.tooltip && d.tooltip.length > 0) {
     tooltip_div.transition().duration(300).style("display", "block");
     var header_div = tooltip_div.append("div");
     header_div.html('<a class="ui-dialog-titlebar-close modal-close" onclick="console.log(\"click\")"> X </a>');
     tooltip_div.html(d.tooltip)
     .style("left", (d3.event.x + 40 - query_plan_offset.left) + "px")
-    .style("top", (d3.event.y + 40 - query_plan_offset.top) + "px");
+    .style("top", (d3.event.y - query_plan_offset.top/2) + "px");
+    }
 
     d3.event.stopPropagation();
   }
@@ -585,11 +590,11 @@
     // how expensive are we? Color background by cost, if we know
     if (plan && plan.time_percent) {
       if (plan.time_percent >= 20)
-        result.level = "wb-explain-node-expensive-3";
+        result.level = "wb-explain-node-expensive-1";
       else if (plan.time_percent >= 5)
         result.level = "wb-explain-node-expensive-2";
       else if (plan.time_percent >= 1)
-        result.level = "wb-explain-node-expensive-1";
+        result.level = "wb-explain-node-expensive-3";
     }
 
     // if the plan has a 'predecessor', it is either a single plan node that should be
