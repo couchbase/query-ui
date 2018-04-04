@@ -70,25 +70,7 @@
          ng-model="dec.options.offset"
          class="input-short-1">
     </div>
-    <div ng-if="dec.use_n1ql()" class="column margin-top-half flex-grow-2">
-      <label class="inline">Where</label>
-      <span
-         class="fa-stack icon-info"
-         uib-tooltip-html="'Show only documents that satisfy this N1QL WHERE clause.'"
-         tooltip-placement="top"
-         tooltip-append-to-body="true"
-         tooltip-trigger="'mouseenter'">
-        <span class="icon fa-circle-thin fa-stack-2x"></span>
-        <span class="icon fa-info fa-stack-1x"></span>
-      </span>
-      <input
-         type="text"
-         ng-model="dec.options.where_clause"
-         ng-submit="dec.retrieveDocs()"
-         class="width-12"
-         placeholder="e.g., 'meta().id = &quot;some_id&quot; and type = &quot;a_type&quot;'">
-    </div>
-    <div ng-if="!dec.use_n1ql()" class="column flex-grow-2">
+    <div class="column flex-grow-2">
       <label class="inline">Document ID</label>
       <span class="fa-stack icon-info"
           uib-tooltip-html="'Find the document with this ID or leave blank to retrieve documents based on limit and offset.'"
@@ -101,12 +83,32 @@
       <input type="text"
          ng-model="dec.options.doc_id"
          ng-submit="dec.retrieveDocs()"
+         ng-disabled="(dec.options.where_clause.length > 0)"
          placeholder="enter document ID or leave blank"
          class="width-12">
     </div>
+    <div class="column margin-top-half flex-grow-2">
+      <label class="inline">Where</label>
+      <span
+         class="fa-stack icon-info"
+         uib-tooltip-html="'Show only documents that satisfy this N1QL WHERE clause. Only available on nodes running query service for indexed buckets.'"
+         tooltip-placement="top"
+         tooltip-append-to-body="true"
+         tooltip-trigger="'mouseenter'">
+        <span class="icon fa-circle-thin fa-stack-2x"></span>
+        <span class="icon fa-info fa-stack-1x"></span>
+      </span>
+      <input
+         type="text"
+         ng-model="dec.options.where_clause"
+         ng-submit="dec.retrieveDocs()"
+         ng-disabled="!dec.use_n1ql() || (dec.options.doc_id.length > 0)"
+         class="width-12"
+         placeholder="e.g., 'meta().id = &quot;some_id&quot; and type = &quot;a_type&quot;'">
+    </div>
     <div style="display:none;" class="resp-show-sml margin-top-half width-12"></div>
     <button
-       ng-disabled="searchForm.$invalid"
+       ng-disabled="searchForm.$invalid || !dec.options.selected_bucket"
        ng-click="dec.retrieveDocs()"
        class="fix-width-3">
         Retrieve Docs

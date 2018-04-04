@@ -32,8 +32,21 @@
     dec.buckets = [];
     dec.buckets_prim = {};
     dec.buckets_sec = {};
-    dec.use_n1ql = function() {return(validateQueryService.valid())};
+    dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
     dec.options.show_scrollbars = true;
+    
+    function queryableBucket() {
+      if (!dec.options.selected_bucket)
+        return(false);
+      
+      for (var i=0; i< qwQueryService.buckets.length; i++) {
+        if (qwQueryService.buckets[i].id == dec.options.selected_bucket &&
+            (qwQueryService.buckets[i].has_prim || qwQueryService.buckets[i].has_sec))
+          return(true);
+      }
+      
+      return(false);
+    }
 
     //
     //
@@ -675,6 +688,10 @@
           dec.options.current_result = JSON.stringify(data.errors);
           showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);
         }
+        else if (resp.statusText) {
+          dec.options.current_result = JSON.stringify(resp.statusText);
+          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);          
+        }
       }
     }
 
@@ -722,7 +739,7 @@
       if (dec.options.doc_id && dec.options.doc_id.length) {
         getDocsForIdArray([dec.options.doc_id]).then(function()
             {
-          console.log("results: " + JSON.stringify(dec.options.current_result));
+              //console.log("results: " + JSON.stringify(dec.options.current_result));
               dec.options.queryBusy = false;
              });
         return;
@@ -781,9 +798,6 @@
     //
 
     function getBuckets() {
-      //if (dec.use_n1ql())
-     //   return getBuckets_n1ql();
-      //else
         return getBuckets_rest();
     }
 
@@ -806,8 +820,11 @@
           }
 
           // if we didn't see the user-selected bucket, reset selected bucket to the first one
-          if (!default_seen && dec.buckets.length > 0)
-            dec.options.selected_bucket = dec.buckets[0];
+          if (!default_seen)
+            if (dec.buckets.length > 0)
+              dec.options.selected_bucket = dec.buckets[0];
+            else
+              dec.options.selected_bucket = "";
         }
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
 
@@ -838,7 +855,7 @@
 
         // if we don't have any buckets yet, get the bucket list first
         if (dec.buckets.length == 0)
-          getBucketList().then(retrieveDocs_inner);
+          getBuckets().then(retrieveDocs_inner);
         else
           retrieveDocs_inner();
       }
