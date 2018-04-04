@@ -101,6 +101,11 @@
 
               // put a sort listener on the data columns
               var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
+              // allow sorting by id
+              header[0].childNodes[startSortColumn - 1].addEventListener("click",function() {
+                sortTable(this,scope,$compile,$timeout,true);
+              },false);
+
               for (var i=startSortColumn; i < header[0].childNodes.length; i++) {
                 header[0].childNodes[i].addEventListener("click",function() {
                   sortTable(this,scope,$compile,$timeout);
@@ -133,7 +138,7 @@
   var prevSortElem;   // previous header element, for changing sort style
   var sortForward = true;
 
-  function sortTable(spanElem,scope,$compile,$timeout) {
+  function sortTable(spanElem,scope,$compile,$timeout,sortById) {
     //console.log("sortBy: " + spanElem.innerText + ", meta: " + meta);
     // if it's a new field, sort forward by that field
     if (spanElem !== prevSortElem) {
@@ -164,7 +169,10 @@
     // now sort the data, clear the div, and render the visible region
 
     meta["outerKey"] = "data";
-    tdata.sort(compare);
+    if (sortById)
+      tdata.sort(compareById);
+    else
+      tdata.sort(compare);
     wrapperElement.empty();
     var tableHTML = makeHTMLTopLevel();
     var table = angular.element(tableHTML);
@@ -179,6 +187,12 @@
   // compare two rows based on the sort field
   function compare(a,b) {
     return(myCompare(a,b,sortField,meta));
+  }
+
+  // compare two rows based on the doc ID
+  function compareById(a,b) {
+    var direction = (sortForward ? 1 : -1);
+    return a.id.localeCompare(b.id)*direction;
   }
 
   // since we may need to sort subobjects, make our comparison general
@@ -364,7 +378,7 @@
     //
     var columnHeaders = '<div class="data-table-header-row">';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">&nbsp;</span>';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id</span>';
+    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id<span class="caret-subspan"></span></span>';
 
     // we may need an unnamed column for things that don't have field names
     if (meta.hasNonObject) {

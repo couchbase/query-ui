@@ -34,17 +34,17 @@
     dec.buckets_sec = {};
     dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
     dec.options.show_scrollbars = true;
-    
+
     function queryableBucket() {
       if (!dec.options.selected_bucket)
         return(false);
-      
+
       for (var i=0; i< qwQueryService.buckets.length; i++) {
         if (qwQueryService.buckets[i].id == dec.options.selected_bucket &&
             (qwQueryService.buckets[i].has_prim || qwQueryService.buckets[i].has_sec))
           return(true);
       }
-      
+
       return(false);
     }
 
@@ -199,70 +199,6 @@
       });
     }
 
-
-    //
-    // get the metadata and XATTRs for the specified document
-    //
-
-//    function getMeta(row) {
-//      console.log("showing metadata for row " + row + ", id: " + dec.options.current_result[row].id)
-//
-//      var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
-//          "/docs/" + dec.options.current_result[row].id;
-//
-//      $http({
-//        url: rest_url,
-//        method: "GET"
-//      }).then(function success(resp) {
-//        if (resp && resp.status == 200 && resp.data) {
-//          dec.options.current_bucket = dec.options.selected_bucket;
-//
-//          var data = resp.data;
-//
-//          if (!data)
-//            return;
-//
-//          console.log("Got REST results meta: " + JSON.stringify(data.meta) + ", xattrs: " + JSON.stringify(data.xattrs));
-//          var meta = {meta: data.meta, xattrs: data.xattrs};
-//
-//          var dialogScope = $rootScope.$new(true);
-//
-//          // use an ACE editor for editing the JSON document
-//          dialogScope.ace_options = {
-//              mode: 'json',
-//              showGutter: true,
-//              useWrapMode: true,
-//              onLoad: function(_editor) {_editor.setReadOnly(true); _editor.$blockScrolling = Infinity;},
-//              $blockScrolling: Infinity
-//          };
-//          dialogScope.doc_id = dec.options.current_result[row].id;
-//          dialogScope.doc_json = JSON.stringify(meta,null,4);
-//          dialogScope.readonly = true;
-//          dialogScope.header = "Metadata and XAttrs";
-//
-//          //
-//          // put up a dialog box with the JSON in it, if they hit SAVE, save the doc, otherwise
-//          // revert
-//          //
-//
-//          var promise = $uibModal.open({
-//            templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
-//            scope: dialogScope
-//          }).result;
-//
-//        }
-//      },function error(resp) {
-//        var data = resp.data, status = resp.status;
-//        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
-//
-//        if (data && data.errors) {
-//          dec.options.current_result = JSON.stringify(data.errors);
-//          showErrorDialog("Error with document retrieval.",dec.options.current_result);
-//        }
-//
-//        dec.options.queryBusy = false;
-//      });
-//    }
 
     //
     // function to delete a document
@@ -690,7 +626,7 @@
         }
         else if (resp.statusText) {
           dec.options.current_result = JSON.stringify(resp.statusText);
-          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);          
+          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);
         }
       }
     }
@@ -784,7 +720,9 @@
             dec.options.current_result = JSON.stringify(data.errors);
           else
             dec.options.current_result = JSON.stringify(data,null,2);
-          showErrorDialog("Error with document retrieval.",dec.options.current_result,true);
+          showErrorDialog("Error getting documents.",
+              "Couldn't retrieve: " + dec.options.selected_bucket + " offset: " + dec.options.offset +
+              " limit " + dec.options.limit + ', Error:' + dec.options.current_result,true);
         }
 
         dec.options.queryBusy = false;
