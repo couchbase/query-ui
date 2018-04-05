@@ -469,7 +469,7 @@
           'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
         result += '>' + mySanitize(tdata[row].id) + '</span>';
         if (tdata[row].rawJSON)
-          result += '<span class="fa-stack icon-info" ' +
+          result += '<span class="fa-stack icon-info" ng-show="dec.options.show_tables"' +
             'uib-tooltip-html="\'Document contains numbers too large for tabular editing, edit as JSON instead (with button to the left).\'"' +
             'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
             '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';

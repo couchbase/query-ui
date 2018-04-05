@@ -139,8 +139,8 @@
             '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
 
         res.promise.then(function success(resp) {
-          //console.log("saving new doc...");
           var newJson = res.scope.editor.getSession().getValue();
+          //console.log("saving new doc: " + newJson);
           saveDoc(-1,newJson,res.scope.doc_id).then(function success(res) {
             refreshUnlessUnsaved();
           }, function error(resp) {
@@ -176,7 +176,11 @@
       promise.then(function success(resp) {
         dec.updatingRow = row;
 
-        var promise = saveDoc(row,JSON.stringify(dec.options.current_result[row].data),dialogScope.file.name);
+        var promise;
+        if (dec.options.current_result[row].rawJSON)
+          promise = saveDoc(row,dec.options.current_result[row].rawJSON,dialogScope.file.name);
+        else
+          promise = saveDoc(row,JSON.stringify(dec.options.current_result[row].data),dialogScope.file.name);
 
         // did the query succeed?
         promise.then(function success(resp) {
