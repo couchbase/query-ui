@@ -14,13 +14,134 @@
     var qwQueryPlanService = {};
 
     //
-    qwQueryPlanService.convertPlanJSONToPlanNodes = convertPlanJSONToPlanNodes;
+    qwQueryPlanService.convertN1QLPlanToPlanNodes = convertN1QLPlanToPlanNodes;
+    qwQueryPlanService.convertAnalyticsPlanToPlanNodes = convertAnalyticsPlanToPlanNodes;
     qwQueryPlanService.analyzePlan = analyzePlan;
+    qwQueryPlanService.analyzeAnalyticsPlan = analyzeAnalyticsPlan;
     qwQueryPlanService.convertTimeToNormalizedString = convertTimeToNormalizedString;
     qwQueryPlanService.convertTimeStringToFloat = convertTimeStringToFloat;
 
     //
-    // convertPlanJSONToPlanNodes
+    // convertAnalyticsPlanToPlanNodes
+    //
+    //
+
+    function convertAnalyticsPlanToPlanNodes(plan, predecessor, lists) {
+
+      // sanity check
+      if (!plan || _.isString(plan))
+        return(null);
+
+      // iterate over fields, look for "#operator" field
+      var operatorName = plan['#operator'];
+
+      // we had better have an operator name at this point
+      if (!operatorName) {
+        console.log("Error, no operator found for item, plan: " + JSON.stringify(plan));
+        console.log(JSON.stringify(plan));
+        return(null);
+      }
+
+      // analytics operator with inputs
+      if (plan["inputs"]) {
+        var inputs = plan["inputs"];
+        var opInputs = [];
+        for (var i = 0; i < inputs.length; i++) {
+          opInputs.push(convertAnalyticsPlanToPlanNodes(inputs[i], predecessor, lists));
+        }
+        var op = new PlanNode(opInputs, plan, null, null);
+        return (op);
+      }
+
+      // for all other operators, create a plan node
+      else {
+        return(new PlanNode(predecessor,plan,null,lists.total_time));
+      }
+    }
+
+
+    //
+    //
+    //
+
+    function analyzeAnalyticsPlan(plan,lists) {
+      if (!lists)
+        lists = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0};
+
+      if (!plan || _.isString(plan))
+        return(null);
+
+      // iterate over fields, look for "#operator" field
+      var operatorName = plan['#operator'];
+      //console.log("Analyzing plan node: " + operatorName);
+
+      // at this point we should have an operation name and a field array
+      //console.log("  after analyze, got op name: " + operatorName);
+      // we had better have an operator name at this point
+
+      if (!operatorName) {
+        console.log("Error, no operator found for item: " + JSON.stringify(plan));
+        return(lists);
+      }
+
+      else if (plan["data-source"]) {
+        lists.indexes[getDatasource(plan["data-source"])] = true;
+      }
+
+      else if (plan["expressions"]) {
+        var exp = plan["expressions"];
+        if (exp.startsWith("index-search(")) {
+          lists.indexes[getIndexFromExpression(exp)] = true;
+        } else if (exp.includes(".getField")) {
+          lists.fields[getFieldFromExpression(exp)] = true;
+        }
+      }
+
+      // analytics operator with inputs
+      if (plan["inputs"]) {
+        var inputs = plan['inputs'];
+        for (var i = 0; i < inputs.length; i++) {
+          analyzeAnalyticsPlan(inputs[i], lists);
+        }
+      }
+
+      return (lists);
+    }
+
+
+    //
+    //
+    //
+
+    function getIndexFromExpression(expression) {
+      var idxBegin = expression.indexOf("(") + 2;
+      var params = expression.substring(idxBegin).split(",");
+      var namespace = params[2].trim();
+      if (namespace === "Metadata") {
+        return params[0].trim() + "." + params[2].trim();
+      }
+      return params[0].trim();
+    }
+
+    function getFieldFromExpression(expression) {
+      var beginToken = "getField(";
+      var fieldBegin = expression.indexOf(beginToken) + beginToken.length;
+      var fieldEnd = expression.indexOf(")", fieldBegin);
+      return expression.substring(fieldBegin, fieldEnd).trim();
+    }
+
+    function getDatasource(dataSource) {
+      var fullyQualifiedDs = dataSource;
+      if (!fullyQualifiedDs.startsWith("Metadata.")) {
+        fullyQualifiedDs = fullyQualifiedDs.substring(fullyQualifiedDs.indexOf(".") + 1, fullyQualifiedDs.length);
+      }
+      return fullyQualifiedDs;
+    }
+
+
+
+    //
+    // convertN1QLPlanToPlanNodes
     //
     // We need to take the query plan, which is a somewhat arbitrary JSON
     // structure and turn it into more of a data-flow tree of PlanNodes, where
@@ -45,7 +166,7 @@
     //             'unset_terms' (array of {"path":"..."})
     //  Let?
 
-    function convertPlanJSONToPlanNodes(plan, predecessor, lists) {
+    function convertN1QLPlanToPlanNodes(plan, predecessor, lists) {
 
       // sanity check
       if (!plan || _.isString(plan))
@@ -54,11 +175,11 @@
       // special case: prepared queries
 
       if (plan.operator)
-        return(convertPlanJSONToPlanNodes(plan.operator,null,lists));
+        return(convertN1QLPlanToPlanNodes(plan.operator,null,lists));
 
       // special case #2: plan with query timings is wrapped in an outer object
       if (plan.plan && !plan['#operator'])
-        return(convertPlanJSONToPlanNodes(plan.plan,null,lists));
+        return(convertN1QLPlanToPlanNodes(plan.plan,null,lists));
 
       //console.log("Inside analyzePlan");
 
@@ -80,7 +201,7 @@
       // if we have a sequence, we analyze the children and append them to the predecessor
       if (operatorName === "Sequence" && plan['~children']) {
         for (var i = 0; i < plan['~children'].length; i++)
-          predecessor = convertPlanJSONToPlanNodes(plan['~children'][i],predecessor,lists);
+          predecessor = convertN1QLPlanToPlanNodes(plan['~children'][i],predecessor,lists);
 
         return(predecessor);
       }
@@ -90,7 +211,7 @@
 
       else if (operatorName === "Parallel" && plan['~child']) {
         //console.log("Got Parallel block, predecessor: " + JSON.stringify(predecessor));
-        var subsequence = convertPlanJSONToPlanNodes(plan['~child'],predecessor,lists);
+        var subsequence = convertN1QLPlanToPlanNodes(plan['~child'],predecessor,lists);
         var subseq_end = null;
 
         // mark the elements of a parallel subsequence for later annotation
@@ -110,7 +231,7 @@
 
       // Prepare operators have their plan inside prepared.operator
       else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
-        return(convertPlanJSONToPlanNodes(plan.prepared.operator,null,lists));
+        return(convertN1QLPlanToPlanNodes(plan.prepared.operator,null,lists));
       }
 
       // ExceptAll and InterceptAll have 'first' and 'second' subqueries
@@ -118,10 +239,10 @@
         var children = [];
 
         if (plan['first'])
-          children.push(convertPlanJSONToPlanNodes(plan['first'],null,lists));
+          children.push(convertN1QLPlanToPlanNodes(plan['first'],null,lists));
 
         if (plan['second'])
-          children.push(convertPlanJSONToPlanNodes(plan['second'],null,lists));
+          children.push(convertN1QLPlanToPlanNodes(plan['second'],null,lists));
 
         if (children.length > 0)
           return(new PlanNode(children,plan,null,lists.total_time));
@@ -134,10 +255,10 @@
         var children = [];
 
         if (plan['delete'])
-          children.push(convertPlanJSONToPlanNodes(plan['delete'],null,lists));
+          children.push(convertN1QLPlanToPlanNodes(plan['delete'],null,lists));
 
         if (plan['update'])
-          children.push(convertPlanJSONToPlanNodes(plan['update'],null,lists));
+          children.push(convertN1QLPlanToPlanNodes(plan['update'],null,lists));
 
         if (children.length > 0)
           return(new PlanNode(children,plan,null,lists.total_time));
@@ -149,13 +270,13 @@
       // the authorize op
       else if (operatorName === "Authorize" && plan['~child']) {
         var authorizeNode = new PlanNode(predecessor,plan,null,lists.total_time);
-        var authorizeChildren = convertPlanJSONToPlanNodes(plan['~child'],authorizeNode,lists);
+        var authorizeChildren = convertN1QLPlanToPlanNodes(plan['~child'],authorizeNode,lists);
         return(authorizeChildren);
       }
 
       // DistinctScan operators have a single child called 'scan'
       else if (operatorName === "DistinctScan" && plan['scan']) {
-        return(new PlanNode(convertPlanJSONToPlanNodes(plan['scan'],null,lists),plan,null,lists.total_time));
+        return(new PlanNode(convertN1QLPlanToPlanNodes(plan['scan'],null,lists),plan,null,lists.total_time));
       }
 
       // UNION operators will have an array of predecessors drawn from their "children".
@@ -167,7 +288,7 @@
         // what to do? for now put it on every child of the Union
 
         for (var i = 0; i < plan['~children'].length; i++)
-          unionChildren.push(convertPlanJSONToPlanNodes(plan['~children'][i],predecessor,lists));
+          unionChildren.push(convertN1QLPlanToPlanNodes(plan['~children'][i],predecessor,lists));
 
         var unionNode = new PlanNode(unionChildren,plan,null,lists.total_time);
 
@@ -187,7 +308,7 @@
         //&& plan["~child"]["~children"]) {
         // do we have a
         var inner = predecessor;
-        var outer = convertPlanJSONToPlanNodes(plan['~child'],null,lists);
+        var outer = convertN1QLPlanToPlanNodes(plan['~child'],null,lists);
         return(new PlanNode([inner,outer],plan,null,lists.total_time));
       }
 
@@ -198,7 +319,7 @@
         var scanChildren = [];
 
         for (var i = 0; i < plan['scans'].length; i++)
-          scanChildren.push(convertPlanJSONToPlanNodes(plan['scans'][i],null,lists));
+          scanChildren.push(convertN1QLPlanToPlanNodes(plan['scans'][i],null,lists));
 
         return(new PlanNode(scanChildren,plan,null,lists.total_time));
       }
@@ -356,7 +477,7 @@
     // turn the fields of an operator into list elements,
     // but ignore child operators
 
-    var childFieldNames = /#operator|\~child*|delete|update|scans|first|second/;
+    var childFieldNames = /#operator|\~child*|delete|update|scans|first|second|inputs/;
 
     function getNonChildFieldList(op) {
       var result = "";
@@ -509,6 +630,14 @@
         if (inOutStr.length > 0)
           pushTruncated(result,inOutStr);
       }
+
+      // handle Analytics operators
+      if (op['variables'])
+        pushTruncated(result,'vars: ' + op['variables']);
+      if (op['expressions'])
+        pushTruncated(result,'expr:' + op['expressions']);
+
+      // all done, return the result
       return(result);
     }
 
@@ -767,6 +896,8 @@
             }
           }
       }
+
+      //
 
       // for all other operators, certain fields will tell us stuff:
       //  - keyspace is a bucket name
@@ -1036,7 +1167,6 @@
 
       return(minutesStr + ":" + secondsStr);
     }
-
 
     //
     //

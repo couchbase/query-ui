@@ -1090,7 +1090,7 @@
             newResult.explainResult =
             {explain: data.results[0],
                 analysis: lists,
-                plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan, null, lists)
+                plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
             };
 
             // let's check all the fields to make sure they are all valid
@@ -1334,7 +1334,7 @@
           newResult.explainResult =
           {explain: data.profile.executionTimings,
               analysis: lists,
-              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.profile.executionTimings,null,lists)
+              plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.profile.executionTimings,null,lists)
               /*,
               buckets: qwQueryService.buckets,
               tokens: qwQueryService.autoCompleteTokens*/};
@@ -1345,7 +1345,7 @@
           if (problem_fields.length > 0)
             newResult.explainResult.problem_fields = problem_fields;
         }
-        
+
         // need to handle any exceptions that might occur
         catch (exception) {
           console.log("Exception analyzing query plan: " + exception);
@@ -1362,7 +1362,7 @@
           newResult.explainResult =
           {explain: data.results[0],
               analysis: lists,
-              plan_nodes: qwQueryPlanService.convertPlanJSONToPlanNodes(data.results[0].plan,null,lists)
+              plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan,null,lists)
               /*,
               buckets: qwQueryService.buckets,
               tokens: qwQueryService.autoCompleteTokens*/};
