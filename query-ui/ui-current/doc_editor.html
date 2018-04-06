@@ -4,7 +4,8 @@
      depot="actions"
      ng-if="dec.options.selected_bucket">
     <div class="header-controls">
-      <a ng-click="dec.createBlankDoc()">
+      <a ng-click="dec.createBlankDoc()"
+       ng-show="dec.rbac.cluster.bucket[dec.options.selected_bucket].data.write">
         ADD <span class="resp-hide-xsml">DOCUMENT</span>
       </a>
     </div>

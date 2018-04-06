@@ -66,6 +66,7 @@
     dec.updatingRow = -1;
 
     dec.bucketChanged = function(item) {$state.go('app.admin.doc_editor',{bucket: item});};
+    dec.rbac = mnPermissions.export;
 
     //
     // call the activate method for initialization
@@ -256,7 +257,7 @@
     // function to edit the JSON of a document
     //
 
-    function editDoc(row) {
+    function editDoc(row,readonly) {
       if (dec.updatingRow >= 0)
         return;
 
@@ -273,7 +274,7 @@
       var meta_obj = {meta: dec.options.current_result[row].meta,
           xattrs: dec.options.current_result[row].xattrs};
       var meta_str = "'" + JSON.stringify(meta_obj,null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;') + "'";
-      var res = showDocEditor(dec.options.current_result[row].id, doc_string,meta_str);
+      var res = showDocEditor(dec.options.current_result[row].id, doc_string,meta_str,readonly);
       res.promise.then(getSaveDocClosure(res.scope,row));
     }
 
@@ -281,7 +282,7 @@
     // bring up the JSON editing dialog for edit or create new documents
     //
 
-    function showDocEditor(id,json,meta) {
+    function showDocEditor(id,json,meta,readonly) {
       var dialogScope = $rootScope.$new(true);
 
       // use an ACE editor for editing the JSON document
@@ -293,6 +294,7 @@
             _editor.$blockScrolling = Infinity;
             _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
             dialogScope.editor = _editor;
+            _editor.setReadOnly(readonly);
             _editor.getSession().on("changeAnnotation", function() {
               var annot_list = _editor.getSession().getAnnotations();
               if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
@@ -314,6 +316,8 @@
       dialogScope.doc_json = json;
       dialogScope.doc_meta = meta;
       dialogScope.header = "Edit Document";
+      dialogScope.readonly = readonly;
+
 
       // are there any syntax errors in the editor?
       dialogScope.errors = function() {
@@ -756,7 +760,8 @@
           dec.buckets.length = 0;
           var default_seen = false;
           for (var i=0; i < resp.data.length; i++) if (resp.data[i]) {
-            dec.buckets.push(resp.data[i].name);
+            if (dec.rbac.cluster.bucket[resp.data[i].name].data.read) // only include buckets we have access to
+              dec.buckets.push(resp.data[i].name);
             if (resp.data[i].name == dec.options.selected_bucket)
               default_seen = true;
           }

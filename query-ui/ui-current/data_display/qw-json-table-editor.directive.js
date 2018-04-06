@@ -441,7 +441,7 @@
 
         '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + '" ' +
-        'ng-click="dec.editDoc(' + row +')" ' +
+        'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)" ' +
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ' +
