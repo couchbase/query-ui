@@ -170,10 +170,12 @@
       dialogScope.header_message = "Save As";
       dialogScope.body_message = "New Document Key ";
 
+      hideTooltips()
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_input_dialog.html',
         scope: dialogScope
       }).result;
+      promise.then(allowTooltips,allowTooltips); // allow tooltips to show again
 
       promise.then(function success(resp) {
         dec.updatingRow = row;
@@ -218,8 +220,10 @@
       // make sure they really want to do this
       //
 
+      hideTooltips();
       var promise = showErrorDialog("Delete Document",
           "Warning, this will delete the document: " + dec.options.current_result[row].id);
+      promise.then(allowTooltips,allowTooltips); // allow tooltips to show again
 
       promise.then(function success(res) {
         dec.updatingRow = row;
@@ -339,16 +343,19 @@
       // revert
       //
 
-      dec.hideAllTooltips = true; // hide any existing tooltipys
+      hideTooltips(); // hide any existing tooltipys
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
         scope: dialogScope
       }).result;
 
-      promise.then(function() {dec.hideAllTooltips = false;},function() {dec.hideAllTooltips = false;}); // allow tooltips to show again
+      promise.then(allowTooltips,allowTooltips); // allow tooltips to show again
 
       return({scope:dialogScope, promise:promise});
     }
+    
+    function hideTooltips() {dec.hideAllTooltips = true;}
+    function allowTooltips() {dec.hideAllTooltips = false;}
 
     // need to remember the dialogScope and row in the promise resolution
 
