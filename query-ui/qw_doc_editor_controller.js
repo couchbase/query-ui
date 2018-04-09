@@ -34,6 +34,7 @@
     dec.buckets_sec = {};
     dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
     dec.options.show_scrollbars = true;
+    dec.hideAllTooltips = false;
 
     function queryableBucket() {
       if (!dec.options.selected_bucket)
@@ -338,10 +339,13 @@
       // revert
       //
 
+      dec.hideAllTooltips = true; // hide any existing tooltipys
       var promise = $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/data_display/qw_doc_editor_dialog.html',
         scope: dialogScope
       }).result;
+
+      promise.then(function() {dec.hideAllTooltips = false;},function() {dec.hideAllTooltips = false;}); // allow tooltips to show again
 
       return({scope:dialogScope, promise:promise});
     }

@@ -466,12 +466,13 @@
           'px"><span  ';
         if (tdata[row].meta || tdata[row].xattrs)
           result += ' class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
-          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
+          'tooltip-placement="bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
+          'tooltip-trigger="\'none\'" data-ng-click="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span>';
         if (tdata[row].rawJSON)
           result += '<span class="fa-stack icon-info" ng-show="dec.options.show_tables"' +
             'uib-tooltip-html="\'Document contains numbers too large for tabular editing, edit as JSON instead (with button to the left).\'"' +
-            'tooltip-placement="top" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
+            'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
             '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';
         result += '</span>';
 
@@ -547,7 +548,8 @@
           'px;"><span '
         if (tdata[row].meta || tdata[row].xattrs)
           result += 'class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
-          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mousedown\'"';
+          'tooltip-placement="bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
+          'tooltip-trigger="\'none\'" data-ng-click="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
         var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " base64 not available";
