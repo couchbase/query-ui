@@ -409,7 +409,7 @@
 
     function saveDoc_rest(row,newJson,newKey) {
       var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
-      "/docs/" + (newKey ? newKey : encodeURIComponent(dec.options.current_result[row].id));
+      "/docs/" + (newKey ? encodeURIComponent(newKey) : encodeURIComponent(dec.options.current_result[row].id));
 
 
       // with newKey, we need to check if the document exists first by that key
@@ -585,8 +585,8 @@
       dec.options.current_result.length = idArray.length;
 
       for (var i=0; i< idArray.length; i++) {
-        var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
-          "/docs/" + idArray[i];
+        var rest_url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
+          "/docs/" + encodeURIComponent(idArray[i]);
         //console.log("  url: " + rest_url);
 
         promiseArray.push($http({
