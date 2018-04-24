@@ -512,7 +512,7 @@
 
         // otherwise, a truncated version of the JSON
 
-        var json = JSON.stringify(tdata[row].data);
+        var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
         if (json.length > max_length)
           json = json.substring(0,max_length) + '...';
         result += '<span ng-hide="dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
