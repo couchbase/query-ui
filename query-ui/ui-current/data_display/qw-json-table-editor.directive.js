@@ -28,10 +28,16 @@
       template: '<div></div>',
       link: function (scope, element) {
 
-        scope.$watch('data', createEditorFromJson);
+        scope.$watch('data', buildEditorFromJson);
         scope.rbac = mnPermissions.export;
         scope.getTooltip = getTooltip;
 
+        function buildEditorFromJson(json) {
+          // start by putting up a message
+          element.append(angular.element('<div class="text-medium">Rendering results...</div>'));
+
+          $timeout(function() {createEditorFromJson(json)},10); // let the above message render, then build 
+        }
         function createEditorFromJson(json) {
 
           // start with an empty div, if we have data convert it to HTML
@@ -471,9 +477,10 @@
         result += '>' + mySanitize(tdata[row].id) + '</span>';
         if (tdata[row].rawJSON)
           result += '<span class="fa-stack icon-info" ng-show="dec.options.show_tables"' +
-            'uib-tooltip-html="\'Document contains numbers too large for tabular editing, edit as JSON instead (with button to the left).\'"' +
-            'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
-            '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';
+          'uib-tooltip-html="\'Document contains numbers too large for tabular editing, edit as JSON instead (with button to the left).\'"' +
+          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
+          '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';
+
         result += '</span>';
 
         // if we have unnamed items like arrays or primitives, they go in the next column
@@ -639,6 +646,8 @@
   //the spririt of Angular, but it was taking 10 seconds or more to render
   //a table with tens of thousands of cells
 
+  var max_array_len = 100; // don't show arrays longer than this in overly large documents
+
   function makeHTMLtable(object,prefix,totalSize,disabled) {
     var result = '';
 
@@ -737,6 +746,9 @@
       totalSize.width = 0;
       // get the max width for each column of each row
       _.forEach(object, function (item, index) {
+        // limit these arrays to 100 items
+        if (index > max_array_len)
+          return(false);
         // if the row is an array or primitive, compute the width for the unnamed column
         if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item)) {
           var width = getColumnWidth(item);
@@ -773,6 +785,14 @@
 
       // for each object in the array, output all the column (and unnamed) values
       _.forEach(object, function (item, index) {
+        // limit these arrays to 100 items
+        if (index > max_array_len) {
+          result += '<div class="doc-editor-row">Array length ' + object.length +
+            ' truncated to ' + max_array_len + ' rows, use JSON editing to see entire array</div>';
+          return false;
+        }
+
+
         result += '<div class="doc-editor-row">'; // new div for each row
 
         // if there exist unnamed objects in the array, output them in the first column

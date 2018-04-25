@@ -617,7 +617,8 @@
           if (docInfo && docInfo.json && docInfo.meta) {
             docInfo.meta.type = "json";
             dec.options.current_result[position] =
-              {id: docId, data: doc.data, meta: docInfo.meta, xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null};
+              {id: docId, docSize: docInfo.json.length, data: doc.data, meta: docInfo.meta,
+                xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null};
           }
 
           // maybe a single binary doc?
