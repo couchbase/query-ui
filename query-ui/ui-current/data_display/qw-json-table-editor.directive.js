@@ -36,7 +36,7 @@
           // start by putting up a message
           element.append(angular.element('<div class="text-medium">Rendering results...</div>'));
 
-          $timeout(function() {createEditorFromJson(json)},10); // let the above message render, then build 
+          $timeout(function() {createEditorFromJson(json)},10); // let the above message render, then build
         }
         function createEditorFromJson(json) {
 
@@ -468,20 +468,14 @@
         '</span>';
 
         // put the meta().id in the next column
-        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 +
-          'px"><span  ';
-        if (tdata[row].meta || tdata[row].xattrs)
-          result += ' class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
-          'tooltip-placement="bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
-          'tooltip-trigger="\'none\'" data-ng-click="showTT'+row+' = !showTT'+row+ '"';
-        result += '>' + mySanitize(tdata[row].id) + '</span>';
+        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">' +
+                  '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)">' +
+                   mySanitize(tdata[row].id);
         if (tdata[row].rawJSON)
-          result += '<span class="fa-stack icon-info" ng-show="dec.options.show_tables"' +
-          'uib-tooltip-html="\'Document contains numbers too large for tabular editing, edit as JSON instead (with button to the left).\'"' +
-          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
-          '<span class="icon fa-exclamation-triangle fa-stack-2x"></span></span>';
-
-        result += '</span>';
+          result += ' <span class="icon fa-exclamation-triangle" ng-show="dec.options.show_tables"' +
+                       'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
+                       'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+        result += '</a></span>';
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
