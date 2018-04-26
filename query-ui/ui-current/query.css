@@ -333,6 +333,9 @@ ul.wb-explain-tooltip-list li ul li {
 input:checked + .toggle-control-body {
   background-color: #4287d6;
 }
+input:checked[disabled] + .toggle-control-body {
+  background-color: #d1d1d1;
+}
 input:checked + .toggle-control-body:before {
   transform: translateX(24px);
 }
