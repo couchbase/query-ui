@@ -432,7 +432,7 @@
 
     for (var row=0; row < tdata.length; row++) {
       // handle JSON docs
-      if (tdata[row].data && tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json")  {// they'd all better have these
+      if (tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json")  {// they'd all better have these
         var formName = 'row' + row + 'Form';
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
@@ -491,33 +491,33 @@
           result += '</span>';
         }
 
-        // now the field values, if we are showing tables
+        // now the field values, if we are showing tables, but only if we have a non-null document
 
-      //  result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell ajtd-type-bool" style="width:' +
-      //  columnWidthPx*1 + 'px"> ' +
-      //  '<a class="btn square-button" ' +
-      //  'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
-      //  'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
-      //  'title="Save changes to document"><span class="icon fa-save square-button"></span></a>' +
-      //  '</span>';
+        if (tdata[row].data) {
+          Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
+            var item = tdata[row].data[key];
+            var childSize = {width: 1};
+            var disabled = !!tdata[row].rawJSON;
+            var childHTML = (item || item === 0 || item === "") ?
+                makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
+                result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
+                columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
+          });
 
-        Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
-          var item = tdata[row].data[key];
-          var childSize = {width: 1};
-          var disabled = !!tdata[row].rawJSON;
-          var childHTML = (item || item === 0 || item === "") ?
-              makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
-              result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
-              columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
-        });
+          // otherwise, a truncated version of the JSON
 
-        // otherwise, a truncated version of the JSON
+          var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
+          if (json.length > max_length)
+            json = json.substring(0,max_length) + '...';
+          result += '<span ng-hide="dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
+          + mySanitize(json) + '</span>';
+        }
 
-        var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
-        if (json.length > max_length)
-          json = json.substring(0,max_length) + '...';
-        result += '<span ng-hide="dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
-        + mySanitize(json) + '</span>';
+        // for a null document, output a message saying so
+
+        else {
+          result += '<span class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">Empty Document</span>';
+        }
 
         // for some reason I couldn't get the form from $scope, so the following acts as a sentinel that I can search for
         // to see if anything changed in any form of the editor
@@ -537,10 +537,10 @@
 
         '<a class="btn square-button" ng-disabled="true"><span class="icon fa-copy"></span></a>' +
 
-        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-edit"></span></a>' +
-
         '<a class="btn square-button" ng-click="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
+
+        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-edit"></span></a>' +
 
         '</span>';
 

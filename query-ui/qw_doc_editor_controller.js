@@ -272,6 +272,10 @@
       if (dec.options.current_result[row].rawJSON)
         doc_string = js_beautify(dec.options.current_result[row].rawJSON,{"indent_size": 2});
 
+      // handle empty documents
+      else if (!dec.options.current_result[row].data)
+        doc_string = "";
+
       // otherwise create a string from the underlying data
       else
         doc_string = JSON.stringify(dec.options.current_result[row].data,null,2);
@@ -333,6 +337,10 @@
               if (annot_list[i].type == "error") {
                 return true;
               }
+
+          // don't allow empty documents
+          if (dialogScope.editor.getSession().getValue().trim().length == 0)
+            return true;
           }
         return false;
       };
@@ -353,7 +361,7 @@
 
       return({scope:dialogScope, promise:promise});
     }
-    
+
     function hideTooltips() {dec.hideAllTooltips = true;}
     function allowTooltips() {dec.hideAllTooltips = false;}
 
