@@ -7,9 +7,14 @@
   <div class="panel-content" style="height:calc(100% - 100px)">
     <div class="row margin-bottom-half">
       <h4 class="ellipsis margin-right-half">{{doc_id}}</h4>
-      <span ng-show="doc_meta" class="blue-1 text-small nowrap cursor-pointer" uib-tooltip-html="{{doc_meta}}"
-        tooltip-placement="right" tooltip-append-to-body="true"
-        tooltip-trigger="'mousedown'">metadata</span>
+      <span
+         ng-show="doc_meta"
+         class="blue-1 text-small nowrap cursor-pointer"
+         uib-tooltip-html="{{doc_meta}}"
+         tooltip-placement="right-top"
+         tooltip-append-to-body="true"
+         tooltip-trigger="'mousedown'"
+         tooltip-class="tooltip-maxheight">metadata</span>
     </div>
     <div
        ui-ace="ace_options"
