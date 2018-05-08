@@ -105,17 +105,18 @@ input.ng-invalid-number {
   -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.15);
 }
 
-/* doc editor resizable JSON editing dialog -------------------------------- */
-.dialog-resizable {
-  overflow: hidden;
-  resize: both;
-}
 
 /* query monitoring tables ------------------------------------------------- */
 .qm-table-active .cbui-table-header,
 .qm-table-completed .cbui-table-header,
 .qm-table-prepared .cbui-table-header {
   cursor: pointer;
+}
+
+/* edit history dialog list of queries ------------------------------------- */
+.history-list {
+  height:96%;
+  overflow: scroll;
 }
 
 /* query monitoring statistics --------------------------------------------- */

@@ -4,6 +4,12 @@
      depot="actions"
      ng-if="dec.options.selected_bucket">
     <div class="header-controls">
+      <a
+       ui-sref="app.admin.buckets.documents.control.list({bucket: dec.options.selected_bucket, statsHostname: 'all'})"      
+       class="resp-hide-sml">
+        CLASSIC <span class="resp-hide-xsml">EDITOR</span>
+      </a>
+
       <a ng-click="dec.createBlankDoc()"
        ng-show="dec.rbac.cluster.bucket[dec.options.selected_bucket].data.write">
         ADD <span class="resp-hide-xsml">DOCUMENT</span>

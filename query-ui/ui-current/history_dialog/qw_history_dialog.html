@@ -1,10 +1,9 @@
-<div class="dialog-med wb-history-dialog">
+<div class="dialog-lg wb-history-dialog dialog-resizable" style="height:80vh">
   <div class="panel-header">
     <h2>Query History</h2>
   </div>
 
-  <form class="forms">
-    <div class="panel-content">
+    <div class="panel-content" style="height:calc(100% - 100px)">
       <div class="filter-input-group scroll-shadow-top width-12">
         <input type="text" name="searchTerm" maxlength="256" class="filter-input"
            placeholder="filter queries"
@@ -22,7 +21,7 @@
         </span>
       </div>
 
-      <div class="wb-history-table max-height-500">
+      <div class="wb-history-table history-list">
           <section ng-repeat="query in pastQueries" ng-if="showRow($index)">
             <span
                ng-if="showRow($index)"
@@ -43,7 +42,6 @@
             </span>
           </section>
       </div>
-
     </div>
 
     <div class="panel-footer spaced scroll-shadow">
@@ -68,5 +66,4 @@
         Delete All
       </button>
     </div>
-  </form>
 </div>
