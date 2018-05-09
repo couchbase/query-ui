@@ -865,6 +865,7 @@
       if (is_user_query) {
         qwQueryService.currentQueryRequestID = UUID.generate();
         queryData.client_context_id = qwQueryService.currentQueryRequestID;
+        queryData.pretty = true;
       }
       // for auditing, note that the non-user queries are "INTERNAL"
       else
@@ -1321,7 +1322,7 @@
         newResult.resultSize = data.metrics.resultSize;
         newResult.sortCount = data.metrics.sortCount;
         if (data.rawJSON)
-          newResult.result = js_beautify(data.rawJSON, {"indent_size": 2});
+          newResult.result = data.rawJSON;
         else
           newResult.result = angular.toJson(result, true);
         newResult.data = result;

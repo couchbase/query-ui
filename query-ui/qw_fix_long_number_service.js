@@ -32,19 +32,21 @@
         return rawBytes;
 
       var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
-      var longIntCount = 0;
+      var hasLongInts = false;
       var matchArray = matchNonQuotedLongInts.exec(rawBytes);
       while (matchArray != null) {
-        if (matchArray[1] || matchArray[2]) // group 1, a non-quoted long int, group 2, a long float
-          longIntCount++;
+        if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
+          hasLongInts = true;
+          break;
+        }
         matchArray = matchNonQuotedLongInts.exec(rawBytes);
       }
 
-      //console.log("Got response, longIntcount: " + longIntCount /*+ ", raw bytes: " + rawBytes*/);
+      //console.log("Got response, longInts: " + hasLongInts /*+ ", raw bytes: " + rawBytes*/);
 
       // if no long ints, just return the original bytes parsed
 
-      if (longIntCount == 0) try {
+      if (!hasLongInts) try {
         return(JSON.parse(rawBytes));
       }
       catch (e) {
