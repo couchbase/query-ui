@@ -10,9 +10,9 @@
         <span ng-if="qmc.isSelected(2)">Slowest Completed Queries</span>
         <span ng-if="qmc.isSelected(3)">Slowest Prepared Queries</span>
         <small>
-          {{qmc.updatedTime()}} <span ng-if="qmc.get_update_flag()"
-          class="loading"></span> <span ng-if="!qmc.get_update_flag()"
-          class="loading-placeholder"></span>
+          {{qmc.updatedTime()}}
+          <span ng-if="qmc.get_update_flag()" class="loading"></span>
+          <span ng-if="!qmc.get_update_flag()" class="loading-placeholder"></span>
         </small>
       </h4>
       <button class="outline tight icon-small indent-1"

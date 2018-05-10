@@ -21,15 +21,15 @@
     qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
 
 
-    qwQueryService.monitoringOptions = {
+    var monitoringOptions = {
         selectedTab: 1,
         autoUpdate: true
     };
-    qwQueryService.selectMonitoringTab = function(newTab) {qwQueryService.monitoringOptions.selectedTab = newTab; saveStateToStorage();};
-    qwQueryService.getMonitoringSelectedTab = function() {return qwQueryService.monitoringOptions.selectedTab;};
-    qwQueryService.isMonitoringSelected = function(checkTab) {return qwQueryService.monitoringOptions.selectedTab === checkTab;};
-    qwQueryService.monitoringAutoUpdate = function() {return qwQueryService.monitoringOptions.autoUpdate;};
-    qwQueryService.setMonitoringAutoUpdate = function(newValue) {qwQueryService.monitoringOptions.autoUpdate = newValue; saveStateToStorage();};
+    qwQueryService.selectMonitoringTab = function(newTab) {monitoringOptions.selectedTab = newTab; saveStateToStorage();};
+    qwQueryService.getMonitoringSelectedTab = function() {return monitoringOptions.selectedTab;};
+    qwQueryService.isMonitoringSelected = function(checkTab) {return monitoringOptions.selectedTab === checkTab;};
+    qwQueryService.getMonitoringAutoUpdate = function() {return monitoringOptions.autoUpdate;};
+    qwQueryService.setMonitoringAutoUpdate = function(newValue) {monitoringOptions.autoUpdate = newValue; saveStateToStorage();};
 
 
     // access to our most recent query result, and functions to traverse the history
@@ -347,7 +347,7 @@
           }
 
           if (savedState.monitoringOptions)
-            qwQueryService.monitoringOptions = savedState.monitoringOptions;
+            monitoringOptions = savedState.monitoringOptions;
 
           // handle case where auto_infer is not yet defined, and set it to true
           if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false) {
@@ -393,7 +393,7 @@
           orientation: qwQueryService.query_plan_options.orientation
       };
 
-      savedState.monitoringOptions = qwQueryService.monitoringOptions;
+      savedState.monitoringOptions = monitoringOptions;
 
       _.forEach(pastQueries,function(queryRes,index) {
         var qcopy = savedResultTemplate.clone();

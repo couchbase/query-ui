@@ -32,7 +32,7 @@
     qmc.updatedTime = updatedTime;
     qmc.toggle_update = toggle_update;
     qmc.get_toggle_label = get_toggle_label;
-    qmc.get_update_flag = function() {return(qwQueryService.monitoringAutoUpdate);}
+    qmc.get_update_flag = function() {return(qwQueryService.getMonitoringAutoUpdate());}
 
     qmc.stats = {};
     qmc.stat_names = ["query_requests","query_selects","query_avg_req_time","query_avg_svc_time",
@@ -128,7 +128,7 @@
 
     function updatedTime() {
       var result;
-      switch (qwQueryService.monitoringTab) {
+      switch (qwQueryService.getMonitoringSelectedTab()) {
       case 1: result = qmc.monitoring.active_updated; break
       case 2: result = qmc.monitoring.completed_updated; break;
       case 3: result = qmc.monitoring.prepareds_updated; break;
@@ -156,24 +156,17 @@
     //
 
     function activate() {
-      // if we were here before, remember if monitoring was updating or not
-      if (qwQueryService.userAutoUpdate)
-        qwQueryService.monitoringAutoUpdate = qwQueryService.userAutoUpdate;
-      // otherwise remember the current state
-      else
-        qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate();
-
-      // if we haven't been here before, initialize the monitoring data
-      if (qwQueryService.monitoringTab == 0) {
-        qmc.selectTab(1); // default is 1st tab
-        update();     // start updating
-        qwQueryService.updateQueryMonitoring(2); // but also get data for other two tabs
+      // get initial data for each panel
+      if (qmc.monitoring.active_updated == "never")
+        qwQueryService.updateQueryMonitoring(1);
+      if (qmc.monitoring.completed_updated == "never")
+        qwQueryService.updateQueryMonitoring(2);
+      if (qmc.monitoring.prepareds_updated == "never")
         qwQueryService.updateQueryMonitoring(3);
-      }
 
-      // if we have been here before, start auto-updating if necessary
+      // start auto-updating if necessary
 
-      else if (qwQueryService.monitoringAutoUpdate)
+      if (qwQueryService.getMonitoringAutoUpdate())
         update();
 
       // Prevent the backspace key from navigating back. Thanks StackOverflow!
@@ -207,23 +200,23 @@
     }
 
     function toggle_update() {
-      if (qwQueryService.monitoringAutoUpdate) {
+      if (qwQueryService.getMonitoringAutoUpdate()) {
         if (qmc.timer) { // stop any timers
           $timeout.cancel(qmc.timer);
           qmc.timer = null;
         }
-        qwQueryService.monitoringAutoUpdate = false;
+        qwQueryService.setMonitoringAutoUpdate(false);
       }
       else {
-        qwQueryService.monitoringAutoUpdate = true;
+        qwQueryService.setMonitoringAutoUpdate(true);
         update();
       }
 
-      qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate;
+      //qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate;
     }
 
     function get_toggle_label() {
-      if (qwQueryService.monitoringAutoUpdate)
+      if (qwQueryService.getMonitoringAutoUpdate())
         return("pause");
       else
         return("resume");
@@ -278,7 +271,7 @@
           },function error(resp) {console.log("Error getting graph data");});
 
       // do it again in 5 seconds
-      if (qwQueryService.monitoringAutoUpdate) {
+      if (qwQueryService.getMonitoringAutoUpdate()) {
         qmc.timer = $timeout(update,5000);
       }
 
@@ -332,7 +325,7 @@
 
     // when the controller is destroyed, stop the updates
     $scope.$on('$destroy',function(){
-      qwQueryService.monitoringAutoUpdate = false;
+      //qwQueryService.setMonitoringAutoUpdate(false);
       if (qmc.timer) {
          $timeout.cancel(qmc.timer);
          qmc.timer = null;
