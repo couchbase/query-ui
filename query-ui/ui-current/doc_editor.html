@@ -5,7 +5,7 @@
      ng-if="dec.options.selected_bucket">
     <div class="header-controls">
       <a
-       ui-sref="app.admin.buckets.documents.control.list({bucket: dec.options.selected_bucket, statsHostname: 'all'})"      
+       ui-sref="app.admin.buckets.documents.control.list({bucket: dec.options.selected_bucket, statsHostname: 'all'})"
        class="resp-hide-sml">
         CLASSIC <span class="resp-hide-xsml">EDITOR</span>
       </a>
@@ -131,7 +131,8 @@
      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0"
      class="row resp-sml margin-bottom-half">
     <div class="text-small resp-margin-sml">
-      <strong><span ng-if="dec.options.current_result.length">{{dec.options.current_result.length}}</span> Results for</strong> <em>{{dec.options.current_query}}</em>
+      <strong><span ng-if="dec.resultSize()">{{dec.resultSize()}}</span>
+       Results for</strong> <em>{{dec.options.current_query}}</em>
     </div>
     <div class="row text-small resp-margin-sml">
       simple
@@ -162,7 +163,7 @@
 
 <!-- results (documents or status messages) ***************************** -->
   <div ng-if="dec.options.queryBusy">Retrieving results...</div>
-  <div ng-if="dec.options.show_scrollbars">
+  <div>
     <div
        class="row"
        ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
@@ -172,26 +173,6 @@
            data="dec.options.current_result"
            controller="dec">
       </div>
-    </div>
-  </div>
-  <div ng-if="!dec.options.show_scrollbars">
-    <div
-       class="row"
-       ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0">
-      <div class="doc-editor-results">
-        <qw-json-table-editor
-           ng-if="!dec.options.queryBusy"
-           data="dec.options.current_result"
-           controller="dec">
-      </div>
-      <div
-         class="scroll-shadow-horizontal"
-         ng-if="dec.options.current_result.length > 0">
-      </div>
-    </div>
-    <div
-      ng-if="dec.options.selected_bucket && dec.options.current_query.length > 0 && !dec.options.queryBusy"
-      class="scroll-shadow-bottom">
     </div>
   </div>
 </div>

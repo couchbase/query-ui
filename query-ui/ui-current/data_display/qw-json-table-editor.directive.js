@@ -73,9 +73,9 @@
           //
 
           else {
-            wrapper = '<div class="data-table-wrapper">Unable to process data.<br><br>' + json + '</div>';
-            //console.log("Unable to create tabular view for data:");
-            //console.log(JSON.stringify(json,null,4));
+            wrapper = '<div class="data-table-wrapper">' + json + '</div>';
+            header = null;
+            table = null;
           }
 
           // even if the json was empty, we have a wrapper element

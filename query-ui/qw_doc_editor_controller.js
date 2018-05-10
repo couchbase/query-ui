@@ -30,21 +30,20 @@
     dec.options.current_result = [];
     dec.currentDocs = [];
     dec.buckets = [];
-    dec.buckets_prim = {};
-    dec.buckets_sec = {};
+    dec.buckets_ephemeral = {};
     dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
-    dec.options.show_scrollbars = true;
     dec.hideAllTooltips = false;
+    dec.resultSize = function() {if (_.isArray(dec.options.current_result)) return dec.options.current_result.length; 
+                      else return null;};
 
     function queryableBucket() {
       if (!dec.options.selected_bucket)
         return(false);
 
-      for (var i=0; i< qwQueryService.buckets.length; i++) {
+      for (var i=0; i< qwQueryService.buckets.length; i++)
         if (qwQueryService.buckets[i].id == dec.options.selected_bucket &&
             (qwQueryService.buckets[i].has_prim || qwQueryService.buckets[i].has_sec))
-          return(true);
-      }
+            return(true);
 
       return(false);
     }
@@ -144,7 +143,7 @@
           var newJson = res.scope.editor.getSession().getValue();
           //console.log("saving new doc: " + newJson);
           saveDoc(-1,newJson,res.scope.doc_id).then(function success(res) {
-            refreshUnlessUnsaved();
+            $timeout(refreshUnlessUnsaved,100);
           }, function error(resp) {
             console.log("Error saving doc");;
           });
@@ -484,9 +483,22 @@
     function retrieveDocs_inner() {
       qwQueryService.saveStateToStorage();
 
-      // only use query service if there is a 'where' clause
+      // special case - when first loading the page, the QueryService may not have gotten all
+      // the bucket information yet. If we want to use n1ql, but can't do so yet, put up a message
+      // asking the user to click "retrieve"
 
-      if (dec.use_n1ql() && dec.options.where_clause)
+      if (validateQueryService.valid() &&
+          (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]) &&
+          !qwQueryService.buckets.length) { // no bucket info yet
+        dec.options.current_query = dec.options.selected_bucket;
+        dec.options.current_bucket = dec.options.selected_bucket;
+        dec.options.current_result =  "Connection to query service not quite ready. Click 'Retrieve Docs' to see data.";
+        return;
+      }
+
+      // only use query service if there is a 'where' clause or an ephemeral bucket
+
+      if (dec.use_n1ql() && (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]))
         retrieveDocs_n1ql();
       else
         retrieveDocs_rest();
@@ -683,8 +695,6 @@
       if (dec.options.queryBusy) // don't have 2 retrieves going at once
         return;
 
-      //console.log("Retrieving docs via REST...");
-
       dec.options.current_query = dec.options.selected_bucket;
 
       if (dec.options.doc_id)
@@ -693,6 +703,14 @@
       else
         dec.options.current_query += ", limit: " +
           dec.options.limit + ", offset: " + dec.options.offset;
+
+      // can only use REST API to retrieve single docs from emphemeral buckets
+      if (!dec.options.doc_id && dec.buckets_ephemeral[dec.options.selected_bucket]) {
+        dec.options.current_bucket = dec.options.selected_bucket;
+        dec.options.current_result =
+            "Ephemeral buckets can only be queried by document ID, or via a primary or secondary GSI index.";
+        return;
+      }
 
       // get the stats from the Query service
       dec.options.queryBusy = true;
@@ -778,10 +796,15 @@
         if (resp && resp.status == 200 && resp.data) {
           // get the bucket names
           dec.buckets.length = 0;
+          dec.buckets_ephemeral = {};
           var default_seen = false;
           for (var i=0; i < resp.data.length; i++) if (resp.data[i]) {
             if (dec.rbac.cluster.bucket[resp.data[i].name].data.read) // only include buckets we have access to
               dec.buckets.push(resp.data[i].name);
+
+            if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
+              dec.buckets_ephemeral[resp.data[i].name] = true;
+
             if (resp.data[i].name == dec.options.selected_bucket)
               default_seen = true;
           }
@@ -818,8 +841,6 @@
 
       // if we got a param, or a saved user-selected value, select it and get the docs
       if (dec.options.selected_bucket && dec.options.selected_bucket.length > 0) {
-        //console.log("Selecting bucket: " + $stateParams.bucket + " from bucket list: " + JSON.stringify(dec.buckets));
-
         // if we don't have any buckets yet, get the bucket list first
         if (dec.buckets.length == 0)
           getBuckets().then(retrieveDocs_inner);
