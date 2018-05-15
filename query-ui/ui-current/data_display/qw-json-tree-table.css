@@ -181,6 +181,7 @@ td.ajtd-type-array {
   padding-left: .25rem;
   cursor: pointer;
   font-size: .75rem; /* make sure font and size are the same as the data cells */
+  overflow:hidden;
 }
 .data-table-header-cell:last-child {
   border-right: solid 0px #d1d1d1;

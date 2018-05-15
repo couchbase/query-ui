@@ -33,7 +33,7 @@
     dec.buckets_ephemeral = {};
     dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
     dec.hideAllTooltips = false;
-    dec.resultSize = function() {if (_.isArray(dec.options.current_result)) return dec.options.current_result.length; 
+    dec.resultSize = function() {if (_.isArray(dec.options.current_result)) return dec.options.current_result.length;
                       else return null;};
 
     function queryableBucket() {
@@ -65,7 +65,7 @@
 
     dec.updatingRow = -1;
 
-    dec.bucketChanged = function(item) {$state.go('app.admin.doc_editor',{bucket: item});};
+    dec.bucketChanged = function(item) {if (!item) return; $state.go('app.admin.doc_editor',{bucket: item});};
     dec.rbac = mnPermissions.export;
 
     //
@@ -199,7 +199,7 @@
         function error(resp) {
           var data = resp.data, status = resp.status;
 
-          showErrorDialog("Error Copying Document", JSON.stringify(data),true);
+          //showErrorDialog("Error Copying Document", JSON.stringify(data),true);
           dec.updatingRow = -1;
         });
 
@@ -697,6 +697,22 @@
 
       dec.options.current_query = dec.options.selected_bucket;
 
+      // validate fields
+      if (!_.isNumber(dec.options.limit) || dec.options.limit < 1 || dec.options.limit > 200) {
+        dec.options.current_result = "Invalid value for 'limit': Limit must be a number between 1 and 200";
+        return;
+      }
+
+      if (!_.isNumber(dec.options.offset) || dec.options.offset < 0) {
+        dec.options.current_result = "Invalid value for 'offset': Offset must be a number >= 0";
+        return;
+      }
+
+      if (!_.isString(dec.options.selected_bucket) || dec.options.selected_bucket == "") {
+        dec.options.current_result = "No selected bucket.";
+        return;
+      }
+
       if (dec.options.doc_id)
         dec.options.current_query += ', document id: ' + dec.options.doc_id;
 
@@ -715,7 +731,6 @@
       // get the stats from the Query service
       dec.options.queryBusy = true;
       dec.options.current_result = [];
-
 
       // we just get a single ID if they specified a doc_id
       if (dec.options.doc_id && dec.options.doc_id.length) {

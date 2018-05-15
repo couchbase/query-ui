@@ -18,15 +18,15 @@
   </mn-element-cargo>
 
 <!-- row of controls for the query ***************************************** -->
-  <form name="searchForm">
-  <div class="controls resp-sml">
-    <div class="column">
-      <label>Bucket</label>
-      <ui-select
-         on-select="dec.bucketChanged($item)"
-         ng-model="dec.options.selected_bucket"
-         theme="selectize"
-         class="cbui-select">
+  <div class="controls resp-sml margin-0">
+    <div class="controls resp-sml">
+     <div class="column">
+       <label>Bucket</label>
+        <ui-select
+          on-select="dec.bucketChanged($item)"
+          ng-model="dec.options.selected_bucket"
+          theme="selectize"
+          class="cbui-select">
         <ui-select-match class="ui-select-match">
           {{$select.selected}}
         </ui-select-match>
@@ -35,8 +35,11 @@
            repeat="bucket in dec.buckets | filter: $select.search">
           <span class="select-item ellipsis" ng-bind-html="bucket | highlight: $select.search"></span>
         </ui-select-choices>
-      </ui-select>
+       </ui-select>
+      </div>
     </div>
+  <form name="searchForm">
+  <div class="controls resp-sml">
     <div class="column">
       <div>
         <label class="inline">Limit</label>
@@ -123,8 +126,9 @@
         <span class="icon fa-spinner fa-spin fa-pulse"></span>
       </span>
     </button>
-  </div>
+    </div>
   </form>
+  </div>
 
 <!-- row for result query text, toggle, & next/previous buttons *********** -->
   <div

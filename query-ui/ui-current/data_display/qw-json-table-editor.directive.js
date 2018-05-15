@@ -392,9 +392,6 @@
         meta.unnamedWidth*columnWidthPx + 'px;">&nbsp;</span>';
     }
 
-    // if we have non-objects, leave a separate column just for them with no header
-    // header for "save" button
-    // columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width:' + columnWidthPx*1 + 'px">&nbsp;</span>';
     // header for each column
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
       columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
@@ -437,7 +434,7 @@
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
         var invalidName = formName + '.$invalid';
-        result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + 4)*columnWidthPx + 'px" ' +
+        result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
         '<fieldset class="doc-editor-fieldset" ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.write">' +
         '<div class="doc-editor-row" ' +
@@ -479,7 +476,8 @@
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
-          result += '<span class="doc-editor-cell" style="width:' + meta.rowWidths[row]*columnWidthPx + 'px">';
+          result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width:' +
+          meta.unnamedWidth*columnWidthPx + 'px">';
 
           // if this row is a subarray or primitive, put it here
           var data = tdata[row].data;
@@ -498,7 +496,7 @@
             var item = tdata[row].data[key];
             var childSize = {width: 1};
             var disabled = !!tdata[row].rawJSON;
-            var childHTML = (item || item === 0 || item === "") ?
+            var childHTML = (item || item === 0 || item === "" || item === false) ?
                 makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
                 result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
                 columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
@@ -533,14 +531,14 @@
 
         // span where the buttons would go, all disabled except include delete
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
-        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-save"></span></a>' +
+        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ng-disabled="true"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ng-click="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
-        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-edit"></span></a>' +
+        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-save"></span></a>' +
 
         '</span>';
 
@@ -659,7 +657,7 @@
     if (_.isArray(object)) {
       // if the array is empty, say so
       if (object.length == 0)
-        return('<div class="ajtd-key">[]</div>');
+        return('<div class="ajtd-key">[ ]</div>');
 
       // find the columns
       var arrayObjCount = 0;
@@ -909,7 +907,7 @@
       var no_edit = disabled ? ' ng-disabled="true" ' : '';
 
       if (_.isNumber(object))
-        result += '<input type="number" ' + model + inputStyle + no_edit + '>';
+        result += '<input type="number" step="any" ' + model + inputStyle + no_edit + '>';
       else if (_.isBoolean(object))
         result += '<select ' + model + inputStyle + no_edit +
         ' ng-options="opt.v as opt.n for opt in [{n: \'false\', v: false}, {n:\'true\', v: true}]"></select>';
