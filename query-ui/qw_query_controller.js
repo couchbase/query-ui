@@ -282,7 +282,7 @@
       //
       // only support auto-complete if we're in enterprise mode
       //
-      
+
       if (qc.isEnterprise() && !qc.inputEditor.getOption("enableBasicAutocompletion")) {
         // make autocomplete work with 'tab', and auto-insert if 1 match
         autocomplete.Autocomplete.startCommand.bindKey = "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab";
@@ -855,8 +855,12 @@
           break;
 
         case "1":
-          file = new Blob([qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data)],
-              {type: "text/plain", name: "data.txt"});
+          var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data);
+          if (!csv || csv.length == 0) {
+            showErrorMessage("Unable to create tab-separated values, perhaps source data is not an array.");
+            return;
+          }
+          file = new Blob([csv],{type: "text/plain", name: "data.txt"});
           file_extension = ".txt";
           break;
 
@@ -1134,6 +1138,12 @@
 
     function copyResultAsCSV() {
       var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data);
+
+      // error check
+      if (!csv || csv.length == 0) {
+        showErrorMessage("Unable to create tab-separated values, perhaps source data is not an array.");
+        return;
+      }
 
       // create temp element
       var copyElement = document.createElement("textarea");
