@@ -369,8 +369,7 @@
     function getSaveDocClosure(dialogScope,row) {
       return function(res) {
         var newJson = dialogScope.editor.getSession().getValue();
-        saveDoc(row,newJson);
-        refreshUnlessUnsaved();
+        saveDoc(row,newJson).then(refreshUnlessUnsaved());
       }
     }
 

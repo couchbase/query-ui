@@ -430,6 +430,7 @@
     for (var row=0; row < tdata.length; row++) {
       // handle JSON docs
       if (tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json")  {// they'd all better have these
+        var docTooBig = tdata[row].docSize > 1024*1024;
         var formName = 'row' + row + 'Form';
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
@@ -443,7 +444,7 @@
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + '" ' +
+        'ng-disabled="' + invalidName + ' || ' + docTooBig + '" ' +
         'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)" ' +
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
@@ -465,10 +466,19 @@
         '</span>';
 
         // put the meta().id in the next column
-        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">' +
-                  '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)">' +
-                   mySanitize(tdata[row].id);
-        if (tdata[row].rawJSON)
+        result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">';
+
+        if (!docTooBig)
+          result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)">';
+        else 
+          result += '<a>';
+
+        result += mySanitize(tdata[row].id);
+        if (docTooBig)
+          result += ' <span class="icon fa-exclamation-triangle" ' +
+          'uib-tooltip-html="\'Document is larger than 1MB, and cant be edited.\'"' +
+          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+        else if (tdata[row].rawJSON)
           result += ' <span class="icon fa-exclamation-triangle" ng-show="dec.options.show_tables"' +
                        'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
                        'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
@@ -495,7 +505,7 @@
           Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
             var item = tdata[row].data[key];
             var childSize = {width: 1};
-            var disabled = !!tdata[row].rawJSON;
+            var disabled = !!tdata[row].rawJSON || docTooBig;
             var childHTML = (item || item === 0 || item === "" || item === false) ?
                 makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
                 result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
@@ -911,6 +921,13 @@
       else if (_.isBoolean(object))
         result += '<select ' + model + inputStyle + no_edit +
         ' ng-options="opt.v as opt.n for opt in [{n: \'false\', v: false}, {n:\'true\', v: true}]"></select>';
+
+      // can't edit incredibly long strings without the browser barfing
+      else if (object.length > 1024*512)
+        result += '<div class="text-center"><span class="icon fa-exclamation-triangle" ' +
+        'uib-tooltip-html="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
+        'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
+        '</span></div>';
       else
         result += '<textarea ' + model + inputStyle + no_edit + '></textarea>';
     }
