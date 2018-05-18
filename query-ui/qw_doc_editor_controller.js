@@ -298,6 +298,12 @@
           mode: 'json',
           showGutter: true,
           useWrapMode: true,
+          onChange: function(e) {
+            if (dialogScope.editor && dialogScope.editor.getSession().getValue().length > 1024*1024) {
+              dialogScope.error_message = "Documents larger than 1MB may not be edited.";
+              dialogScope.$applyAsync(function() {});
+            }
+          },
           onLoad: function(_editor) {
             _editor.$blockScrolling = Infinity;
             _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
@@ -311,8 +317,10 @@
                   dialogScope.$applyAsync(function() {});
                   return;
                 }
-              dialogScope.error_message = null; // no errors found
-              dialogScope.$applyAsync(function() {});
+              if (dialogScope.editor && dialogScope.editor.getSession().getValue().length < 1024*1024) {
+                dialogScope.error_message = null; // no errors found
+                dialogScope.$applyAsync(function() {});
+              }
             });
             if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
               _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
@@ -337,8 +345,9 @@
                 return true;
               }
 
-          // don't allow empty documents
-          if (dialogScope.editor.getSession().getValue().trim().length == 0)
+          // don't allow empty documents or documents > 1MB
+          if ((dialogScope.editor.getSession().getValue().trim().length == 0) ||
+              (dialogScope.editor.getSession().getValue().trim().length > 1024*1024))
             return true;
           }
         return false;
