@@ -470,7 +470,7 @@
 
         if (!docTooBig)
           result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)">';
-        else 
+        else
           result += '<a>';
 
         result += mySanitize(tdata[row].id);
@@ -478,6 +478,11 @@
           result += ' <span class="icon fa-exclamation-triangle" ' +
           'uib-tooltip-html="\'Document is larger than 1MB, and cant be edited.\'"' +
           'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+        else if (tdata[row].rawJSONError)
+          result += ' <span class="icon fa-exclamation-triangle" ng-show="dec.options.show_tables"' +
+                       'uib-tooltip-html="\'Error checking document for numebers too long to edit. Tabular editing not permitted. ' +
+                       tdata[row].rawJsonError + '\'"' +
+                       'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         else if (tdata[row].rawJSON)
           result += ' <span class="icon fa-exclamation-triangle" ng-show="dec.options.show_tables"' +
                        'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +

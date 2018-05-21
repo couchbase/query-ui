@@ -31,62 +31,82 @@
       if (!rawBytes)
         return rawBytes;
 
-      var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
-      var hasLongInts = false;
-      var matchArray = matchNonQuotedLongInts.exec(rawBytes);
-      while (matchArray != null) {
-        if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
-          hasLongInts = true;
-          break;
-        }
-        matchArray = matchNonQuotedLongInts.exec(rawBytes);
+      // the regex can fail on large documents, but we can't edit documents larger than 1MB anyway, so just
+      // parse and return
+
+      if (rawBytes.length > 1024*1024) {
+        result = JSON.parse(rawBytes);
+        result.rawJSON = rawBytes;
+        return(result);
       }
 
-      //console.log("Got response, longInts: " + hasLongInts /*+ ", raw bytes: " + rawBytes*/);
+      // add a try/catch in case the regex fails
 
-      // if no long ints, just return the original bytes parsed
-
-      if (!hasLongInts) try {
-        return(JSON.parse(rawBytes));
-      }
-      catch (e) {
-        return(rawBytes);
-      }
-
-      // otherwise copy the raw bytes, replace all long ints in the copy, and add the raw bytes as a new field on the result
-      else {
-        matchNonQuotedLongInts.lastIndex = 0;
-        matchArray = matchNonQuotedLongInts.exec(rawBytes);
-        //console.log("Old raw: " + rawBytes);
-        var result = JSON.parse(rawBytes);
-        var newBytes = "";
-        var curBytes = rawBytes;
-
+      try {
+        var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
+        var hasLongInts = false;
+        var matchArray = matchNonQuotedLongInts.exec(rawBytes);
         while (matchArray != null) {
-          if (matchArray[1]) { // group 1, a non-quoted long int
-            //console.log("  Got longInt: " + matchArray[1] + " with lastMatch: " + matchNonQuotedLongInts.lastIndex);
-            //console.log("  remainder: " + rawBytes.substring(matchNonQuotedLongInts.lastIndex,matchNonQuotedLongInts.lastIndex + 10));
-            var matchLen = matchArray[1].length;
-            newBytes += curBytes.substring(0,matchNonQuotedLongInts.lastIndex - matchLen) + '"' +
-              matchArray[1].substring(1) + '"';
-            curBytes = curBytes.substring(matchNonQuotedLongInts.lastIndex - 1);
-            matchNonQuotedLongInts.lastIndex = 0;
+          if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
+            hasLongInts = true;
+            break;
           }
-          matchArray = matchNonQuotedLongInts.exec(curBytes);
+          matchArray = matchNonQuotedLongInts.exec(rawBytes);
         }
-        newBytes += curBytes;
-        //console.log("New raw: " + newBytes);
-        result = JSON.parse(newBytes);
 
-        // see if we can pull just the result out of the rawBytes
-        var rawResult = findResult(rawBytes);
+        //console.log("Got response, longInts: " + hasLongInts /*+ ", raw bytes: " + rawBytes*/);
 
-        if (rawResult)
-          result.rawJSON = '\t' + rawResult;
-        else
-          result.rawJSON = rawBytes;
+        // if no long ints, just return the original bytes parsed
 
-        return result;
+        if (!hasLongInts) try {
+          return(JSON.parse(rawBytes));
+        }
+        catch (e) {
+          return(rawBytes);
+        }
+
+        // otherwise copy the raw bytes, replace all long ints in the copy, and add the raw bytes as a new field on the result
+        else {
+          matchNonQuotedLongInts.lastIndex = 0;
+          matchArray = matchNonQuotedLongInts.exec(rawBytes);
+          //console.log("Old raw: " + rawBytes);
+          var result = JSON.parse(rawBytes);
+          var newBytes = "";
+          var curBytes = rawBytes;
+
+          while (matchArray != null) {
+            if (matchArray[1]) { // group 1, a non-quoted long int
+              //console.log("  Got longInt: " + matchArray[1] + " with lastMatch: " + matchNonQuotedLongInts.lastIndex);
+              //console.log("  remainder: " + rawBytes.substring(matchNonQuotedLongInts.lastIndex,matchNonQuotedLongInts.lastIndex + 10));
+              var matchLen = matchArray[1].length;
+              newBytes += curBytes.substring(0,matchNonQuotedLongInts.lastIndex - matchLen) + '"' +
+              matchArray[1].substring(1) + '"';
+              curBytes = curBytes.substring(matchNonQuotedLongInts.lastIndex - 1);
+              matchNonQuotedLongInts.lastIndex = 0;
+            }
+            matchArray = matchNonQuotedLongInts.exec(curBytes);
+          }
+          newBytes += curBytes;
+          //console.log("New raw: " + newBytes);
+          result = JSON.parse(newBytes);
+
+          // see if we can pull just the result out of the rawBytes
+          var rawResult = findResult(rawBytes);
+
+          if (rawResult)
+            result.rawJSON = '\t' + rawResult;
+          else
+            result.rawJSON = rawBytes;
+
+          return result;
+        }
+
+        // if the regex fails, we don't know if there are large numbers or not, mark as not editable
+      } catch (except) {
+        result = JSON.parse(rawBytes);
+        result.rawJSON = rawBytes;
+        result.rawJSONError = "Error checking document for long numbers: " + except.message;
+        return(result);
       }
     }
 

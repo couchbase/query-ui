@@ -646,7 +646,7 @@
             docInfo.meta.type = "json";
             dec.options.current_result[position] =
               {id: docId, docSize: docInfo.json.length, data: doc.data, meta: docInfo.meta,
-                xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null};
+                xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null, rawJSONError: doc.rawJSONError};
           }
 
           // maybe a single binary doc?
