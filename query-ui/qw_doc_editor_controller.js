@@ -404,7 +404,13 @@
 
       // ...or fail?
       function error(resp) {
-        handleSaveFailure(newKey,resp.data);
+        var errors = resp;
+        if (resp.errors)
+          errors = resp.errors;
+        else if (resp.data)
+          errors = resp.data;
+
+        handleSaveFailure(newKey,errors);
         dec.updatingRow = -1;
       });
 
@@ -418,7 +424,7 @@
     function handleSaveFailure(newKey,errors) {
       var title = newKey ? "Error Inserting New Document" : "Error Updating Document";
 
-      showErrorDialog(title, JSON.stringify(errors), true);
+      showErrorDialog(title, 'Errors from server: ' + JSON.stringify(errors), true);
     }
 
 

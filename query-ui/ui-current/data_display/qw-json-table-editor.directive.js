@@ -449,7 +449,7 @@
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.write" ' +
+        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.write" ' +
         'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
