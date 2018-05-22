@@ -1019,14 +1019,19 @@
       // matches for group 1, it looks like more than one query.
 
       if (qwConstantsService.forbidMultipleQueries) {
+        // first remove any comments, so they don't confuse us
+        var matchComment = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\/\*(?:.|[\n\r])*?\*\//g;
+        var strippedText = queryText.replace(matchComment,"$1");
+
+        // now see if there is any non-whitespace after the semicolon
         var matchNonQuotedSemicolons = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|(;\s*\S+)/ig;
         var semicolonCount = 0;
 
-        var matchArray = matchNonQuotedSemicolons.exec(queryText);
+        var matchArray = matchNonQuotedSemicolons.exec(strippedText);
         while (matchArray != null) {
           if (matchArray[1]) // group 1, a non-quoted semicolon with non-whitespace following
             semicolonCount++;
-          matchArray = matchNonQuotedSemicolons.exec(queryText);
+          matchArray = matchNonQuotedSemicolons.exec(strippedText);
         }
 
         if (semicolonCount > 0) {
