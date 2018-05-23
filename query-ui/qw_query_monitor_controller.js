@@ -40,6 +40,7 @@
       "query_requests_250ms","query_requests_500ms", "query_requests_1000ms","query_requests_5000ms"];
     qmc.getLatestStat = getLatestStat;
     qmc.getAverageStat = getAverageStat;
+    qmc.getSummaryStat = getSummaryStat;
 
     qmc.vitals = {};
     qmc.vitals_names = ["request.per.sec.15min","request.per.sec.5min",
@@ -302,6 +303,23 @@
           sum += qmc.stats[name].config.data[i];
         //console.log("For stat: " + name + " got length: " + qmc.stats[name].config.data.length + " and sum: " + sum);
         return sum/qmc.stats[name].config.data.length;
+      }
+      else
+        return null;
+    }
+
+    //
+    // average sometimes isn't right, for items like the number of queries > time over the past minute,
+    // we would like a sum
+    //
+
+    function getSummaryStat(name) {
+      if (qmc.stats && qmc.stats[name] && qmc.stats[name].config && _.isArray(qmc.stats[name].config.data)) {
+        var sum = 0;
+        for (var i=0;i<qmc.stats[name].config.data.length;i++)
+          sum += qmc.stats[name].config.data[i];
+        //console.log("For stat: " + name + " got length: " + qmc.stats[name].config.data.length + " and sum: " + sum + ", " + JSON.stringify(qmc.stats[name].config.data ));
+        return sum;
       }
       else
         return null;
