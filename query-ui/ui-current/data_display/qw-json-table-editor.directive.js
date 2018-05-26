@@ -437,7 +437,7 @@
         var invalidName = formName + '.$invalid';
         result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
-        '<fieldset class="doc-editor-fieldset" ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.write">' +
+        '<fieldset class="doc-editor-fieldset" ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
         '<div class="doc-editor-row" ' +
         'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
@@ -445,16 +445,16 @@
 
         '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + ' || ' + docTooBig + '" ' +
-        'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)" ' +
+        'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)" ' +
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.write" ' +
+        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
         'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.write" ' +
+        'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
@@ -469,7 +469,7 @@
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">';
 
         if (!docTooBig)
-          result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.write)">';
+          result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)">';
         else
           result += '<a>';
 

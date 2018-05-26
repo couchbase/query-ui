@@ -105,7 +105,8 @@
       mnPermissionsProvider.set("cluster.n1ql.meta!read"); // system catalogs
       mnPermissionsProvider.setBucketSpecific(function (name) {
         return [
-          "cluster.bucket[" + name + "].n1ql.select!execute"
+          "cluster.bucket[" + name + "].n1ql.select!execute",
+          "cluster.bucket[" + name + "].data.docs!upsert"
         ]
       })
 

@@ -828,7 +828,7 @@
           dec.buckets_ephemeral = {};
           var default_seen = false;
           for (var i=0; i < resp.data.length; i++) if (resp.data[i]) {
-            if (dec.rbac.cluster.bucket[resp.data[i].name].data.read) // only include buckets we have access to
+            if (dec.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
               dec.buckets.push(resp.data[i].name);
 
             if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
