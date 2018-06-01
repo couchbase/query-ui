@@ -831,14 +831,18 @@
             // for objects and arrays, make a recursive call
             if (_.isArray(value) || _.isPlainObject(value)) {
               var childSize = {width: 1};
-              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize, disabled);
+              var childHTML = makeHTMLtable(value,prefix + '[' + index + ']' +
+                  (innerKeys ? ('.' + onlyField) : '') + 
+                  '[\''+ key + '\']',childSize, disabled);
               result += '<span class="doc-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
 
             // primitive values also use an input form generated recursively
             else {
               var childSize = {width: 1};
-              var childHTML = makeHTMLtable(value,prefix + '[' + index + '][\''+ key + '\']',childSize, disabled);
+              var childHTML = makeHTMLtable(value,prefix + '[' + index + ']' +
+                  (innerKeys ? ('.' + onlyField) : '') + 
+                  '[\''+ key + '\']',childSize, disabled);
               result += '<span class="doc-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
 
