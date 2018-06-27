@@ -406,8 +406,13 @@
 
     // Enter any new links at the parent's previous position.
     link.enter().insert("path", "g")
-    .attr("class", "wb-explain-link")
-    // .style("stroke", function(d) { return d.target.level; }) // color line with level color
+    //.attr("class", "wb-explain-link")
+    .attr("class", function(l) { // clone nodes are duplicates. if we have a link between 2, we need to hide it
+      if (l.target.cloneOf && l.source.cloneOf)
+        return("wb-clone-link");
+      else
+        return("wb-explain-link");
+    })
     .attr("marker-start", "url(#arrowhead)")
     .attr("d", function(d) {
       var o = {x: root.x0, y: root.y0};
@@ -440,6 +445,11 @@
   //
 
   function getConnectionEndPoint(node) {
+    // if the node is a clone, get the endpoint from the source
+   if (node.cloneOf)
+     return(getCloneConnectionEndPoint(node.cloneOf));
+
+    // otherwise base it on the graph orientation.
     switch (queryService.query_plan_options.orientation) {
     case orientTB:
       return [node.x, node.y + getHeight(node)/2];
@@ -455,6 +465,26 @@
       return [-node.y - getWidth(node)/2, node.x];
     }
   }
+
+  function getCloneConnectionEndPoint(node) {
+
+    // otherwise base it on the graph orientation.
+    switch (queryService.query_plan_options.orientation) {
+    case orientTB:
+      return [node.x , node.y];
+
+    case orientBT:
+      return [node.x , -node.y];
+
+    case orientLR:
+      return [node.y , node.x ];
+
+    case orientRL:
+    default:
+      return [-node.y , node.x ];
+    }
+  }
+
 
   function getRootTranslation(root) {
     switch (queryService.query_plan_options.orientation) {
@@ -475,6 +505,11 @@
   }
 
   function getNodeTranslation(node) {
+    // if the node is a clone, get the translation from the source
+    if (node.cloneOf)
+      return(getNodeTranslation(node.cloneOf));
+
+    // otherwise base it on the orientation of the graph
     switch (queryService.query_plan_options.orientation) {
     case orientTB:
       return "translate(" + node.x + "," + node.y + ")";
@@ -564,10 +599,14 @@
   // recursively turn the tree of ops into a simple tree to give to d3
   //
 
-  function makeSimpleTreeFromPlanNodes(plan,next,parent) {
+  function makeSimpleTreeFromPlanNodes(plan,next,parent,nodeCache) {
+    // keep a cache of nodes we have created, in case we see them again
+    if (!nodeCache)
+      nodeCache = {};
+
     // we ignore operators of nodes with subsequences, and put in the subsequence
     if (plan.subsequence)
-      return(makeSimpleTreeFromPlanNodes(plan.subsequence,plan.predecessor,parent));
+      return(makeSimpleTreeFromPlanNodes(plan.subsequence,plan.predecessor,parent,nodeCache));
 
     if (!plan || !plan.operator)
       return(null);
@@ -597,14 +636,25 @@
         result.level = "wb-explain-node-expensive-3";
     }
 
+    // if we have seen a node with this id before, we need to mark the new node as a clone
+    // the clone will then override the layout to move to it's twin's location
+    // this is because D3 doesn't support DAGs, so we will fake it with a tree with co-located nodes
+
+    if (plan && plan.operator && plan.operator.operatorId && nodeCache[plan.operator.operatorId])
+      result.cloneOf = nodeCache[plan.operator.operatorId];
+
+    // otherwise add this new node to the cache
+    else if (plan.operator.operatorId)
+      nodeCache[plan.operator.operatorId] = result;
+
     // if the plan has a 'predecessor', it is either a single plan node that should be
     // our child, or an array marking multiple children
 
     if (plan.predecessor)
       if (!_.isArray(plan.predecessor))
-        result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor,next,result.name));
+        result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor,next,result.name,nodeCache));
       else for (var i=0; i< plan.predecessor.length; i++)
-        result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor[i],null,result.name));
+        result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor[i],null,result.name,nodeCache));
 
     return(result);
   }

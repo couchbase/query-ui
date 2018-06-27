@@ -224,6 +224,10 @@ input.ng-invalid-number {
   stroke: #979797;
   stroke-width: 1px;
 }
+.wb-clone-link { /* analytics plans can have duplicate edges "clones" which need to be hidden */
+  fill: none;
+  stroke-width: 0px;
+}
 marker {
   fill: #333;
 }
