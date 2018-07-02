@@ -45,25 +45,35 @@
     </div>
 
     <div class="panel-footer spaced scroll-shadow">
-      <button
-         type="submit"
-         class="outline"
-         ng-disabled="disableDel()"
-         ng-click="del()">
-        Delete Selected
-      </button>
-      <button
-         type="submit"
-         class="outline"
-         ng-disabled="disableDel()"
-         ng-click="$close('run')">
-        Close & Run
-      </button>
-      <button
-         type="submit"
-         class="outline"
-         ng-click="delAll($close)">
-        Delete All
-      </button>
+      <span>
+        <button
+           type="submit"
+           class="outline"
+           ng-disabled="disableDel()"
+           ng-click="del()">
+          Delete Selected
+        </button>
+        <button
+           type="submit"
+           class="outline"
+           ng-click="delAll($close)">
+          Delete All
+        </button>
+      </span>
+      <span>
+        <button
+           type="submit"
+           class="outline"
+           ng-disabled="disableDel()"
+           ng-click="$close('run')">
+          Close & Run
+        </button>
+        <button
+           type="submit"
+           class="outline"
+           ng-click="$close()">
+          Close
+        </button>
+      </span>
     </div>
 </div>

@@ -932,7 +932,7 @@
         ' ng-options="opt.v as opt.n for opt in [{n: \'false\', v: false}, {n:\'true\', v: true}]"></select>';
 
       // can't edit incredibly long strings without the browser barfing
-      else if (object.length > 1024*512)
+      else if (object && object.length > 1024*512)
         result += '<div class="text-center"><span class="icon fa-exclamation-triangle" ' +
         'uib-tooltip-html="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
         'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
