@@ -84,7 +84,7 @@
         state: 'app.admin.doc_editor',
         includedByState: 'app.admin.doc_editor',
         plugIn: 'workbenchTab',
-        ngShow: "rbac.cluster.bucket['.'].data.docs.read",
+        ngShow: "rbac.cluster.bucket['.'].data.docs.read  && rbac.cluster.bucket['.'].data.xattr.read",
         index: 0
       });
 
@@ -106,7 +106,8 @@
       mnPermissionsProvider.setBucketSpecific(function (name) {
         return [
           "cluster.bucket[" + name + "].n1ql.select!execute",
-          "cluster.bucket[" + name + "].data.docs!upsert"
+          "cluster.bucket[" + name + "].data.docs!upsert",
+          "cluster.bucket[" + name + "].data.xattr!read"
         ]
       })
 
