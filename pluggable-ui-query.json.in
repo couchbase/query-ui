@@ -1,6 +1,6 @@
 {
   "service": "n1ql",
-  "proxy-strategy": "local",
+  "proxy-strategy": "sticky",
   "rest-api-prefix": "query",
   "version-dirs": [
     {"version": [4, 5], "dir": "ui-classic"},
