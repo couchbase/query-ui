@@ -5,7 +5,7 @@
 
   <form class="forms" name="prefs_form" novalidate>
     <div class="panel-content">
-      <div class="formrow">
+      <div class="formrow" ng-hide="mode == 'analytics'">
         <input id="for-collect-timings" type="checkbox" ng-model="options.timings">
         <label for="for-collect-timings" class="checkbox inline margin-right-zero">Collect query timings</label>
         <span
@@ -15,7 +15,7 @@
            <span class="icon fa-info fa-stack-1x"></span>
         </span>
       </div>
-      <div class="formrow">
+      <div class="formrow" ng-hide="mode == 'analytics'">
         <input id="for-auto-infer" type="checkbox" ng-model="options.auto_infer">
         <label for="for-auto-infer" class="checkbox inline margin-right-zero">Automatically infer bucket schemas</label>
         <span
@@ -25,11 +25,11 @@
            <span class="icon fa-info fa-stack-1x"></span>
         </span>
       </div>
-      <div class="formrow">
+      <div class="formrow" ng-hide="mode == 'analytics'">
         <label class="inline">Max Parallelism</label>
         <input type="text" id="pwd" ng-model="options.max_parallelism"></input>
       </div>
-      <div class="formrow">
+      <div class="formrow" ng-hide="mode == 'analytics'">
         <label>Scan Consistency</label>
         <select ng-model="options.scan_consistency">
           <option value="not_bounded">not_bounded</option>
@@ -74,7 +74,7 @@
         </div>
       </div>
 
-      <div class="formrow">
+      <div class="formrow" ng-hide="mode == 'analytics'">
           <label>Query Timeout</label>
           <input type="number" id="pwd" ng-model="options.query_timeout"></input>
       </div>
