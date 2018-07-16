@@ -32,7 +32,7 @@
       if (!plan || _.isString(plan))
         return(null);
 
-      // iterate over fields, look for "#operator" field
+      // get the "#operator" field
       var operatorName = plan['#operator'];
 
       // we had better have an operator name at this point
@@ -42,12 +42,23 @@
         return(null);
       }
 
+      // ignore 'empty-tuple-source' operator
+      if (operatorName === "empty-tuple-source")
+        return(null);
+
+      // bypass 'exchange' operators
+      if (operatorName === "exchange" && plan['physical-operator'] === "ONE_TO_ONE_EXCHANGE" &&
+          _.isArray(plan['inputs']) && plan['inputs'].length == 1)
+        return(convertAnalyticsPlanToPlanNodes(plan['inputs'][0], predecessor, lists));
+
       // analytics operator with inputs
       if (plan["inputs"]) {
         var inputs = plan["inputs"];
         var opInputs = [];
         for (var i = 0; i < inputs.length; i++) {
-          opInputs.push(convertAnalyticsPlanToPlanNodes(inputs[i], predecessor, lists));
+          var input = convertAnalyticsPlanToPlanNodes(inputs[i], predecessor, lists);
+          if (input)
+            opInputs.push(input);
         }
         var op = new PlanNode(opInputs, plan, null, null);
         return (op);
