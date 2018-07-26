@@ -807,8 +807,10 @@
           result += '<span class="doc-editor-cell" style="width: ' + unnamedWidth*columnWidthPx + 'px">';
 
           // is this row an array or primitive?
-          if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))
-            result += makeHTMLtable(item,prefix + "[" + index + "]", null, disabled);
+          if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item)) {
+            var childSize = {width: 1};
+            result += makeHTMLtable(item,prefix + "[" + index + "]", childSize, disabled);
+          }
 
           result += '</span>';
 
@@ -832,7 +834,7 @@
             if (_.isArray(value) || _.isPlainObject(value)) {
               var childSize = {width: 1};
               var childHTML = makeHTMLtable(value,prefix + '[' + index + ']' +
-                  (innerKeys ? ('.' + onlyField) : '') + 
+                  (innerKeys ? ('.' + onlyField) : '') +
                   '[\''+ key + '\']',childSize, disabled);
               result += '<span class="doc-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
@@ -841,7 +843,7 @@
             else {
               var childSize = {width: 1};
               var childHTML = makeHTMLtable(value,prefix + '[' + index + ']' +
-                  (innerKeys ? ('.' + onlyField) : '') + 
+                  (innerKeys ? ('.' + onlyField) : '') +
                   '[\''+ key + '\']',childSize, disabled);
               result += '<span class="doc-editor-row" style="width: '+ childSize.width*columnWidthPx + 'px;">' + childHTML + '</span>';
             }
@@ -897,7 +899,7 @@
       // figure out the widths of each column
       _.forIn(object, function(value,key) {
         var childSize = {width: 1};
-        var childHTML = makeHTMLtable(value,prefix + "['" + key + "']",childSize, disabled);
+        var childHTML = makeHTMLtable(value,prefix + "['" + key.replace(/'/g,"\\'") + "']",childSize, disabled);
         if (!columnWidths[key] || childSize.width > columnWidths[key])
           columnWidths[key] = childSize.width;
         dataRow += '<span class="doc-editor-cell" style="width: ' + columnWidths[key]*columnWidthPx + 'px">' + childHTML + '</span>';
