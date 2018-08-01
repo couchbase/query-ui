@@ -1067,9 +1067,10 @@
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
       var explain_promise;
 
-      if (!queryIsExplain && !queryIsPrepare && qwConstantsService.autoExplain) {
+      newResult.queryDone = false;
+      newResult.explainDone = false;
 
-        newResult.explainDone = false;
+      if (!queryIsExplain && !queryIsPrepare && qwConstantsService.autoExplain) {
 
         var explain_request = buildQueryRequest("explain " + queryText, false, queryOptions);
         if (!explain_request) {
@@ -1089,6 +1090,14 @@
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //console.log("explain success: " + JSON.stringify(data));
+          
+          // if the query finished before the 'explain', and we already have a result, just forget about 
+          // the explain results
+          if (newResult.queryDone && newResult.explainResult) {
+            lastResult.copyIn(newResult);
+            finishQuery();
+            return;
+          }
 
           // now check the status of what came back
           if (data && data.status == "success" && data.results && data.results.length > 0) try {
@@ -1120,6 +1129,7 @@
 
           newResult.explainDone = true;
 
+          // if we have a plan, and the query hasn't already finished, put up the plan
           if (newResult.explainResult.explain)
             newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
           else
@@ -1234,8 +1244,6 @@
       //
       // Issue the request
       //
-
-      newResult.queryDone = false;
 
       var request = buildQueryRequest(queryText, true, queryOptions);
 
