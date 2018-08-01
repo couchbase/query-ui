@@ -420,7 +420,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "commit"                        { return("COMMIT"); }
 "connect"                       { return("CONNECT"); }
 "continue"                      { return("CONTINUE"); }
-"correlate"                     { return("CORRELATE"); }
+"correlated"                    { return("CORRELATED"); }
 "cover"                         { return("COVER"); }
 "create"                        { return("CREATE"); }
 "database"                      { return("DATABASE"); }
@@ -578,7 +578,7 @@ qid                         [`](([`][`])|[^`])+[`]
 /* Precedence: lowest to highest */
 %left           ORDER
 %left           UNION INTERESECT EXCEPT
-%left           JOIN NEST UNNEST FLATTEN INNER LEFT
+%left           JOIN NEST UNNEST FLATTEN INNER LEFT RIGHT
 %left           OR
 %left           AND
 %right          NOT
@@ -2122,7 +2122,6 @@ REVOKE role_list ON keyspace_list FROM user_list
 }
 ;
 
-
 /*************************************************
  *
  * CREATE INDEX
@@ -3105,6 +3104,11 @@ subquery_expr
 ;
 
 subquery_expr:
+CORRELATED LPAREN fullselect RPAREN
+{
+    $$ = algebra.NewSubquery($2);
+}
+|
 LPAREN fullselect RPAREN
 {
     $$ = algebra.NewSubquery($2);
