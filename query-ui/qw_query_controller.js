@@ -70,11 +70,13 @@
     qc.acePlanChanged = acePlanChanged;
 
     //
-    // expand/collapse the analysis pane
+    // expand/collapse/hide/show the analysis pane
     //
 
     qc.analysisExpanded = false;
     qc.toggleAnalysisSize = toggleAnalysisSize;
+    qc.analysisHidden = false;
+    qc.toggleAnalysisHide = toggleAnalysisHide;
 
     //
     // functions for running queries and saving results
@@ -1082,6 +1084,25 @@
       }
       qc.analysisExpanded = !qc.analysisExpanded;
     }
+    //
+   // hide & show the bucket insights pane
+   //
+
+   function toggleAnalysisHide() {
+     if (!qc.analysisHidden) {
+       $(".insights-sidebar").removeClass("width-3");
+       $(".insights-sidebar").addClass("fix-width-0");
+       $(".wb-main-wrapper").removeClass("width-9");
+       $(".wb-main-wrapper").addClass("width-12")
+     }
+     else {
+       $(".insights-sidebar").removeClass("fix-width-0");
+       $(".insights-sidebar").addClass("width-3");
+       $(".wb-main-wrapper").removeClass("width-12");
+       $(".wb-main-wrapper").addClass("width-9");
+     }
+     qc.analysisHidden = !qc.analysisHidden;
+   }
 
     //
     // show an error dialog
