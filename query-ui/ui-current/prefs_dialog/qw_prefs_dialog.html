@@ -41,8 +41,8 @@
         <div class="row">
           <label>Positional Parameters</label>
           <span>
-            <button class="outline btn-small" title="Add a parameter" ng-click="options.positional_parameters.push('')">+</button>
-            <button class="outline btn-small" title="Remove parameter" ng-click="options.positional_parameters.splice(-1,1)" ng-disabled="options.positional_parameters.length < 1">-</button>
+            <button type="button" class="outline btn-small" title="Add a parameter" ng-click="options.positional_parameters.push('')">+</button>
+            <button type="button" class="outline btn-small" title="Remove parameter" ng-click="options.positional_parameters.splice(-1,1)" ng-disabled="options.positional_parameters.length < 1">-</button>
           </span>
         </div>
           <div style="margin:.5rem 0;" ng-repeat="param in options.positional_parameters track by $index">
@@ -56,8 +56,8 @@
         <div class="row">
           <label>Named Parameters</label>
           <span>
-            <button class="outline btn-small" title="Add parameter" ng-click="options.named_parameters.push({name:'',value:''})" >+</button>
-            <button class="outline btn-small" title="Remove parameter" ng-click="options.named_parameters.splice(-1,1)" ng-disabled="options.named_parameters.length < 1">-</button>
+            <button type="button" class="outline btn-small" title="Add parameter" ng-click="options.named_parameters.push({name:'',value:''})" >+</button>
+            <button type="button" class="outline btn-small" title="Remove parameter" ng-click="options.named_parameters.splice(-1,1)" ng-disabled="options.named_parameters.length < 1">-</button>
           </span>
         </div>
         <div class="row" ng-repeat="param in options.named_parameters track by $index">
@@ -74,7 +74,7 @@
         </div>
       </div>
 
-      <div class="formrow" ng-hide="mode == 'analytics'">
+      <div class="formrow">
           <label>Query Timeout</label>
           <input type="number" id="pwd" ng-model="options.query_timeout"></input>
       </div>

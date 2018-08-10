@@ -264,8 +264,8 @@
         '    <div ng-if="field.type==\'object\'">' +
         '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +
         '    <div ng-if="field.type==\'array\' && field.items.length">' +
-        '      <ul class="insights-sidebar-schema"><li ng-repeat="schema in field.items">{{name}} subtype:' +
-        '        <schema-display schema="schema" path="path + name + \'[]\' "></schema-display></li>' +
+        '      <ul class="insights-sidebar-schema"><li ng-repeat="schema in field.items">item {{schema.type}}' +
+        '        <span ng-if="schema.$schema || schema.type == \'array\'">:<schema-display schema="schema" path="path + name + \'[]\' "></schema-display></li></span>' +
         '      </ul>' +
         '    </div>' +
         '    <div ng-if="field.type==\'array\' && field.items.$schema">' +
@@ -276,7 +276,11 @@
         '    <div ng-if="field.type==\'array\' && field.items.subtype">' +
         '      <schema-display schema="field.items.subtype" path="path + name + \'[]\' "></schema-display>' +
         '    </div>' +
-        '   </li>' +
+        '  </li>' +
+        '  <li ng-repeat="schema in schema.items">' +
+        '    item {{schema.type}} <span ng-hide="schema.type">{{schema}}</span>' +
+        '       <span ng-if="schema.$schema || schema.type == \'array\'">:<schema-display schema="schema" path="path + name + \'[]\' "></schema-display></li></span>' +
+        '  </li>' +
         '</ul>',
         compile: function(element) {
           return(MyRecursionHelper.compile(element));

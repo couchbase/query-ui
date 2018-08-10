@@ -820,7 +820,7 @@
       // protected buckets
       //
 
-      var queryData = {statement: queryText, pretty: false};
+      var queryData = {statement: queryText, pretty: false, timeout: (qwQueryService.options.query_timeout + 's')};
 
       if (qwConstantsService.sendCreds) {
         var credArray = [];
@@ -899,7 +899,8 @@
         var queryRequest = {
             url: qwConstantsService.queryURL,
             method: "POST",
-            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':qwQueryService.options.query_timeout*1000,
+            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':
+                          (qwQueryService.options.query_timeout+1)*1000,
                       'ignore-401':'true','CB-User-Agent': userAgent},
             data: queryData,
             mnHttp: {
@@ -923,7 +924,7 @@
         queryRequest = {url: qwConstantsService.queryURL,
             method: "POST",
             headers: {'Content-Type': 'application/x-www-form-urlencoded',
-                      'ns-server-proxy-timeout':qwQueryService.options.query_timeout*1000,'CB-User-Agent': userAgent},
+                      'ns-server-proxy-timeout':(qwQueryService.options.query_timeout+1)*1000,'CB-User-Agent': userAgent},
             data: encodedQuery,
             mnHttp: {
               group: "global"
@@ -1090,8 +1091,8 @@
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //console.log("explain success: " + JSON.stringify(data));
-          
-          // if the query finished before the 'explain', and we already have a result, just forget about 
+
+          // if the query finished before the 'explain', and we already have a result, just forget about
           // the explain results
           if (newResult.queryDone && newResult.explainResult) {
             lastResult.copyIn(newResult);
@@ -1264,69 +1265,58 @@
       // SUCCESS!
       .then(function success(resp) {
         var data = resp.data, status = resp.status;
-//      console.log("Success Data: " + JSON.stringify(data));
-//      console.log("Success Status: " + JSON.stringify(status));
+//        console.log("Success Data: " + JSON.stringify(data));
+//        console.log("Success Status: " + JSON.stringify(status));
+//        if (data && data.errors)
+//          console.log("Success error: " + JSON.stringify(data.errors));
 //      console.log("Success Headers: " + JSON.stringify(headers));
 //      console.log("Success Config: " + JSON.stringify(config));
 
-        var result;
+        var result; // hold the result
 
-        //      var post_post_ms = new Date().getTime();
+        // Even though we got a successful HTTP response, it might contain warnings or errors
+        // We need to be able to show both errors and partial results, or if there are no results
+        // just the errors
 
-        // make sure we show errors if the query did not succeed
-        if (data.status == "success") {
-          // if the results are empty, show some of the surrounding data
-          if (_.isArray(data.results) && data.results.length == 0) {
-            // did we get warnings?
-            if (data.warnings)
-              result = data.warnings;
+        var emptyResult = (!_.isArray(data.results) || data.results.length == 0);
 
-            // otherwise show some context, make it obvious that results are empty
-            else {
-              result = {};
-              result.results = data.results;
-            }
-            //result.metrics = data.metrics;
+        // empty result, fill it with any errors or warnings
+        if (emptyResult) {
+          if (data.errors)
+            result = data.errors;
+          else if (data.warnings)
+            result = data.warnings;
+
+          // otherwise show some context, make it obvious that results are empty
+          else {
+            result = {};
+            result.results = data.results;
           }
-          // otherwise, use the results
-          else
-            result = data.results;
         }
-        else if (data.errors) {
-          var failed = "Authorization Failed";
-          // hack - detect authorization failed, make a suggestion
-//          for (var i=0; i < data.errors.length; i++)
-//            if (data.errors[i].msg &&
-//                data.errors[i].msg.length >= failed.length &&
-//                data.errors[i].msg.substring(0,failed.length) == failed)
-//              data.errors[i].suggestion = "Try reloading bucket information by refreshing the Bucket Analysis pane.";
+        // non-empty result: use it
+        else
+          result = data.results;
 
-          result = data.errors;
-        }
-        else if (data.status == "stopped") {
+        // if we have results, but also errors, record them in the result's warning object
+        if (data.warnings && data.errors)
+          newResult.warnings = "'" + JSON.stringify(data.warnings,null,2) + JSON.stringify(data.errors,null,2) + "'";
+        else if (data.warnings)
+          newResult.warnings = "'" + JSON.stringify(data.warnings,null,2) + "'";
+        else if (data.errors)
+          newResult.warnings = "'" + JSON.stringify(data.errors,null,2) + "'";
+        if (data.status == "stopped") {
           result = {status: "Query stopped on server."};
-//          console.log("Success/Error Data: " + JSON.stringify(data));
-//          console.log("Success/Error Status: " + JSON.stringify(status));
-//          console.log("Success/Error Headers: " + JSON.stringify(headers));
-//          console.log("Success/Error Config: " + JSON.stringify(config));
         }
+
+        if (_.isString(newResult.warnings))
+          newResult.warnings = newResult.warnings.replace(/\n/g,'<br>').replace(/ /g,'&nbsp;');
 
         // if we got no metrics, create a dummy version
-
         if (!data.metrics) {
           data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
         }
 
-        // did the query return any warnings?
-
-        if (data.warnings)
-          newResult.warnings = JSON.stringify(data.warnings);
-
-        if (data.errors)
-          newResult.status = "Error";
-        else
-          newResult.status = data.status;
-
+        newResult.status = data.status;
         newResult.elapsedTime = data.metrics.elapsedTime;
         newResult.executionTime = data.metrics.executionTime;
         newResult.resultCount = data.metrics.resultCount;
@@ -1405,6 +1395,7 @@
       /* error response from $http */
       function error(resp) {
         var data = resp.data, status = resp.status;
+//        console.log("Error resp: " + JSON.stringify(resp));
 //        console.log("Error Data: " + JSON.stringify(data));
 //        console.log("Request was: " + JSON.stringify(request));
 //      console.log("Error Status: " + JSON.stringify(status));

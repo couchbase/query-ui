@@ -31,15 +31,6 @@
       if (!rawBytes)
         return rawBytes;
 
-      // the regex can fail on large documents, but we can't edit documents larger than 1MB anyway, so just
-      // parse and return
-
-      if (rawBytes.length > 1024*1024) {
-        result = JSON.parse(rawBytes);
-        result.rawJSON = rawBytes;
-        return(result);
-      }
-
       // add a try/catch in case the regex fails
 
       try {
@@ -67,6 +58,18 @@
 
         // otherwise copy the raw bytes, replace all long ints in the copy, and add the raw bytes as a new field on the result
         else {
+          // the regex can fail on large documents, just return rawJSON, and tables will show incorrect values
+          if (rawBytes.length > 5*1024*1024) {
+            result = JSON.parse(rawBytes);
+
+            var rawResult = findResult(rawBytes);
+            if (rawResult)
+              result.rawJSON = '\t' + rawResult;
+            else
+              result.rawJSON = rawBytes;
+            return(result);
+          }
+
           matchNonQuotedLongInts.lastIndex = 0;
           matchArray = matchNonQuotedLongInts.exec(rawBytes);
           //console.log("Old raw: " + rawBytes);

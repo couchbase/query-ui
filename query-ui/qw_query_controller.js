@@ -410,7 +410,7 @@
     // this function is used for autocompletion of dynamically known names such
     // as bucket names, field names, and so on. We only want to return items that
     // either start with the prefix, or items where the prefix follows a '.'
-    // (meaning that the prefix is a field name from a path
+    // (meaning that the prefix is a field name from a path)
 
     var identifierCompleter = {
         getCompletions: function(editor, session, pos, prefix, callback) {
@@ -418,7 +418,7 @@
 
           var results = [];
           var modPrefix = '.' + prefix;
-          var modPrefix2 = '`' + prefix;
+          var modPrefix2 = _.startsWith(prefix,'`') ? prefix : '`' + prefix;
           for (var i=0; i<qwQueryService.autoCompleteArray.length; i++) {
             //console.log("  *" + qwQueryService.autoCompleteArray[i].caption + "*");
             if (_.startsWith(qwQueryService.autoCompleteArray[i].caption,prefix) ||
