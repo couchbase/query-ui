@@ -316,7 +316,7 @@
     // how many columns are needed by each field
     //
 
-    var maxWidth = 500;
+    var maxWidth = 250;
     var topLevelKeys = {};
     var columnWidths = {};
     var totalWidth = 0;
@@ -353,7 +353,7 @@
       totalWidth += columnWidths[key];
     });
 
-    // if the total width is > 1000 columns, truncate the data to be presented
+    // if the total width is > the max number of columns, truncate the data to be presented
     if (totalWidth > maxWidth) {
       var truncatedKeys = {};
       var newWidth = 0;
@@ -394,7 +394,7 @@
 
     // header for each column
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
-      columnHeaders += '<span ng-show="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
+      columnHeaders += '<span ng-if="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
       meta.columnWidths[key]*columnWidthPx + 'px;">' + mySanitize(key) +'<span class="caret-subspan"></span></span>';
     });
     columnHeaders += '</div>';
@@ -479,19 +479,19 @@
           'uib-tooltip-html="\'Document is larger than 1MB, and cant be edited.\'"' +
           'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         else if (tdata[row].rawJSONError)
-          result += ' <span class="icon fa-exclamation-triangle" ng-show="dec.options.show_tables"' +
+          result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
                        'uib-tooltip-html="\'Error checking document for numebers too long to edit. Tabular editing not permitted. ' +
                        tdata[row].rawJsonError + '\'"' +
                        'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         else if (tdata[row].rawJSON)
-          result += ' <span class="icon fa-exclamation-triangle" ng-show="dec.options.show_tables"' +
+          result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
                        'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
                        'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         result += '</a></span>';
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
-          result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width:' +
+          result += '<span ng-if="dec.options.show_tables" class="doc-editor-cell" style="width:' +
           meta.unnamedWidth*columnWidthPx + 'px">';
 
           // if this row is a subarray or primitive, put it here
@@ -513,7 +513,7 @@
             var disabled = !!tdata[row].rawJSON || docTooBig;
             var childHTML = (item || item === 0 || item === "" || item === false) ?
                 makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
-                result += '<span ng-show="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
+                result += '<span ng-if="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
                 columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
           });
 
@@ -522,7 +522,7 @@
           var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
           if (json.length > max_length)
             json = json.substring(0,max_length) + '...';
-          result += '<span ng-hide="dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
+          result += '<span ng-if="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
           + mySanitize(json) + '</span>';
         }
 
