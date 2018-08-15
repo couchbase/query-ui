@@ -158,8 +158,10 @@
           <span class="cbui-table-cell">
             {{result.resultCount}}
           </span>
-          <span class="cbui-table-cell">
+          <span ng-class="result.errorCount ? 'orange-3 cbui-table-cell' : 'cbui-table-cell'">
             {{result.state}}
+            <span ng-if="result.errorCount" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
+                class="fa-warning icon orange-3 cursor-pointer" uib-tooltip="{{result.errors}}"></span>
           </span>
           <span class="cbui-table-cell cursor-pointer" uib-tooltip="{{result.requestTime}}"
              tooltip-placement="top"
