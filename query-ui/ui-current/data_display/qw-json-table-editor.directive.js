@@ -431,6 +431,7 @@
       // handle JSON docs
       if (tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json")  {// they'd all better have these
         var docTooBig = tdata[row].docSize > 1024*1024;
+        var docError = tdata[row].error;
         var formName = 'row' + row + 'Form';
         var pristineName = formName + '.$pristine';
         var setPristineName = formName + '.$setPristine';
@@ -444,22 +445,22 @@
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docTooBig + '" ' +
+        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || ' + docError + '" ' +
         'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)" ' +
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
+        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
         'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
+        'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert' + ' || ' + docError + '" ' +
         'ng-click="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + pristineName + ' || '+ invalidName + '" ' +
+        'ng-disabled="' + pristineName + ' || '+ invalidName + ' || ' + docError + '" ' +
         'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
         'title="Save changes to document"><span class="icon fa-save"></span></a>' +
 
@@ -510,7 +511,7 @@
           Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
             var item = tdata[row].data[key];
             var childSize = {width: 1};
-            var disabled = !!tdata[row].rawJSON || docTooBig;
+            var disabled = !!tdata[row].rawJSON || docTooBig || docError;
             var childHTML = (item || item === 0 || item === "" || item === false) ?
                 makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
                 result += '<span ng-if="dec.options.show_tables" class="doc-editor-cell" style="width: ' +

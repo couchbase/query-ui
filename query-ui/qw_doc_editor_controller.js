@@ -672,15 +672,15 @@
       return function error(resp) {
         var data = resp.data, status = resp.status;
         //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
-        dec.options.current_result[position] = {id: id, data: {}, meta: {}, xattrs: {}};
+        dec.options.current_result[position] = {id: id, data: {}, meta: {type:"json"}, xattrs: {}, error: true};
 
         if (data && data.errors) {
-          dec.options.current_result = JSON.stringify(data.errors);
-          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);
+          dec.options.current_result[position].data = {"_ERROR": JSON.stringify(data.errors)};
+          showErrorDialog("Error with document: " + id,  JSON.stringify(data.errors), true);
         }
         else if (resp.statusText) {
-          dec.options.current_result = JSON.stringify(resp.statusText);
-          showErrorDialog("Error with retrieving document: " + id,  dec.options.current_result, true);
+          dec.options.current_result[position].data = {"_ERROR": JSON.stringify(resp.statusText)};
+          showErrorDialog("Error with document: " + id,  JSON.stringify(resp.statusText), true);
         }
       }
     }
