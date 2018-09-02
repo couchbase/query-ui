@@ -11,6 +11,7 @@
 
   function getQwQueryPlanService() {
 
+    const analyticsFieldPattern = /getField\((.+?)\)/igm;
     var qwQueryPlanService = {};
 
     //
@@ -104,7 +105,7 @@
         if (exp.startsWith("index-search(")) {
           extractSourceFromExpression(exp, lists.datasets, lists.indexes);
         } else if (exp.includes(".getField")) {
-          lists.fields[getFieldFromExpression(exp)] = true;
+          extractFieldsFromExpression(exp, lists.fields);
         }
       }
 
@@ -138,11 +139,11 @@
       }
     }
 
-    function getFieldFromExpression(expression) {
-      var beginToken = "getField(";
-      var fieldBegin = expression.indexOf(beginToken) + beginToken.length;
-      var fieldEnd = expression.indexOf(")", fieldBegin);
-      return expression.substring(fieldBegin, fieldEnd).trim();
+    function extractFieldsFromExpression(expression, fields) {
+      let matches = (expression.match(analyticsFieldPattern) || []).map(e => e.replace(analyticsFieldPattern, '$1'));
+      for (let i = 0; i < matches.length; i++) {
+        fields[matches[i].trim()] = true;
+      }
     }
 
     //
