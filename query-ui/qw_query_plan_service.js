@@ -349,6 +349,15 @@
         return(predecessor);
       }
 
+      // WITH operator has bindings, and a child
+
+      else if (operatorName == "With") {
+        var withNode = new PlanNode(predecessor,plan,null,lists.total_time);
+        var withChildren = convertN1QLPlanToPlanNodes(plan['~child'],withNode,lists);
+        return(withChildren);
+
+      }
+
       // for all other operators, create a plan node
       else {
         return(new PlanNode(predecessor,plan,null,lists.total_time));
