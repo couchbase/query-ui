@@ -152,17 +152,24 @@
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
         ' {{bucket.id}} <span ng-if="bucket.count > -1">&nbsp;({{bucket.count}})</span></a>' +
         '  <ul class="text-small" ng-if="bucket.expanded">' +
+        //   error?
         '    <li class="insights-sidebar-schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
+        //   for each flavor in the schema...
         '    <li class="insights-sidebar-schema" ng-repeat="flavor in bucket.schema">' +
-
+        //     each schema starts with a pseudo-flavor giving a summary with the number of flavors
         '      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
-
-        '      <div ng-hide="flavor.Summary" class="semi-bold"><span ng-show="flavor[\'%docs\']">Flavor {{$index}}' +
-        '        ({{flavor[\'%docs\'] | number:1}}{{"%)"}}</span>' +
-        '        <span ng-show="flavor.Flavor">{{"&nbsp;Common: " + flavor.Flavor}}</span></div>' +
+        //     now the real flavor
+        '      <div ng-hide="flavor.Summary" class="semi-bold"><span ng-show="flavor[\'%docs\']">' +
+        //       toggles to control showing details
+        '        <h href="" ng-click="flavor.Show = !flavor.Show"><span class="icon fa-caret-down fa-fw" ng-show="flavor.Show"></span>' +
+        '        <span class="icon fa-caret-right fa-fw"  ng-hide="flavor.Show"></span></a>' +
+        //       summary info
+        '        Flavor {{$index}}' +
+        '        ({{flavor[\'%docs\'] | number:1}}{{"%, "}}{{getNumFields(flavor.properties)}}{{" fields)"}}</span>' +
+        '        <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span ng-show="flavor.Flavor">{{"&nbsp;Common: " + flavor.Flavor}}</span></div>' +
         '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
 
-        '      <schema-display ng-hide="flavor.Summary" schema="flavor" path=""></schema-display>' +
+        '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
 
         '      <li ng-show="bucket.indexes.length > 0"><span class="semi-bold">Indexes</span> <ul class="bucket">' +
         '        <li class="index" ng-repeat="index in bucket.indexes">' +
@@ -177,6 +184,7 @@
             scope.schema = schema;
 
             scope.showSchemaControls = qwConstantsService.showSchemas;
+            scope.getNumFields = function(schema) {return(Object.keys(schema).length);};
 
             /*
              * This function is used to expand bucket descriptions (asking for SASL passwords
