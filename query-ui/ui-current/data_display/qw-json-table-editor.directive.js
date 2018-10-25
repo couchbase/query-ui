@@ -395,7 +395,13 @@
     // header for each column
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
       columnHeaders += '<span ng-if="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
-      meta.columnWidths[key]*columnWidthPx + 'px;">' + mySanitize(key) +'<span class="caret-subspan"></span></span>';
+      meta.columnWidths[key]*columnWidthPx + 'px;"'
+
+      // for column names too big to fit, add a tooltip
+      if (mySanitize(key).length > 25*meta.columnWidths[key])
+        columnHeaders += ' title="' + mySanitize(key) + '" ';
+
+      columnHeaders += '>' + mySanitize(key) +'<span class="caret-subspan"></span></span>';
     });
     columnHeaders += '</div>';
 
