@@ -261,9 +261,15 @@
           return(null);
       }
 
-      // Merge has two children: 'delete' and 'update'
+      // Merge may have various children: 'insert', 'delete' and/or 'update'
       else if (operatorName === "Merge") {
         var children = [];
+
+        if (predecessor)
+          children.push(predecessor);
+
+        if (plan['insert'])
+          children.push(convertN1QLPlanToPlanNodes(plan['insert'],null,lists));
 
         if (plan['delete'])
           children.push(convertN1QLPlanToPlanNodes(plan['delete'],null,lists));
