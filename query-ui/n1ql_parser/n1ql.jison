@@ -250,11 +250,12 @@
      algebra.NewDropIndex = function(keyspace, opt_using)                     {var a = new expr("DropIndex"); a.ops.keyspace = keyspace; a.ops.opt_using = opt_using; return a;};
      algebra.NewExcept = function(first,except)                               {var a = new expr("Except"); a.ops.first = first; a.ops.except = except; return a;};
      algebra.NewExceptAll = function(first,except)                            {var a = new expr("ExceptAll"); a.ops.first = first; a.ops.except = except; return a;};
-     algebra.NewExecute = function(expression)                                {var a = new expr("Execute"); a.ops.expression = expression; return a;};
+     algebra.NewExecute = function(expression,using)                          {var a = new expr("Execute"); a.ops.expression = expression; a.ops.using = using; return a;};
      algebra.NewExplain = function(statement)                                 {var a = new expr("Explain"); a.ops.statement = statement; return a;};
      algebra.NewExpressionTerm = function(expression, opt_as_alias, opt_use)  {var a = new expr("ExpressionTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; a.ops.opt_use = opt_use; return a;};
      algebra.NewGrantRole = function(role_list,user_list,keyspace_list)       {var a = new expr("GrantRole"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
      algebra.NewGroup = function(expression,opt_letting,opt_having)           {var a = new expr("Group"); a.ops.expression = expression; a.ops.opt_letting = opt_letting; a.ops.opt_having = opt_having; return a;};
+     algebra.NewGroupTerm = function(expression,opt_as_alias)                 {var a = new expr("GroupTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; return a;};
      algebra.NewIndexJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewIndexKeyTerm = function(index_term,opt_dir)                   {var a = new expr("IndexKeyTerm"); a.ops.index_term = index_term; a.ops.opt_dir = opt_dir; return a;};
      algebra.NewIndexNest = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
@@ -270,7 +271,7 @@
      algebra.NewMerge = function(keyspace,merge_source,key,merge_actions,opt_limit,returning) {var a = new expr("Merge"); a.ops.keyspace = keyspace; a.ops.merge_source = merge_source; a.ops.key = key; a.ops.merge_actions = merge_actions; a.ops.opt_limit = opt_limit; a.ops.returning = returning; return a;};
      algebra.NewMergeActions = function(update,del,insert)                    {var a = new expr("MergeActions"); a.ops.update = update; a.ops.del = del; a.ops.insert = insert; return a;};
      algebra.NewMergeDelete = function(where)                                 {var a = new expr("MergeDelete"); a.ops.where = where; return a;};
-     algebra.NewMergeInsert = function(expression,where)                      {var a = new expr("MergeInsert"); a.ops.expression = expression; a.ops.where = where; return a;};
+     algebra.NewMergeInsert = function(key_expr,expression,where)             {var a = new expr("MergeInsert"); a.ops.key_expr = key_expr;  a.ops.expression = expression; a.ops.where = where; return a;};
      algebra.NewMergeSourceExpression = function(expression,alias)            {var a = new expr("MergeSourceSelect"); a.ops.expression = expression; a.ops.alias = alias; return a;};
      algebra.NewMergeSourceFrom = function(from,alias)                        {var a = new expr("MergeSourceSelect"); a.ops.from = from; a.ops.alias = alias; return a;};
      algebra.NewMergeSourceSelect = function(from,alias)                      {var a = new expr("MergeSourceSelect"); a.ops.from = from; a.ops.alias = alias; return a;};
@@ -278,6 +279,8 @@
      algebra.NewNamedParameter = function(named_param)                        {var a = new expr("NamedParameter"); a.ops.named_param = named_param; return a;};
      algebra.NewNest = function(from,join_type,join_term)                     {var a = new expr("Nest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
      algebra.NewOrder = function(sort_terms)                                  {var a = new expr("Order"); a.ops.sort_terms = sort_terms; return a;};
+     algebra.NewOrderNulls = function(do_nulls, do_nulls2, last)              {var a = new expr("Order"); a.ops.do_nulls = do_nulls; a.ops.do_nulls2 = do_nulls2; a.ops.last = last; return a;};
+     algebra.NewOrderNullsPos = function(dir,nulls)                           {var a = new expr("Order"); a.ops.dir = dir; a.ops.nulls = nulls; return a;};
      algebra.NewPair = function(first,second)                                 {var a = new expr("Pair"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewPositionalParameter = function(positional_param)              {var a = new expr("PositionalParameter"); a.ops.positional_param = positional_param; return a;};
      algebra.NewPrepare = function(name,statement)                            {var a = new expr("Prepare"); a.ops.name = name; a.ops.statement = statement; return a;};
@@ -289,10 +292,10 @@
      algebra.NewSelectTerm = function(term)                                   {var a = new expr("SelectTerm"); a.ops.term = term; return a;};
      algebra.NewSet = function(set_terms)                                     {var a = new expr("Set"); a.ops.set_terms = set_terms; return a;};
      algebra.NewSetTerm = function(path,expression,update_for)                {var a = new expr("SetTerm"); a.ops.path = path; a.ops.expression = expression; a.ops.update_for = update_for; return a;};
-     algebra.NewSortTerm = function(expression,desc)                          {var a = new expr("SortTerm"); a.ops.expression = expression; a.ops.desc = desc; return a;};
+     algebra.NewSortTerm = function(expression,desc,order_nulls_pos)          {var a = new expr("SortTerm"); a.ops.expression = expression; a.ops.desc = desc; a.order_nulls_pos = order_nulls_pos; return a;};
      algebra.NewSubquery = function(fullselect)                               {var a = new expr("Subquery"); a.ops.fullselect = fullselect; return a;};
      algebra.NewSubqueryTerm = function(select_term,as_alias)                 {var a = new expr("SubqueryTerm"); a.ops.select_term = select_term; a.ops.as_alias = as_alias; return a;};
-     algebra.NewSubselect = function(from,let,where,group,select)             {var a = new expr("Subselect"); a.ops.from = from; a.ops.let = let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
+     algebra.NewSubselect = function(with_expr,from,let,where,group,select)   {var a = new expr("Subselect"); a.ops.with_expr = with_expr; a.ops.from = from; a.ops.let = let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
      algebra.NewUnion = function(first,second)                                {var a = new expr("Union"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewUnionAll = function(first,second)                             {var a = new expr("UnionAll"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewUnnest = function(from,join_type,expression,as_alias)         {var a = new expr("Unnest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
@@ -302,7 +305,10 @@
      algebra.NewUpdateFor = function(update_dimensions,when)                  {var a = new expr("UpdateFor"); a.ops.update_dimensions = update_dimensions; a.ops.when = when; return a;};
      algebra.NewUpsertSelect = function(keyspace,key_expr,value_expr,fullselect,returning) {var a = new expr("UpsertSelect"); a.ops.keyspace = keyspace; a.ops.key_expr = key_expr; a.ops.value_expr = value_expr; a.ops.fullselect = fullselect; a.ops.returning = returning; return a;};
      algebra.NewUpsertValues = function(keyspace,values_list,returning)       {var a = new expr("UpsertValues"); a.ops.keyspace = keyspace; a.ops.values_list = values_list; a.ops.returning = returning; return a;};
-     algebra.NewUse = function(keys,index)                                    {var a = new expr("Use"); a.ops.keys = keys; a.ops.index = index; return a;};
+     algebra.NewUse = function(keys,index, hint)                              {var a = new expr("Use"); a.ops.keys = keys; a.ops.index = index; a.ops.hint = hint; 
+                                                                               a.SetKeys = function(keys) {a.ops.keys = keys;}; a.SetIndexes = function(indexes) {a.ops.index = indexes;}; a.SetJoinHint = function(hint) {a.ops.hint=hint}; 
+                                                                               a.Indexes = function() {return a.ops.index}; a.JoinHint = function() {return a.ops.hint}; a.Keys = function() {return a.ops.keys};
+                                                                               return a;};
 
      algebra.SubqueryTerm = "SubqueryTerm";
      algebra.ExpressionTerm = "ExpressionTerm";
@@ -496,7 +502,9 @@ qid                         [`](([`][`])|[^`])+[`]
 "nest"                          { return("NEST"); }
 "nl"                            { return("NL"); }
 "not"                           { return("NOT"); }
+"not_a_token"                   { return("NOT_A_TOKEN"); }
 "null"                          { return("NULL"); }
+"nulls"                         { return("NULLS"); }
 "number"                        { return("NUMBER"); }
 "object"                        { return("OBJECT"); }
 "offset"                        { return("OFFSET"); }
@@ -515,8 +523,8 @@ qid                         [`](([`][`])|[^`])+[`]
 "primary"                       { return("PRIMARY"); }
 "private"                       { return("PRIVATE"); }
 "privilege"                     { return("PRIVILEGE"); }
-"procedure"                     { return("PROCEDURE"); }
 "probe"                         { return("PROBE"); }
+"procedure"                     { return("PROCEDURE"); }
 "public"                        { return("PUBLIC"); }
 "raw"                           { return("RAW"); }
 "realm"                         { return("REALM"); }
@@ -700,9 +708,22 @@ EXPLAIN stmt
 ;
 
 prepare:
-PREPARE opt_name stmt
+PREPARE opt_force opt_name stmt
 {
-    $$ = algebra.NewPrepare($2, $3)
+    $$ = algebra.NewPrepare($3, $4, $2)
+}
+;
+
+opt_force:
+/* empty */
+{
+    $$ = false
+}
+|
+FORCE
+{
+    /*yylex.(*lexer).setOffset($<tokOffset>1)*/
+    $$ = true
 }
 ;
 
@@ -725,14 +746,32 @@ STR from_or_as
 
 from_or_as:
 FROM
+{
+    /*yylex.(*lexer).setOffset($<tokOffset>1)*/
+}
 |
 AS
+{
+    /*yylex.(*lexer).setOffset($<tokOffset>1)*/
+}
 ;
 
 execute:
-EXECUTE expr
+EXECUTE expr execute_using
 {
-    $$ = algebra.NewExecute($2)
+    $$ = algebra.NewExecute($2, $3)
+}
+;
+
+execute_using:
+/* empty */
+{
+    $$ = nil
+}
+|
+USING construction_expr
+{
+    $$ = $2
 }
 ;
 
@@ -774,7 +813,12 @@ infer_with
 infer_with:
 WITH expr
 {
-    $$ = $2
+    $$ = $2;
+    /*
+    if $$ == nil {
+    yylex.Error("WITH value must be static.")
+    }
+    */    
 }
 ;
 
@@ -928,14 +972,24 @@ select_from
 from_select:
 from opt_let opt_where opt_group select_clause
 {
-    $$ = algebra.NewSubselect($1, $2, $3, $4, $5)
+    $$ = algebra.NewSubselect(nil, $1, $2, $3, $4, $5)
+}
+|
+opt_with from opt_let opt_where opt_group select_clause
+{
+    $$ = algebra.NewSubselect($1, $2, $3, $4, $5, $6)
 }
 ;
 
 select_from:
 select_clause opt_from opt_let opt_where opt_group
 {
-    $$ = algebra.NewSubselect($2, $3, $4, $5, $1)
+    $$ = algebra.NewSubselect(nil, $2, $3, $4, $5, $1)
+}
+|
+opt_with select_clause opt_from opt_let opt_where opt_group
+{
+    $$ = algebra.NewSubselect($1, $3, $4, $5, $6, $2)
 }
 ;
 
@@ -1008,9 +1062,9 @@ STAR
     $$ = algebra.NewResultTerm(expression.SELF, true, "");
 }
 |
-expr DOT STAR opt_as_alias
+expr DOT STAR
 {
-    $$ = algebra.NewResultTerm($1, true, $4);
+    $$ = algebra.NewResultTerm($1, true, "");
 }
 |
 expr opt_as_alias
@@ -1067,11 +1121,23 @@ FROM from_term
 from_term:
 simple_from_term
 {
+   /*
+    if $1.JoinHint() != algebra.JOIN_HINT_NONE {
+        yylex.Error(fmt.Sprintf("Join hint (USE HASH or USE NL) cannot be specified on the first from term %s", $1.Alias()))
+    }
+    */
     $$ = $1
 }
 |
 from_term opt_join_type JOIN simple_from_term on_keys
 {
+    /*
+    ksterm := algebra.GetKeyspaceTerm($4)
+    if ksterm == nil {
+        yylex.Error("JOIN must be done on a keyspace.")
+    }
+    ksterm.SetJoinKeys($5)
+    */
     var ksterm = $4;
     ksterm.join_keys = $5;
     $$ = algebra.NewJoin($1, $2, ksterm)
@@ -1079,6 +1145,14 @@ from_term opt_join_type JOIN simple_from_term on_keys
 |
 from_term opt_join_type JOIN simple_from_term on_key FOR IDENT
 {
+    /*
+    ksterm := algebra.GetKeyspaceTerm($4)
+    if ksterm == nil {
+        yylex.Error("JOIN must be done on a keyspace.")
+    }
+    ksterm.SetIndexJoinNest()
+    ksterm.SetJoinKeys($5)
+    */
     var ksterm = $4;
     ksterm.join_keys = $5;
     $$ = algebra.NewIndexJoin($1, $2, ksterm, $7)
@@ -1086,6 +1160,13 @@ from_term opt_join_type JOIN simple_from_term on_key FOR IDENT
 |
 from_term opt_join_type NEST simple_from_term on_keys
 {
+    /*
+    ksterm := algebra.GetKeyspaceTerm($4)
+    if ksterm == nil {
+        yylex.Error("NEST must be done on a keyspace.")
+    }
+    ksterm.SetJoinKeys($5)
+    */
     var ksterm = $4;
     ksterm.join_keys = $5;
     $$ = algebra.NewNest($1, $2, ksterm)
@@ -1093,6 +1174,14 @@ from_term opt_join_type NEST simple_from_term on_keys
 |
 from_term opt_join_type NEST simple_from_term on_key FOR IDENT
 {
+    /*
+    ksterm := algebra.GetKeyspaceTerm($4)
+    if ksterm == nil {
+        yylex.Error("NEST must be done on a keyspace.")
+    }
+    ksterm.SetIndexJoinNest()
+    ksterm.SetJoinKeys($5)
+    */    
     var ksterm = $4;
     ksterm.join_keys = $5;
     $$ = algebra.NewIndexNest($1, $2, ksterm, $7)
@@ -1105,24 +1194,20 @@ from_term opt_join_type unnest expr opt_as_alias
 |
 from_term opt_join_type JOIN simple_from_term ON expr
 {
-    var ksterm = $4;
-    $$ = algebra.NewAnsiJoin($1, $2, ksterm, $6)
+    /*$4.SetAnsiJoin()*/
+    $$ = algebra.NewAnsiJoin($1, $2, $4, $6)
 }
 |
 from_term opt_join_type NEST simple_from_term ON expr
 {
-    var ksterm = $4;
-    $$ = algebra.NewAnsiNest($1, $2, ksterm, $6)
+    /*$4.SetAnsiNest()*/
+    $$ = algebra.NewAnsiNest($1, $2, $4, $6)
 }
 |
 simple_from_term RIGHT opt_outer JOIN simple_from_term ON expr
 {
-    var ksterm = $1;
-    if (ksterm == nil) {
-        yylex.Error("Left hand side of an ANSI RIGHT OUTER JOIN must be a keyspace.")
-    }
-    //ksterm.SetAnsiJoin()  
-    $$ = algebra.NewAnsiRightJoin(ksterm, $5, $7)
+    /*$1.SetAnsiJoin()*/  
+    $$ = algebra.NewAnsiRightJoin($4, $5, $7)
 }
 ;
 
@@ -1200,7 +1285,8 @@ opt_use:
 USE use_options
 {
     $$ = $2
-};
+}
+;
 
 use_options:    
 use_keys
@@ -1211,21 +1297,25 @@ join_hint
 |
 use_index join_hint
 {
+    $1.SetJoinHint($2.JoinHint());
     $$ = $1
 }
 |
 join_hint use_index
 {
+    $1.SetIndexes($2.Indexes());
     $$ = $1
 }
 |
 use_keys join_hint
 {
+    $1.SetJoinHint($2.JoinHint());
     $$ = $1
 }
 |
 join_hint use_keys
 {
+    $1.SetKeys($2.Keys());
     $$ = $1
 }
 ;
@@ -1299,9 +1389,11 @@ PROBE
 opt_use_del_upd:
 opt_use
 {
- //   if $1.JoinHint() != algebra.JOIN_HINT_NONE {
- //       yylex.Error("Keyspace reference cannot have join hint (USE HASH or USE NL) in DELETE or UPDATE statement")
- //   }
+    /*
+    if $1.JoinHint() != algebra.JOIN_HINT_NONE {
+        yylex.Error("Keyspace reference cannot have join hint (USE HASH or USE NL) in DELETE or UPDATE statement")
+    }
+    */
     $$ = $1
 }
 ;
@@ -1386,6 +1478,43 @@ alias EQ expr
 }
 ;
 
+/*************************************************
+ *
+ * WITH clause
+ *
+ *************************************************/
+
+opt_with:
+WITH with_list
+{
+    $$ = $2
+}
+;
+
+with_list:
+with_term
+{
+    $$ = [$1]
+}
+|
+with_list COMMA with_term
+{
+    $1.push($3);
+    $$ = $1;
+}
+;
+
+with_term:
+
+/* we want expressions in parentesheses, but don't want to be
+   forced to have subquery expressions in nested parentheses
+ */
+alias AS paren_expr
+{
+    $$ = expression.NewSimpleBinding($1, $3)
+}
+;
+
 
 /*************************************************
  *
@@ -1426,7 +1555,7 @@ group
 ;
 
 group:
-GROUP BY exprs opt_letting opt_having
+GROUP BY group_terms opt_letting opt_having
 {
     $$ = algebra.NewGroup($3, $4, $5)
 }
@@ -1437,16 +1566,23 @@ letting
 }
 ;
 
-exprs:
-expr
+group_terms:
+group_term
 {
     $$ = [$1]
 }
 |
-exprs COMMA expr
+group_terms COMMA group_term
 {
     $1.push($3);
     $$ = $1
+}
+;
+
+group_term:
+expr opt_as_alias
+{
+    $$ = algebra.NewGroupTerm($1, $2);
 }
 ;
 
@@ -1519,9 +1655,9 @@ sort_terms COMMA sort_term
 ;
 
 sort_term:
-expr opt_dir
+expr opt_dir opt_nulls
 {
-    $$ = algebra.NewSortTerm($1, $2)
+    $$ = algebra.NewSortTerm($1, $2, algebra.NewOrderNullsPos($2,$3));
 }
 ;
 
@@ -1546,6 +1682,27 @@ DESC
 }
 ;
 
+opt_nulls:
+/* empty */
+{
+    $$ = algebra.NewOrderNulls(true,false,false)
+}
+|
+nulls first_last
+{
+    $$ = algebra.NewOrderNulls(false, $1,$2)
+}
+;
+
+first_last:
+FIRST { $$ = false }
+|
+LAST { $$ = true }
+;
+
+nulls:
+NULLS { $$ = true }
+;
 
 /*************************************************
  *
@@ -1704,6 +1861,13 @@ opt_value_expr:
     $$ = nil
 }
 |
+value_expr
+{
+    $$ = $1
+}
+;
+
+value_expr:
 COMMA VALUE expr
 {
     $$ = $3
@@ -1908,21 +2072,47 @@ path opt_update_for
  *************************************************/
 
 merge:
-MERGE INTO keyspace_ref USING simple_from_term ON key_expr merge_actions opt_limit opt_returning
+MERGE INTO keyspace_ref opt_use_merge USING simple_from_term ON opt_key expr merge_actions opt_limit opt_returning
 {
-     switch ($5.type) {
+     switch ($66.type) {
          case algebra.SubqueryTerm:
-              var source = algebra.NewMergeSourceSelect($5.Subquery(), $5.Alias())
-              $$ = algebra.NewMerge($3, source, $7, $8, $9, $10)
+              var source = algebra.NewMergeSourceSelect($6.Subquery(), $6.Alias())
+              $$ = algebra.NewMerge($3, $4.Indexes(), source, $8, $9, $10, $11, $12)
          case algebra.ExpressionTerm:
-              var source = algebra.NewMergeSourceExpression($5, "")
-              $$ = algebra.NewMerge($3, source, $7, $8, $9, $10)
+              var source = algebra.NewMergeSourceExpression($6, "")
+              $$ = algebra.NewMerge($3, $4.Indexes(), source, $8, $9, $10, $11, $12)
          case algebra.KeyspaceTerm:
-              var source = algebra.NewMergeSourceFrom($5, "")
-              $$ = algebra.NewMerge($3, source, $7, $8, $9, $10)
+              var source = algebra.NewMergeSourceFrom($6, "")
+              $$ = algebra.NewMerge($3, $4.Indexes(), source, $8, $9, $10, $11, $12)
          default:
               yylex.Error("MERGE source term is UNKNOWN.")
      }
+}
+;
+
+opt_use_merge:
+opt_use
+{
+    /*
+    if $1.Keys() != nil {
+        yylex.Error("Keyspace reference cannot have USE KEYS hint in MERGE statement.")
+    } else if $1.JoinHint() != algebra.JOIN_HINT_NONE {
+        yylex.Error("Keyspace reference cannot have join hint (USE HASH or USE NL)in MERGE statement.")
+    }
+    */
+    $$ = $1
+}
+;
+
+opt_key:
+/* empty */
+{
+    $$ = false
+}
+|
+key
+{
+    $$ = true
 }
 ;
 
@@ -2004,7 +2194,17 @@ opt_where
 merge_insert:
 expr opt_where
 {
-    $$ = algebra.NewMergeInsert($1, $2)
+    $$ = algebra.NewMergeInsert(nil,$1,$2)
+}
+|
+LPAREN expr COMMA expr RPAREN opt_where
+{
+    $$ = algebra.NewMergeInsert($2, $4, $6)
+}
+|
+LPAREN key_expr value_expr RPAREN opt_where
+{
+    $$ = algebra.NewMergeInsert($2, $3, $5)
 }
 ;
 
@@ -2664,7 +2864,7 @@ paren_expr
 /* For covering indexes */
 COVER LPAREN expr RPAREN
 {
-    $$ = expression.NewCover($2)
+    $$ = expression.NewCover($3)
 }
 ;
 
@@ -2868,6 +3068,18 @@ opt_exprs:
 exprs
 ;
 
+exprs:
+expr
+{
+    $$ = [$1]
+}
+|
+exprs COMMA expr
+{
+    $1.push($3);
+    $$ = $1;
+}
+;
 
 /*************************************************
  *
