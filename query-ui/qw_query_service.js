@@ -1071,7 +1071,7 @@
       newResult.queryDone = false;
       newResult.explainDone = false;
 
-      if (!queryIsExplain && !queryIsPrepare && qwConstantsService.autoExplain) {
+      if (!queryIsExplain && (!queryIsPrepare || explainOnly) && qwConstantsService.autoExplain) {
 
         var explain_request = buildQueryRequest("explain " + queryText, false, queryOptions);
         if (!explain_request) {
