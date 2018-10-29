@@ -47,6 +47,9 @@
             // summarize plan in panel at the top
             if (data.analysis) {
               content += "<div class='row wb-explain-summary'>";
+              if(data.mode === "analytics") {
+                  content += constructDatasetsColumn(data.analysis.datasets);
+              }
               content += "<div class='column'>";
               content += "<b>Indexes</b><br>";
 
@@ -57,11 +60,13 @@
                   content += "<em>" + f + "</em>&nbsp;&nbsp; ";
               content += "</div>";
 
-              content += "<div class='column'>";
-              content += "<b>Buckets</b><br>";
-              for (var b in data.analysis.buckets)
-                content += "<em>" + b + "</em>&nbsp;&nbsp; ";
-              content += "</div>";
+              if(data.mode !== "analytics") {
+                content += "<div class='column'>";
+                content += "<b>Buckets</b><br>";
+                for (var b in data.analysis.buckets)
+                  content += "<em>" + b + "</em>&nbsp;&nbsp; ";
+                content += "</div>";
+              }
 
               content += "<div class='column'>";
               content += "<b>Fields</b><br>";
@@ -657,6 +662,16 @@
         result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor[i],null,result.name,nodeCache));
 
     return(result);
+  }
+
+  function constructDatasetsColumn(datasets) {
+      var html = "<div class='column'>";
+      html += "<b>Datasets</b><br>";
+      for (var dataset in datasets) {
+          html += "<em>" + dataset + "</em>&nbsp;&nbsp; ";
+      }
+      html += "</div>";
+      return html;
   }
 
 })();
