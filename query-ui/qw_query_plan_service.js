@@ -11,6 +11,7 @@
 
   function getQwQueryPlanService() {
 
+    const analyticsFieldPattern = /getField\((.+?)\)/igm;
     var qwQueryPlanService = {};
 
     //
@@ -77,7 +78,7 @@
 
     function analyzeAnalyticsPlan(plan,lists) {
       if (!lists)
-        lists = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0};
+        lists = {buckets : {}, fields : {}, indexes: {}, aliases: [], datasets: {}, total_time: 0.0};
 
       if (!plan || _.isString(plan))
         return(null);
@@ -96,15 +97,15 @@
       }
 
       else if (plan["data-source"]) {
-        lists.indexes[getDatasource(plan["data-source"])] = true;
+        lists.datasets[plan["data-source"]] = true;
       }
 
       else if (plan["expressions"]) {
         var exp = plan["expressions"];
         if (exp.startsWith("index-search(")) {
-          lists.indexes[getIndexFromExpression(exp)] = true;
+          extractSourceFromExpression(exp, lists.datasets, lists.indexes);
         } else if (exp.includes(".getField")) {
-          lists.fields[getFieldFromExpression(exp)] = true;
+          extractFieldsFromExpression(exp, lists.fields);
         }
       }
 
@@ -124,32 +125,26 @@
     //
     //
 
-    function getIndexFromExpression(expression) {
-      var idxBegin = expression.indexOf("(") + 2;
-      var params = expression.substring(idxBegin).split(",");
-      var namespace = params[2].trim();
-      if (namespace === "Metadata") {
-        return params[0].trim() + "." + params[2].trim();
+    function extractSourceFromExpression(expression, datasets, indexes) {
+      let idxBegin = expression.indexOf("(") + 2;
+      let params = expression.substring(idxBegin).split(",");
+      let indexName = params[0].trim();
+      let dataverseName = params[2].trim();
+      let datasetName = params[3].trim();
+      let fullyQualifiedName = dataverseName + "." + indexName;
+      if(indexName === datasetName) {
+        datasets[fullyQualifiedName] = true;
+      } else {
+        indexes[fullyQualifiedName] = true;
       }
-      return params[0].trim();
     }
 
-    function getFieldFromExpression(expression) {
-      var beginToken = "getField(";
-      var fieldBegin = expression.indexOf(beginToken) + beginToken.length;
-      var fieldEnd = expression.indexOf(")", fieldBegin);
-      return expression.substring(fieldBegin, fieldEnd).trim();
-    }
-
-    function getDatasource(dataSource) {
-      var fullyQualifiedDs = dataSource;
-      if (!fullyQualifiedDs.startsWith("Metadata.")) {
-        fullyQualifiedDs = fullyQualifiedDs.substring(fullyQualifiedDs.indexOf(".") + 1, fullyQualifiedDs.length);
+    function extractFieldsFromExpression(expression, fields) {
+      let matches = (expression.match(analyticsFieldPattern) || []).map(e => e.replace(analyticsFieldPattern, '$1'));
+      for (let i = 0; i < matches.length; i++) {
+        fields[matches[i].trim()] = true;
       }
-      return fullyQualifiedDs;
     }
-
-
 
     //
     // convertN1QLPlanToPlanNodes
