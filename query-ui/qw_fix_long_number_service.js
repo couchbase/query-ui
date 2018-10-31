@@ -35,28 +35,54 @@
 
       try {
         var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
+
+        // we also can't handle floats bigger than Number.MAX_VALUE: 1.798e+308, these help us detect them
+        var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]+(?:\.[0-9]+)?[eE]\+[0-9]{3,})[,\s}]/ig;
+        var deconstructFloat = /[:\s]\-?([0-9]+)(?:\.[0-9]+)?[eE]\+([0-9]{3,})/ig;
+
         var hasLongInts = false;
-        var matchArray = matchNonQuotedLongInts.exec(rawBytes);
+        var hasLongFloats = false;
+
+        // look for overly large floats
+        var matchArray = matchNonQuotedBigFloats.exec(rawBytes);
+        while (matchArray != null) {
+          if (matchArray[1]) { // found a potentially big float, check out length of exponent and characteristic
+            var subMatch = deconstructFloat.exec(matchArray[1]);
+            if (subMatch[1] && subMatch[2]) {
+              if ((subMatch[1].length + subMatch[2].length >= 5) || // number big enough based on digits
+                  (subMatch[1].length + Number(subMatch[2]) >= 309)) { //
+                hasLongFloats = true;
+                break;
+              }
+            }
+          }
+          matchArray = matchNonQuotedBigFloats.exec(rawBytes);
+        }
+
+        // look for overly large ints
+        matchArray = matchNonQuotedLongInts.exec(rawBytes);
         while (matchArray != null) {
           if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
+            result = JSON.parse(rawBytes);
+            result.rawJSON = rawBytes;
             hasLongInts = true;
             break;
           }
           matchArray = matchNonQuotedLongInts.exec(rawBytes);
         }
 
-        //console.log("Got response, longInts: " + hasLongInts /*+ ", raw bytes: " + rawBytes*/);
+       //console.log("Got response, longInts: " + hasLongInts /*+ ", raw bytes: " + rawBytes*/);
 
         // if no long ints, just return the original bytes parsed
 
-        if (!hasLongInts) try {
+        if (!hasLongInts && !hasLongFloats) try {
           return(JSON.parse(rawBytes));
         }
         catch (e) {
           return(rawBytes);
         }
 
-        // otherwise copy the raw bytes, replace all long ints in the copy, and add the raw bytes as a new field on the result
+        // otherwise copy the raw bytes, replace all long numbers in the copy, and add the raw bytes as a new field on the result
         else {
           // the regex can fail on large documents, just return rawJSON, and tables will show incorrect values
           if (rawBytes.length > 5*1024*1024) {
@@ -70,30 +96,16 @@
             return(result);
           }
 
-          matchNonQuotedLongInts.lastIndex = 0;
-          matchArray = matchNonQuotedLongInts.exec(rawBytes);
-          //console.log("Old raw: " + rawBytes);
-          var result = JSON.parse(rawBytes);
-          var newBytes = "";
+          // now do ints and floats as necessary
           var curBytes = rawBytes;
+          if (hasLongInts)
+            curBytes = replaceRegExMatchWithString(curBytes,matchNonQuotedLongInts);
+          if (hasLongFloats)
+            curBytes = replaceRegExMatchWithString(curBytes,matchNonQuotedBigFloats);
 
-          while (matchArray != null) {
-            if (matchArray[1]) { // group 1, a non-quoted long int
-              //console.log("  Got longInt: " + matchArray[1] + " with lastMatch: " + matchNonQuotedLongInts.lastIndex);
-              //console.log("  remainder: " + rawBytes.substring(matchNonQuotedLongInts.lastIndex,matchNonQuotedLongInts.lastIndex + 10));
-              var matchLen = matchArray[1].length;
-              newBytes += curBytes.substring(0,matchNonQuotedLongInts.lastIndex - matchLen) + '"' +
-              matchArray[1].substring(1) + '"';
-              curBytes = curBytes.substring(matchNonQuotedLongInts.lastIndex - 1);
-              matchNonQuotedLongInts.lastIndex = 0;
-            }
-            matchArray = matchNonQuotedLongInts.exec(curBytes);
-          }
-          newBytes += curBytes;
-          //console.log("New raw: " + newBytes);
-          result = JSON.parse(newBytes);
+          var result = JSON.parse(curBytes);
 
-          // see if we can pull just the result out of the rawBytes
+          // pull just the result out of the rawBytes
           var rawResult = findResult(rawBytes);
 
           if (rawResult)
@@ -112,6 +124,37 @@
         return(result);
       }
     }
+
+    //
+    // replaceRegExMatchWithString
+    //
+    // we want to be able to replace overly long integers or overly big floats with strings of the same
+    // value. This function will take a regex and replace matches of it with strings.
+    //
+    //
+
+    function replaceRegExMatchWithString(curBytes,regex) {
+      regex.lastIndex = 0; // reset regex to beginning
+      var matchArray = regex.exec(curBytes);
+      var newBytes = "";
+
+      while (matchArray != null) {
+        if (matchArray[1]) { // group 1, a non-quoted long int
+          //console.log("  Got match: " + matchArray[1] + " with lastMatch: " + regex.lastIndex);
+          //console.log("  remainder: " + curBytes.substring(regex.lastIndex,regex.lastIndex + 10));
+          var matchLen = matchArray[1].length;
+          newBytes += curBytes.substring(0,regex.lastIndex - matchLen) + '"' +
+            matchArray[1].substring(1) + '"';
+          curBytes = curBytes.substring(regex.lastIndex - 1);
+          regex.lastIndex = 0;
+        }
+        matchArray = regex.exec(curBytes);
+      }
+      newBytes += curBytes;
+
+      return(newBytes);
+    }
+
 
     //
     // getRawResultsFromBytes

@@ -1955,14 +1955,16 @@
         if (response)
           if (response.data && response.data.errors) {
             error += ", " + JSON.stringify(response.data.errors,null,'  ');
-            bucket.schema_error = response.data.errors;
           }
-          else if (response.status)
+          else if (response.status) {
             error += ", " + response.status;
+            if (response.statusText)
+              error += " " + response.statusText;
+          }
           else
             error += JSON.stringify(response);
 
-        console.log("   error: " + error);
+        bucket.schema_error = error;
       });
 
     };

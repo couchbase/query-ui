@@ -184,7 +184,7 @@
             scope.schema = schema;
 
             scope.showSchemaControls = qwConstantsService.showSchemas;
-            scope.getNumFields = function(schema) {return(Object.keys(schema).length);};
+            scope.getNumFields = function(schema) {if (schema) return(Object.keys(schema).length); else return 0;};
 
             /*
              * This function is used to expand bucket descriptions (asking for SASL passwords
