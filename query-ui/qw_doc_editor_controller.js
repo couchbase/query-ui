@@ -31,6 +31,7 @@
     dec.currentDocs = [];
     dec.buckets = [];
     dec.buckets_ephemeral = {};
+    dec.show_id = show_id;
     dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
     dec.hideAllTooltips = false;
     dec.resultSize = function() {if (_.isArray(dec.options.current_result)) return dec.options.current_result.length;
@@ -93,6 +94,22 @@
         dec.options.offset += dec.options.limit;
         retrieveDocs_inner();
       });
+    }
+
+    //
+    // handle switch between a single ID and a range of IDs
+    //
+
+    function show_id(val) {
+      dec.options.show_id = val;
+      // if they typed something in the where_clause, clear out the id values,
+      // since they can't do both
+      if (val && dec.options.where_clause.length > 0)
+        dec.options.doc_id = '';
+      if (!val && dec.options.where_clause.length > 0) {
+        dec.options.doc_id_start = '';
+        dec.options.doc_id_end = '';
+      }
     }
 
     //
@@ -727,12 +744,19 @@
         return;
       }
 
-      if (dec.options.doc_id)
+      if (dec.options.doc_id && dec.options.show_id)
         dec.options.current_query += ', document id: ' + dec.options.doc_id;
 
-      else
+      else {
         dec.options.current_query += ", limit: " +
           dec.options.limit + ", offset: " + dec.options.offset;
+      }
+
+      if (!dec.options.show_id && dec.options.doc_id_start)
+        dec.options.current_query += ", startKey: " + dec.options.doc_id_start;
+
+      if (!dec.options.show_id && dec.options.doc_id_end)
+        dec.options.current_query += ", endKey: " + dec.options.doc_id_end;
 
       // can only use REST API to retrieve single docs from emphemeral buckets
       if (!dec.options.doc_id && dec.buckets_ephemeral[dec.options.selected_bucket]) {
@@ -756,9 +780,15 @@
         return;
       }
 
-      // otherwise get a list of IDs
+      // otherwise use skip, offset, and optionally start & end keys
       var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
         "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
+
+      if (!dec.options.show_id && dec.options.doc_id_start)
+        rest_url += "&startkey=%22" + encodeURIComponent(dec.options.doc_id_start) + '%22';
+
+      if (!dec.options.show_id && dec.options.doc_id_end)
+        rest_url += "&endkey=%22" + encodeURIComponent(dec.options.doc_id_end) + '%22';
 
       $http({
         url: rest_url,

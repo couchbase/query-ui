@@ -81,21 +81,35 @@
          class="input-short-1">
     </div>
     <div class="column flex-grow-2">
-      <label class="inline">Document ID</label>
+      <label class="inline">Document <a ng-click="dec.show_id(true)">ID</a>/<a ng-click="dec.show_id(false)">Range</a></label>
       <span class="fa-stack icon-info"
-          uib-tooltip-html="'Find the document with this ID or leave blank to retrieve documents based on limit and offset.'"
+          uib-tooltip-html="'Find the document a specific ID. Click Range to specify a range of IDs. Leave blank to retrieve all documents, or use a WHERE clause.'"
           tooltip-placement="top"
           tooltip-append-to-body="true"
           tooltip-trigger="'mouseenter'">
         <span class="icon fa-circle-thin fa-stack-2x"></span>
         <span class="icon fa-info fa-stack-1x"></span>
       </span>
+      
       <input type="text"
          ng-model="dec.options.doc_id"
+         ng-if="dec.options.show_id"
          ng-submit="dec.retrieveDocs()"
          ng-disabled="(dec.options.where_clause.length > 0)"
          placeholder="enter document ID or leave blank"
          class="width-12">
+      <span ng-if="!dec.options.show_id" style="display:inline-block">
+      <input type="text"
+         ng-model="dec.options.doc_id_start"
+         ng-submit="dec.retrieveDocs()"
+         ng-disabled="(dec.options.where_clause.length > 0)"
+         placeholder="starting document ID">
+      <input type="text"
+         ng-model="dec.options.doc_id_end"
+         ng-submit="dec.retrieveDocs()"
+         ng-disabled="(dec.options.where_clause.length > 0)"
+         placeholder="ending document ID">
+         </span> 
     </div>
     <div class="column margin-top-half flex-grow-2">
       <label class="inline">Where</label>
@@ -112,7 +126,7 @@
          type="text"
          ng-model="dec.options.where_clause"
          ng-submit="dec.retrieveDocs()"
-         ng-disabled="!dec.use_n1ql() || (dec.options.doc_id.length > 0)"
+         ng-disabled="!dec.use_n1ql() || (dec.options.doc_id.length > 0 && dec.options.show_id) || ((dec.options.doc_id_start.length || dec.options.doc_id_end.length) && !dec.options.show_id)"
          class="width-12"
          placeholder="e.g., 'meta().id = &quot;some_id&quot; and type = &quot;a_type&quot;'">
     </div>

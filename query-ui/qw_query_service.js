@@ -162,10 +162,13 @@
         selected_bucket: null,
         query_busy: false,
         show_tables: false,
+        show_id: true, // show ID vs range of IDs
         limit: 10,
         offset: 0,
         where_clause: '',
         doc_id: '',
+        doc_id_start: '',
+        doc_id_end: '',
         current_query: '',
         current_bucket: '',
         current_result: []
