@@ -425,7 +425,7 @@
 
     function addToken(token, type) {
       // see if the token needs to be quoted
-      if (token.indexOf(' ') >= 0 || token.indexOf('-') >= 0)
+      if (token.indexOf(' ') >= 0 || token.indexOf('-') >= 0 && !token.startsWith('`'))
         token = '`' + token + '`';
 
       // if the token isn't already there, add it
@@ -455,15 +455,22 @@
 
     function getFieldNamesFromSchema(schema,prefix) {
       //console.log("Got schema: " + JSON.stringify(schema, null, 4));
+
+      if (!prefix)
+        prefix = '';
+
       for (var i=0; i< schema.length; i++)
         _.forEach(schema[i]['properties'], function(field, field_name) {
-          //console.log("Adding field: " + prefix + field_name);
+          //console.log("Adding field prefix: " + prefix + ', field: ' +  field_name);
           //console.log("  field[properties]: " + field['properties']);
           //console.log("  field[items]: " + field['items']);
           //if (field['items'])
           // console.log("    field[items].subtype: " + field['items'].subtype);
 
           addToken(prefix + field_name,"field");
+          //if (prefix.length == 0 && !field_name.startsWith('`'))
+          //  addToken('`' + field_name + '`',"field");
+
           // if the field has sub-properties, make a recursive call
           if (field['properties']) {
             getFieldNamesFromSchema([field],prefix + field_name + ".");
@@ -1696,6 +1703,7 @@
             qwQueryService.bucket_names.push(bucket.id);
           }
           addToken(bucket.id,"bucket");
+          addToken('`' + bucket.id + '`',"bucket");
         }
 
         refreshAutoCompleteArray();
