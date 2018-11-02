@@ -688,16 +688,19 @@
     function getDocReturnErrorHandler(position,id) {
       return function error(resp) {
         var data = resp.data, status = resp.status;
-        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
+        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(resp));
         dec.options.current_result[position] = {id: id, data: {}, meta: {type:"json"}, xattrs: {}, error: true};
 
-        if (data && data.errors) {
-          dec.options.current_result[position].data = {"_ERROR": JSON.stringify(data.errors)};
-          showErrorDialog("Error with document: " + id,  JSON.stringify(data.errors), true);
+        if (status == 404)
+          dec.options.current_result[position].data = "ERROR: Document not found.";
+
+        else if (data && data.errors) {
+          dec.options.current_result[position].data = "ERROR: " + JSON.stringify(data.errors);
+          //showErrorDialog("Error with document: " + id,  JSON.stringify(data.errors), true);
         }
         else if (resp.statusText) {
-          dec.options.current_result[position].data = {"_ERROR": JSON.stringify(resp.statusText)};
-          showErrorDialog("Error with document: " + id,  JSON.stringify(resp.statusText), true);
+          dec.options.current_result[position].data = "ERROR: " + JSON.stringify(resp.statusText);
+          //showErrorDialog("Error with document: " + id,  JSON.stringify(resp.statusText), true);
         }
       }
     }
