@@ -519,7 +519,7 @@
             var childSize = {width: 1};
             var disabled = !!tdata[row].rawJSON || docTooBig || docError;
             var childHTML = (item || item === 0 || item === "" || item === false) ?
-                makeHTMLtable(item,'[' + row + '].data[\''+ key + '\']', childSize, disabled) : '&nbsp;';
+                makeHTMLtable(item,'[' + row + '].data[\''+ key.replace(/'/g,"\\'") + '\']', childSize, disabled) : '&nbsp;';
                 result += '<span ng-if="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
                 columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
           });

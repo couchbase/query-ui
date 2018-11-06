@@ -586,11 +586,14 @@
         }
 
         else if (data.errors) {
-          var errorText = "";
-          for (var i=0; i< data.errors.length; i++)
-            errorText += "Code: " + data.errors[i].code + ', Message: "' + data.errors[i].msg + '"    \n';
+          var errorText = [];
+          errorText.push("Query: " + query);
+          for (var i=0; i< data.errors.length; i++) {
+            errorText.push("Code: " + data.errors[i].code);
+            errorText.push('Message: "' + data.errors[i].msg + '"');
+          }
 
-          showErrorDialog("Error with document retrieval query.", errorText, true);
+          showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
 
           dec.options.queryBusy = false;
         }
@@ -609,13 +612,19 @@
         //console.log("Editor Q Error Status: " + JSON.stringify(status));
 
         if (data && data.errors) {
-          dec.options.current_result = JSON.stringify(data.errors);
+          var errorText = [];
+          errorText.push("Query: " + query);
+          for (var i=0; i< data.errors.length; i++) {
+            errorText.push("Code: " + data.errors[i].code);
+            errorText.push('Message: "' + data.errors[i].msg + '"');
+          }
 
-          var errorText = "";
-          for (var i=0; i< data.errors.length; i++)
-            errorText += "Code: " + data.errors[i].code + ', Message: "' + data.errors[i].msg + '"    \n';
+          data.errors.unshift({"Query": query});
+          var errorHTML = '';
+          errorText.forEach(function (message) {errorHTML += message + '<br>'});
+          dec.options.current_result = errorHTML;
 
-          showErrorDialog("Error with document retrieval query.", errorText, true);
+          showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
 
           //console.log("Got error: " + dec.options.current_result);
         }
@@ -712,7 +721,10 @@
     function showErrorDialog(title, detail, hide_cancel) {
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = title;
-      dialogScope.error_detail = detail;
+      if (!Array.isArray(detail))
+        dialogScope.error_detail = detail;
+      else
+        dialogScope.error_detail_array = detail;
       dialogScope.hide_cancel = hide_cancel;
       return $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
