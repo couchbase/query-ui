@@ -26,6 +26,10 @@
         </span>
       </div>
       <div class="formrow" ng-hide="mode == 'analytics'">
+        <input id="for-auto-format" type="checkbox" ng-model="options.auto_format">
+        <label for="for-auto-format" class="checkbox inline margin-right-zero">Automatically format queries before executing</label>
+      </div>
+      <div class="formrow" ng-hide="mode == 'analytics'">
         <label class="inline">Max Parallelism</label>
         <input type="text" id="pwd" ng-model="options.max_parallelism"></input>
       </div>

@@ -134,6 +134,7 @@
     qwQueryService.options = {
         timings: true,
         auto_infer: true,
+        auto_format: false,
         max_parallelism: "",
         scan_consistency: "not_bounded",
         positional_parameters: [],
@@ -146,6 +147,7 @@
         return {
           timings: qwQueryService.options.timings,
           auto_infer: qwQueryService.options.auto_infer,
+          auto_format: qwQueryService.options.auto_format,
           max_parallelism: qwQueryService.options.max_parallelism,
           scan_consistency: qwQueryService.options.scan_consistency,
           positional_parameters: qwQueryService.options.positional_parameters.slice(0),
@@ -355,14 +357,17 @@
             monitoringOptions = savedState.monitoringOptions;
 
           // handle case where auto_infer is not yet defined, and set it to true
-          if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false) {
+          if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false)
             qwQueryService.options.auto_infer = true;
-          }
+
+          if (qwQueryService.options.auto_format !== true && qwQueryService.options.auto_format !== false)
+            qwQueryService.options.auto_format = false;
         }
         else
           console.log("No last result");
       } catch (err) {console.log("Error loading state: " + err);}
     }
+
 
 
     function saveStateToStorage() {

@@ -24,7 +24,11 @@
     <div class="wb-query-editor">
 <!-- Editor "header row" -->
       <div class="wb-query-editor-header">
-        <h4>Query Editor</h4>
+          <h4>Query Editor
+          <a ng-disabled="qc.executingQuery.busy" ng-click="qc.format()" class="wb-history-controls-inner">
+             &nbsp;&nbsp;&nbsp;format query
+          </a>
+          </h4>
         <span>
           <button
              title="View previous queries & results" ng-click="qc.prev()"

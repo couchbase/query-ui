@@ -152,6 +152,8 @@
 
     qc.showOptions = qwConstantsService.showOptions;
 
+    qc.format = format;
+
     //
     // does the browser support file choosing?
     //
@@ -385,8 +387,10 @@
 
     var langTools = ace.require("ace/ext/language_tools");
     var autocomplete = ace.require("ace/autocomplete");
+    var mode_n1ql;
 
     function aceInputLoaded(_editor) {
+      mode_n1ql = ace.require("ace/mode/n1ql");
       _editor.$blockScrolling = Infinity;
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
@@ -406,6 +410,14 @@
       $(".wb-ace-editor")[0].addEventListener('dragover',handleDragOver,false);
       $(".wb-ace-editor")[0].addEventListener('drop',handleFileDrop,false);
     };
+
+    //
+    // format the contents of the query field
+    //
+
+    function format() {
+      qc.lastResult.query = mode_n1ql.Instance.format(qc.lastResult.query,2);
+    }
 
     // this function is used for autocompletion of dynamically known names such
     // as bucket names, field names, and so on. We only want to return items that
@@ -678,6 +690,10 @@
       // syntax errors (query parser doesn't like \n after ;
       if (endsWithSemi.test(qc.lastResult.query))
         qc.lastResult.query = qc.lastResult.query.trim();
+
+      // if the user wants auto-formatting, format the query
+      if (qwQueryService.options.auto_format)
+        format();
 
       var queryStr = qc.lastResult.query;
 
@@ -1261,6 +1277,5 @@
     }
 
   }
-
 
 })();
