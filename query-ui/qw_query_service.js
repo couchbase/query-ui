@@ -186,10 +186,10 @@
     //
 
     function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult,mutationCount,warnings,sortCount) {
+        data,query,requestID,explainResult,mutationCount,warnings,sortCount,lastRun,status) {
       this.status = status;
       this.resultCount = resultCount;
-      this.resultCount = mutationCount;
+      this.mutationCount = mutationCount;
       this.resultSize = resultSize;
       this.result = result;
       this.data = data;
@@ -205,8 +205,11 @@
       this.executionTime = truncateTime(executionTime);
       this.warnings = warnings;
       this.sortCount = sortCount;
-    };
 
+      // when last run?
+      this.lastRun = lastRun;
+      this.status = status;
+    };
 
     // elapsed and execution time come back with ridiculous amounts of
     // precision, and some letters at the end indicating units.
@@ -230,8 +233,36 @@
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
           this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
-          this.mutationCount,this.warnings,this.sortCount);
+          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status);
     };
+
+    //
+    // clone a query object, but omit the data and plan (which might take lots of space)
+    //
+
+    var un_run_status = "Not yet run";
+    var un_run_query_data = {"No data to display": "Hit execute to run query."};
+    var un_run_query_text =  JSON.stringify(un_run_query_data);
+
+    QueryResult.prototype.clone_for_storage = function() {
+      var res = new QueryResult(this.status,'','',this.resultCount,
+          '',
+          un_run_query_text,
+          un_run_query_data,
+          this.query,
+          '',
+          un_run_query_data,
+          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status);
+
+      res.explainResultText = un_run_query_text;
+
+      return res;
+    }
+
+    QueryResult.prototype.hasData = function() {
+      return(this.result !== un_run_query_text);
+    }
+
     QueryResult.prototype.copyIn = function(other)
     {
       this.status = other.status;
@@ -248,8 +279,47 @@
       this.explainResultText = other.explainResultText;
       this.warnings = other.warnings;
       this.sortCount = other.sortCount;
+      if (_.isString(other.lastRun))
+        this.lastRun = new Date(other.lastRun);
+      else
+        this.lastRun = other.lastRun;
+      this.status = other.status;
     };
 
+    //
+    // how recently was the query run (if at all)?
+    //
+
+    QueryResult.prototype.getLastRun = function() {
+      // need a lastRun time to see how long ago it was
+      if (!this.lastRun || !_.isDate(this.lastRun))
+        return(null);
+
+      // figure out how long ago it was
+      var howRecent = (new Date().getTime() - this.lastRun.getTime())/1000;
+      var recentStr = 'Last run: ';
+      if (howRecent < 60)
+        recentStr += ' just now';
+      else if (howRecent < 3600)
+        recentStr += Math.round(howRecent/60) + ' minutes ago';
+      else if (howRecent < 86400)
+        recentStr += Math.round(howRecent/3600) + ' hours ago';
+      else
+        recentStr += this.lastRun.toDateString() + ' at ' + this.lastRun.getHours() + ':' + this.lastRun.getMinutes();
+
+      return(recentStr);
+    }
+
+    QueryResult.prototype.getLastDetails = function () {
+      var status = '';
+
+      if (this.mutationCount)
+        status += ', ' + this.mutationCount + ' mutations';
+      else if (this.resultCount)
+        status += ', ' + this.resultCount + ' documents';
+
+      return(status);
+    }
 
     //
     // structures for remembering queries and results
@@ -259,15 +329,15 @@
     var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
     savedResultTemplate.status = "";
-    savedResultTemplate.result = '{"No data to display": "Hit execute to rerun the query."}';
-    savedResultTemplate.data = {"No data to display": "Hit execute to rerun query."};
+    savedResultTemplate.result = un_run_query_text;
+    savedResultTemplate.data = un_run_query_data;
     savedResultTemplate.explainResult = savedResultTemplate.data;
     savedResultTemplate.explainResultText = savedResultTemplate.result;
 
     var newQueryTemplate = dummyResult.clone();
-    newQueryTemplate.status = "Not yet run";
-    newQueryTemplate.result = '{"no_data_yet": "Hit execute to run query"}';
-    newQueryTemplate.data = {no_data_yet: "Hit execute to run query"};
+    newQueryTemplate.status = un_run_status;
+    newQueryTemplate.result = un_run_query_text;
+    newQueryTemplate.data = un_run_query_data;
 
     var executingQueryTemplate = dummyResult.clone();
     executingQueryTemplate.status = "Executing";
@@ -284,6 +354,22 @@
     function emptyResult() {
         return(!pastQueries[currentQueryIndex] ||
             pastQueries[currentQueryIndex].result === savedResultTemplate.result);
+    }
+
+    //
+    // support a batch of queries to be run in sequence
+    //
+
+    function QueryBatch(_queries, _stop_on_error) {
+      this.queries = _queries;
+      this.current_query = -1;
+      this.stop_on_error = _stop_on_error;
+    }
+
+    QueryBatch.prototype.copyIn = function(other) {
+      this.queries = other.queries;
+      this.current_query = other.current_query;
+      this.stop_on_error = other.stop_on_error;
     }
 
     //
@@ -337,8 +423,14 @@
         if (savedState.lastResult) {
           //console.log("Got last result: " + JSON.stringify(savedState.lastResult));
           lastResult.copyIn(savedState.lastResult);
-          currentQueryIndex = savedState.currentQueryIndex;
-          pastQueries = savedState.pastQueries;
+          pastQueries = [];
+          _.forEach(savedState.pastQueries,function(queryRes,index) {
+            var newQuery = new QueryResult();
+            newQuery.copyIn(queryRes);
+            pastQueries.push(newQuery);
+          });
+
+          setCurrentIndex(savedState.currentQueryIndex);
           qwQueryService.outputTab = savedState.outputTab;
           if (savedState.options)
             qwQueryService.options = savedState.options;
@@ -383,8 +475,7 @@
       savedState.pastQueries = [];
       savedState.outputTab = qwQueryService.outputTab;
       savedState.currentQueryIndex = currentQueryIndex;
-      savedState.lastResult = savedResultTemplate.clone();
-      savedState.lastResult.query = lastResult.query;
+      savedState.lastResult = lastResult.clone_for_storage();
       savedState.options = qwQueryService.options;
 
       savedState.doc_editor_options = {
@@ -407,9 +498,7 @@
       savedState.monitoringOptions = monitoringOptions;
 
       _.forEach(pastQueries,function(queryRes,index) {
-        var qcopy = savedResultTemplate.clone();
-        qcopy.query = queryRes.query;
-        savedState.pastQueries.push(qcopy);
+        savedState.pastQueries.push(queryRes.clone_for_storage());
       });
 
       //console.log("saving state, len: " + JSON.stringify(savedState).length);
@@ -1019,6 +1108,7 @@
           (lastResult.status == newQueryTemplate.status)){
         newResult = executingQueryTemplate.clone();
         newResult.query = lastResult.query.trim();
+        newResult.lastRun = new Date();
         pastQueries[currentQueryIndex] = newResult; // forget previous results
       }
 
@@ -1028,6 +1118,7 @@
       else {
         newResult = executingQueryTemplate.clone();
         newResult.query = lastResult.query.trim();
+        newResult.lastRun = new Date();
         pastQueries.push(newResult);
         currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
       }

@@ -75,7 +75,8 @@
         </span>
 
 <!-- query results stats -->
-        <div ng-hide="qc.lastResult.hide" class="wb-result-summary">
+        <div>
+        <div ng-if="qc.lastResult.hasData()" class="wb-result-summary">
           <span
             class="wb-result-status"
             ng-class="{success: qc.status_success() || qc.lastResult.status == 'explain success', error: qc.status_fail()}">
@@ -86,6 +87,17 @@
           <span ng-if="!qc.lastResult.mutationCount && qc.lastResult.resultCount" ng-attr-title="sortCount: {{qc.lastResult.sortCount}}">
           count: {{qc.lastResult.resultCount}} | </span>
           <span ng-if="qc.lastResult.resultSize">size: {{qc.lastResult.resultSize}}</span>
+        </div>
+        <div class="wb-result-summary" ng-if="!qc.lastResult.hasData()">Click execute to run query.</div>
+        <div class="wb-result-summary" ng-if="qc.lastResult.getLastRun()" ng-attr-title="{{qc.lastResult.lastRun}}">{{qc.lastResult.getLastRun()}}
+            <span ng-if="!qc.lastResult.hasData()">&nbsp;
+                <span class="wb-result-status"
+                  ng-class="{success: qc.status_success() || qc.lastResult.status == 'explain success', error: qc.status_fail()}">
+                  {{qc.lastResult.status}}
+                </span>
+                {{qc.lastResult.getLastDetails()}}
+            </span>
+        </div>
         </div>
 
 <!-- run-time preferences -->

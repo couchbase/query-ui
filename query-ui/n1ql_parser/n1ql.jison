@@ -230,6 +230,7 @@
 
      var algebra = {};
      algebra.EMPTY_USE = new expr("EMPTY_USE");
+     algebra.GetAggregate = function(name, dummy, has_window)                {var a = new expr("Aggregate"); a.ops.name = name; return a;}
      algebra.MapPairs = function(pairs)                                       {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
      algebra.NewAlterIndex = function(keyspace, index_name, opt_using, rename){var a = new expr("AlterIndex"); a.ops.keyspace = keyspace; a.ops.index_name = index_name; a.ops.opt_using = opt_using; a.ops.rename = rename; return a;};
      algebra.NewAnsiJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
@@ -309,10 +310,33 @@
                                                                                a.SetKeys = function(keys) {a.ops.keys = keys;}; a.SetIndexes = function(indexes) {a.ops.index = indexes;}; a.SetJoinHint = function(hint) {a.ops.hint=hint}; 
                                                                                a.Indexes = function() {return a.ops.index}; a.JoinHint = function() {return a.ops.hint}; a.Keys = function() {return a.ops.keys};
                                                                                return a;};
+     algebra.NewWindowTerm = function(partition, order, frame)                {var a = new expr("WindowTerm"); a.ops.partition = partition; a.ops.order = order; a.ops.frame = frame; return a;};
+     algebra.NewWindowFrame = function(modifier, extents)                     {var a = new expr("WindowFrame"); a.ops.modifier = modifier; a.ops.extents = extents; return a;};
+     algebra.NewWindowFrameExtent = function(exprn, extent)                   {var a = new expr("WindowFrameExtent"); a.ops.exprn = exprn; a.ops.extent = extent; return a;};
+     algebra.WindowFrameExtents = function(from, to)                          {var a = new expr("WindowFrameExtents"); a.ops.from = from; a.ops.to = to; return a;};
 
      algebra.SubqueryTerm = "SubqueryTerm";
      algebra.ExpressionTerm = "ExpressionTerm";
      algebra.KeyspaceTerm = "KeyspaceTerm";
+     
+     algebra.AGGREGATE_FROMLAST = "AGGREGATE_FROMLAST";
+     algebra.AGGREGATE_FROMFIRST = "AGGREGATE_FROMFIRST";
+     algebra.AGGREGATE_DISTINCT = "AGGREGATE_DISTINCT";
+     algebra.AGGREGATE_RESPECTNULLS = "AGGREGATE_RESPECTNULLS";
+     algebra.AGGREGATE_IGNORENULLS = "AGGREGATE_IGNORENULLS";
+
+     algebra.WINDOW_FRAME_ROWS = "WINDOW_FRAME_ROWS";
+     algebra.WINDOW_FRAME_RANGE = "WINDOW_FRAME_RANGE";
+     algebra.WINDOW_FRAME_GROUPS = "WINDOW_FRAME_GROUPS";
+     algebra.WINDOW_FRAME_EXCLUDE_CURRENT_ROW = "WINDOW_FRAME_EXCLUDE_CURRENT_ROW";
+     algebra.WINDOW_FRAME_EXCLUDE_TIES = "WINDOW_FRAME_EXCLUDE_TIES";
+     algebra.WINDOW_FRAME_EXCLUDE_GROUP = "WINDOW_FRAME_EXCLUDE_GROUP";
+     algebra.WINDOW_FRAME_UNBOUNDED_PRECEDING = "WINDOW_FRAME_UNBOUNDED_PRECEDING";
+     algebra.WINDOW_FRAME_UNBOUNDED_FOLLOWING = "WINDOW_FRAME_UNBOUNDED_FOLLOWING";
+     algebra.WINDOW_FRAME_CURRENT_ROW = "WINDOW_FRAME_CURRENT_ROW";
+     algebra.WINDOW_FRAME_VALUE_PRECEDING = "WINDOW_FRAME_VALUE_PRECEDING";
+     algebra.WINDOW_FRAME_VALUE_FOLLOWING = "WINDOW_FRAME_VALUE_FOLLOWING";
+     
 
      var value = {};
      value.NewValue = function(val) {var a = new expr("Value"); a.value = val; return a;};
@@ -429,6 +453,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "correlated"                    { return("CORRELATED"); }
 "cover"                         { return("COVER"); }
 "create"                        { return("CREATE"); }
+"current"                       { return("CURRENT"); }
 "database"                      { return("DATABASE"); }
 "dataset"                       { return("DATASET"); }
 "datastore"                     { return("DATASTORE"); }
@@ -455,6 +480,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "fetch"                         { return("FETCH"); }
 "first"                         { return("FIRST"); }
 "flatten"                       { return("FLATTEN"); }
+"following"                     { return("FOLLOWING"); }
 "for"                           { return("FOR"); }
 "force"                         { return("FORCE"); }
 "from"                          { return("FROM"); }
@@ -462,6 +488,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "function"                      { return("FUNCTION"); }
 "grant"                         { return("GRANT"); }
 "group"                         { return("GROUP"); }
+"groups"                        { return("GROUPS"); }
 "gsi"                           { return("GSI"); }
 "hash"                          { return("HASH"); }
 "having"                        { return("HAVING"); }
@@ -501,8 +528,10 @@ qid                         [`](([`][`])|[^`])+[`]
 "namespace"                     { return("NAMESPACE"); }
 "nest"                          { return("NEST"); }
 "nl"                            { return("NL"); }
+"no"                            { return("NO"); }
 "not"                           { return("NOT"); }
 "not_a_token"                   { return("NOT_A_TOKEN"); }
+"nth_value"                     { return("NTH_VALUE"); }
 "null"                          { return("NULL"); }
 "nulls"                         { return("NULLS"); }
 "number"                        { return("NUMBER"); }
@@ -512,6 +541,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "option"                        { return("OPTION"); }
 "or"                            { return("OR"); }
 "order"                         { return("ORDER"); }
+"others"                        { return("OTHERS"); }
 "outer"                         { return("OUTER"); }
 "over"                          { return("OVER"); }
 "parse"                         { return("PARSE"); }
@@ -519,6 +549,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "password"                      { return("PASSWORD"); }
 "path"                          { return("PATH"); }
 "pool"                          { return("POOL"); }
+"preceding"                     { return("PRECEDING") }
 "prepare"                       { return("PREPARE") }
 "primary"                       { return("PRIMARY"); }
 "private"                       { return("PRIVATE"); }
@@ -526,16 +557,20 @@ qid                         [`](([`][`])|[^`])+[`]
 "probe"                         { return("PROBE"); }
 "procedure"                     { return("PROCEDURE"); }
 "public"                        { return("PUBLIC"); }
+"range"                         { return("RANGE"); }
 "raw"                           { return("RAW"); }
 "realm"                         { return("REALM"); }
 "reduce"                        { return("REDUCE"); }
 "rename"                        { return("RENAME"); }
+"respect"                       { return("RESPECT"); }
 "return"                        { return("RETURN"); }
 "returning"                     { return("RETURNING"); }
 "revoke"                        { return("REVOKE"); }
 "right"                         { return("RIGHT"); }
 "role"                          { return("ROLE"); }
 "rollback"                      { return("ROLLBACK"); }
+"row"                           { return("ROW"); }
+"rows"                          { return("ROWS"); }
 "satisfies"                     { return("SATISFIES"); }
 "schema"                        { return("SCHEMA"); }
 "select"                        { return("SELECT"); }
@@ -549,11 +584,13 @@ qid                         [`](([`][`])|[^`])+[`]
 "string"                        { return("STRING"); }
 "system"                        { return("SYSTEM"); }
 "then"                          { return("THEN"); }
+"ties"                          { return("TIES"); }
 "to"                            { return("TO"); }
 "transaction"                   { return("TRANSACTION"); }
 "trigger"                       { return("TRIGGER"); }
 "true"                          { return("TRUE"); }
 "truncate"                      { return("TRUNCATE"); }
+"unbounded"                     { return("UNBOUNDED"); }
 "under"                         { return("UNDER"); }
 "union"                         { return("UNION"); }
 "unique"                        { return("UNIQUE"); }
@@ -815,7 +852,7 @@ WITH expr
 {
     $$ = $2;
     /*
-    if $$ == nil {
+    if ($$) == nil {
     yylex.Error("WITH value must be static.")
     }
     */    
@@ -3169,20 +3206,29 @@ ELSE expr
  *
  * Function
  *
+ * NTH_VALUE(expr,n) [FROM FIRST|LAST] [RESPECT|IGNORE NULLS] OVER(....)
+ *   requires special handling due to FROM (avoid conflict with query FROM)
+ *   example: SELECT SUM(c1) FROM default WHERE ...
  *************************************************/
 
 function_expr:
-function_name opt_exprs RPAREN
+NTH_VALUE LPAREN exprs RPAREN opt_from_first_last opt_nulls_treatment window_clause
+{
+    var fname = "nth_value";
+    $$ = algebra.GetAggregate(fname, false, ($7 != null));
+}
+|
+function_name opt_exprs RPAREN opt_nulls_treatment opt_window_clause
 {
     $$ = expression.NewFunction($1,$2);
 }
 |
-function_name DISTINCT expr RPAREN
+function_name DISTINCT expr RPAREN opt_window_clause
 {
     $$ = expression.NewFunction($1,$3,true);
 }
 |
-function_name STAR RPAREN
+function_name STAR RPAREN opt_window_clause
 {
     $$ = expression.NewFunction($1,"star");
 }
@@ -3354,5 +3400,173 @@ all DISTINCT expr
 DISTINCT expr
 {
     $$ = expression.NewAll($2, true)
+}
+;
+
+opt_window_clause:
+/* empty */
+{ $$ = nil }
+|
+window_clause
+{ $$ = $1 }
+;
+
+window_clause:
+OVER LPAREN opt_window_partition opt_order_by opt_window_frame RPAREN
+{
+    $$ = algebra.NewWindowTerm($3,$4,$5)
+}
+;
+
+opt_window_partition:
+/* empty */
+{ $$ = nil }
+|
+PARTITION BY exprs
+{ $$ = $3 }
+;
+
+opt_window_frame:
+/* empty */
+{
+    $$ = nil
+}
+|
+window_frame_modifier window_frame_extents opt_window_frame_exclusion
+{
+    $$ = algebra.NewWindowFrame($1|$3, $2)
+}
+;
+
+
+window_frame_modifier:
+ROWS
+{
+    $$ = algebra.WINDOW_FRAME_ROWS
+}
+|
+RANGE
+{
+    $$ = algebra.WINDOW_FRAME_RANGE
+}
+|
+GROUPS
+{
+    $$ = algebra.WINDOW_FRAME_GROUPS
+}
+;
+
+opt_window_frame_exclusion:
+/* empty */
+{
+     $$ = 0
+}
+|
+EXCLUDE NO OTHERS
+{
+     $$ = 0
+}
+|
+EXCLUDE CURRENT ROW
+{
+     $$ = algebra.WINDOW_FRAME_EXCLUDE_CURRENT_ROW
+}
+|
+EXCLUDE TIES
+{
+     $$ = algebra.WINDOW_FRAME_EXCLUDE_TIES
+}
+|
+EXCLUDE GROUP
+{
+     $$ = algebra.WINDOW_FRAME_EXCLUDE_GROUP
+}
+;
+
+window_frame_extents:
+window_frame_extent
+{
+    $$ = algebra.WindowFrameExtents($1)
+}
+|
+BETWEEN window_frame_extent AND window_frame_extent
+{
+    $$ = algebra.WindowFrameExtents($2, $4)
+}
+;
+
+window_frame_extent:
+UNBOUNDED PRECEDING
+{
+    $$ = algebra.NewWindowFrameExtent(nil, algebra.WINDOW_FRAME_UNBOUNDED_PRECEDING)
+}
+|
+UNBOUNDED FOLLOWING
+{
+    $$ = algebra.NewWindowFrameExtent(nil, algebra.WINDOW_FRAME_UNBOUNDED_FOLLOWING)
+}
+|
+CURRENT ROW
+{
+    $$ = algebra.NewWindowFrameExtent(nil, algebra.WINDOW_FRAME_CURRENT_ROW)
+}
+|
+expr window_frame_valexpr_modifier
+{
+    $$ = algebra.NewWindowFrameExtent($1, $2)
+}
+;
+
+window_frame_valexpr_modifier:
+PRECEDING
+{
+    $$ = algebra.WINDOW_FRAME_VALUE_PRECEDING
+}
+|
+FOLLOWING
+{
+    $$ = algebra.WINDOW_FRAME_VALUE_FOLLOWING
+}
+;
+
+opt_nulls_treatment:
+/* empty */
+{ $$ = 0 }
+|
+nulls_treatment
+{ $$ = $1 }
+;
+
+nulls_treatment:
+RESPECT NULLS
+{ $$ = algebra.AGGREGATE_RESPECTNULLS }
+|
+IGNORE NULLS
+{ $$ = algebra.AGGREGATE_IGNORENULLS }
+;
+
+opt_from_first_last:
+/* empty */
+{ $$ = 0 }
+|
+FROM first_last
+{
+    if ($2) {
+         $$ = algebra.AGGREGATE_FROMLAST
+    } else {
+         $$ = algebra.AGGREGATE_FROMFIRST
+    }
+}
+;
+
+agg_quantifier:
+ALL
+{
+   $$ = 0
+}
+|
+DISTINCT
+{
+   $$ = algebra.AGGREGATE_DISTINCT
 }
 ;

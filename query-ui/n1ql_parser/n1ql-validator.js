@@ -77,7 +77,7 @@ function queryArray() {
 "SELECT * from default:orders3 INNER JOIN default:contacts ON KEYS orders3.customers ORDER BY orders3.id, contacts.name",
 "SELECT * FROM default:orders2 INNER JOIN default:contacts AS cont ON  KEYS orders2.custId ORDER BY orders2.id, cont.name",
 "SELECT META(o).id oid FROM default:users_with_orders u USE KEYS \"Adaline_67672807\" INNER JOIN default:users_with_orders o ON KEYS ARRAY s.order_id FOR s IN u.shipped_order_history END ORDER BY oid",
-"SELECT META(u).id uid, META(o).id oid FROM default:users_with_orders u USE KEYS \"Aide_48687583\" INNER JOIN default:users_with_orders o ON KEYS ARRAY s.order_id FOR s IN u.shipped_order_history END ORDER BY oid,uid", 
+"SELECT META(u).id uid, META(o).id oid FROM default:users_with_orders u USE KEYS \"Aide_48687583\" INNER JOIN default:users_with_orders o ON KEYS ARRAY s.order_id FOR s IN u.shipped_order_history END ORDER BY oid,uid",
 "SELECT META(o).id oid FROM default:users_with_orders u USE KEYS \"Adaline_67672807\" UNNEST u.shipped_order_history s INNER JOIN default:users_with_orders o ON KEYS s.order_id ORDER BY oid",
 "SELECT o.order_details.order_id AS oid FROM default:users_with_orders u USE KEYS \"Aide_48687583\" INNER JOIN default:users_with_orders o ON KEYS ARRAY s.order_id FOR s IN u.shipped_order_history END ORDER BY oid",
 "SELECT  o.order_details.order_id as oid FROM default:users_with_orders u USE KEYS \"Aide_48687583\" UNNEST u.shipped_order_history s INNER JOIN default:users_with_orders o ON KEYS s.order_id ORDER BY oid",
@@ -95,7 +95,7 @@ function queryArray() {
 "SELECT META(customer).id oid1, meta(purchase).id oid2 FROM purchase USE KEYS \"purchase0_joins\" LEFT JOIN customer ON KEYS purchase.customerId || \"_\" || purchase.test_id where purchase.test_id = \"joins\" order by oid1, oid2",
 "SELECT customer.ccInfo, customer.customerId, purchase.purchaseId, purchase.lineItems from purchase INNER JOIN customer ON KEYS purchase.customerId || \"_\" || purchase.test_id WHERE customer.test_id = \"joins\" ORDER BY purchase.customerId,purchase.purchaseId limit 10",
 "SELECT META(customer).id oid1, meta(purchase).id oid2 FROM purchase USE KEYS \"purchase0_joins\" INNER JOIN customer ON KEYS purchase.customerId || \"_\" || purchase.test_id where purchase.test_id = \"joins\" order by oid1, oid2",
-"SELECT META(purchase).id purchase_id, META(product).id product_id FROM purchase INNER JOIN product ON KEYS ARRAY s.product || \"_\" || purchase.test_id FOR s IN purchase.lineItems END where purchase.test_id = \"joins\" ORDER BY purchase_id, product_id limit 5", 
+"SELECT META(purchase).id purchase_id, META(product).id product_id FROM purchase INNER JOIN product ON KEYS ARRAY s.product || \"_\" || purchase.test_id FOR s IN purchase.lineItems END where purchase.test_id = \"joins\" ORDER BY purchase_id, product_id limit 5",
 "SELECT META(purchase).id as purchase_id, meta(product).id as product_id, product.name as name FROM purchase UNNEST purchase.lineItems line INNER JOIN product ON KEYS line.product || \"_\" || purchase.test_id where purchase.test_id = \"joins\" AND product.test_id = \"joins\" ORDER BY purchase_id, product_id, name limit 5 ",
 "SELECT purchase.purchaseId, META(customer).id custID, META(product).id prodID, cardio FROM purchase USE KEYS \"purchase1018_joins\" UNNEST ARRAY (pl.product || \"_\" || \"joins\") FOR pl IN purchase.lineItems END AS pID INNER JOIN product ON KEYS pID INNER JOIN customer ON KEYS (purchase.customerId || \"_\" || \"joins\") UNNEST TO_ARRAY(customer.ccInfo.cardNumber) AS cardio ORDER BY prodID",
 "SELECT pu.customerId, product.unitPrice, product.productId from purchase pu USE KEYS \"purchase1018_joins\" INNER JOIN product ON KEYS ARRAY (pl.product || \"_\" || \"joins\") FOR pl IN pu.lineItems END ORDER BY product.unitPrice DESC",
@@ -103,7 +103,7 @@ function queryArray() {
 "SELECT DISTINCT productId, pu.customerId, customer.firstName FROM purchase pu UNNEST ARRAY (pl.product|| \"_\" || \"joins\") FOR pl IN pu.lineItems END AS productId INNER JOIN customer ON KEYS (pu.customerId|| \"_\" || \"joins\") WHERE pu.customerId=\"customer498\" ORDER BY productId limit 8",
 "SELECT customer.ccInfo, customer.customerId, purchase.purchaseId, purchase.lineItems from purchase LEFT JOIN customer ON KEYS purchase.customerId || \"_\" || purchase.test_id WHERE customer.test_id = \"joins\" ORDER BY purchase.customerId,purchase.purchaseId limit 10",
 "SELECT META(customer).id oid1, meta(purchase).id oid2 FROM purchase USE KEYS \"purchase0_joins\" LEFT JOIN customer ON KEYS purchase.customerId || \"_\" || purchase.test_id where purchase.test_id = \"joins\" order by oid1, oid2",
-"SELECT META(purchase).id purchase_id, META(product).id product_id FROM purchase LEFT JOIN product ON KEYS ARRAY s.product || \"_\" || purchase.test_id FOR s IN purchase.lineItems END where purchase.test_id = \"joins\" ORDER BY purchase_id, product_id limit 5", 
+"SELECT META(purchase).id purchase_id, META(product).id product_id FROM purchase LEFT JOIN product ON KEYS ARRAY s.product || \"_\" || purchase.test_id FOR s IN purchase.lineItems END where purchase.test_id = \"joins\" ORDER BY purchase_id, product_id limit 5",
         "SELECT META(purchase).id as purchase_id, meta(product).id as product_id, product.name as name FROM purchase UNNEST purchase.lineItems line LEFT JOIN product ON KEYS line.product || \"_\" || purchase.test_id where purchase.test_id = \"joins\" AND product.test_id = \"joins\" ORDER BY purchase_id, product_id, name limit 5 ",
 
 'SELECT DISTINCT route.destinationairport FROM `travel-sample` airport JOIN `travel-sample` route ON airport.faa = route.sourceairport AND route.type = "route" WHERE airport.type = "airport" AND airport.city = "San Francisco" AND airport.country = "United States";',
@@ -163,6 +163,7 @@ function queryArray() {
         }
         catch (err) {
             console.log("\n\nParse error for \n\n" + query + "\n\nis: " + err.message);
+            console.log(err.stack);
         }
     }
 }
@@ -170,7 +171,8 @@ function queryArray() {
 function queryFile() {
     var lineReader = require('readline').createInterface({
         //    input: require('fs').createReadStream('/Users/eben/src/jison/examples/query.txt')
-        input: require('fs').createReadStream('/Users/eben/src/jison/examples/queries.txt')
+        //input: require('fs').createReadStream('/Users/eben/src/jison/examples/queries.txt')
+        input: require('fs').createReadStream('/Users/eben/src/master/query-ui/query-ui/n1ql_parser/window_queries.n1ql')
     });
 
     var lineNum = 0;
@@ -184,10 +186,11 @@ function queryFile() {
         }
         catch (err) {
             console.log("\n\nParse error for \n\n" + line + "\n\nis: " + err.message);
+            console.log(err.stack);
         }
     });
 }
 
 
-//queryFile();
-queryArray();
+queryFile();
+//queryArray();
