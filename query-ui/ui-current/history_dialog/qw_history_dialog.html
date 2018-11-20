@@ -38,7 +38,17 @@
                ng-click="select($index,$event)"
                ng-dblclick="select($index);$close('ok')"
                class="text-small width-11">
-              {{query.query | limitTo: 1024}}{{query.query.length > 1024 ? '...' : ''}}
+               <div>
+                {{query.query | limitTo: 1024}}{{query.query.length > 1024 ? '...' : ''}}
+               </div>
+               <span>
+                <span class="wb-result-status"
+                  ng-class="{success: query.status_success(), error: query.status_fail()}">
+                  {{query.status}}
+                </span>
+                {{query.getLastDetails()}}
+            </span>
+
             </span>
           </section>
       </div>

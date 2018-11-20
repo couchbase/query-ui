@@ -92,7 +92,7 @@
         <div class="wb-result-summary" ng-if="qc.lastResult.getLastRun()" ng-attr-title="{{qc.lastResult.lastRun}}">{{qc.lastResult.getLastRun()}}
             <span ng-if="!qc.lastResult.hasData()">&nbsp;
                 <span class="wb-result-status"
-                  ng-class="{success: qc.status_success() || qc.lastResult.status == 'explain success', error: qc.status_fail()}">
+                  ng-class="{success: qc.status_success(), error: qc.status_fail()}">
                   {{qc.lastResult.status}}
                 </span>
                 {{qc.lastResult.getLastDetails()}}

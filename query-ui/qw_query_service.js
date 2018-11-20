@@ -118,14 +118,8 @@
     qwQueryService.status_success = status_success;
     qwQueryService.status_fail = status_fail;
 
-    function status_success() {return(lastResult.status == 'success');}
-    function status_fail()
-    {return(lastResult.status == '400' ||
-        lastResult.status == 'errors' ||
-        lastResult.status == '500' ||
-        lastResult.status == '404' ||
-        lastResult.status == 'stopped' ||
-        lastResult.status == 'explain error');}
+    function status_success() {return(lastResult.status_success());}
+    function status_fail()    {return(lastResult.status_fail());}
 
     //
     // here are some options we use while querying
@@ -234,6 +228,18 @@
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
           this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
           this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status);
+    };
+
+    QueryResult.prototype.status_success = function() {
+      return(this.status == 'success' || this.status == 'explain success');
+    };
+    QueryResult.prototype.status_fail = function()
+    {return(lastResult.status == '400' ||
+        this.status == 'errors' ||
+        this.status == '500' ||
+        this.status == '404' ||
+        this.status == 'stopped' ||
+        this.status == 'explain error');
     };
 
     //
