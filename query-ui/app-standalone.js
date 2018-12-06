@@ -18,7 +18,8 @@
                     'mnPools',
                     'mnElementCrane',
                     'ui.ace',
-                    'ui.bootstrap'])
+                    'ui.bootstrap',
+                    'ng-showdown'])
 
         .config(function($stateProvider,$urlRouterProvider) {
         $urlRouterProvider.otherwise('/standalone/workbench');
@@ -96,13 +97,13 @@
         _bucketsInProgress = true;
 
         // meanwhile issue a query to the local node get the list of buckets
-        var queryData = {statement: "select keyspaces.name from system:keyspaces;"};
+        var queryData = {statement: "select raw keyspaces.name from system:keyspaces;"};
         $http.post("/_p/query/query/service",queryData)
         .then(function success(resp) {
           //var data = resp.data, status = resp.status;
           //console.log("Got bucket list data: " + JSON.stringify(resp).substring(0,10) + " with callbacks: " + _callbackList.length);
           mnPermissions.check().then(function success() {
-            updateValidBuckets();
+            updateValidBuckets(resp.data.results);
             while (_callbackList.length) // call each callback to let them know we're done
               _callbackList.pop()();
           });
@@ -119,7 +120,7 @@
         });
       }
 
-      function updateValidBuckets() {
+      function updateValidBuckets(allBuckets) {
         // see what buckets we have permission to access
         var perms = mnPermissions.export.cluster;
         //console.log("Got bucket permissions... " + JSON.stringify(perms));
@@ -139,6 +140,8 @@
               _bucketList.push(k);
                _bucketStatsList.push(k);
             }
+             else
+               _bucketList = allBuckets;
           });
 
           //console.log("valid bucketList: " + JSON.stringify(_bucketList));

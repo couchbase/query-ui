@@ -1,7 +1,7 @@
 <!doctype html>
 <html ng-app="qwQuery">
 <head>
-<title>Couchbase Query Workbench - standalone version</title>
+<title>Couchbase N1QL Tutorial</title>
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
@@ -30,9 +30,7 @@
 
 <script src="app-standalone/jquery-3.3.1.slim.js" type="text/javascript" ></script>
 
-<!-- script src="libs-standalone/codemirror.js"></script>
 <script src="libs-standalone/beautify.js"></script>
-<script src="libs-standalone/codemirror.javascript.js"></script-->
 <script src="libs-standalone/angular.js"></script>
 <script src="libs-standalone/angular-animate.js"></script>
 <script src="libs-standalone/angular-sanitize.js"></script>
@@ -110,6 +108,8 @@
 
 <script src="n1ql_parser/n1ql.js"></script>
 
+<script src="tutorial/tutorial.js"></script>
+<link rel="stylesheet" href="tutorial/tutorial.css">
 
 <link rel="stylesheet" href="ui-current/query.css">
 <link rel="stylesheet" href="ui-current/data_display/qw-json-tree-table.css">
@@ -146,21 +146,34 @@
 </script>
 
 </head>
-<body ng-controller="qwQueryController as qc">
+<body>
 <div class="page-wrap">
   <header>
     <span class="logobug-wrapper">
       <img src="images/cb_logo_bug_white_2.svg" width="48" height="48" alt="Couchbase Server" class="logobug">
     </span>
-    <h1>Couchbase Query Workbench &nbsp;
+    <h1>Couchbase N1QL Tutorial &nbsp;
     <small>{{ qc.version }}</small>
     </h1>
-    <mn-element-depot name="actions"></mn-element-depot>
+    <mn-element-depot ng-hide="true" name="actions"></mn-element-depot>
   </header>
 
   <main>
-    <div class="main-content">
-      <div ui-view></div>
+    <div class="main-content" style="display:flex">
+      <div ng-controller="tutorialController as tc" class="column vertical-divider">
+          <div class="tutorial" id="info">
+            <div class="tutorial-control-bar">
+                <button class="tutorial-control" id="prev" ng-click="tc.prev()" class="button">Previous Lesson</button>
+                <button class="tutorial-control" id="index" class="button enabled">Index</button>
+                <button class="tutorial-control" id="next" ng-click="tc.next()" class="button">Next Lesson</button>
+            </div>
+            <div class="slide" id="slide">
+                <div class="slide" id="content" markdown-to-html="tc.current_slide_content"></div>
+            </div>
+        </div>
+      
+      </div>
+      <div ng-controller="qwQueryController as qc" class="column" style="width:-webkit-fill-available" ui-view></div>
     </div>
   </main>
 </div>

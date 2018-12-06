@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	//"strconv"
 
 	"github.com/couchbase/go-couchbase"
 	json "github.com/dustin/gojson"
@@ -181,6 +183,7 @@ func launchWebService() {
 	// if they specified a QUERYENGINE, remember what they specified
 
 	if QUERYENGINE != nil && len(*QUERYENGINE) > 0 { // if no DATASTORE, there must be a QUERYENGINE
+		fmt.Printf("    Using CB QueryEngine at: %s\n", *QUERYENGINE)
 
 		queryHost = *QUERYENGINE
 
@@ -229,10 +232,17 @@ func launchWebService() {
 		http.Handle("/pools", mgmtProxy)
 		http.Handle("/pools/default", mgmtProxy)
 		http.Handle("/pools/default/buckets", mgmtProxy)
-		http.Handle("/pools/default/checkPermissions", mgmtProxy)
 		//		http.Handle("/uilogin", mgmtProxy)
 		//		http.Handle("/uilogout", mgmtProxy)
 		//		http.Handle("/whoami", mgmtProxy)
+	} else {
+		// if we don't have a server host, we must be directly connected to cbqengine. We
+		// need to intercept and handle messages to /pools/...
+
+		http.HandleFunc("/pools", fakeServer)
+		http.HandleFunc("/pools/default", fakeServer)
+		http.HandleFunc("/pools/default/buckets", fakeServer)
+		http.HandleFunc("/pools/default/checkPermissions", fakeServer)
 	}
 
 	// handle queries at the service prefix
@@ -410,6 +420,16 @@ func fromMgmt(resp *http.Response) error {
 	delete(resp.Header, "Www-Authenticate")
 	//fmt.Printf("After got response: %v\n",resp.Header)
 	return nil
+}
+
+func fakeServer(w http.ResponseWriter, r *http.Request) {
+	if strings.EqualFold(r.URL.Path, "/pools") {
+        fmt.Fprintf(w,"{\"isAdminCreds\":true,\"isROAdminCreds\":false,\"isEnterprise\":true,\"isIPv6\":false,\"pools\":[{\"name\":\"default\",\"uri\":\"/pools/default?uuid=a38cf241fd1dca5c4165ac385216ce98\",\"streamingUri\":\"/poolsStreaming/default?uuid=a38cf241fd1dca5c4165ac385216ce98\"}],\"settings\":{\"maxParallelIndexers\":\"/settings/maxParallelIndexers?uuid=a38cf241fd1dca5c4165ac385216ce98\",\"viewUpdateDaemon\":\"/settings/viewUpdateDaemon?uuid=a38cf241fd1dca5c4165ac385216ce98\"},\"uuid\":\"a38cf241fd1dca5c4165ac385216ce98\",\"implementationVersion\":\"0.0.0-0000-enterprise\",\"componentsVersion\":{\"public_key\":\"1.5.2\",\"inets\":\"6.5.2.4\",\"sasl\":\"3.1.2\",\"ale\":\"0.0.0-0000-enterprise\",\"crypto\":\"4.2.2.2\",\"lhttpc\":\"1.3.0\",\"os_mon\":\"2.4.4\",\"ns_server\":\"0.0.0-0000-enterprise\",\"ssl\":\"8.2.6.2\",\"kernel\":\"5.4.3.2\",\"asn1\":\"5.0.5.1\",\"stdlib\":\"3.4.5\"}}")
+	} else if strings.EqualFold(r.URL.Path, "/pools/default") {
+        fmt.Fprintf(w,"{ \"balanced\": false, \"buckets\": { \"terseBucketsBase\": \"/pools/default/b/\", \"terseStreamingBucketsBase\": \"/pools/default/bs/\", \"uri\": \"/pools/default/buckets?v=64942530&uuid=a38cf241fd1dca5c4165ac385216ce98\" }, \"cbasMemoryQuota\": 1791, \"checkPermissionsURI\": \"/pools/default/checkPermissions?v=af0ZJUIda2kjhckw2uArdg%2Fjzqk%3D\", \"clusterName\": \"\", \"counters\": { \"rebalance_start\": 1, \"rebalance_success\": 1 }, \"eventingMemoryQuota\": 256, \"ftsMemoryQuota\": 512, \"indexMemoryQuota\": 512, \"indexStatusURI\": \"/indexStatus?v=11215683\", \"maxBucketCount\": 10, \"memoryQuota\": 6013, \"name\": \"default\", \"nodeStatusesUri\": \"/nodeStatuses\", \"nodes\": [ { \"clusterCompatibility\": 393221, \"clusterMembership\": \"active\", \"couchApiBase\": \"http://127.0.0.1:9092/\", \"couchApiBaseHTTPS\": \"https://127.0.0.1:19092/\", \"cpuCount\": 4, \"hostname\": \"127.0.0.1:9091\", \"interestingStats\": { \"cmd_get\": 0, \"couch_docs_actual_disk_size\": 502368648, \"couch_docs_data_size\": 464684579, \"couch_spatial_data_size\": 0, \"couch_spatial_disk_size\": 0, \"couch_views_actual_disk_size\": 0, \"couch_views_data_size\": 0, \"curr_items\": 75934, \"curr_items_tot\": 75934, \"ep_bg_fetched\": 0, \"get_hits\": 0, \"mem_used\": 202033888, \"ops\": 0, \"vb_active_num_non_resident\": 0, \"vb_replica_curr_items\": 0 }, \"mcdMemoryAllocated\": 13107, \"mcdMemoryReserved\": 13107, \"memoryFree\": 5218476032, \"memoryTotal\": 17179869184, \"os\": \"x86_64-apple-darwin17.7.0\", \"otpNode\": \"n_0@127.0.0.1\", \"ports\": { \"direct\": 12210, \"httpsCAPI\": 19092, \"httpsMgmt\": 19091 }, \"recoveryType\": \"none\", \"services\": [ \"fts\", \"index\", \"kv\", \"n1ql\" ], \"status\": \"healthy\", \"systemStats\": { \"cpu_utilization_rate\": 22.22222222222222, \"mem_free\": 5218476032, \"mem_total\": 17179869184, \"swap_total\": 5368709120, \"swap_used\": 3903586304 }, \"thisNode\": true, \"uptime\": \"300174\", \"version\": \"0.0.0-0000-enterprise\" }, { \"clusterCompatibility\": 393221, \"clusterMembership\": \"active\", \"couchApiBase\": \"http://127.0.0.1:9192/\", \"couchApiBaseHTTPS\": \"https://127.0.0.1:19192/\", \"cpuCount\": 4, \"hostname\": \"127.0.0.1:9191\", \"interestingStats\": {}, \"mcdMemoryAllocated\": 13107, \"mcdMemoryReserved\": 13107, \"memoryFree\": 5220597760, \"memoryTotal\": 17179869184, \"os\": \"x86_64-apple-darwin17.7.0\", \"otpNode\": \"n_1@127.0.0.1\", \"ports\": { \"direct\": 12310, \"httpsCAPI\": 19192, \"httpsMgmt\": 19191 }, \"recoveryType\": \"none\", \"services\": [ \"cbas\", \"eventing\" ], \"status\": \"healthy\", \"systemStats\": { \"cpu_utilization_rate\": 37.78337531486146, \"mem_free\": 5220597760, \"mem_total\": 17179869184, \"swap_total\": 5368709120, \"swap_used\": 3903586304 }, \"uptime\": \"300174\", \"version\": \"0.0.0-0000-enterprise\" } ], \"rebalanceProgressUri\": \"/pools/default/rebalanceProgress\", \"rebalanceStatus\": \"none\", \"remoteClusters\": { \"uri\": \"/pools/default/remoteClusters?uuid=a38cf241fd1dca5c4165ac385216ce98\", \"validateURI\": \"/pools/default/remoteClusters?just_validate=1\" }, \"serverGroupsUri\": \"/pools/default/serverGroups?v=99375014\", \"stopRebalanceUri\": \"/controller/stopRebalance?uuid=a38cf241fd1dca5c4165ac385216ce98\", \"storageTotals\": { \"hdd\": { \"free\": 155021091349, \"quotaTotal\": 500068036608, \"total\": 500068036608, \"used\": 345046945259, \"usedByData\": 502368648 }, \"ram\": { \"quotaTotal\": 6305087488, \"quotaTotalPerNode\": 6305087488, \"quotaUsed\": 629145600, \"quotaUsedPerNode\": 629145600, \"total\": 11798970368, \"used\": 11449360384, \"usedByData\": 202033888 } }, \"tasks\": { \"uri\": \"/pools/default/tasks?v=57669170\" }}")
+	} else if strings.EqualFold(r.URL.Path, "/pools/default/checkPermissions") {
+	    fmt.Fprintf(w,"{\"cluster.bucket[.].n1ql.select!execute\":true,\"cluster.bucket[.].data.docs!upsert\":true,\"cluster.bucket[.].data.xattr!read\":true}")		
+	}
 }
 
 //
