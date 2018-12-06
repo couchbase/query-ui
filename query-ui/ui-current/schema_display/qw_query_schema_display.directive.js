@@ -161,15 +161,15 @@
         //     now the real flavor
         '      <div ng-hide="flavor.Summary" class="semi-bold"><span ng-show="flavor[\'%docs\']">' +
         //       toggles to control showing details
-        '        <h href="" ng-click="flavor.Show = !flavor.Show"><span class="icon fa-caret-down fa-fw" ng-show="flavor.Show"></span>' +
+        '        <a ng-show="bucket.schema.length != 2" href="" ng-click="flavor.Show = !flavor.Show"><span class="icon fa-caret-down fa-fw" ng-show="flavor.Show"></span>' +
         '        <span class="icon fa-caret-right fa-fw"  ng-hide="flavor.Show"></span></a>' +
         //       summary info
         '        Flavor {{$index}}' +
         '        ({{flavor[\'%docs\'] | number:1}}{{"%, "}}{{getNumFields(flavor.properties)}}{{" fields)"}}</span>' +
-        '        <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span ng-show="flavor.Flavor">{{"&nbsp;Common: " + flavor.Flavor}}</span></div>' +
+        '        <span ng-show="flavor.Flavor"><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{"&nbsp;Common: " + flavor.Flavor}}</span></div>' +
         '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
 
-        '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
+        '      <schema-display ng-hide="flavor.Summary || (!flavor.Show && bucket.schema.length != 2)" schema="flavor" path=""></schema-display>' +
 
         '      <li ng-show="bucket.indexes.length > 0"><span class="semi-bold">Indexes</span> <ul class="bucket">' +
         '        <li class="index" ng-repeat="index in bucket.indexes">' +
