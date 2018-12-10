@@ -145,38 +145,35 @@
       scope: { bucket: '=bucketDisplay' },
       //templateUrl: 'template/bucket-display.tmpl',
       template:
-        '<a href="" ng-click="changeExpandBucket(bucket)" class="margin-bottom-half text-small">' +
-        '<span class="icon fa-caret-down fa-fw" ng-show="bucket.expanded"></span>' +
-        '<span class="icon fa-caret-right fa-fw"  ng-hide="bucket.expanded"></span>' +
+        '<h5 class="row">' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" />' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
-        ' {{bucket.id}} <span ng-if="bucket.count > -1">&nbsp;({{bucket.count}})</span></a>' +
-        '  <ul class="text-small" ng-if="bucket.expanded">' +
+        ' {{bucket.id}} <small ng-if="bucket.count > -1"> sampled 1000 of {{bucket.count}}</small></h5>' +
+        '  <ul class="text-small">' +
         //   error?
         '    <li class="insights-sidebar-schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
         //   for each flavor in the schema...
-        '    <li class="insights-sidebar-schema" ng-repeat="flavor in bucket.schema">' +
+        '    <li class="insights-sidebar-schema text-smaller" ng-repeat="flavor in bucket.schema">' +
         //     each schema starts with a pseudo-flavor giving a summary with the number of flavors
-        '      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
+      //'      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
         //     now the real flavor
-        '      <div ng-hide="flavor.Summary" class="semi-bold"><span ng-show="flavor[\'%docs\']">' +
+        '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure row" ng-class="{disclosed: flavor.Show}" ' +
+        '      ng-click="flavor.Show = !flavor.Show" ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
         //       toggles to control showing details
-        '        <a ng-show="bucket.schema.length != 2" href="" ng-click="flavor.Show = !flavor.Show"><span class="icon fa-caret-down fa-fw" ng-show="flavor.Show"></span>' +
-        '        <span class="icon fa-caret-right fa-fw"  ng-hide="flavor.Show"></span></a>' +
+        //        <div ng-click="flavor.Show = !flavor.Show"><span class="icon fa-caret-down fa-fw" ng-show="flavor.Show"></span>' +
+        //        <span class="icon fa-caret-right fa-fw" ng-hide="flavor.Show"></span>' +
         //       summary info
-        '        Flavor {{$index}}' +
-        '        ({{flavor[\'%docs\'] | number:1}}{{"%, "}}{{getNumFields(flavor.properties)}}{{" fields)"}}</span>' +
-        '        <span ng-show="flavor.Flavor"><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{"&nbsp;Common: " + flavor.Flavor}}</span></div>' +
+        '        <span>{{flavor.Flavor}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
         '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
 
-        '      <schema-display ng-hide="flavor.Summary || (!flavor.Show && bucket.schema.length != 2)" schema="flavor" path=""></schema-display>' +
+        '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
 
-        '      <li ng-show="bucket.indexes.length > 0"><span class="semi-bold">Indexes</span> <ul class="bucket">' +
-        '        <li class="index" ng-repeat="index in bucket.indexes">' +
+        '      <li ng-show="bucket.indexes.length > 0"><h5>Indexes</h5>' +
+        '        <span class="index" ng-repeat="index in bucket.indexes">' +
         '        <em>{{index.name}}</em> <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
         '         <span ng-if="index.condition"> where {{index.condition}}</span>' +
-        '        </li>' +
-        '      </ul></li>' +
+
+        '      </span>' +
         '  </ul>'
         ,
         link: function (scope) {
