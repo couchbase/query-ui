@@ -153,7 +153,7 @@
         //   error?
         '    <li class="text-smallish warning" ng-show="bucket.schema_error" title="{{bucket.schema_error}}">{{bucket.schema_error}}</li>' +
         //   for each flavor in the schema...
-        '    <li class="insights-sidebar-schema text-smaller" ng-repeat="flavor in bucket.schema">' +
+        '    <li class="insights-sidebar-schema text-smallish" ng-repeat="flavor in bucket.schema">' +
         //     each schema starts with a pseudo-flavor giving a summary with the number of flavors
       //'      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
         //     now the real flavor
@@ -164,10 +164,12 @@
 
         '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
 
-        '      <li ng-show="bucket.indexes.length > 0"><div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">Indexes</div>' +
-        '        <span class="text-smaller indent-1-5" ng-show="indexes.Show" ng-repeat="index in bucket.indexes">' +
-        '        <em>{{index.name}}</em> <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
-        '        <span ng-if="index.condition"> where {{index.condition}}</span>' +
+        '      <li ng-show="bucket.indexes.length > 0">' +
+        '        <div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">Indexes</div>' +
+        '        <span class="text-smallsh indent-1-5" ng-show="indexes.Show" ng-repeat="index in bucket.indexes">' +
+        '        <span ng-class="{warning: index.state != \'online\'}" ng-attr-title="{{index.state != \'online\' ? \'Index not built yet\' : \'\'}}">' +
+        '        {{index.name}} <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
+        '        <span ng-if="index.condition"> where {{index.condition}}</span></span>' +
         '        <br></span>' +
         '  </ul>'
         ,
