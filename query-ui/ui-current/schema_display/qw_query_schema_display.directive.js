@@ -149,31 +149,26 @@
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" />' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
         ' {{bucket.id}} <small ng-if="bucket.count > -1"> sampled 1000 of {{bucket.count}}</small></h5>' +
-        '  <ul class="text-small">' +
+        '  <ul class="text-small margin-bottom-half">' +
         //   error?
-        '    <li class="insights-sidebar-schema" ng-show="bucket.schema_error">{{bucket.schema_error}}</li>' +
+        '    <li class="text-smallish warning" ng-show="bucket.schema_error" title="{{bucket.schema_error}}">{{bucket.schema_error}}</li>' +
         //   for each flavor in the schema...
         '    <li class="insights-sidebar-schema text-smaller" ng-repeat="flavor in bucket.schema">' +
         //     each schema starts with a pseudo-flavor giving a summary with the number of flavors
       //'      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
         //     now the real flavor
         '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure row" ng-class="{disclosed: flavor.Show}" ' +
-        '      ng-click="flavor.Show = !flavor.Show" ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
-        //       toggles to control showing details
-        //        <div ng-click="flavor.Show = !flavor.Show"><span class="icon fa-caret-down fa-fw" ng-show="flavor.Show"></span>' +
-        //        <span class="icon fa-caret-right fa-fw" ng-hide="flavor.Show"></span>' +
-        //       summary info
-        '        <span>{{flavor.Flavor}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
+        '      ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
+        '      <span>{{flavor.Flavor}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
         '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
 
         '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
 
-        '      <li ng-show="bucket.indexes.length > 0"><h5>Indexes</h5>' +
-        '        <span class="index" ng-repeat="index in bucket.indexes">' +
+        '      <li ng-show="bucket.indexes.length > 0"><div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">Indexes</div>' +
+        '        <span class="text-smaller indent-1-5" ng-show="indexes.Show" ng-repeat="index in bucket.indexes">' +
         '        <em>{{index.name}}</em> <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
-        '         <span ng-if="index.condition"> where {{index.condition}}</span>' +
-
-        '      </span>' +
+        '        <span ng-if="index.condition"> where {{index.condition}}</span>' +
+        '        <br></span>' +
         '  </ul>'
         ,
         link: function (scope) {

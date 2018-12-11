@@ -194,7 +194,7 @@
   <div class="insights-sidebar width-3 show-scrollbar resp-hide-sml">
     <div ng-if="qc.qqs.bucket_errors" class="insights-sidebar-body">{{qc.qqs.bucket_errors}}</div>
     <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body">
-      <div class="row">
+      <div class="row margin-bottom-half">
         <h4>Data Insights</h4>
         <div
            title="expand or contract sidebar"
@@ -206,7 +206,9 @@
       </div>
 
       <section ng-if="qc.has_prim_buckets()">
-        <h5 title="Buckets with a primary index support all queries.">Fully Queryable Buckets</h5>
+        <h5 title="Buckets with a primary index support all queries. Not recommended for production!">
+          Queryable Buckets
+        </h5>
         <span
            ng-repeat="bucket in qc.buckets"
            ng-show="bucket.has_prim">
@@ -215,7 +217,9 @@
       </section>
 
       <section ng-if="qc.has_sec_buckets()">
-        <h5 title="Buckets with only secondary indexes require a 'where' clause using indexed fields.">Queryable on Indexed Fields</h5>
+        <h5 title="Buckets with only secondary indexes require a 'WHERE' clause using indexed fields.">
+          Queryable On Indexed Fields
+        </h5>
           <span
              ng-repeat="bucket in qc.buckets"
              ng-show="!bucket.has_prim && bucket.has_sec">
@@ -224,7 +228,7 @@
       </section>
 
       <section ng-if="qc.has_unindexed_buckets()">
-        <h5 title="Buckets with no index cannot be queried.">Non-Indexed Buckets</h5>
+        <h5 title="Buckets with no index can only be queried by document id.">Queryable By Doc ID Only</h5>
           <span
              ng-repeat="bucket in qc.buckets"
              ng-show="!bucket.has_prim && !bucket.has_sec">
