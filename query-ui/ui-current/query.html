@@ -83,12 +83,6 @@
             Explain
             <span  ng-if="qc.executingQuery.busy" class="icon fa-spinner fa-spin fa-pulse"></span>
           </button>
-          <button
-             ng-disabled="qc.executingQuery.busy"
-             ng-click="qc.format()"
-             class="outline tight">
-            Format
-          </button>
         </span>
 <!-- query execution summary stats -------------------------------------------->
         <div class="wb-result-summary">
@@ -116,6 +110,13 @@
             {{qc.lastResult.getLastRun()}}
           </span>
         </div>
+        <a
+           ng-disabled="qc.executingQuery.busy"
+           ng-click="qc.format()"
+           class="text-smallish">
+          <span class="icon fa-align-right"></span>
+          format query
+        </a>
       </div>
     </div>
 
