@@ -3,11 +3,11 @@
   angular.module('qwQuery').controller('qwQueryController', queryController);
 
   queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService',
-    'validateQueryService','mnPools','$scope','$interval','qwConstantsService', 'mnPoolDefault',
+    'validateQueryService','mnPools','$scope','$interval','$interpolate','qwConstantsService', 'mnPoolDefault',
     'mnServersService', 'qwJsonCsvService'];
 
   function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
-      validateQueryService, mnPools, $scope, $interval, qwConstantsService, mnPoolDefault,
+      validateQueryService, mnPools, $scope, $interval, $interpolate,qwConstantsService, mnPoolDefault,
       mnServersService, qwJsonCsvService) {
 
     var qc = this;
@@ -26,9 +26,9 @@
     qc.buckets = qwQueryService.buckets;                // buckets on cluster
     qc.gettingBuckets = qwQueryService.gettingBuckets;  // busy retrieving?
     qc.updateBuckets = qwQueryService.updateBuckets;    // function to update
-    qc.lastResult = qwQueryService.getResult(); // holds the current query and result
+    qc.lastResult = qwQueryService.getCurrentResult; // holds the current query and result
     //qc.limit = qwQueryService.limit;            // automatic result limiter
-    qc.executingQuery = qwQueryService.executingQuery;
+    //qc.executingQuery = qwQueryService.executingQuery;
     qc.emptyQuery = function() {return(qwQueryService.getResult().query.length == 0);}
     qc.emptyResult = qwQueryService.emptyResult;
 
@@ -190,9 +190,9 @@
 
     function dataTooBig() {
       switch (qwQueryService.outputTab) {
-      case 1: return(qc.lastResult.resultSize / qc.maxAceSize) > 1.1;
+      case 1: return(qc.lastResult().resultSize / qc.maxAceSize) > 1.1;
       //case 2: return(qc.lastResult.resultSize / qc.maxTableSize) > 1.1;
-      case 3: return(qc.lastResult.resultSize / qc.maxTreeSize) > 1.1;
+      case 3: return(qc.lastResult().resultSize / qc.maxTreeSize) > 1.1;
       }
 
     }
@@ -204,9 +204,9 @@
     function getBigDataMessage() {
       var fraction;
       switch (qwQueryService.outputTab) {
-      case 1: fraction = qc.lastResult.resultSize / qc.maxAceSize; break;
-      case 2: fraction = qc.lastResult.resultSize / qc.maxTableSize; break;
-      case 3: fraction = qc.lastResult.resultSize / qc.maxTreeSize; break;
+      case 1: fraction = qc.lastResult().resultSize / qc.maxAceSize; break;
+      case 2: fraction = qc.lastResult().resultSize / qc.maxTableSize; break;
+      case 3: fraction = qc.lastResult().resultSize / qc.maxTreeSize; break;
       }
       var timeEstimate = Math.round(fraction * 2.5);
       var timeUnits = "seconds";
@@ -214,7 +214,7 @@
         timeEstimate = Math.round(timeEstimate/60);
         timeUnits = "minutes";
       }
-      var message = "The current dataset, " + qc.lastResult.resultSize + " " +
+      var message = "The current dataset, " + qc.lastResult().resultSize + " " +
         "bytes, is too large to display quickly.<br>Using a lower limit or a more " +
         "specific where clause in your query can reduce result size. Rendering " +
         "might freeze your browser for " + timeEstimate + " to " + timeEstimate*4 +
@@ -304,8 +304,8 @@
       }
 
      // weird bug - sometimes the query is not up to date with the text area
-      if (qc.inputEditor.getSession().getValue() != qc.lastResult.query)
-        qc.lastResult.query = qc.inputEditor.getSession().getValue();
+      if (qc.inputEditor.getSession().getValue() != qc.lastResult().query)
+        qc.lastResult().query = qc.inputEditor.getSession().getValue();
 
       // show a placeholder when nothing has been typed
       var curSession = qc.inputEditor.getSession();
@@ -343,10 +343,10 @@
         // detect and remove smart quotes, but only outside existing quoted strings. The regex
         // pattern matches either quoted strings or smart quotes outside quoted strings. If we
         // see any matched  for group 1, a bare smart quote, replace it.
-        var matchArray = matchNonQuotedSmartQuotes.exec(qc.lastResult.query);
+        var matchArray = matchNonQuotedSmartQuotes.exec(qc.lastResult().query);
         if (matchArray != null) {
           var newBytes = "";
-          var curBytes = qc.lastResult.query;
+          var curBytes = qc.lastResult().query;
           while (matchArray != null)  {
             if (matchArray[1]) { // we want group 1
               newBytes += curBytes.substring(0,matchNonQuotedSmartQuotes.lastIndex - 1) + '"';
@@ -357,7 +357,7 @@
           }
 
           if (newBytes.length > 0)
-            qc.lastResult.query = newBytes + curBytes;
+            qc.lastResult().query = newBytes + curBytes;
         }
 
         // after past grab focus, move to end
@@ -372,7 +372,7 @@
         if (e[0].lines && e[0].lines.length > 1 && e[0].lines[0].length > 0 &&
             pos.row == (qc.inputEditor.getSession().getLength()-1) &&
             pos.column == line.length)
-          qc.lastResult.query = qc.lastResult.query.trim();
+          qc.lastResult().query = qc.lastResult().query.trim();
 
         // if they hit enter and the query ends with a semicolon, run the query
         if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
@@ -381,7 +381,7 @@
             e[0].lines[1].length == 0 &&
             e[0].start.column > 0 && // and the previous line wasn't blank
             curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
-            endsWithSemi.test(qc.lastResult.query))
+            endsWithSemi.test(qc.lastResult().query))
           qc.query();
       }
 
@@ -400,7 +400,7 @@
       _editor.$blockScrolling = Infinity;
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
-      _editor.setReadOnly(qc.executingQuery.busy);
+      //_editor.setReadOnly(qc.lastResult().busy);
 
       if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
         _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
@@ -422,7 +422,7 @@
     //
 
     function format() {
-      qc.lastResult.query = mode_n1ql.Instance.format(qc.lastResult.query,2);
+      qc.lastResult().query = mode_n1ql.Instance.format(qc.lastResult().query,2);
     }
 
     // this function is used for autocompletion of dynamically known names such
@@ -680,33 +680,33 @@
 
     function query(explainOnly) {
       // make sure there is a query to run
-      if (qc.lastResult.query.trim().length == 0)
+      if (qc.lastResult().query.trim().length == 0)
         return;
 
       // if a query is already running, we should cancel it
-      if (qc.executingQuery.busy) {
-        qwQueryService.cancelQuery();
+      if (qc.lastResult().busy) {
+        qwQueryService.cancelQuery(qc.lastResult());
         return;
       }
 
       // don't let the user edit the query while it's running
-      qc.inputEditor.setReadOnly(true);
+      //qc.inputEditor.setReadOnly(true);
 
       // remove trailing whitespace to keep query from growing, and avoid
       // syntax errors (query parser doesn't like \n after ;
-      if (endsWithSemi.test(qc.lastResult.query))
-        qc.lastResult.query = qc.lastResult.query.trim();
+      if (endsWithSemi.test(qc.lastResult().query))
+        qc.lastResult().query = qc.lastResult().query.trim();
 
       // if the user wants auto-formatting, format the query
       if (qwQueryService.options.auto_format)
         format();
 
-      var queryStr = qc.lastResult.query;
+      //var queryStr = qc.lastResult().query;
 
       //console.log("Running query: " + queryStr);
       // run the query and show a spinner
 
-      var promise = qwQueryService.executeQuery(queryStr,qc.lastResult.query,qwQueryService.options,explainOnly);
+      var promise = qwQueryService.executeUserQuery(explainOnly);
 
       if (promise) {
         // also have the input grab focus at the end
@@ -729,13 +729,13 @@
       var markerIds = [];
       var session = qc.inputEditor.getSession();
 
-      //console.log("Explain result: " + JSON.stringify(qc.lastResult.explainResult));
-      //console.log("Explain result probs: " + JSON.stringify(qc.lastResult.explainResult.problem_fields));
+      //console.log("Explain result: " + JSON.stringify(qc.lastResult().explainResult));
+      //console.log("Explain result probs: " + JSON.stringify(qc.lastResult().explainResult.problem_fields));
 
-      if (qc.lastResult && qc.lastResult.explainResult && qc.lastResult.explainResult.problem_fields &&
-          qc.lastResult.explainResult.problem_fields.length > 0) {
+      if (qc.lastResult() && qc.lastResult().explainResult && qc.lastResult().explainResult.problem_fields &&
+          qc.lastResult().explainResult.problem_fields.length > 0) {
         var lines = session.getLines(0,session.getLength()-1);
-        var fields = qc.lastResult.explainResult.problem_fields;
+        var fields = qc.lastResult().explainResult.problem_fields;
 
         var allFields = "";
         var field_names = [];
@@ -779,7 +779,7 @@
         session.clearAnnotations();
 
       // now update everything
-      qc.inputEditor.setReadOnly(false);
+      //qc.inputEditor.setReadOnly(false);
       qc.markerIds = markerIds;
       updateEditorSizes();
       focusOnInput();
@@ -857,7 +857,7 @@
         {kind: "json", label: "Query Results"},
         {kind: "txt", label: "Results as tab-separated"},
         ];
-      if (qc.lastResult.query && qc.lastResult.query.length > 0)
+      if (qc.lastResult().query && qc.lastResult().query.length > 0)
         dialogScope.file_options.push({kind: "txt", label: "Query Statement"});
       dialogScope.selected = {item: "0"};
 
@@ -873,12 +873,12 @@
 
         switch (dialogScope.selected.item) {
         case "0":
-          file = new Blob([qc.lastResult.result],{type: "text/json", name: "data.json"});
+          file = new Blob([qc.lastResult().result],{type: "text/json", name: "data.json"});
           file_extension = ".json";
           break;
 
         case "1":
-          var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data);
+          var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult().data);
           if (!csv || csv.length == 0) {
             showErrorMessage("Unable to create tab-separated values, perhaps source data is not an array.");
             return;
@@ -888,7 +888,7 @@
           break;
 
         case "2":
-          file = new Blob([qc.lastResult.query],{type: "text/plain", name: "query.txt"});
+          file = new Blob([qc.lastResult().query],{type: "text/plain", name: "query.txt"});
           file_extension = ".txt";
           break;
 
@@ -1179,7 +1179,7 @@
 
 
     function copyResultAsCSV() {
-      var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult.data);
+      var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult().data);
 
       // error check
       if (!csv || csv.length == 0) {
@@ -1220,7 +1220,7 @@
       // if we receive a query parameter, and it's not the same as the current query,
       // insert it at the end of history
       if (_.isString($stateParams.query) && $stateParams.query.length > 0 &&
-          $stateParams.query != qc.lastResult.query) {
+          $stateParams.query != qc.lastResult().query) {
         qwQueryService.addNewQueryAtEndOfHistory($stateParams.query);
       }
 
@@ -1267,13 +1267,15 @@
       });
       }
 
-      // get the list of buckets
-      //qc.updateBuckets();
+      /*
+       * Watch whether a query is running, meaning that the query input should be read-only
+       */
 
-      //$( "#resizable-2" ).resizable({
-      //  animate: true
-    // });
-      //$(".resizable").resizable({handles: "w"});
+      $scope.$watch($interpolate("{{qc.lastResult().busy}}"),function(newValue) {
+        if (qc.inputEditor) {
+          qc.inputEditor.setReadOnly(qc.lastResult().busy);
+        }
+      });
 
       //
       // now let's make sure the window is the right size

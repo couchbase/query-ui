@@ -62,52 +62,51 @@
       <div
          class="wb-ace-editor"
          ui-ace="qc.aceInputOptions"
-         ng-disabled="qc.executingQuery.busy"
-         ng-model="qc.lastResult.query">
+         ng-model="qc.lastResult().query">
       </div>
 
 <!-- wrapper under query editor for button and stats ------------------------->
       <div class="wb-query-editor-footer">
         <span class="wb-button-wrapper nowrap">
           <button ng-click="qc.query()" class="wb-button-execute">
-            <div ng-if="!qc.executingQuery.busy">Execute</div>
-            <div ng-if="qc.executingQuery.busy" class="icon-button">
+            <div ng-if="!qc.lastResult().busy">Execute</div>
+            <div ng-if="qc.lastResult().busy" class="icon-button">
               Cancel
               <span class="icon fa-spinner fa-spin fa-pulse"></span>
             </div>
           </button>
           <button
-             ng-disabled="qc.executingQuery.busy"
+             ng-disabled="qc.lastResult().busy"
              ng-click="qc.query(true)"
              class="outline tight">
             Explain
-            <span  ng-if="qc.executingQuery.busy" class="icon fa-spinner fa-spin fa-pulse"></span>
+            <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
           </button>
         </span>
 <!-- query execution summary stats -------------------------------------------->
         <div class="wb-result-summary">
           <span
              class="nowrap wb-result-status padding-right-half"
-             ng-class="{success: qc.status_success() || qc.lastResult.status == 'explain success', error: qc.status_fail()}">
-            {{qc.lastResult.status}}
+             ng-class="{success: qc.status_success() || qc.lastResult().status == 'explain success', error: qc.status_fail()}">
+            {{qc.lastResult().status}}
           </span>
-          <span ng-if="qc.lastResult.elapsedTime" class="nowrap pipe">
-            elapsed: {{qc.lastResult.elapsedTime}}
+          <span ng-if="qc.lastResult().elapsedTime" class="nowrap pipe">
+            elapsed: {{qc.lastResult().elapsedTime}}
           </span>
-          <span ng-if="qc.lastResult.executionTime" class="nowrap pipe">
-            execution: {{qc.lastResult.executionTime}}
+          <span ng-if="qc.lastResult().executionTime" class="nowrap pipe">
+            execution: {{qc.lastResult().executionTime}}
           </span>
-          <span ng-if="qc.lastResult.mutationCount" class="nowrap pipe">
-            mutations: {{qc.lastResult.mutationCount}}
+          <span ng-if="qc.lastResult().mutationCount" class="nowrap pipe">
+            mutations: {{qc.lastResult().mutationCount}}
           </span>
-          <span ng-if="!qc.lastResult.mutationCount && qc.lastResult.resultCount" class="nowrap pipe">
-            docs: {{qc.lastResult.resultCount}}
+          <span ng-if="!qc.lastResult().mutationCount && qc.lastResult().resultCount" class="nowrap pipe">
+            docs: {{qc.lastResult().resultCount}}
           </span>
-          <span ng-if="qc.lastResult.resultSize" class="nowrap pipe">
-            size: {{qc.lastResult.resultSize}} bytes
+          <span ng-if="qc.lastResult().resultSize" class="nowrap pipe">
+            size: {{qc.lastResult().resultSize}} bytes
           </span>
           <span class="nowrap pipe">
-            {{qc.lastResult.getLastRun()}}
+            {{qc.lastResult().getLastRun()}}
           </span>
         </div>
         <a
@@ -121,7 +120,7 @@
     </div>
 
 <!-- query results ------------------------------------------------------------>
-    <div class="wb-results-header"> <!-- ng-show="qc.lastResult.hasData()" -->
+    <div class="wb-results-header"> <!-- ng-show="qc.lastResult().hasData()" -->
       <h4>Query Results
         <a
            ng-click="qc.copyResultAsCSV()"
@@ -130,11 +129,11 @@
           <span class="icon fa-copy"></span>
         </a>
         <span
-           ng-if="qc.lastResult.warnings"
+           ng-if="qc.lastResult().warnings"
            tooltip-trigger="'mouseenter'"
            tooltip-append-to-body="true"
            class="fa-warning icon orange-3 cursor-pointer"
-           uib-tooltip-html="{{qc.lastResult.warnings}}">
+           uib-tooltip-html="{{qc.lastResult().warnings}}">
         </span>
       </h4>
       <span class="pills">
@@ -160,22 +159,22 @@
 
       <div class="wb-results-json" ui-ace="qc.aceOutputOptions"
         ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
-        ng-model="qc.lastResult.result"></div>
+        ng-model="qc.lastResult().result"></div>
 
       <div class="wb-results-table"
-        ng-if="qc.isSelected(2) && qc.lastResult.data"
-        qw-json-data-table="qc.lastResult.data"></div>
+        ng-if="qc.isSelected(2) && qc.lastResult().data"
+        qw-json-data-table="qc.lastResult().data"></div>
 
       <div class="wb-results-tree"
         ng-if="qc.isSelected(3) && (!qc.dataTooBig() || qc.showBigDatasets)"
-        qw-json-tree="qc.lastResult.data"></div>
+        qw-json-tree="qc.lastResult().data"></div>
 
       <div class="wb-results-explain" ng-if="qc.isSelected(4)"
-        qw-explain-viz-d3="qc.lastResult.explainResult"></div>
+        qw-explain-viz-d3="qc.lastResult().explainResult"></div>
 
       <div class="wb-results-explain-text" ng-if="qc.isSelected(5)"
         ui-ace="qc.acePlanOptions"
-        ng-model="qc.lastResult.explainResultText"></div>
+        ng-model="qc.lastResult().explainResultText"></div>
     </div>
   </div>
 

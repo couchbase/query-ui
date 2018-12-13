@@ -35,7 +35,7 @@
     // access to our most recent query result, and functions to traverse the history
     // of different results
 
-    qwQueryService.getResult = function() {return lastResult;};
+    qwQueryService.getCurrentResult = getCurrentResult;
     qwQueryService.getCurrentIndexNumber = getCurrentIndexNumber;
     qwQueryService.getCurrentIndex = getCurrentIndex;
     qwQueryService.setCurrentIndex = setCurrentIndex;
@@ -63,10 +63,10 @@
 
     // execute queries, and keep track of when we are busy doing so
 
-    qwQueryService.executingQuery = {busy: false};
+    //qwQueryService.executingQuery = {busy: false};
     qwQueryService.currentQueryRequest = null;
     qwQueryService.currentQueryRequestID = null;
-    qwQueryService.executeQuery = executeQuery;
+    qwQueryService.executeUserQuery = executeUserQuery;
     qwQueryService.cancelQuery = cancelQuery;
     qwQueryService.cancelQueryById = cancelQueryById;
 
@@ -118,8 +118,8 @@
     qwQueryService.status_success = status_success;
     qwQueryService.status_fail = status_fail;
 
-    function status_success() {return(lastResult.status_success());}
-    function status_fail()    {return(lastResult.status_fail());}
+    function status_success() {return(getCurrentResult().status_success());}
+    function status_fail()    {return(getCurrentResult().status_fail());}
 
     //
     // here are some options we use while querying
@@ -234,7 +234,7 @@
       return(this.status == 'success' || this.status == 'explain success');
     };
     QueryResult.prototype.status_fail = function()
-    {return(lastResult.status == '400' ||
+    {return(this.status == '400' ||
         this.status == 'errors' ||
         this.status == '500' ||
         this.status == '404' ||
@@ -332,7 +332,7 @@
     //
 
     var dummyResult = new QueryResult('','','','','','',{},'');
-    var lastResult = dummyResult.clone();
+    //var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
     savedResultTemplate.status = "";
     savedResultTemplate.result = un_run_query_text;
@@ -356,6 +356,9 @@
     var pastQueries = [];       // keep a history of past queries and their results
     var currentQueryIndex = 0;  // where in the array are we? we start past the
                                 // end of the array, since there's no history yet
+    pastQueries.push(newQueryTemplate.clone()); // start off with a blank query
+
+    function getCurrentResult() {return pastQueries[currentQueryIndex]}
 
     function emptyResult() {
         return(!pastQueries[currentQueryIndex] ||
@@ -370,12 +373,14 @@
       this.queries = _queries;
       this.current_query = -1;
       this.stop_on_error = _stop_on_error;
+      this.is_batch = true;
     }
 
     QueryBatch.prototype.copyIn = function(other) {
       this.queries = other.queries;
       this.current_query = other.current_query;
       this.stop_on_error = other.stop_on_error;
+      this.is_batch = true;
     }
 
     //
@@ -391,15 +396,17 @@
     }
 
     function setCurrentIndex(index) {
-      if (index < 0 || index >= pastQueries.length)
+      if (index < 0 || index >= pastQueries.length || index == currentQueryIndex)
         return;
+
+      // if the current query was edited but not run, restore query to match results
+      if (getCurrentResult().savedQuery && getCurrentResult().savedQuery != getCurrentResult().query)
+        getCurrentResult().query = getCurrentResult().savedQuery;
 
       currentQueryIndex = index;
 
-      $timeout(function(){
-        lastResult.copyIn(pastQueries[currentQueryIndex]);
-        currentQuery = lastResult.query;
-      },50);
+      // remember the current query in case the user edits it, then wants to revert
+      getCurrentResult().savedQuery = getCurrentResult().query;
     }
 
     //
@@ -426,17 +433,25 @@
       if (hasLocalStorage && _.isString(localStorage[localStorageKey])) try {
         var savedState = JSON.parse(localStorage[localStorageKey]);
         //console.log("Got saved state: " + JSON.stringify(savedState));
-        if (savedState.lastResult) {
-          //console.log("Got last result: " + JSON.stringify(savedState.lastResult));
-          lastResult.copyIn(savedState.lastResult);
+//        if (savedState.lastResult) {
+//          //console.log("Got last result: " + JSON.stringify(savedState.lastResult));
+//          lastResult.copyIn(savedState.lastResult);
+//        }
+//        else
+//          console.log("No last result");
+
+        if (savedState.pastQueries) {
           pastQueries = [];
           _.forEach(savedState.pastQueries,function(queryRes,index) {
             var newQuery = new QueryResult();
             newQuery.copyIn(queryRes);
             pastQueries.push(newQuery);
           });
+        }
 
+        if (savedState.currentQueryIndex) {
           setCurrentIndex(savedState.currentQueryIndex);
+          getCurrentResult().savedQuery = getCurrentResult().query; // remember query if edited later
           qwQueryService.outputTab = savedState.outputTab;
           if (savedState.options)
             qwQueryService.options = savedState.options;
@@ -461,8 +476,6 @@
           if (qwQueryService.options.auto_format !== true && qwQueryService.options.auto_format !== false)
             qwQueryService.options.auto_format = false;
         }
-        else
-          console.log("No last result");
       } catch (err) {console.log("Error loading state: " + err);}
     }
 
@@ -481,7 +494,7 @@
       savedState.pastQueries = [];
       savedState.outputTab = qwQueryService.outputTab;
       savedState.currentQueryIndex = currentQueryIndex;
-      savedState.lastResult = lastResult.clone_for_storage();
+      //savedState.lastResult = lastResult.clone_for_storage();
       savedState.options = qwQueryService.options;
 
       savedState.doc_editor_options = {
@@ -661,9 +674,8 @@
     function canCreateBlankQuery() {
       return (currentQueryIndex >= 0 &&
           currentQueryIndex == pastQueries.length - 1 &&
-          lastResult.query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
-          lastResult.status != newQueryTemplate.status &&
-          !qwQueryService.executingQuery.busy);
+          getCurrentResult().query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
+          getCurrentResult().status != newQueryTemplate.status);
     }
     function hasPrevResult() {return currentQueryIndex > 0;}
 
@@ -678,33 +690,13 @@
     {
       if (currentQueryIndex > 0) // can't go earlier than the 1st
       {
-        // if we are going backward from the end of the line, from a query that
-        // has been edited but hasn't been run yet, we need to add it to the
-        // history
+        // if the current query was edited but not run, restore query to match results
+        if (getCurrentResult().savedQuery && getCurrentResult().savedQuery != getCurrentResult().query)
+          getCurrentResult().query = getCurrentResult().savedQuery;
 
-        if (currentQueryIndex === (pastQueries.length-1) &&
-            lastResult.query.trim() !== pastQueries[pastQueries.length-1].query.trim()) {
-          var newResult = newQueryTemplate.clone();
-          newResult.query = lastResult.query;
-          pastQueries.push(newResult);
-          currentQueryIndex++;
-        }
-
-        //
-        // the following gross hack is due to an angular issue where it doesn't
-        // successfully detect *some* changes in the result data, and thus doesn't
-        // update the table. So we set the result to blank, then back to a value
-        // after a certain delay.
-        //
-
-        lastResult.result = tempResult; // blank values
-        lastResult.data = tempData;
         currentQueryIndex--;
 
-        $timeout(function(){
-          lastResult.copyIn(pastQueries[currentQueryIndex]);
-          currentQuery = lastResult.query;
-        },50);
+        getCurrentResult().savedQuery = getCurrentResult().query;
       }
     }
 
@@ -712,19 +704,13 @@
     {
       if (currentQueryIndex < pastQueries.length -1) // can we go forward?
       {
+        // if the current query was edited but not run, restore query to match results
+        if (getCurrentResult().savedQuery && getCurrentResult().savedQuery != getCurrentResult().query)
+          getCurrentResult().query = getCurrentResult().savedQuery;
 
-        //
-        // see comment above about the delay hack.
-        //
-
-        lastResult.result = tempResult; // blank values
-        lastResult.data = tempData;
         currentQueryIndex++;
 
-        $timeout(function(){
-          lastResult.copyIn(pastQueries[currentQueryIndex]);
-          currentQuery = lastResult.query;
-        },50);
+        getCurrentResult().savedQuery = getCurrentResult().query;
       }
 
       // if the end query has been run, and is unedited, create a blank query
@@ -752,7 +738,6 @@
       }
 
       currentQueryIndex = pastQueries.length - 1;
-      lastResult.copyIn(pastQueries[currentQueryIndex]);
     }
 
     //
@@ -760,13 +745,16 @@
     //
 
     function clearHistory() {
-      // don't clear the history if existing queries are already running
-      if (qwQueryService.executingQuery.busy)
-        return;
+      // don't clear the history if any queries are running
+      for (i = 0; i < pastQueries.length; i++)
+        if (pastQueries[i].busy)
+          return;
 
-      lastResult.copyIn(dummyResult);
+      //lastResult.copyIn(dummyResult);
       pastQueries.length = 0;
       currentQueryIndex = 0;
+      var newResult = newQueryTemplate.clone();
+      pastQueries.push(newResult);
 
       saveStateToStorage(); // save current history
     }
@@ -777,7 +765,7 @@
 
     function clearCurrentQuery(index) {
       // don't clear the history if existing queries are already running
-      if (qwQueryService.executingQuery.busy || pastQueries.length == 0)
+      if (qwQueryService.getCurrentResult().busy || pastQueries.length <= index)
         return;
 
       // did they specify an index to delete?
@@ -787,13 +775,19 @@
       if (currentQueryIndex >= pastQueries.length)
         currentQueryIndex = pastQueries.length - 1;
 
-      if (currentQueryIndex >= 0)
-        lastResult.copyIn(pastQueries[currentQueryIndex]);
+      //if (currentQueryIndex >= 0)
+        //lastResult.copyIn(pastQueries[currentQueryIndex]);
       // did they delete everything?
-      else {
-        lastResult.copyIn(dummyResult);
-        pastQueries.length = 0;
-        currentQueryIndex = 0;
+//      else {
+//        //lastResult.copyIn(dummyResult);
+//        pastQueries.length = 0;
+//        currentQueryIndex = 0;
+//      }
+
+      // make sure we have at least one query
+      if (pastQueries.length == 0) {
+        var newResult = newQueryTemplate.clone();
+        pastQueries.push(newResult);
       }
 
       saveStateToStorage(); // save current history
@@ -825,10 +819,10 @@
     // cancelQuery - if a query is running, cancel it
     //
 
-    function cancelQuery() {
-//      console.log("Cancelling query, currentQuery: " + qwQueryService.currentQueryRequest);
-      if (qwQueryService.currentQueryRequest != null) {
-        var queryInFly = mnPendingQueryKeeper.getQueryInFly(qwQueryService.currentQueryRequest);
+    function cancelQuery(queryResult) {
+      //console.log("Cancelling query, currentQuery: " + queryResult.client_context_id);
+      if (queryResult && queryResult.client_context_id != null) {
+        var queryInFly = mnPendingQueryKeeper.getQueryInFly(queryResult.client_context_id);
         queryInFly && queryInFly.canceler("test");
 
         //
@@ -836,7 +830,7 @@
         //
 
         var query = 'delete from system:active_requests where clientContextID = "' +
-          qwQueryService.currentQueryRequestID + '";';
+          queryResult.client_context_id + '";';
 
 //        console.log("  queryInFly: " + queryInFly + "\n  query: " + query);
 
@@ -976,8 +970,7 @@
       // if the user might want to cancel it, give it an ID
 
       if (is_user_query) {
-        qwQueryService.currentQueryRequestID = UUID.generate();
-        queryData.client_context_id = qwQueryService.currentQueryRequestID;
+        queryData.client_context_id = UUID.generate();
         queryData.pretty = true;
       }
       // for auditing, note that the non-user queries are "INTERNAL"
@@ -1099,37 +1092,34 @@
     // executeQuery
     //
 
-    function executeQuery(queryText, userQuery, queryOptions, explainOnly) {
-      var newResult;
+    function executeUserQuery(explainOnly) {
+      // if the user edited an already-run query, add the edited query to the end of the history
+      var query = getCurrentResult();
+      if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
+        var result = executingQueryTemplate.clone();
+        result.query = query.query.trim();
+        pastQueries.push(result);
+        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
+        query.query = query.savedQuery; // restore historical query to original value
+      }
+
+      // make sure that the current query isn't already running
+      if (getCurrentResult().busy)
+        return;
+
+      getCurrentResult().busy = true;
+
+      // clear any previous results, remember when we started
+      var queryText = getCurrentResult().query;
+      var newResult = getCurrentResult();
+      newResult.copyIn(executingQueryTemplate);
+      newResult.query = queryText;
+      newResult.savedQuery = queryText;
+      newResult.lastRun = new Date();
 
       //console.log("Got query to execute: " + queryText);
-      //logWorkbenchError("Got query to execute: " + queryText);
 
-      // if the current query is part of the history,
-      // or current query is "not yet run",
-      // update the results from the history
-
-      if ((currentQueryIndex < pastQueries.length &&
-          lastResult.query.trim() === pastQueries[currentQueryIndex].query.trim()) ||
-          (lastResult.status == newQueryTemplate.status)){
-        newResult = executingQueryTemplate.clone();
-        newResult.query = lastResult.query.trim();
-        newResult.lastRun = new Date();
-        pastQueries[currentQueryIndex] = newResult; // forget previous results
-      }
-
-      // otherwise, we have a new/edited query, so we create a new empty result
-      // at the end of the query history
-
-      else {
-        newResult = executingQueryTemplate.clone();
-        newResult.query = lastResult.query.trim();
-        newResult.lastRun = new Date();
-        pastQueries.push(newResult);
-        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
-      }
-
-      // don't allow multiple queries, as indicated by anything after a semicolon
+      // special handling for multiple queries, as indicated by anything after a semicolon
       // we test for semicolons in either single or double quotes, or semicolons outside
       // of quotes followed by non-whitespace. That final one is group 1. If we get any
       // matches for group 1, it looks like more than one query.
@@ -1150,28 +1140,39 @@
           matchArray = matchNonQuotedSemicolons.exec(strippedText);
         }
 
+        // extract the queries
+        var queries = [];
+        var curQuery = '';
+        var findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\/\*(?:.|[\n\r])*\*\/)|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;
+        var matchArray = findSemicolons.exec(queryText);
+
+        while (matchArray != null) {
+          //console.log("Got matchArray: " + JSON.stringify(matchArray));
+          curQuery += matchArray[0];
+          if (matchArray[0] == ';') {
+            queries.push(curQuery);
+            curQuery = '';
+          }
+          matchArray = findSemicolons.exec(queryText);
+        }
+
+        if (curQuery.length > 0)
+          queries.push(curQuery); // get final query if unterminated with ;
+
+       // console.log("Got queries: " + JSON.stringify(queries));
+
+
         if (semicolonCount > 0) {
           newResult.status = "errors";
           newResult.data = {error: "Error, you cannot issue more than one query at once. Please remove all text after the semicolon closing the first query."};
           newResult.result = JSON.stringify(newResult.data);
           newResult.explainResult = newResult.data;
           newResult.explainResultText = newResult.result;
-          lastResult.copyIn(newResult);
+          //lastResult.copyIn(newResult);
           saveStateToStorage(); // save current history
           return null;
         }
       }
-
-      // don't run new queries if existing queries are already running
-      if (qwQueryService.executingQuery.busy)
-        return;
-
-      qwQueryService.executingQuery.busy = true;
-      lastResult.result = executingQueryTemplate.result;
-      lastResult.data = executingQueryTemplate.data;
-      lastResult.status = executingQueryTemplate.status;
-      lastResult.resultSize = executingQueryTemplate.resultSize;
-      lastResult.resultCount = executingQueryTemplate.resultCount;
 
       var pre_post_ms = new Date().getTime(); // when did we start?
 
@@ -1188,7 +1189,7 @@
 
       if (!queryIsExplain && (!queryIsPrepare || explainOnly) && qwConstantsService.autoExplain) {
 
-        var explain_request = buildQueryRequest("explain " + queryText, false, queryOptions);
+        var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options);
         if (!explain_request) {
           newResult.result = '{"status": "query failed"}';
           newResult.data = {status: "Query Failed."};
@@ -1198,8 +1199,8 @@
           newResult.queryDone = true;
 
           // can't recover from error, finish query
-          lastResult.copyIn(newResult);
-          finishQuery();
+          //lastResult.copyIn(newResult);
+          finishQuery(newResult);
           return;
         }
         explain_promise = $http(explain_request)
@@ -1210,8 +1211,8 @@
           // if the query finished before the 'explain', and we already have a result, just forget about
           // the explain results
           if (newResult.queryDone && newResult.explainResult) {
-            lastResult.copyIn(newResult);
-            finishQuery();
+            //lastResult.copyIn(newResult);
+            finishQuery(newResult);
             return;
           }
 
@@ -1277,11 +1278,11 @@
 
           // all done
 
-          lastResult.copyIn(newResult);
+          //lastResult.copyIn(newResult);
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone || explainOnly) {
-            finishQuery();
+            finishQuery(newResult);
           }
         },
         /* error response from $http */
@@ -1329,13 +1330,13 @@
             newResult.sortCount = data.metrics.sortCount;
           }
 
-          lastResult.copyIn(newResult);
+          //lastResult.copyIn(newResult);
 
           //console.log("Explain: " + newResult.explainResult);
 
           // if the query has run and finished already, mark everything as done
           if (newResult.queryDone || explainOnly) {
-            finishQuery();
+            finishQuery(newResult);
           }
         });
 
@@ -1361,7 +1362,9 @@
       // Issue the request
       //
 
-      var request = buildQueryRequest(queryText, true, queryOptions);
+      var request = buildQueryRequest(queryText, true, qwQueryService.options);
+      newResult.client_context_id = request.data.client_context_id;
+      //console.log("Got client context id: " + newResult.client_context_id);
 
       if (!request) {
         newResult.result = '{"status": "Query Failed."}';
@@ -1372,8 +1375,8 @@
         newResult.queryDone = true;
 
         // make sure to only finish if the explain query is also done
-        lastResult.copyIn(newResult);
-        finishQuery();
+        //lastResult.copyIn(newResult);
+        finishQuery(newResult);
         return;
       }
       var promise = $http(request)
@@ -1503,8 +1506,8 @@
         if (newResult.explainDone) {
           //console.log("Query done, got explain: " + newResult.explainResultText);
 
-          lastResult.copyIn(newResult);
-          finishQuery();
+          //lastResult.copyIn(newResult);
+          finishQuery(newResult);
         }
       },
       /* error response from $http */
@@ -1535,11 +1538,11 @@
 
           // make sure to only finish if the explain query is also done
           if (newResult.explainDone) {
-            lastResult.copyIn(newResult);
+            //lastResult.copyIn(newResult);
             // when we have errors, don't show theh plan tabs
             if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
               qwQueryService.selectTab(1);
-            finishQuery();
+            finishQuery(newResult);
           }
           return;
         }
@@ -1555,11 +1558,11 @@
 
           // make sure to only finish if the explain query is also done
           if (newResult.explainDone) {
-            lastResult.copyIn(newResult);
+            //lastResult.copyIn(newResult);
             // when we have errors, don't show theh plan tabs
             if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
               qwQueryService.selectTab(1);
-            finishQuery();
+            finishQuery(newResult);
           }
           return;
         }
@@ -1582,11 +1585,11 @@
 
           // make sure to only finish if the explain query is also done
           if (newResult.explainDone) {
-            lastResult.copyIn(newResult);
+            //lastResult.copyIn(newResult);
             // when we have errors, don't show theh plan tabs
             if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
               qwQueryService.selectTab(1);
-            finishQuery();
+            finishQuery(newResult);
           }
           return;
         }
@@ -1623,11 +1626,11 @@
 
         // make sure to only finish if the explain query is also done
         if (newResult.explainDone) {
-          lastResult.copyIn(newResult);
-          // when we have errors, don't show theh plan tabs
+          //lastResult.copyIn(newResult);
+          // when we have errors, don't show the plan tabs
           if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
             qwQueryService.selectTab(1);
-          finishQuery();
+          finishQuery(newResult);
         }
       });
 
@@ -1636,14 +1639,30 @@
     }
 
     //
+    // when we have a single query, associated with a query result in the history,
+    // we have a specific process to execute it:
+    //
+    // - mark the query as busy - we don't want to execute multiple times
+    // - should we run EXPLAIN separately? If so, do it, update the query result
+    // - should we run the plain query? If so, do it, update the query result
+    // - return a promise resolving when either/both of those queries completes,
+    //   marking the query as no longer busy when that happens
+    //
+
+    function executeSingleQuery(queryText, userQuery, queryOptions, explainOnly, queryResult) {
+
+    }
+
+
+    //
     // whenever a query finishes, we need to set the state to indicate teh query
     // is not longer running.
     //
 
-    function finishQuery() {
+    function finishQuery(runningQuery) {
       saveStateToStorage();                       // save the state
-      qwQueryService.currentQueryRequest = null;  // no query running
-      qwQueryService.executingQuery.busy = false; // enable the UI
+      runningQuery.currentQueryRequest = null;  // no query running
+      runningQuery.busy = false; // enable the UI
     }
 
     //
