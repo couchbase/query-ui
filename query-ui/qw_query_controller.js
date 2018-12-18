@@ -376,6 +376,7 @@
 
         // if they hit enter and the query ends with a semicolon, run the query
         if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
+            !qc.inputEditor.ignoreCR && // make sure it's not a special CR
             e[0].lines && e[0].lines.length == 2 && // <cr> marked by two empty lines
             e[0].lines[0].length == 0 &&
             e[0].lines[1].length == 0 &&
@@ -383,9 +384,21 @@
             curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
             endsWithSemi.test(qc.lastResult().query))
           qc.query();
+
+        qc.inputEditor.ignoreCR = false;
       }
 
     };
+
+    //
+    // function for adding a carriage return to the query editor without tripping the
+    // automatic return-after-semicolon-causes-query-to-execute
+    //
+
+    function insertReturn(editor) {
+      editor.ignoreCR = true; // make sure editor doesn't launch query
+      qc.inputEditor.insert('\n');
+    }
 
     //
     // initialize the query editor
@@ -401,6 +414,27 @@
       _editor.setFontSize('13px');
       _editor.renderer.setPrintMarginColumn(false);
       //_editor.setReadOnly(qc.lastResult().busy);
+
+      _editor.commands.addCommand({
+        name: 'enterSpecial',
+        bindKey: {win: 'Ctrl-Return',mac:'Ctrl-Return'},
+        exec: insertReturn,
+        readOnly: true
+      });
+
+      _editor.commands.addCommand({
+        name: 'enterSpecial2',
+        bindKey: {win: 'Command-Return',mac:'Command-Return'},
+        exec: insertReturn,
+        readOnly: true
+      });
+
+      _editor.commands.addCommand({
+        name: 'enterSpecial3',
+        bindKey: {win: 'Shift-Return',mac:'Shift-Return'},
+        exec: insertReturn,
+        readOnly: true
+      });
 
       if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
         _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
