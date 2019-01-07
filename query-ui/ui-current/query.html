@@ -7,9 +7,8 @@
     <div class="header-controls">
       <a
          ng-if="qc.showOptions"
-         ng-click="qc.options()"
-         class="resp-hide-sml">
-        PREFERENCES
+         ng-click="qc.options()">
+        <span class="icon fa-cog fa-lg"></span>
       </a>
       <input
          type="file"
@@ -21,11 +20,15 @@
          ng-if="qc.fileSupport"
          id="loadQueryButton"
          ng-click="qc.load_query()"
-         class="outline"
+         class="outline resp-hide-sml"
          onchange="console.log('changed files')">
         IMPORT
       </a>
-      <a ng-click="qc.unified_save()">EXPORT</a>
+      <a
+         ng-click="qc.unified_save()"
+         class="resp-hide-sml">
+        EXPORT
+      </a>
     </div>
   </mn-element-cargo>
 
@@ -94,6 +97,9 @@
              ng-class="{success: qc.status_success() || qc.lastResult().status == 'explain success', error: qc.status_fail()}">
             {{qc.lastResult().status}}
           </span>
+          <span class="nowrap" ng-hide="qc.lastResult().status == 'executing'">
+            {{qc.lastResult().getLastRun()}}
+          </span>
           <span ng-if="qc.lastResult().elapsedTime" class="nowrap pipe">
             elapsed: {{qc.lastResult().elapsedTime}}
           </span>
@@ -109,17 +115,17 @@
           <span ng-if="qc.lastResult().resultSize" class="nowrap pipe">
             size: {{qc.lastResult().resultSize}} bytes
           </span>
-          <span class="nowrap pipe">
-            {{qc.lastResult().getLastRun()}}
-          </span>
+
         </div>
-        <a
-           ng-disabled="qc.executingQuery.busy"
-           ng-click="qc.format()"
-           class="text-smallish">
-          <span class="icon fa-align-right"></span>
-          format query
-        </a>
+        <div>
+          <a
+             ng-disabled="qc.executingQuery.busy"
+             ng-click="qc.format()"
+             class="text-smallish nowrap resp-hide-xsml">
+            <span class="icon fa-align-right"></span>
+            format
+          </a>
+        </div>
       </div>
     </div>
 

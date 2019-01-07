@@ -314,7 +314,7 @@
       }
 
       // figure out how long ago it was
-      var recentStr = 'last run: ';
+      var recentStr = '';
       if (howRecent < 60)
         recentStr += ' just now';
       else if (howRecent < 3600)
@@ -357,7 +357,7 @@
     newQueryTemplate.data = un_run_query_data;
 
     var executingQueryTemplate = dummyResult.clone();
-    executingQueryTemplate.status = "Executing";
+    executingQueryTemplate.status = "executing";
     executingQueryTemplate.result = '{"status": "Executing statement"}';
     executingQueryTemplate.data = {status: "Executing statement"};
     executingQueryTemplate.resultSize = 0;
