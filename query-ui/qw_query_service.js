@@ -1216,7 +1216,7 @@
       parentResult.explainResult.push({
         _batch_num: childIndex + 1,
         _batch_query: parentResult.batch_results[childIndex].query,
-        _batch_result: parentResult.batch_results[i].explainResult});
+        _batch_result: parentResult.batch_results[childIndex].explainResult});
 
       parentResult.result = JSON.stringify(parentResult.data, null, '  ');
       parentResult.explainResultText = JSON.stringify(parentResult.explainResult, null, '  ');
