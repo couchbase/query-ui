@@ -611,6 +611,18 @@
 
     }
 
+
+    //
+    // programatically open up the search dialog
+    //
+
+    var config = require("ace/config");
+    function aceSearchOutput() {config.loadModule("ace/ext/cb-searchbox", function(e) {e.Search(qc.outputEditor)});}
+
+    //
+    // callback when plan text editor loaded
+    //
+
     function acePlanLoaded(_editor) {
       //console.log("AcePlanLoaded");
       _editor.$blockScrolling = Infinity;
