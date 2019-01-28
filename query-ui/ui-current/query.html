@@ -132,12 +132,7 @@
 <!-- query results ------------------------------------------------------------>
     <div class="wb-results-header"> <!-- ng-show="qc.lastResult().hasData()" -->
       <h4>Query Results
-        <a
-           ng-click="qc.copyResultAsCSV()"
-           class="margin-left-half"
-           title="Copy results in tabular format">
-          <span class="icon fa-copy"></span>
-        </a>
+        <span class="icon fa-copy" ng-if="qc.isSelected(2)" ng-click="qc.copyResultAsCSV()" title="Copy results in tabular format"></span>
         <span
            ng-if="qc.lastResult().warnings"
            tooltip-trigger="'mouseenter'"
@@ -145,7 +140,9 @@
            class="fa-warning icon orange-3 cursor-pointer"
            uib-tooltip-html="{{qc.lastResult().warnings}}">
         </span>
+        <span class="icon fa-search" ng-if="qc.isSelected(1)" ng-click="qc.aceSearchOutput()"></span>
       </h4>
+
       <span class="pills">
         <a ng-click="qc.selectTab(1)"
            ng-class="{selected: qc.isSelected(1)}">JSON</a>

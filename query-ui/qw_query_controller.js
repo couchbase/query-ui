@@ -118,6 +118,8 @@
         $blockScrolling: Infinity
     };
 
+    qc.aceSearchOutput = aceSearchOutput;
+
     //
     // Do we have a REST API to work with?
     //
@@ -613,11 +615,14 @@
 
 
     //
-    // programatically open up the search dialog
+    // programatically open up the JSON results search dialog
     //
 
-    var config = require("ace/config");
-    function aceSearchOutput() {config.loadModule("ace/ext/cb-searchbox", function(e) {e.Search(qc.outputEditor)});}
+    var config = require("ace/config" );
+    function aceSearchOutput() {
+      config.loadModule("ace/ext/cb-searchbox",
+      function(e) {e.Search(qc.outputEditor)});
+    }
 
     //
     // callback when plan text editor loaded
