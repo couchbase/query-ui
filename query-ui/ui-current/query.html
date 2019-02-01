@@ -39,26 +39,26 @@
 <!-- Editor "header row" ----------------------------------------------------->
       <div class="wb-query-editor-header">
         <h4>Query Editor</h4>
-        <span>
-          <button
+        <span class="wb-history-controls">
+          <span
              title="View previous queries & results" ng-click="qc.prev()"
              qw-long-press="qc.historyMenu"
-             class="outline btn-small"
+             class="icon angle-icon left"
              ng-disabled="!qc.hasPrev()">
-            &larr;
-          </button>
+
+          </span>
           <span class="wb-history-controls-inner">
             <a ng-click="qc.historyMenu()">history</a>
             ({{qc.getCurrentIndex()}})
           </span>
-          <button
+          <span
              title="View subsequent queries & results"
              ng-click="qc.next()"
              qw-long-press="qc.historyMenu"
-             class="outline btn-small"
+             class="icon angle-icon right"
              ng-disabled="!qc.hasNext()">
-            &rarr;
-          </button>
+
+          </span>
         </span>
         <div class="wb-fullscreen resp-hide-sml" ng-click="qc.toggleFullscreen()">
           <span ng-if="!qc.fullscreen" class="icon fa-expand" title="expand"></span>
@@ -132,7 +132,12 @@
 <!-- query results ------------------------------------------------------------>
     <div class="wb-results-header"> <!-- ng-show="qc.lastResult().hasData()" -->
       <h4>Query Results
-        <span class="icon fa-copy" ng-if="qc.isSelected(2)" ng-click="qc.copyResultAsCSV()" title="Copy results in tabular format"></span>
+        <span
+           class="icon fa-copy"
+           ng-if="qc.isSelected(2)"
+           ng-click="qc.copyResultAsCSV()"
+           title="Copy results in tabular format">
+        </span>
         <span
            ng-if="qc.lastResult().warnings"
            tooltip-trigger="'mouseenter'"
