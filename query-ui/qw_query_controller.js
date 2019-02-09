@@ -91,6 +91,13 @@
     //
     // options for the two Ace editors, the input and the output
     //
+    // unbind ^F for all ACE editors
+    var default_commands = ace.require("ace/commands/default_commands");
+    for (var i=0; i< default_commands.commands.length; i++)
+      if (default_commands.commands[i].name.startsWith("find")) {
+        default_commands.commands.splice(i,1);
+        i--;
+      }
 
     qc.aceInputOptions = {
         mode: 'n1ql',
