@@ -6,11 +6,16 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
-  margin: 0 0 1.5rem 0;
+  margin: .5rem 0 1.5rem 0;
   font-size: .875rem;
 }
 .doc-editor .controls .column {
   margin-right: .5rem;
+  white-space: nowrap;
+  min-width: 0;
+}
+.doc-editor .controls .column:last-child {
+  margin-right: 0;
 }
 .doc-editor .controls label {
   font-size: .875rem;
@@ -116,7 +121,7 @@ input.ng-invalid-number {
 
 /* edit history dialog list of queries ------------------------------------- */
 .history-list {
-  height:96%;
+  height: 96%;
   overflow: scroll;
 }
 
