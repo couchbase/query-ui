@@ -2002,13 +2002,23 @@
         if (!response || !response.data)
           bucket.schema_error = "Empty or invalid server response: ";
         else if (response.data.errors) {
-          bucket.schema_error = "Unable to get schema: " + JSON.stringify(response.data.errors);
+          bucket.schema_error = "Infer error: ";
+          if (_.isString(response.data.errors))
+            bucket.schema_error += response.data.errors;
+          else if (_.isArray(response.data.errors)) {
+            response.data.errors.forEach(function(val) {
+              if (val.msg) bucket.schema_error += val.msg + ' ';
+              else bucket.schema_error += JSON.stringify(val) + ' ';
+            });
+          }
+          else
+            bucket.schema_error += JSON.stringify(response.data.errors);
         }
         else if (response.data.status == "stopped") {
-          bucket.schema_error = "Unable to get schema, query stopped on server.";
+          bucket.schema_error = "Infer error, query stopped on server.";
         }
         else if (response.data.status != "success") {
-          bucket.schema_error = "Unable to get schema: " + response.data.status;
+          bucket.schema_error = "Infer error: " + response.data.status;
         }
         else if (_.isString(response.data.results))
           bucket.schema_error = response.data.results;

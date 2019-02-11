@@ -148,7 +148,7 @@
         '<h5 class="row">' +
         '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" />' +
         '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
-        ' {{bucket.id}} <small ng-if="bucket.count > -1"> sampled 1000 of {{bucket.count}}</small></h5>' +
+        ' {{bucket.id}} <small ng-if="bucket.count > -1 && bucket.totalDocCount > 0"> sampled {{bucket.totalDocCount}} of {{bucket.count}}</small></h5>' +
         '  <ul class="text-small margin-bottom-half">' +
         //   error?
         '    <li class="text-smallish warning" ng-show="bucket.schema_error" title="{{bucket.schema_error}}">{{bucket.schema_error}}</li>' +
