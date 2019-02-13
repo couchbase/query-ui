@@ -368,7 +368,15 @@
                                 // end of the array, since there's no history yet
     pastQueries.push(newQueryTemplate.clone()); // start off with a blank query
 
-    function getCurrentResult() {return pastQueries[currentQueryIndex]}
+    function getCurrentResult() {
+      // sanity checks to prevent MB-32954
+      if (!pastQueries) pastQueries = [newQueryTemplate.clone()];
+      if (currentQueryIndex < 0 || currentQueryIndex > pastQueries.length)
+        currentQueryIndex = 0;
+      if (!pastQueries[currentQueryIndex])
+        pastQueries[currentQueryIndex] = newQueryTemplate.clone();
+      return pastQueries[currentQueryIndex];
+    }
 
     function emptyResult() {
         return(!pastQueries[currentQueryIndex] ||
@@ -486,7 +494,7 @@
       savedState.pastQueries = [];
       savedState.outputTab = qwQueryService.outputTab;
       savedState.currentQueryIndex = currentQueryIndex;
-      //savedState.lastResult = lastResult.clone_for_storage();
+      savedState.lastResult = getCurrentResult().clone_for_storage(); // for backward compatability
       savedState.options = qwQueryService.options;
 
       savedState.doc_editor_options = {
