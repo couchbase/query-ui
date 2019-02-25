@@ -325,7 +325,7 @@
     var rowWidths = [];
     var truncated = false; // did we have to leave out
     for (var row=0; row < object.length; row++)
-      if (object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
+      if (object[row] && object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
         //console.log("row: " + row + ": " + JSON.stringify(object[row].data));
         var data = object[row].data;
         // if the data is a sub-array, or primitive type, they will go in an unnamed column,
