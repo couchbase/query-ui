@@ -2042,7 +2042,7 @@
           getFieldNamesFromSchema(bucket.schema,bucket.name);
           refreshAutoCompleteArray();
 
-          //console.log("for bucket: " + bucket.name + " got doc count: " + totalDocCount)
+          //console.log("for bucket: " + bucket.id + " got " + bucket.schema.length + " flavars, doc count: " + totalDocCount);
           bucket.totalDocCount = totalDocCount;
 
           for (var i=0; i<bucket.schema.length; i++)
@@ -2069,12 +2069,14 @@
 
           for (var flavor=0; flavor<bucket.schema.length; flavor++) { // iterate over flavors
             markIndexedFields(bucket.indexed_fields, bucket.schema[flavor], "");
-            bucket.schema[flavor].hasFields = Object.keys(bucket.schema[flavor].properties).length > 0;
+            bucket.schema[flavor].hasFields =
+              (bucket.schema[flavor].properties && Object.keys(bucket.schema[flavor].properties).length > 0) ||
+              bucket.schema[flavor].type;
           }
 
-          if (bucket.schema.length)
-            bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
-              hasFields: true});
+          //if (bucket.schema.length)
+          //  bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
+          //    hasFields: true});
         }
 
       }, function errorCallback(response) {

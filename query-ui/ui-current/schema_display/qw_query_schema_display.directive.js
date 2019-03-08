@@ -159,13 +159,14 @@
         //     now the real flavor
         '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure row" ng-class="{disclosed: flavor.Show}" ' +
         '      ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
-        '      <span>{{flavor.Flavor}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
-        '      <div ng-hide="flavor.hasFields">Flavor {{index}} - no fields found, perhaps binary data, not JSON?</div>' +
+        '      <span>{{flavor.Flavor || "schema " + ($index+1)}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
+        '      <div ng-hide="flavor.hasFields">No fields found, perhaps binary data, not JSON?</div>' +
 
         '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
 
         '      <li ng-show="bucket.indexes.length > 0">' +
-        '        <div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">Indexes</div>' +
+        '        <div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">' +
+        '          <span class="index-header">Indexes</span></div>' +
         '        <span class="text-smallsh indent-1-5" ng-show="indexes.Show" ng-repeat="index in bucket.indexes">' +
         '        <span ng-class="{warning: index.state != \'online\'}" ng-attr-title="{{index.state != \'online\' ? \'Index not built yet\' : \'\'}}">' +
         '        {{index.name}} <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
@@ -279,9 +280,14 @@
         '      <schema-display schema="field.items.subtype" path="path + name + \'[]\' "></schema-display>' +
         '    </div>' +
         '  </li>' +
-        '  <li ng-repeat="schema in schema.items">' +
-        '    item {{schema.type}} <span ng-hide="schema.type">{{schema}}</span>' +
-        '       <span ng-if="schema.$schema || schema.type == \'array\'">:<schema-display schema="schema" path="path + name + \'[]\' "></schema-display></li></span>' +
+        // if we aren't a top level schema, and see an array type, put out the types of the items of the array
+        '  <li ng-if="!schema.hasOwnProperty(\'Flavor\')" ng-repeat="subschema in schema.items">' +
+        '    item {{subschema.type}} <span ng-hide="subschema.type">{{subschema}}</span>' +
+        '       <span ng-if="subschema.$schema || subschema.type == \'array\'">:<schema-display schema="subschema" path="path + name + \'[]\' "></schema-display></li></span>' +
+        '  </li>' +
+        // top level bare types instead of objects
+        '  <li ng-if="schema.hasOwnProperty(\'Flavor\')">' +
+        '    <div ng-attr-title="{{showSamples(schema)}}">{{showFieldType(schema)}}</div>' +
         '  </li>' +
         '</ul>',
         compile: function(element) {

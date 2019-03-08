@@ -308,3 +308,7 @@ ul.wb-explain-tooltip-list li ul li {
   margin: 0;
   font-size: .75rem;
 }
+
+.index-header {
+  font-style: italic;
+}
