@@ -32,27 +32,22 @@
     dec.buckets = [];
     dec.buckets_ephemeral = {};
     dec.show_id = show_id;
-    dec.use_n1ql = function() {return(validateQueryService.valid() && queryableBucket())};
     dec.hideAllTooltips = false;
-    dec.resultSize = function() {if (_.isArray(dec.options.current_result)) return dec.options.current_result.length;
-                      else return null;};
+    dec.resultSize = function()
+    {
+      if (_.isArray(dec.options.current_result))
+        return dec.options.current_result.length;
+      else return null;
+    };
 
-    function queryableBucket() {
-      if (!dec.options.selected_bucket)
-        return(false);
-
-      for (var i=0; i< qwQueryService.buckets.length; i++)
-        if (qwQueryService.buckets[i].id == dec.options.selected_bucket &&
-            (qwQueryService.buckets[i].has_prim || qwQueryService.buckets[i].has_sec))
-            return(true);
-
-      return(false);
-    }
+    dec.how_to_query = how_to_query;
+    dec.can_use_n1ql = can_use_n1ql;
 
     //
     //
     //
 
+    dec.getTopKeys = getTopKeys;
     dec.retrieveDocs = retrieveDocs;
     dec.createBlankDoc = createBlankDoc;
     dec.nextBatch = nextBatch;
@@ -69,11 +64,107 @@
     dec.bucketChanged = function(item) {if (!item) return; $state.go('app.admin.doc_editor',{bucket: item});};
     dec.rbac = mnPermissions.export;
 
+    var N1QL = "N1QL";
+    var KV = "KV";
     //
     // call the activate method for initialization
     //
 
     activate();
+
+    // how to get the documents?
+    //
+    // we have two options: N1QL and the KV REST API.
+    //
+    // the N1QL approach is only available if we have a query service.
+    // the KV approach doesn't work well for ephemeral buckets.
+    // in some cases, neither work.
+    //
+    // We have several types of query:
+    // - single key lookup - use KV
+    // - key range lookup - if primary index, use N1QL, otherwise KV, fail if ephemeral bucket
+    // - limit/offset - if primary index, use N1QL, otherwise KV, fail if ephemeral
+    // - limit/offset with WHERE clause - if primary or secondary index
+    //
+    // In some cases, nothing works (such as a Limit/Offset query on an
+    // ephemeral bucket with no indexes).
+    //
+
+    function how_to_query() {
+      // make sure that there is a current bucket selected
+      if (!dec.options.selected_bucket) {
+        dec.options.current_result = "No bucket selected.";
+        return(false);
+      }
+
+      // do we have any buckets?
+      if (dec.buckets.length == 0) {
+        dec.options.current_query = dec.options.selected_bucket;
+        dec.options.current_result = "No buckets found.";
+        return(false);
+      }
+
+      // always use KV for single doc lookups by ID
+      if (dec.options.show_id && dec.options.doc_id)
+        return KV;
+
+      // other query types depend on indexes, see if the current bucket is indexed
+      var has_prim = false, has_sec = false;
+
+      if (validateQueryService.valid()) for (var i=0; i< qwQueryService.buckets.length; i++)
+        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
+          has_prim = qwQueryService.buckets[i].has_prim;
+          has_sec = qwQueryService.buckets[i].has_sec;
+          break;
+        }
+
+      // key range lookup or limit/offset with no WHERE clause
+      // - use N1QL if primary index, otherwise KV (though fail if ephemeral)
+      if ((!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end)) || dec.options.where_clause.length == 0) {
+        if (has_prim)
+          return(N1QL);
+        else if (dec.buckets_ephemeral[dec.options.selected_bucket]) { // ephemeral, no primary key
+          dec.options.current_result = "Limit/offset and key range queries not supported for ephemeral buckets with no primary index.";
+          return(false);
+        }
+        else
+          return(KV);
+      }
+
+      // limit/offset with WHERE clause
+      // must have primary or secondary index, otherwise error message
+
+      if (dec.options.where_clause.length > 0) {
+        if (!has_prim && !has_sec) {
+          dec.options.current_result = "WHERE clause not supported unless bucket has primary or secondary index.";
+          return(false);
+        }
+        return(N1QL)
+      }
+
+      // shouldn't get here
+      dec.options.current_result = "Internal error running document query.";
+      return(false);
+    }
+
+    //
+    // is it possible to use_n1ql?
+    // need a query service, and some index for the current bucket
+    //
+
+    function can_use_n1ql() {
+      if (!validateQueryService.valid())
+        return false;
+
+      for (var i=0; i< qwQueryService.buckets.length; i++)
+        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
+          if (qwQueryService.buckets[i].has_prim) return true;
+          if (qwQueryService.buckets[i].has_sec) return true;
+          break;
+        }
+
+      return(false);
+    }
 
     //
     // get the next or previous set of documents using paging
@@ -527,12 +618,13 @@
         return;
       }
 
-      // only use query service if there is a 'where' clause or an ephemeral bucket
+      // use n1ql service if we can
 
-      if (dec.use_n1ql() && (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]))
-        retrieveDocs_n1ql();
-      else
-        retrieveDocs_rest();
+      //console.log("Querying via: " + how_to_query());
+      switch (how_to_query()) {
+      case N1QL: retrieveDocs_n1ql(); break;
+      case KV: retrieveDocs_rest(); break;
+      }
     }
 
 
@@ -553,6 +645,14 @@
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
+      else if (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end)) {
+        if (dec.options.doc_id_start && dec.options.doc_id_end)
+          query += 'where meta().id >= "' + dec.options.doc_id_start + '" and meta().id <= "' + dec.options.doc_id_end + '"';
+        else if (dec.options.doc_id_start)
+          query += 'where meta().id > "' + dec.options.doc_id_start + '"';
+        else
+          query += 'where meta().id < "' + dec.options.doc_id_end + '"';
+      }
 
       query += ' order by meta().id ';
 
@@ -593,7 +693,7 @@
             errorText.push('Message: "' + data.errors[i].msg + '"');
           }
 
-          showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
+          //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
 
           dec.options.queryBusy = false;
         }
@@ -624,7 +724,7 @@
           errorText.forEach(function (message) {errorHTML += message + '<br>'});
           dec.options.current_result = errorHTML;
 
-          showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
+          //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
 
           //console.log("Got error: " + dec.options.current_result);
         }
@@ -653,7 +753,7 @@
           url: rest_url,
           method: "GET"
         }).then(getDocReturnHandler(i),
-            getDocReturnErrorHandler(i,idArray[i])));
+            getDocReturnErrorHandler(i,idArray)));
       }
 
       return $q.all(promiseArray);
@@ -694,11 +794,11 @@
       }
     }
 
-    function getDocReturnErrorHandler(position,id) {
+    function getDocReturnErrorHandler(position,idArray) {
       return function error(resp) {
         var data = resp.data, status = resp.status;
         //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(resp));
-        dec.options.current_result[position] = {id: id, data: {}, meta: {type:"json"}, xattrs: {}, error: true};
+        dec.options.current_result[position] = {id: idArray[position], data: {}, meta: {type:"json"}, xattrs: {}, error: true};
 
         if (status == 404)
           dec.options.current_result[position].data = "ERROR: Document not found.";
@@ -711,6 +811,10 @@
           dec.options.current_result[position].data = "ERROR: " + JSON.stringify(resp.statusText);
           //showErrorDialog("Error with document: " + id,  JSON.stringify(resp.statusText), true);
         }
+
+        // if there was only one document we were looking for, make the error message the entire result
+        if (idArray.length == 1)
+          dec.options.current_result = dec.options.current_result[position].data;
       }
     }
 
@@ -833,7 +937,7 @@
         }
       },function error(resp) {
         var data = resp.data, status = resp.status;
-        //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(data));
+        //console.log("Got REST error status: " + status/* + ", data: " + JSON.stringify(data)*/);
 
         if (data) {
           if (data.errors)
@@ -850,9 +954,58 @@
 
     }
 
+    //
+    // get a list of hot keys for the current bucket via the REST API
+    //
+
+    function getTopKeys() {
+      if (dec.options.queryBusy) // don't have 2 retrieves going at once
+        return;
+
+      dec.options.queryBusy = true;
+      dec.options.current_query = "top keys for bucket: " + dec.options.selected_bucket;
+      dec.options.current_bucket = dec.options.selected_bucket;
+      dec.options.current_result = [];
+
+      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) + "/stats";
+      var promise = $http({
+        url: Url,
+        method: "GET"
+      }).then(function success(resp) {
+        if (resp && resp.status == 200 && resp.data && resp.data.hot_keys && resp.data.hot_keys.length) {
+          // get the IDs for the top keys
+          var top_keys = [];
+          var ops = {};
+
+          for (var i=0; i<resp.data.hot_keys.length; i++) {
+            top_keys.push(resp.data.hot_keys[i].name);
+            ops[resp.data.hot_keys[i].name] = resp.data.hot_keys[i].ops;
+          }
+
+          getDocsForIdArray(top_keys).then(function() {
+            for (var i=0; i < dec.options.current_result.length; i++)
+              dec.options.current_result[i].ops = ops[dec.options.current_result[i].id];
+            //console.log("results: " + JSON.stringify(dec.options.current_result));
+            dec.options.queryBusy = false;
+          });
+        }
+        else {
+          dec.options.current_result = "No top keys found.";
+        }
+        //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
+
+      },function error(resp) {
+        var data = resp.data, status = resp.status;
+
+        dec.options.current_result = "Error getting top keys: " + resp.status;
+        dec.options.queryBusy = false;
+      });
+
+      return(promise);
+    }
 
     //
-    // get a list of buckets from the server, either through N1QL or the REST API
+    // get a list of buckets from the server via the REST API
     //
 
     function getBuckets() {

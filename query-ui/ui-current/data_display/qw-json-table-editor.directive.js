@@ -321,11 +321,14 @@
     var columnWidths = {};
     var totalWidth = 0;
     var hasNonObject = false;
+    var hasOps = false; // are we looking at top keys with ops/sec?
     var unnamedWidth;
     var rowWidths = [];
     var truncated = false; // did we have to leave out
     for (var row=0; row < object.length; row++)
       if (object[row] && object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
+        if (object[row].ops)
+          hasOps = true;
         //console.log("row: " + row + ": " + JSON.stringify(object[row].data));
         var data = object[row].data;
         // if the data is a sub-array, or primitive type, they will go in an unnamed column,
@@ -371,7 +374,7 @@
 
 
     return({topLevelKeys: topLevelKeys, columnWidths: columnWidths, totalWidth: totalWidth,
-      hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowWidths: rowWidths, truncated: truncated});
+      hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowWidths: rowWidths, truncated: truncated, hasOps: hasOps});
   }
 
   //
@@ -385,6 +388,12 @@
     var columnHeaders = '<div class="data-table-header-row">';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">&nbsp;</span>';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id<span class="caret-subspan"></span></span>';
+
+    // we may need a column for top key ops/ser
+    if (meta.hasOps) {
+      columnHeaders += '<span class="data-table-header-cell" style="width: ' +
+        0.5*columnWidthPx + 'px;">ops/sec</span>';
+    }
 
     // we may need an unnamed column for things that don't have field names
     if (meta.hasNonObject) {
@@ -495,6 +504,15 @@
                        'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
                        'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         result += '</a></span>';
+
+        // if we are showing top keys, add the ops per second
+        if (meta.hasOps) {
+          if (tdata[row].ops && _.isNumber(tdata[row].ops))
+            tdata[row].ops = Math.round(tdata[row].ops*1000)/1000;
+
+          result += '<span class="doc-editor-cell" style="width:' + 0.5*columnWidthPx + 'px">' + tdata[row].ops + '</span>';
+        }
+
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {

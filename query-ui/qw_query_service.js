@@ -1826,7 +1826,7 @@
         /////////////////////////////////////////////////////////////////////////
 
         if (qwConstantsService.showSchemas) {
-          queryText = "select indexes.* from system:indexes";
+          queryText = 'select indexes.* from system:indexes where type = "online"';
 
           res1 = executeQueryUtil(queryText, false)
           //res1 = $http.post("/_p/query/query/service",{statement : queryText})
