@@ -1653,8 +1653,8 @@
 
     function updateQueryMonitoring(category) {
 
-      var query1 = "select active_requests.* from system:active_requests";
-      var query2 = "select completed_requests.* from system:completed_requests";
+      var query1 = "select active_requests.*, meta().plan from system:active_requests";
+      var query2 = "select completed_requests.*, meta().plan from system:completed_requests";
       var query3 = "select prepareds.* from system:prepareds";
       var query = "foo";
 

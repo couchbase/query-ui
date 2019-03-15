@@ -93,6 +93,7 @@
             {{result.users}}
           </span>
           <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
+            <a ng-if="result.plan" ng-click="qmc.showPlan(result.statement,result.plan)">Plan&nbsp;</a>
             <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
               Edit
             </a>
@@ -173,6 +174,7 @@
             {{result.users}}
           </span>
           <span class="cbui-table-cell flex-grow-half text-right">
+            <a ng-if="result.plan" ng-click="qmc.showPlan(result.statement,result.plan)">plan&nbsp;</a>
             <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
               edit
             </a>

@@ -50,6 +50,11 @@
       "requests/sec (1min)","mean request time","median request time","memory util",
       "cpu utilization","# cores"];
     qmc.getVital = getVital;
+    qmc.showPlan = showPlan;
+
+    // are we enterprise?
+
+    qmc.isEnterprise = validateQueryService.isEnterprise;
 
     //
     // sorting for each of the three result tables
@@ -100,6 +105,45 @@
       return(qmc.prepared_sort_by == field && !qmc.prepared_sort_reverse);
     };
 
+    //
+    // show the plan info for a completed query
+    //
+
+    function showPlan(statement, plan) {
+      var dialogScope = $rootScope.$new(true);
+      dialogScope.planText = JSON.stringify(plan,null,'  ');
+      dialogScope.show_plan = dialogScope.isEnterprise = qmc.isEnterprise();
+      dialogScope.statement = statement;
+      dialogScope.set_show_plan = function(val) {dialogScope.show_plan = val;};
+
+      // only analyze the plan if we are EE
+      if (dialogScope.isEnterprise) try {
+        var lists = qwQueryPlanService.analyzePlan(plan,null);
+        dialogScope.plan =
+        {explain: {plan: plan, text: statement},
+            analysis: lists,
+            plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(plan, null, lists)
+        };
+      } catch (exception) {console.log("Got exception: " + JSON.stringify(exception))}
+
+      dialogScope.acePlanOptions = {
+          mode: 'json',
+          showGutter: true,
+          useWrapMode: true,
+          onLoad: function (_editor) {
+            _editor.$blockScrolling = Infinity;
+            _editor.setReadOnly(true);
+            _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
+          },
+          $blockScrolling: Infinity
+      };
+
+      // bring up the dialog
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/query_plan_viz/qw_plan_dialog.html',
+        scope: dialogScope
+      }).result;
+    }
 
     //
     // cancel a running query
