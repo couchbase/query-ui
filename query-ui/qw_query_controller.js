@@ -465,7 +465,7 @@
     //
 
     function format() {
-      qc.lastResult().query = mode_n1ql.Instance.format(qc.lastResult().query,2);
+      qc.lastResult().query = mode_n1ql.Instance.format(qc.lastResult().query,4);
     }
 
     // this function is used for autocompletion of dynamically known names such
