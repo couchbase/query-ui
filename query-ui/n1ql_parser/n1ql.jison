@@ -237,6 +237,7 @@
      algebra.NewAnsiNest = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewAnsiRightJoin = function(keyspace,join_term,for_ident)       {var a = new expr("AnsiRightJoin"); a.ops.ks = keyspace; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewBuildIndexes = function(keyspace,opt_index,index_names)      {var a = new expr("BuildIndexes"); a.ops.keyspace = keyspace; a.opt_index = opt_index; a.ops.index_names = index_names; return a;};
+     algebra.NewCreateFunction = function(name,body,params)                  {var a = new expr("CreateFunction"); a.ops.name = name; a.ops.body = body; a.ops.params = params;}
      algebra.NewCreateIndex = function(index_name,keyspace,index_terms,index_partition,index_where,index_using,index_with) 
        {var a = new expr("CreateIndex"); 
        a.ops.index_name = index_name; 
@@ -248,10 +249,12 @@
        a.ops.index_where = index_where; return a;};
      algebra.NewCreatePrimaryIndex = function(opt_name,keyspace,index_using,index_with) {var a = new expr("CreatePrimateIndex"); a.ops.opt_name = opt_name; a.ops.keyspace = keyspace; a.ops.index_using = index_using; a.ops.index_with = index_with; return a;};
      algebra.NewDelete = function(keyspace,opt_use_keys,opt_use_indexes,opt_where,opt_limit,opt_returning) {var a = new expr("Delete"); a.ops.keyspace = keyspace; a.ops.opt_use_keys = opt_use_keys; a.ops.opt_use_indexes = opt_use_indexes; a.ops.opt_where = opt_where; a.ops.opt_limit = opt_limit; return a;};
+     algebra.NewDropFunction = function(name)                                 {var a = new expr("DropFunction"); a.ops.name = name; return a;};
      algebra.NewDropIndex = function(keyspace, opt_using)                     {var a = new expr("DropIndex"); a.ops.keyspace = keyspace; a.ops.opt_using = opt_using; return a;};
      algebra.NewExcept = function(first,except)                               {var a = new expr("Except"); a.ops.first = first; a.ops.except = except; return a;};
      algebra.NewExceptAll = function(first,except)                            {var a = new expr("ExceptAll"); a.ops.first = first; a.ops.except = except; return a;};
      algebra.NewExecute = function(expression,using)                          {var a = new expr("Execute"); a.ops.expression = expression; a.ops.using = using; return a;};
+     algebra.NewExecuteFunction = function(name,expression)                   {var a = new expr("ExecuteFunction"); a.ops.expression = expression; a.ops.name = name; return a;};
      algebra.NewExplain = function(statement)                                 {var a = new expr("Explain"); a.ops.statement = statement; return a;};
      algebra.NewExpressionTerm = function(expression, opt_as_alias, opt_use)  {var a = new expr("ExpressionTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; a.ops.opt_use = opt_use; return a;};
      algebra.NewGrantRole = function(role_list,user_list,keyspace_list)       {var a = new expr("GrantRole"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
@@ -269,6 +272,7 @@
      algebra.NewJoin = function(from,join_type,join_term)                     {var a = new expr("Join"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
      algebra.NewKeyspaceRef = function(namespace,keyspace,alias)              {var a = new expr("KeyspaceRef"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
      algebra.NewKeyspaceTerm = function(namespace,keyspace,as_alias,opt_use)  {var a = new expr("KeyspaceTerm"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.as_alias = as_alias; a.ops.opt_use = opt_use; return a;};
+     algebra.NewKeyspaceTermFromPath = function(path,as_alias,opt_use_keys,opt_use_indexes)  {var a = new expr("KeyspaceTermFromPath"); a.ops.path = path; a.ops.as_alias = as_alias; a.ops.opt_use_keys = opt_use_keys; a.ops.opt_use_indexes = opt_use_indexes; return a;};
      algebra.NewMerge = function(keyspace,merge_source,key,merge_actions,opt_limit,returning) {var a = new expr("Merge"); a.ops.keyspace = keyspace; a.ops.merge_source = merge_source; a.ops.key = key; a.ops.merge_actions = merge_actions; a.ops.opt_limit = opt_limit; a.ops.returning = returning; return a;};
      algebra.NewMergeActions = function(update,del,insert)                    {var a = new expr("MergeActions"); a.ops.update = update; a.ops.del = del; a.ops.insert = insert; return a;};
      algebra.NewMergeDelete = function(where)                                 {var a = new expr("MergeDelete"); a.ops.where = where; return a;};
@@ -283,6 +287,8 @@
      algebra.NewOrderNulls = function(do_nulls, do_nulls2, last)              {var a = new expr("Order"); a.ops.do_nulls = do_nulls; a.ops.do_nulls2 = do_nulls2; a.ops.last = last; return a;};
      algebra.NewOrderNullsPos = function(dir,nulls)                           {var a = new expr("Order"); a.ops.dir = dir; a.ops.nulls = nulls; return a;};
      algebra.NewPair = function(first,second)                                 {var a = new expr("Pair"); a.ops.first = first; a.ops.second = second; return a;};
+     algebra.NewPathLong = function(namespace,bucket,scope,keyspace)          {var a = new expr("PathShort"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.bucket = bucket; a.ops.scope = scope; return a;};
+     algebra.NewPathShort = function(namespace,keyspace)                      {var a = new expr("PathShort"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; return a;};
      algebra.NewPositionalParameter = function(positional_param)              {var a = new expr("PositionalParameter"); a.ops.positional_param = positional_param; return a;};
      algebra.NewPrepare = function(name,statement)                            {var a = new expr("Prepare"); a.ops.name = name; a.ops.statement = statement; return a;};
      algebra.NewProjection = function(distinct,projects)                      {var a = new expr("Projection"); a.ops.distinct = distinct; a.ops.projects = projects; return a;};
@@ -486,6 +492,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "from"                          { return("FROM"); }
 "fts"                           { return("FTS"); }
 "function"                      { return("FUNCTION"); }
+"golang"                        { return("GOLANG"); }
 "grant"                         { return("GRANT"); }
 "group"                         { return("GROUP"); }
 "groups"                        { return("GROUPS"); }
@@ -511,6 +518,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "keys"                          { return("KEYS"); }
 "keyspace"                      { return("KEYSPACE"); }
 "known"                         { return("KNOWN"); }
+"language"                      { return("LANGUAGE"); }
 "last"                          { return("LAST"); }
 "left"                          { return("LEFT"); }
 "let"                           { return("LET"); }
@@ -526,6 +534,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "minus"                         { return("MINUS"); }
 "missing"                       { return("MISSING"); }
 "namespace"                     { return("NAMESPACE"); }
+"namespace_id"                  { return("NAMESPACE_ID"); }
 "nest"                          { return("NEST"); }
 "nl"                            { return("NL"); }
 "no"                            { return("NO"); }
@@ -646,7 +655,6 @@ qid                         [`](([`][`])|[^`])+[`]
 
 /* Override precedence */
 %left           LPAREN RPAREN
-
 %start          input_list
 
 /*****************************************************************************/
@@ -693,7 +701,7 @@ input SEMI inputs
 
 
 input:
-stmt 
+stmt_body
 {
     $$ = $1;
     /*console.log("Got statement: " + JSON.stringify($1));*/
@@ -719,6 +727,16 @@ expr_input
 /*opt_trailer SEMI*/
 /*;*/
 
+stmt_body:
+explain
+|
+prepare
+|
+execute
+|
+stmt
+;
+
 stmt:
 select_stmt
 |
@@ -726,15 +744,11 @@ dml_stmt
 |
 ddl_stmt
 |
-explain
-|
-prepare
-|
-execute
-|
 infer
 |
 role_stmt
+|
+function_stmt
 ;
 
 explain:
@@ -852,7 +866,7 @@ WITH expr
 {
     $$ = $2;
     /*
-    if ($$) == nil {
+    if $$ == nil {
     yylex.Error("WITH value must be static.")
     }
     */    
@@ -896,6 +910,14 @@ drop_index
 alter_index
 |
 build_index
+;
+
+function_stmt:
+create_function
+|
+drop_function
+|
+execute_function
 ;
 
 fullselect:
@@ -1046,30 +1068,26 @@ projection
 ;
 
 projection:
-projects
+opt_quantifier projects
 {
-    $$ = algebra.NewProjection(false, $1)
+    $$ = algebra.NewProjection($1, $2)
 }
 |
-DISTINCT projects
+opt_quantifier raw expr opt_as_alias
 {
-    $$ = algebra.NewProjection(true, $2)
+    $$ = algebra.NewRawProjection($1, $3, $4)
 }
+;
+
+opt_quantifier:
+/* empty */
+{ $$ = false }
 |
-ALL projects
-{
-    $$ = algebra.NewProjection(false, $2)
-}
+ALL
+{ $$ = false }
 |
-raw expr opt_as_alias
-{
-    $$ = algebra.NewRawProjection(false, $2, $3)
-}
-|
-DISTINCT raw expr opt_as_alias
-{
-    $$ = algebra.NewRawProjection(true, $3, $4)
-}
+DISTINCT
+{ $$ = true }
 ;
 
 raw:
@@ -1288,10 +1306,22 @@ FLATTEN
 ;
 
 keyspace_term:
-namespace_term keyspace_name opt_as_alias opt_use
+keyspace_path opt_as_alias opt_use
 {
-     var ksterm = algebra.NewKeyspaceTerm($1, $2, $3, $4.Keys(), $4.Indexes())
+     var ksterm = algebra.NewKeyspaceTermFromPath($1, $2, $3.Keys(), $3.Indexes());
      $$ = ksterm
+}
+;
+
+keyspace_path:
+namespace_term keyspace_name
+{
+    $$ = algebra.NewPathShort($1,$2)
+}
+|
+namespace_term bucket_name scope_name DOT keyspace_name
+{
+    $$ = algebra.NewPathLong($1,$2,$4,$6)
 }
 ;
 
@@ -1306,7 +1336,21 @@ SYSTEM COLON
 ;
 
 namespace_name:
-IDENT COLON {$$ = $1;}
+IDENT COLON 
+{
+    $$ = $1;
+}
+;
+
+bucket_name:
+IDENT DOT
+{
+    $$ = $1;
+}
+;
+
+scope_name:
+IDENT
 ;
 
 keyspace_name:
@@ -1325,7 +1369,7 @@ USE use_options
 }
 ;
 
-use_options:    
+use_options:
 use_keys
 |
 use_index
@@ -1692,7 +1736,7 @@ sort_terms COMMA sort_term
 ;
 
 sort_term:
-expr opt_dir opt_nulls
+expr opt_dir opt_order_nulls
 {
     $$ = algebra.NewSortTerm($1, $2, algebra.NewOrderNullsPos($2,$3));
 }
@@ -1719,7 +1763,7 @@ DESC
 }
 ;
 
-opt_nulls:
+opt_order_nulls:
 /* empty */
 {
     $$ = algebra.NewOrderNulls(true,false,false)
@@ -1832,7 +1876,7 @@ PRIMARY KEY
 ;
 
 values_list:
-values {$$=$1;}
+values
 |
 values_list COMMA next_values
 {
@@ -2111,18 +2155,22 @@ path opt_update_for
 merge:
 MERGE INTO keyspace_ref opt_use_merge USING simple_from_term ON opt_key expr merge_actions opt_limit opt_returning
 {
-     switch ($66.type) {
-         case algebra.SubqueryTerm:
+     switch ($6.type) {
+         case "SubqueryTerm":
               var source = algebra.NewMergeSourceSelect($6.Subquery(), $6.Alias())
               $$ = algebra.NewMerge($3, $4.Indexes(), source, $8, $9, $10, $11, $12)
-         case algebra.ExpressionTerm:
+              break;
+         case "ExpressionTerm":
               var source = algebra.NewMergeSourceExpression($6, "")
               $$ = algebra.NewMerge($3, $4.Indexes(), source, $8, $9, $10, $11, $12)
-         case algebra.KeyspaceTerm:
+              break;
+         case "KeyspaceTerm":
               var source = algebra.NewMergeSourceFrom($6, "")
               $$ = algebra.NewMerge($3, $4.Indexes(), source, $8, $9, $10, $11, $12)
+              break;
          default:
-              yylex.Error("MERGE source term is UNKNOWN.")
+              yylex.Error("MERGE source term is UNKNOWN: " + $6.type);
+
      }
 }
 ;
@@ -2396,7 +2444,7 @@ keyspace_name
     $$ = algebra.NewKeyspaceRef("", $1, "")
 }
 |
-namespace_term keyspace_name
+namespace_name keyspace_name
 {
     $$ = algebra.NewKeyspaceRef($1, $2, "")
 }
@@ -2567,22 +2615,165 @@ ALTER INDEX named_keyspace_ref DOT index_name opt_index_using index_with
  *************************************************/
 
 build_index:
-BUILD INDEX ON named_keyspace_ref LPAREN index_names RPAREN opt_index_using
+BUILD INDEX ON named_keyspace_ref LPAREN exprs RPAREN opt_index_using
 {
     $$ = algebra.NewBuildIndexes($4, $8, $6)
 }
 ;
 
-index_names:
-index_name
+/*************************************************
+ *
+ * CREATE FUNCTION
+ *
+ *************************************************/
+
+create_function:
+CREATE FUNCTION func_name LPAREN parm_list RPAREN func_body
 {
-    $$ = [];
+    /*
+    if $7 != nil {
+    err := $7.SetVarNames($5)
+    if err != nil {
+        yylex.Error(err.Error())
+        }
+    }
+    */
+    $$ = algebra.NewCreateFunction($3, $7, $5);
+}
+;
+
+func_name:
+short_func_name
+|
+long_func_name
+;
+
+short_func_name:
+keyspace_name
+{
+    /*
+    name, err := functions.Constructor([]string{$1}, yylex.(*lexer).Namespace())
+    if err != nil {
+    yylex.Error(err.Error())
+    }
+    $$ = name
+    */
+    $$ = $1;
+}
+;
+
+long_func_name:
+namespace_term keyspace_name
+{
+    /*
+    name, err := functions.Constructor([]string{$1, $2}, yylex.(*lexer).Namespace())
+    if $$ != nil {
+    yylex.Error(err.Error())
+    }
+    $$ = name
+    */
+    $$ = [$1,$2];
+}
+/* TODO function names for collections
+|
+namespace_term bucket_name scope_name DOT keyspace_name
+{
+    name, err := functions.Constructor([]string{$1, $2, $4, $6}, yylex.(*lexer).Namespace())
+    if $$ != nil {
+    yylex.Error(err.Error())
+    }
+    $$ = name
+    //$$ = [$1,$2,$4,$6];
+}
+*/
+;
+
+parm_list:
+/* empty */
+{
+    $$ = nil
 }
 |
-index_names COMMA index_name
+parameter_terms
+;
+
+parameter_terms:
+IDENT
+{
+    $$ = [$1]
+}
+|
+parameter_terms COMMA IDENT
 {
     $1.push($3);
     $$ = $1;
+}
+;
+
+func_body:
+LBRACE expr RBRACE
+{
+    $$ = $2;
+    /*
+    body, err := inline.NewInlineBody($2)
+    if err != nil {
+    yylex.Error(err.Error())
+    } else {
+        $$ = body
+    }
+    */
+}
+|
+LANGUAGE INLINE AS expr
+{
+    $$ = $4;
+    /*
+    body, err := inline.NewInlineBody($4)
+    if err != nil {
+    yylex.Error(err.Error())
+    } else {
+        $$ = body
+    }
+    */
+}
+|
+LANGUAGE GOLANG AS LBRACE STR COMMA STR RBRACE
+{   
+    $$ = [$5,$7]
+    /*
+    body, err := golang.NewGolangBody($5, $7)
+    if err != nil {
+        yylex.Error(err.Error())
+    } else { 
+        $$ = body
+    }
+    */
+}
+;
+
+/*************************************************
+ *
+ * DROP FUNCTION
+ *
+ *************************************************/
+
+drop_function:
+DROP FUNCTION func_name
+{
+    $$ = algebra.NewDropFunction($3)
+}
+;
+
+/*************************************************
+ *
+ * EXECUTE FUNCTION
+ *
+ *************************************************/
+
+execute_function:
+EXECUTE FUNCTION func_name LPAREN opt_exprs RPAREN
+{
+    $$ = algebra.NewExecuteFunction($3, $5)
 }
 ;
 

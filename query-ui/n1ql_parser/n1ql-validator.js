@@ -4,6 +4,12 @@ var parser = require("./n1ql").parser;
 
 function queryArray() {
     var queries = [
+        "MERGE INTO orders USING orders o USE KEYS ['subqexp_1235', 'subqexp_1236'] ON KEY id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
+        "MERGE INTO orders USING (SELECT 's'||id  AS id FROM orders WHERE test_id = 'subqexp' ) o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
+        "MERGE INTO orders USING (SELECT 'se'||id  AS id, (SELECT RAW SUM(orderlines.price) FROM orders.orderlines)[0] AS total FROM orders WHERE test_id = 'subqexp') o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id, o.total, 'test_id':'subqexp'};",
+        "MERGE INTO orders USING [{'id':'c1235'},{'id':'c1236'}] o ON KEY id WHEN NOT MATCHED THEN INSERT {o.id, 'test_id':'subqexp'};",
+
+/*
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.customerId = \"unknown\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10",
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.purchaseId = \"purchase8992\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10 OFFSET 10",
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId IN [ c.customerId, \"unknown\" ] WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10 OFFSET 20",
@@ -132,25 +138,7 @@ function queryArray() {
 'SELECT count(*) FROM `travel-sample` airline JOIN `travel-sample` route ON KEY route.airlineid FOR airline WHERE airline.type = "airline" AND route.type = "route" AND airline.name = "United Airlines";',
 'SELECT count(*) FROM `travel-sample` airline JOIN `travel-sample` route ON route.airlineid = meta(airline).id WHERE airline.type = "airline" AND route.type = "route" AND airline.name = "United Airlines";',
 'SELECT airline.name, ARRAY {"destination": r.destinationairport} FOR r in route END as destinations FROM `travel-sample` airline NEST `travel-sample` route ON airline.iata = route.airline AND route.type = "route" AND route.sourceairport = "SFO" WHERE airline.type = "airline" AND airline.country = "United States";',
-
-
-//  "select * from foo order by boo.moo.goo",
-        //"select foo from loo",
-        //"(distinct (array (`r`.`flight`) for `r` in `schedule` end))"
-        //"select first e.`desc` for e in props.bom_concrete_type when e.id = \"1\" end as `desc` from default;"
-        //"any foo in reviews satisfies foo.ratings.Overall = 5 end"
-        //"array {\"content\": review.content, \"ratings\" : review.ratings} for review in reviews when every bar within review.ratings satisfies bar = 1 end end"
-        //"first item.content for item in bar end"
-        //"select q.type from `beer-sample` q;"
-        //"blah blah blah blah"
-        //"select foo.moo.goo[a.b.c].boo from loo",
-        //"foo < bar",
-        //"foo < bar; foo > bar;"
-        //"update beer set type = 'foo' where othertype = 'bar'",
-        //"select foo.bar.boo[z.y.x].moo from foo where a.b.c.d > 0",
-        //"distinct array i for i in address when i < 10  END"
-        //"create index idx6 on `beer-sample`(distinct array i for i in address END);"
-        // "select select from from"
+*/
     ];
 
 
@@ -170,9 +158,8 @@ function queryArray() {
 
 function queryFile() {
     var lineReader = require('readline').createInterface({
-        //    input: require('fs').createReadStream('/Users/eben/src/jison/examples/query.txt')
-        //input: require('fs').createReadStream('/Users/eben/src/jison/examples/queries.txt')
-        input: require('fs').createReadStream('/Users/eben/src/master/query-ui/query-ui/n1ql_parser/window_queries.n1ql')
+        input: require('fs').createReadStream('/Users/eben/src/jison/examples/queries.txt')
+        //input: require('fs').createReadStream('/Users/eben/src/master/query-ui/query-ui/n1ql_parser/window_queries.n1ql')
     });
 
     var lineNum = 0;
@@ -180,7 +167,7 @@ function queryFile() {
 
         try {
             var result = parser.parse(line);
-            console.log("Parsed line " + ++lineNum + " ok.");
+            //console.log("Parsed line " + ++lineNum + " ok.");
             //if (result && result[0])
             //  console.log("paths used: \n\n" + JSON.stringify(result[0].pathsUsed,null,2));
         }
