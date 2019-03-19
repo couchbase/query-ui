@@ -460,12 +460,12 @@
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || ' + docError + '" ' +
+        'ng-disabled="' + invalidName + ' || ' + docError + '" ' +
         'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)" ' +
         'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docTooBig + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
+        'ng-disabled="' + invalidName + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
         'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
@@ -484,15 +484,15 @@
         // put the meta().id in the next column
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">';
 
-        if (!docTooBig)
+        //if (!docTooBig)
           result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)">';
-        else
-          result += '<a>';
+        //else
+        //  result += '<a>';
 
         result += mySanitize(tdata[row].id);
         if (docTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
-          'uib-tooltip-html="\'Document is larger than 1MB, and cant be edited.\'"' +
+          'uib-tooltip-html="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
           'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         else if (tdata[row].rawJSONError)
           result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +

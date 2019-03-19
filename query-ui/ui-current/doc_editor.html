@@ -154,7 +154,7 @@
          ng-submit="dec.retrieveDocs()"
          ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id.length > 0) || ((dec.options.doc_id_start.length || dec.options.doc_id_end.length))"
          class="width-12"
-         placeholder="optional...">
+         placeholder="{{dec.has_indexes() ? 'optional...' : 'no indexes available...'}}">
     </div>
 
     <div style="display:none;" class="resp-show-sml margin-top-half width-12"></div>

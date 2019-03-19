@@ -42,6 +42,7 @@
 
     dec.how_to_query = how_to_query;
     dec.can_use_n1ql = can_use_n1ql;
+    dec.has_indexes = has_indexes;
 
     //
     //
@@ -145,6 +146,24 @@
       // shouldn't get here
       dec.options.current_result = "Internal error running document query.";
       return(false);
+    }
+
+    //
+    // does the selected bucket have any indexes?
+    //
+
+    function has_indexes() {
+      // other query types depend on indexes, see if the current bucket is indexed
+      var has_prim = false, has_sec = false;
+
+      if (validateQueryService.valid()) for (var i=0; i< qwQueryService.buckets.length; i++)
+        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
+          has_prim = qwQueryService.buckets[i].has_prim;
+          has_sec = qwQueryService.buckets[i].has_sec;
+          break;
+        }
+
+      return(has_prim || has_sec);
     }
 
     //
@@ -407,8 +426,8 @@
           showGutter: true,
           useWrapMode: true,
           onChange: function(e) {
-            if (dialogScope.editor && dialogScope.editor.getSession().getValue().length > 1024*1024) {
-              dialogScope.error_message = "Documents larger than 1MB may not be edited.";
+            if (dialogScope.editor && dialogScope.editor.getSession().getValue().length > 20*1024*1024) {
+              dialogScope.error_message = "Documents larger than 20MB may not be edited.";
               dialogScope.$applyAsync(function() {});
             }
           },
@@ -425,7 +444,7 @@
                   dialogScope.$applyAsync(function() {});
                   return;
                 }
-              if (dialogScope.editor && dialogScope.editor.getSession().getValue().length < 1024*1024) {
+              if (dialogScope.editor /*&& dialogScope.editor.getSession().getValue().length < 1024*1024*/) {
                 dialogScope.error_message = null; // no errors found
                 dialogScope.$applyAsync(function() {});
               }
@@ -454,8 +473,8 @@
               }
 
           // don't allow empty documents or documents > 1MB
-          if ((dialogScope.editor.getSession().getValue().trim().length == 0) ||
-              (dialogScope.editor.getSession().getValue().trim().length > 1024*1024))
+          if ((dialogScope.editor.getSession().getValue().trim().length == 0)/* ||
+              (dialogScope.editor.getSession().getValue().trim().length > 1024*1024)*/)
             return true;
           }
         return false;
