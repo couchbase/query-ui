@@ -7,10 +7,10 @@
 
   angular.module('qwQuery').controller('qwDocEditorController', docEditorController);
 
-  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$timeout', '$q', '$stateParams',
+  docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$uibModalStack', '$timeout', '$q', '$stateParams',
     'qwQueryService', 'validateQueryService', 'qwConstantsService', 'mnPermissions','qwFixLongNumberService','$state'];
 
-  function docEditorController ($rootScope, $scope, $http, $uibModal, $timeout, $q, $stateParams, qwQueryService,
+  function docEditorController ($rootScope, $scope, $http, $uibModal, $uibModalStack, $timeout, $q, $stateParams, qwQueryService,
       validateQueryService, qwConstantsService, mnPermissions, qwFixLongNumberService, $state) {
 
     var dec = this;
@@ -67,6 +67,9 @@
 
     var N1QL = "N1QL";
     var KV = "KV";
+
+    var largeDoc = 1024*1024;
+
     //
     // call the activate method for initialization
     //
@@ -505,7 +508,9 @@
     function getSaveDocClosure(dialogScope,row) {
       return function(res) {
         var newJson = dialogScope.editor.getSession().getValue();
-        saveDoc(row,newJson).then(refreshUnlessUnsaved());
+        // reformat the doc for compactness
+        newJson = JSON.stringify(JSON.parse(newJson));
+        saveDoc(row,newJson).then(refreshUnlessUnsaved(newJson.length));
       }
     }
 
@@ -559,6 +564,12 @@
       var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
       "/docs/" + (newKey ? encodeURIComponent(newKey) : encodeURIComponent(dec.options.current_result[row].id));
 
+
+      if (newJson.length > largeDoc) {
+        showErrorDialog("Warning: large documents.",
+            'You are saving a very large document, ' + Math.round(10*newJson.length/(1024*1024))/10 +
+            'MB, it may take some time for the change to be visible in the database.', true);
+      }
 
       // with newKey, we need to check if the document exists first by that key
 
@@ -759,6 +770,7 @@
 
     function getDocsForIdArray(idArray) {
       var promiseArray = [];
+      var sizeWarning = {warnedYet: false};
 
       //console.log("Getting docs for: " + JSON.stringify(idArray));
       dec.options.current_result.length = idArray.length;
@@ -771,11 +783,13 @@
         promiseArray.push($http({
           url: rest_url,
           method: "GET"
-        }).then(getDocReturnHandler(i),
+        }).then(getDocReturnHandler(i,sizeWarning),
             getDocReturnErrorHandler(i,idArray)));
       }
 
-      return $q.all(promiseArray);
+      var all_promise = $q.all(promiseArray);
+      //all_promise.then(function() {if (sizeWarning.warnedYet) closeErrorDialog();});
+      return all_promise;
     }
 
     //
@@ -783,12 +797,18 @@
     // results array
     //
 
-    function getDocReturnHandler(position) {
+    function getDocReturnHandler(position,sizeWarning) {
       return function success(resp) {
         if (resp && resp.status == 200 && resp.data) {
 
           var docInfo = resp.data;
           var docId = docInfo.meta.id;
+
+          if (!sizeWarning.warnedYet && docInfo.json.length > largeDoc) {
+            sizeWarning.warnedYet = true;
+            showErrorDialog("Warning: large documents.", "Some of the documents in the result set are large, and processing them may take some time.", true);
+          }
+
           var doc = qwFixLongNumberService.fixLongInts('{ "data": ' + docInfo.json + '}');
           //console.log("Got single doc results for " + position + ": " + JSON.stringify(doc));
 
@@ -842,6 +862,8 @@
     //
 
     function showErrorDialog(title, detail, hide_cancel) {
+      $uibModalStack.dismissAll(); // close any outstanding dialogs
+
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = title;
       if (!Array.isArray(detail))
@@ -854,6 +876,10 @@
         scope: dialogScope
       }).result;
      }
+
+    function closeErrorDialog() {
+      $uibModalStack.dismissAll();
+    }
 
     //
     // get the documents using the REST API
@@ -1100,10 +1126,14 @@
     // there are unsaved changes
     //
 
-    function refreshUnlessUnsaved() {
+    function refreshUnlessUnsaved(changedDocLength) {
+
+      // if the document is large, don't auto-refresh because the results might not be ready
+      if (changedDocLength > largeDoc)
+        return;
 
       // if nothing else on screen is dirty, refresh
-      if (!$('#somethingChangedInTheEditor')[0]) {
+      else if (!$('#somethingChangedInTheEditor')[0]) {
         retrieveDocs_inner();
       }
       // otherwise let the user know that updates are not yet visible

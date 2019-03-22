@@ -446,6 +446,7 @@
       // handle JSON docs
       if (tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json")  {// they'd all better have these
         var docTooBig = tdata[row].docSize > 1024*1024;
+        var docWayTooBig = tdata[row].docSize > 10*1024*1024;
         var docError = tdata[row].error;
         var formName = 'row' + row + 'Form';
         var pristineName = formName + '.$pristine';
@@ -484,13 +485,17 @@
         // put the meta().id in the next column
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">';
 
-        //if (!docTooBig)
+        if (!docWayTooBig)
           result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)">';
-        //else
-        //  result += '<a>';
+        else
+          result += '<a>';
 
         result += mySanitize(tdata[row].id);
-        if (docTooBig)
+        if (docWayTooBig)
+          result += ' <span class="icon fa-exclamation-triangle" ' +
+          'uib-tooltip-html="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB.\'"' +
+          'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+        else if (docTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
           'uib-tooltip-html="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
           'tooltip-placement="right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
