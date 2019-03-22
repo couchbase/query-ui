@@ -88,6 +88,8 @@
 
     qc.load_query = load_query;
 
+    qc.isDeveloperPreview = function() {return qwQueryService.pools.isDeveloperPreview;};
+
     //
     // options for the two Ace editors, the input and the output
     //

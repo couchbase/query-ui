@@ -84,6 +84,12 @@
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
     qwQueryService.testAuth = testAuth; // check passward
 
+    qwQueryService.runAdvise = runAdvise;
+    qwQueryService.runAdviseOnLatest = runAdviseOnLatest;
+    qwQueryService.showWarningDialog = showWarningDialog;
+
+    mnPools.get().then(function (pools) {qwQueryService.pools = pools;});
+
 //    mnAuthService.whoami().then(function (resp) {
 //      if (resp) qwQueryService.user = resp;
 //    });
@@ -180,7 +186,7 @@
     //
 
     function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult,mutationCount,warnings,sortCount,lastRun,status) {
+        data,query,requestID,explainResult,mutationCount,warnings,sortCount,lastRun,status,advice) {
       this.status = status;
       this.resultCount = resultCount;
       this.mutationCount = mutationCount;
@@ -203,6 +209,9 @@
       // when last run?
       this.lastRun = lastRun;
       this.status = status;
+
+      // query advice
+      this.advice = advice
     };
 
     // elapsed and execution time come back with ridiculous amounts of
@@ -227,7 +236,7 @@
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
           this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
-          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status);
+          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status,this.advice);
     };
 
     QueryResult.prototype.status_success = function() {
@@ -290,6 +299,7 @@
       else
         this.lastRun = other.lastRun;
       this.status = other.status;
+      this.advice = other.advice;
     };
 
     //
@@ -1164,6 +1174,8 @@
           function error() {qwQueryService.selectTab(1);}) // error, go to tab 1
           // when done, save the current state
           .finally(function() {saveStateToStorage(); finishQuery(newResult);});
+
+      return(queryExecutionPromise);
     }
 
     //
@@ -1275,7 +1287,7 @@
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
-      var explain_promise;
+      var explain_promise, advise_promise;
 
       if (!queryIsExplain && (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
 
@@ -1417,8 +1429,7 @@
           newResult.resultSize = 0;
 
           // make sure to only finish if the explain query is also done
-          finishQuery(newResult);
-          return(Promise.reject("building query failed"));
+          return(Promise.reject("building explain query failed"));
         }
         var query_promise = $http(request)
         // SUCCESS!
@@ -1618,6 +1629,14 @@
         promises.push(query_promise);
       }
 
+      //
+      // let's run ADVISE on the query to see if there's a better way to do it
+      //
+
+      var advise_promise = runAdvise(queryText,newResult);
+      if (advise_promise != null)
+        promises.push(advise_promise);
+
       // return a promise wrapping the one or two promises
       // when the queries are done, call finishQuery
 
@@ -1627,6 +1646,86 @@
           ));
     }
 
+    //
+    // run ADVISE for a given query and queryResult
+    //
+
+    function runAdviseOnLatest() {
+      // if the user edited an already-run query, add the edited query to the end of the history
+      var query = getCurrentResult();
+      if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
+        var result = executingQueryTemplate.clone();
+        result.query = query.query.trim();
+        pastQueries.push(result);
+        currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
+        query.query = query.savedQuery; // restore historical query to original value
+        saveStateToStorage();
+      }
+
+      runAdvise(getCurrentResult().query,getCurrentResult());
+    };
+
+    function runAdvise(queryText,queryResult) {
+      var queryIsAdvisable = qwQueryService.pools.isDeveloperPreview && /^\s*select|merge|update|delete/gmi.test(queryText);
+
+      if (queryIsAdvisable && !multipleQueries(queryText)) {
+        var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options);
+        // log errors but ignore them
+        if (!advise_request) {
+          console.log("Couldn't build Advise query. ");
+          return(Promise.resolve("building advise query failed"));
+        }
+        advise_promise = $http(advise_request)
+        .then(function success(resp) {
+          var data = resp.data, status = resp.status;
+          //
+          // if the query finished first and produced a plan, ignore
+          // the results of the 'explain'. Only proceed if no explainResult
+
+          // now check the status of what came back
+          if (data && data.status == "success" && data.results && data.results.length > 0) try {
+            //console.log("Advise success: " + JSON.stringify(data.results[0]));
+              queryResult.advice = data.results[0].advice.adviseinfo;
+          }
+          // need to handle any exceptions that might occur
+          catch (exception) {
+            console.log("Exception analyzing advise plan: " + exception);
+          }
+
+          // if status != success
+          else if (data.errors) {
+            console.log("Advise errors: " + JSON.stringify(data.errors, null, '    '));
+          }
+          else {
+            console.log("Unknown advise response: " + JSON.stringify(resp));
+          }
+        },
+        /* error response from $http, log error but otherwise ignore */
+        function error(resp) {
+          var data = resp.data, status = resp.status;
+          console.log("Advise error Data: " + JSON.stringify(data));
+          console.log("Advise error Status: " + JSON.stringify(status));
+        });
+
+        return advise_promise;
+      }
+
+      return null;
+    }
+
+    function multipleQueries(queryText) {
+      var findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\/\*(?:.|[\n\r])*\*\/)|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;
+      var matchArray = findSemicolons.exec(queryText);
+      var queryCount = 0;
+
+      while (matchArray != null) {
+        if (matchArray[0] == ';')
+          if (queryCount++ > 1)
+            return true;
+        matchArray = findSemicolons.exec(queryText);
+      }
+      return false;
+    }
 
     //
     // whenever a query finishes, we need to set the state to indicate teh query

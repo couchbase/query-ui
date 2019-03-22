@@ -1,0 +1,34 @@
+<p ng-if="error" class="error">{{error}}</p>
+
+<button class="outline tight" ng-click="update_advice()">
+  Update
+</button>
+
+<br>
+<br>
+
+<div ng-if="!error">
+  <div ng-repeat="element in advice">
+    <h4>Query currently using:</h4>
+    <ul>
+      <li ng-repeat="curIdx in element.current_indexes">{{curIdx.index_statement}}
+        <span ng-if="curIdx.index_status == 'THIS IS THE BEST INDEX WE CAN RECOMMEND'">
+          (optimal)
+        </span>
+      </li>
+    </ul>
+    <br>
+    <div
+      ng-if="element.recommended_indexes && element.recommended_indexes[0] && element.recommended_indexes[0].index_statement">
+      <h4>Index Recommendations:</h4>
+      <a ng-click="create_option($index)">(create)</a>
+      <ul>
+        <li ng-repeat="reco in element.recommended_indexes">{{reco.index_statement}}</li>
+      </ul>
+    </div>
+    <div
+      ng-if="!element.recommended_indexes[0] || !element.recommended_indexes[0].index_statement">
+      Existing indexes are sufficient.</div>
+    </li> <br> <br>
+  </div>
+</div>

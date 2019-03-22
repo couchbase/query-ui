@@ -160,6 +160,12 @@
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}"
            class="resp-hide-xsml">Plan Text</a>
+        <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise && qc.isDeveloperPreview()"
+
+           ng-class="{selected: qc.isSelected(6)}">Advice
+             <span ng-if="qc.lastResult().advice">*</span>
+             <span ng-if="!qc.lastResult().advice">&nbsp;</span>
+         </a>
       </span>
     </div>
 
@@ -187,6 +193,9 @@
       <div class="wb-results-explain-text" ng-if="qc.isSelected(5)"
         ui-ace="qc.acePlanOptions"
         ng-model="qc.lastResult().explainResultText"></div>
+
+      <div class="wb-results-explain-text" ng-if="qc.isSelected(6)"
+        qw-advice-viz="qc.lastResult().advice || qc.lastResult().query"></div>
     </div>
   </div>
 
