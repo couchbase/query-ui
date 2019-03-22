@@ -1160,6 +1160,7 @@
         for (var i = 0; i < queries.length; i++)
           newResult.batch_results.push(newQueryTemplate.clone());
 
+        newResult.explainResult = "Graphical plans not available for multiple query sequences.";
         queryExecutionPromise = runBatchQuery(newResult, queries, 0, explainOnly);
       }
 
@@ -1228,15 +1229,15 @@
 
       // add the latest result
       parentResult.data.push({
-          _batch_num: childIndex + 1,
-          _batch_query: parentResult.batch_results[childIndex].query,
-          _batch_query_status: parentResult.batch_results[childIndex].status,
-          _batch_result: parentResult.batch_results[childIndex].data}
+          _sequence_num: childIndex + 1,
+          _sequence_query: parentResult.batch_results[childIndex].query,
+          _sequence_query_status: parentResult.batch_results[childIndex].status,
+          _sequence_result: parentResult.batch_results[childIndex].data}
       );
       parentResult.explainResult.push({
-        _batch_num: childIndex + 1,
-        _batch_query: parentResult.batch_results[childIndex].query,
-        _batch_result: parentResult.batch_results[childIndex].explainResult});
+        _sequence_num: childIndex + 1,
+        _sequence_query: parentResult.batch_results[childIndex].query,
+        _sequence_result: parentResult.batch_results[childIndex].explainResult});
 
       parentResult.result = JSON.stringify(parentResult.data, null, '  ');
       parentResult.explainResultText = JSON.stringify(parentResult.explainResult, null, '  ');
@@ -1268,7 +1269,7 @@
       var result = '';
 
       var m = timeValue.match(durationExpr);
-      console.log(JSON.stringify(m));
+
       if (m[1]) result += m[1];
       if (m[2]) {
         var seconds = Math.round(parseFloat(m[2])*10)/10;
@@ -1733,6 +1734,7 @@
           var data = resp.data, status = resp.status;
           console.log("Advise error Data: " + JSON.stringify(data));
           console.log("Advise error Status: " + JSON.stringify(status));
+          queryResult.advice = "Error getting index advice: " + status;
         });
 
         return advise_promise;

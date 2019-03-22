@@ -41,6 +41,8 @@
 
             if (_.isString(data))
               content = '<p class="text-small margin-left-half">' + data + '</p>';
+            else if (_.isArray(data))
+              content = '<p class="text-small margin-left-half">Graphical plans are not supported for multiple query sequences. Try the plan text view.</p>';
             else if (data["No data to display"] || data.errors)
               content = '<p class="text-small margin-left-half">' + JSON.stringify(data) + '</p>';
 

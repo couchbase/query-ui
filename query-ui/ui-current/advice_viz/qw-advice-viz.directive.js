@@ -53,8 +53,11 @@
             scope.error = 'Advise does not support multiple queries.';
 
           // the query might or might not have advice already
-          else if (!advice || _.isString(advice))
+          else if (!advice || advice === qwQueryService.getCurrentResult().query)
               scope.error = 'No current advice, execute query or click update to get advice.';
+
+          else if (_.isString(advice))
+              scope.error = advice;
 
           // is there actually advice to create an index? See if we have some array of recommendations
           //else if (_.isArray(advice) &&
@@ -83,8 +86,11 @@
 
     while (matchArray != null) {
       if (matchArray[0] == ';')
-        if (queryCount++ > 1)
-          return true;
+        queryCount++;
+
+      // if we see anything but a comment past a semicolon, it's a multi-query
+      if ((matchArray[1] || matchArray[2] || matchArray[4] || matchArray[5] || matchArray[6]) && queryCount > 0)
+        return(true);
       matchArray = findSemicolons.exec(queryResult.query);
     }
     return false;
