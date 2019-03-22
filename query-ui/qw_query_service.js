@@ -1258,6 +1258,34 @@
     }
 
     //
+    // time values in metrics can get really ugly, e.g. 1.23423423432s or 334.993843ms
+    //
+    // let's round them
+    //
+
+    function simplifyTimeValue(timeValue) {
+      var durationExpr = /(\d+m)?(?:(\d+\.\d+)s)?(?:(\d+\.\d+)ms)?(?:(\d+\.\d+)µs)?/;
+      var result = '';
+
+      var m = timeValue.match(durationExpr);
+      console.log(JSON.stringify(m));
+      if (m[1]) result += m[1];
+      if (m[2]) {
+        var seconds = Math.round(parseFloat(m[2])*10)/10;
+        result += seconds + 's';
+      }
+      if (m[3]) {
+        var ms = Math.round(parseFloat(m[3])*10)/10;
+        result += ms + 'ms';
+      }
+      if (m[4]) {
+        var us = Math.round(parseFloat(m[4])*10)/10;
+        result += us + 'µs';
+      }
+      return(result)
+    }
+
+    //
     // when we have a single query, associated with a query result in the history,
     // we have a specific process to execute it:
     //
@@ -1321,8 +1349,8 @@
                 newResult.status = "explain success";
 
               if (data.metrics && newResult.elapsedTime != '') {
-                newResult.elapsedTime = data.metrics.elapsedTime;
-                newResult.executionTime = data.metrics.executionTime;
+                newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+                newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
                 newResult.resultCount = data.metrics.resultCount;
                 newResult.mutationCount = data.metrics.mutationCount;
                 newResult.resultSize = data.metrics.resultSize;
@@ -1395,8 +1423,8 @@
             // so they know how long it took before the error
 
             if (data.metrics && newResult.elapsedTime != '') {
-              newResult.elapsedTime = data.metrics.elapsedTime;
-              newResult.executionTime = data.metrics.executionTime;
+              newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+              newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
               newResult.resultCount = data.metrics.resultCount;
               newResult.mutationCount = data.metrics.mutationCount;
               newResult.resultSize = data.metrics.resultSize;
@@ -1483,8 +1511,8 @@
           }
 
           newResult.status = data.status;
-          newResult.elapsedTime = data.metrics.elapsedTime;
-          newResult.executionTime = data.metrics.executionTime;
+          newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+          newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
           newResult.resultCount = data.metrics.resultCount;
           if (data.metrics.mutationCount)
             newResult.mutationCount = data.metrics.mutationCount;
@@ -1606,8 +1634,8 @@
             newResult.status = "errors";
 
           if (data.metrics) {
-            newResult.elapsedTime = data.metrics.elapsedTime;
-            newResult.executionTime = data.metrics.executionTime;
+            newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+            newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
             newResult.resultCount = data.metrics.resultCount;
             if (data.metrics.mutationCount)
               newResult.mutationCount = data.metrics.mutationCount;
@@ -2098,7 +2126,7 @@
       //console.log("Getting schema for : " + bucket.id);
 
       //return $http(inferQueryRequest)
-      return executeQueryUtil('infer `' + bucket.id + '`  with {"infer_timeout":5};', false)
+      return executeQueryUtil('infer `' + bucket.id + '`  with {"infer_timeout":5, "max_schema_MB":1};', false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
         //console.log("Schema status: " + status);
