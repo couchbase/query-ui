@@ -813,7 +813,7 @@
         // one generic warning for all unknown fields
         annotations.push(
             {row: 0,column: 0,
-            text: "This query contains the following fields not found in the inferred schema for their bucket,\nthe field names might be misspelled: \n"+ allFields,
+            text: "Some fields not found (they may be misspelled):\n"+allFields,
             type: "warning"});
 
         // for each line, for each problem field, find all matches and add an info annotation
