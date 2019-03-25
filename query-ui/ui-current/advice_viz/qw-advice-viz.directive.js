@@ -85,12 +85,13 @@
     var queryCount = 0;
 
     while (matchArray != null) {
-      if (matchArray[0] == ';')
-        queryCount++;
-
       // if we see anything but a comment past a semicolon, it's a multi-query
       if ((matchArray[1] || matchArray[2] || matchArray[4] || matchArray[5] || matchArray[6]) && queryCount > 0)
         return(true);
+
+      if (matchArray[0] == ';')
+        queryCount++;
+
       matchArray = findSemicolons.exec(queryResult.query);
     }
     return false;
