@@ -1,34 +1,33 @@
-<p ng-if="error" class="error">{{error}}</p>
+<div>
+  <p ng-if="error" class="warning">{{error}}</p>
+  <button
+     ng-if="!error && !advice"
+     ng-click="update_advice()"
+     class="outline">Get Advice for Current Query
+  </button>
 
-<button class="outline tight" ng-click="update_advice()">
-  Update
-</button>
-
-<br>
-<br>
-
-<div ng-if="!error">
-  <div ng-repeat="element in advice">
-    <h4>Query currently using:</h4>
-    <ul>
-      <li ng-repeat="curIdx in element.current_indexes">{{curIdx.index_statement}}
-        <span ng-if="curIdx.index_status == 'THIS IS THE BEST INDEX WE CAN RECOMMEND'">
-          (optimal)
-        </span>
-      </li>
-    </ul>
-    <br>
+  <div ng-if="!error" ng-repeat="element in advice" class="margin-bottom-1">
+    <h5>Index<span ng-if="element.current_indexes.length > 1">es</span> Currently Used</h5>
+      <p ng-repeat="curIdx in element.current_indexes" class="margin-bottom-half">
+        {{curIdx.index_statement}}
+        <em class="text-smaller" ng-if="curIdx.index_status == 'THIS IS THE BEST INDEX WE CAN RECOMMEND'">
+          <span class="icon fa-check success"></span> optimal index
+        </em>
+      </p>
     <div
       ng-if="element.recommended_indexes && element.recommended_indexes[0] && element.recommended_indexes[0].index_statement">
-      <h4>Index Recommendations:</h4>
-      <a ng-click="create_option($index)">(create)</a>
-      <ul>
-        <li ng-repeat="reco in element.recommended_indexes">{{reco.index_statement}}</li>
-      </ul>
+      <h5>Index Recommendations</h5>
+      <div class="margin-bottom-1">
+        <p class="margin-bottom-0" ng-repeat="reco in element.recommended_indexes">{{reco.index_statement}}</p>
+      </div>
+      <button class="outline" ng-click="create_option($index)">
+        Create & Build Index<span ng-if="element.recommended_indexes.length > 1">es</span>
+      </button>
     </div>
     <div
-      ng-if="!element.recommended_indexes[0] || !element.recommended_indexes[0].index_statement">
-      Existing indexes are sufficient.</div>
-    </li> <br> <br>
+       ng-if="!element.recommended_indexes[0] || !element.recommended_indexes[0].index_statement"
+       class="success">
+      Existing indexes are sufficient.
+    </div>
   </div>
 </div>

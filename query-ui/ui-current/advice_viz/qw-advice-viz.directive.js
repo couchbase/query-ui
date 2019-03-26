@@ -32,6 +32,7 @@
         scope.$watch('data', function (advice) {
 
           //console.log("Got advice data: " + JSON.stringify(advice));
+          scope.advice = null;
 
           // create the recommended indexes
           scope.create_option = function(index) {
@@ -53,8 +54,10 @@
             scope.error = 'Advise does not support multiple queries.';
 
           // the query might or might not have advice already
-          else if (!advice || advice === qwQueryService.getCurrentResult().query)
-              scope.error = 'No current advice, execute query or click update to get advice.';
+          else if (!advice || advice === qwQueryService.getCurrentResult().query) {
+              scope.error = null;
+              scope.advice = null;
+          }
 
           else if (_.isString(advice))
               scope.error = advice;

@@ -134,7 +134,6 @@
       <h4>Query Results
         <span
            class="icon fa-copy"
-           ng-if="qc.isSelected(2)"
            ng-click="qc.copyResultAsCSV()"
            title="Copy results in tabular format">
         </span>
@@ -149,10 +148,10 @@
       </h4>
 
       <span class="pills">
-        <a ng-click="qc.selectTab(1)"
-           ng-class="{selected: qc.isSelected(1)}">JSON</a>
         <a ng-click="qc.selectTab(2)"
            ng-class="{selected: qc.isSelected(2)}">Table</a>
+        <a ng-click="qc.selectTab(1)"
+           ng-class="{selected: qc.isSelected(1)}">JSON</a>
         <a ng-click="qc.selectTab(3)"
            ng-class="{selected: qc.isSelected(3)}">Tree</a>
         <a ng-click="qc.selectTab(4)" ng-if="qc.isEnterprise"
@@ -161,10 +160,8 @@
            ng-class="{selected: qc.isSelected(5)}"
            class="resp-hide-xsml">Plan Text</a>
         <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise && qc.isDeveloperPreview()"
-
            ng-class="{selected: qc.isSelected(6)}">Advice
              <span ng-if="qc.lastResult().advice">*</span>
-             <span ng-if="!qc.lastResult().advice">&nbsp;</span>
          </a>
       </span>
     </div>
@@ -194,7 +191,7 @@
         ui-ace="qc.acePlanOptions"
         ng-model="qc.lastResult().explainResultText"></div>
 
-      <div class="wb-results-explain-text" ng-if="qc.isSelected(6)"
+      <div class="wb-results-advice" ng-if="qc.isSelected(6)"
         qw-advice-viz="qc.lastResult().advice || qc.lastResult().query"></div>
     </div>
   </div>
