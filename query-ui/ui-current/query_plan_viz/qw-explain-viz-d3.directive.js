@@ -112,7 +112,7 @@
 
             // now add the d3 content
 
-            if (data.plan_nodes) {
+            if (data && data.plan_nodes) {
               // put the SVG inside a wrapper to allow scrolling
               wrapperElement = angular.element('<div class="wb-explain-d3-wrapper"></div>');
               element.append(wrapperElement);

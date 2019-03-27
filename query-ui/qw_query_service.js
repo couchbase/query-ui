@@ -17,7 +17,22 @@
     //
 
     qwQueryService.outputTab = 1;     // remember selected output tab
-    qwQueryService.selectTab = function(newTab) {qwQueryService.outputTab = newTab;};
+    qwQueryService.selectTab = function(newTab) {
+      // some tabs are not available in some modes
+      switch (newTab) {
+      case 4: // plan is only available in EE
+        if (!mnPools.export.isEnterprise)
+          newTab = 1;
+        break;
+
+      case 6: // advice is only available in EE and developer preview
+        if (!mnPools.export.isEnterprise || !qwQueryService.pools.isDeveloperPreview)
+          newTab = 1;
+        break;
+      }
+
+      qwQueryService.outputTab = newTab;
+     };
     qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
 
 
@@ -462,7 +477,7 @@
         if (savedState.currentQueryIndex) {
           setCurrentIndex(savedState.currentQueryIndex);
           getCurrentResult().savedQuery = getCurrentResult().query; // remember query if edited later
-          qwQueryService.outputTab = savedState.outputTab;
+          qwQueryService.selectTab(savedState.outputTab);
           if (savedState.options)
             qwQueryService.options = savedState.options;
           if (savedState.doc_editor_options) {
@@ -613,6 +628,43 @@
             }
         });
     }
+
+    //
+    // the UI can really only display a small number of fields in a schema, so truncate when necessary\
+    //
+
+    function truncateSchema(schema) {
+
+      for (var i=0; i< schema.length; i++) {
+        var fieldCount = 0;
+        var flavor = schema[i];
+
+        _.forEach(schema[i]['properties'], function(field, field_name) {
+          if (++fieldCount > 250) {
+            flavor.truncated = true;
+            delete flavor['properties'][field_name];
+            return true;
+          }
+
+          // if the field has sub-properties, make a recursive call
+          if (field['properties']) {
+            truncateSchema([field]);
+          }
+
+          // if the field has 'items', it is an array, make recursive call with array type
+          if (field['items'] && field['items'].subtype) {
+            truncateSchema([field['items'].subtype]);
+          }
+
+          else if (_.isArray(field['items'])) for (var i=0;i<field['items'].length;i++)
+            if (field['items'][i].subtype) {
+              truncateSchema([field['items'][i].subtype]);
+            }
+        });
+      }
+
+    }
+
 
     //
     // for error checking, it would be nice highlight when a specified field is not found
@@ -2128,11 +2180,14 @@
       //console.log("Getting schema for : " + bucket.id);
 
       //return $http(inferQueryRequest)
-      return executeQueryUtil('infer `' + bucket.id + '`  with {"infer_timeout":5, "max_schema_MB":1};', false)
+      return executeQueryUtil('infer \`' + bucket.id + '\`  with {"infer_timeout":5, "max_schema_MB":1};', false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
-        //console.log("Schema status: " + status);
+        //console.log("Schema status: " + response.status);
         //console.log("Schema data: " + JSON.stringify(response.data));
+
+        if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
+          bucket.schema_error = response.data.warnings[0].msg;
 
         bucket.schema.length = 0;
 
@@ -2169,6 +2224,7 @@
 
           getFieldNamesFromSchema(bucket.schema,"");
           getFieldNamesFromSchema(bucket.schema,bucket.name);
+          truncateSchema(bucket.schema);
           refreshAutoCompleteArray();
 
           //console.log("for bucket: " + bucket.id + " got " + bucket.schema.length + " flavars, doc count: " + totalDocCount);

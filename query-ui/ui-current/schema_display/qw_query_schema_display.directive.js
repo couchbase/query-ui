@@ -280,15 +280,17 @@
         '      <schema-display schema="field.items.subtype" path="path + name + \'[]\' "></schema-display>' +
         '    </div>' +
         '  </li>' +
+        '  <li ng-if="schema.truncated">too many fields to display, list truncated...</li>' +
         // if we aren't a top level schema, and see an array type, put out the types of the items of the array
         '  <li ng-if="!schema.hasOwnProperty(\'Flavor\')" ng-repeat="subschema in schema.items">' +
         '    item {{subschema.type}} <span ng-hide="subschema.type">{{subschema}}</span>' +
         '       <span ng-if="subschema.$schema || subschema.type == \'array\'">:<schema-display schema="subschema" path="path + name + \'[]\' "></schema-display></li></span>' +
         '  </li>' +
+//        '  <li>done with list</li>' +
         // top level bare types instead of objects
-        '  <li ng-if="schema.hasOwnProperty(\'Flavor\')">' +
-        '    <div ng-attr-title="{{showSamples(schema)}}">{{showFieldType(schema)}}</div>' +
-        '  </li>' +
+//        '  <li ng-if="schema.hasOwnProperty(\'Flavor\')">' +
+//        '    <div ng-attr-title="{{showSamples(schema)}}">{{showFieldType(schema)}}</div>' +
+//        '  </li>' +
         '</ul>',
         compile: function(element) {
           return(MyRecursionHelper.compile(element));
