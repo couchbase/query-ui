@@ -183,6 +183,8 @@
 
     qc.copyResultAsCSV = function() {copyResultAsCSV();};
 
+    qc.runAdviseOnLatest = qwQueryService.runAdviseOnLatest;
+
     // what kinds of buckets do we have?
 
     qc.has_prim_buckets = function() {for (var i=0; i < qwQueryService.buckets.length; i++) if (qwQueryService.buckets[i].has_prim) return true; return false;}

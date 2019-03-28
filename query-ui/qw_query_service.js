@@ -1743,6 +1743,8 @@
         saveStateToStorage();
       }
 
+      getCurrentResult().advice = "Getting advice for current query...";
+      qwQueryService.selectTab(6);
       runAdvise(getCurrentResult().query,getCurrentResult());
     };
 

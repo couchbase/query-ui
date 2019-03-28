@@ -1,10 +1,10 @@
 <div>
   <p ng-if="error" class="warning">{{error}}</p>
-  <button
+  <!-- button
      ng-if="!error && !advice"
      ng-click="update_advice()"
      class="outline">Get Advice for Current Query
-  </button>
+  </button -->
 
   <div ng-if="!error" ng-repeat="element in advice" class="margin-bottom-1">
     <h5>Index<span ng-if="element.current_indexes.length > 1">es</span> Currently Used</h5>

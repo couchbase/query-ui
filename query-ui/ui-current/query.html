@@ -89,6 +89,13 @@
             Explain
             <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
           </button>
+          <button ng-if="qc.isEnterprise && qc.isDeveloperPreview()"
+             ng-disabled="qc.lastResult().busy"
+             ng-click="qc.runAdviseOnLatest()"
+             class="outline tight">
+             Advise
+            <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
+          </button>
         </span>
 <!-- query execution summary stats -------------------------------------------->
         <div class="wb-result-summary">
