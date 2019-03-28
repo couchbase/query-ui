@@ -38,14 +38,20 @@
 
     var monitoringOptions = {
         selectedTab: 1,
-        autoUpdate: true
+        autoUpdate: true,
+        active_sort_by: 'elapsedTime',
+        active_sort_reverse: true,
+        completed_sort_by: 'elapsedTime',
+        completed_sort_reverse: true,
+        prepared_sort_by: 'elapsedTime',
+        prepared_sort_reverse: true
     };
     qwQueryService.selectMonitoringTab = function(newTab) {monitoringOptions.selectedTab = newTab; saveStateToStorage();};
     qwQueryService.getMonitoringSelectedTab = function() {return monitoringOptions.selectedTab;};
     qwQueryService.isMonitoringSelected = function(checkTab) {return monitoringOptions.selectedTab === checkTab;};
     qwQueryService.getMonitoringAutoUpdate = function() {return monitoringOptions.autoUpdate;};
     qwQueryService.setMonitoringAutoUpdate = function(newValue) {monitoringOptions.autoUpdate = newValue; saveStateToStorage();};
-
+    qwQueryService.getMonitoringOptions = function() {return monitoringOptions};
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -491,8 +497,18 @@
             qwQueryService.query_plan_options = savedState.query_plan_options;
           }
 
-          if (savedState.monitoringOptions)
+          if (savedState.monitoringOptions) {
             monitoringOptions = savedState.monitoringOptions;
+            // handle backward compatibility
+            if (!monitoringOptions.active_sort_by) {
+              monitoringOptions.active_sort_by = 'elapsedTime';
+              monitoringOptions.active_sort_reverse = true;
+              monitoringOptions.completed_sort_by = 'elapsedTime';
+              monitoringOptions.completed_sort_reverse = true;
+              monitoringOptions.prepared_sort_by = 'elapsedTime';
+              monitoringOptions.prepared_sort_reverse = true;
+            }
+          }
 
           // handle case where auto_infer is not yet defined, and set it to true
           if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false)

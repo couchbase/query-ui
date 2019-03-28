@@ -33,6 +33,7 @@
     qmc.toggle_update = toggle_update;
     qmc.get_toggle_label = get_toggle_label;
     qmc.get_update_flag = function() {return(qwQueryService.getMonitoringAutoUpdate());}
+    qmc.options = qwQueryService.getMonitoringOptions;
 
     qmc.stats = {};
     qmc.stat_names = ["query_requests","query_selects","query_avg_req_time","query_avg_svc_time",
@@ -60,49 +61,49 @@
     // sorting for each of the three result tables
     //
 
-    qmc.active_sort_by = 'elapsedTime';
-    qmc.active_sort_reverse = true;
     qmc.update_active_sort = function(field) {
-      if (qmc.active_sort_by == field)
-        qmc.active_sort_reverse = !qmc.active_sort_reverse;
+      if (qmc.options().active_sort_by == field)
+        qmc.options().active_sort_reverse = !qmc.active_sort_reverse;
       else
-        qmc.active_sort_by = field;
+        qmc.options().active_sort_by = field;
+
+      qwQueryService.saveStateToStorage();
     };
     qmc.show_up_caret_active = function(field) {
-      return(qmc.active_sort_by == field && qmc.active_sort_reverse);
+      return(qmc.options().active_sort_by == field && qmc.options().active_sort_reverse);
     };
     qmc.show_down_caret_active = function(field) {
-      return(qmc.active_sort_by == field && !qmc.active_sort_reverse);
+      return(qmc.options().active_sort_by == field && !qmc.options().active_sort_reverse);
     };
 
-    qmc.completed_sort_by = 'elapsedTime';
-    qmc.completed_sort_reverse = true;
     qmc.update_completed_sort = function(field) {
-      if (qmc.completed_sort_by == field)
-        qmc.completed_sort_reverse = !qmc.completed_sort_reverse;
+      if (qmc.options().completed_sort_by == field)
+        qmc.options().completed_sort_reverse = !qmc.options().completed_sort_reverse;
       else
-        qmc.completed_sort_by = field;
+        qmc.options().completed_sort_by = field;
+
+      qwQueryService.saveStateToStorage();
     };
     qmc.show_up_caret_completed = function(field) {
-      return(qmc.completed_sort_by == field && qmc.completed_sort_reverse);
+      return(qmc.options().completed_sort_by == field && qmc.options().completed_sort_reverse);
     };
     qmc.show_down_caret_completed = function(field) {
-      return(qmc.completed_sort_by == field && !qmc.completed_sort_reverse);
+      return(qmc.options().completed_sort_by == field && !qmc.options().completed_sort_reverse);
     };
 
-    qmc.prepared_sort_by = 'uses';
-    qmc.prepared_sort_reverse = true;
     qmc.update_prepared_sort = function(field) {
-      if (qmc.prepared_sort_by == field)
-        qmc.prepared_sort_reverse = !qmc.prepared_sort_reverse;
+      if (qmc.options().prepared_sort_by == field)
+        qmc.options().prepared_sort_reverse = !qmc.options().prepared_sort_reverse;
       else
-        qmc.prepared_sort_by = field;
+        qmc.options().prepared_sort_by = field;
+
+      qwQueryService.saveStateToStorage();
     };
     qmc.show_up_caret_prepared = function(field) {
-      return(qmc.completed_sort_by == field && qmc.prepared_sort_reverse);
+      return(qmc.options().completed_sort_by == field && qmc.options().prepared_sort_reverse);
     };
     qmc.show_down_caret_prepared = function(field) {
-      return(qmc.prepared_sort_by == field && !qmc.prepared_sort_reverse);
+      return(qmc.options().prepared_sort_by == field && !qmc.options().prepared_sort_reverse);
     };
 
     //

@@ -67,7 +67,7 @@
       </div>
 
       <section
-        ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.active_sort_by:qmc.active_sort_reverse">
+        ng-repeat="result in qmc.monitoring.active_requests | orderBy:qmc.options().active_sort_by:qmc.options().active_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
              class="cbui-table-cell flex-grow-3 cursor-pointer"
@@ -140,7 +140,7 @@
           <span class="cbui-table-cell flex-grow-half"></span>
       </div>
 
-      <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.completed_sort_by:qmc.completed_sort_reverse">
+      <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.options().completed_sort_by:qmc.options().completed_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
              class="cbui-table-cell flex-grow-3 cursor-pointer"
@@ -205,7 +205,7 @@
         </span>
       </div>
 
-      <section ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.prepared_sort_by:qmc.prepared_sort_reverse">
+      <section ng-repeat="result in qmc.monitoring.prepareds | orderBy:qmc.options().prepared_sort_by:qmc.options().prepared_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
            class="cbui-table-cell flex-grow-3 cursor-pointer"
