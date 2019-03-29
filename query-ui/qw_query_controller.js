@@ -739,6 +739,13 @@
     }
 
     //
+    // check a n1ql parse tree for dodgy queries, like delete without where
+    //
+
+    function checkTree(tree) {
+    }
+
+    //
     // functions for running queries and saving results to a file
     //
 
@@ -767,17 +774,45 @@
 
       //var queryStr = qc.lastResult().query;
 
-      //console.log("Running query: " + queryStr);
-      // run the query and show a spinner
+      // do a sanity check to warn users about dangerous queries
+      var warningPromise = null;
+      try {
+        var parseTrees = n1ql.parse(qc.lastResult().query);
 
-      var promise = qwQueryService.executeUserQuery(explainOnly);
-
-      if (promise) {
-        // also have the input grab focus at the end
-        promise.then(doneWithQuery,doneWithQuery);
+        if (_.isArray(parseTrees)) for (var i=0; i< parseTrees.length; i++) {
+          var tree = parseTrees[i];
+          // individual tree should be object with 'type' at the top level. Look for 'type' = 'Update' or 'Delete'
+          if (tree && tree.type == 'Update' && tree.where == null)
+            warningPromise = showConfirmationDialog("Warning","Query contains UPDATE with no WHERE clause. Such a query would update all documents. Proceed anyway?");
+          else if (tree && tree.type == 'Delete' && tree.ops && tree.ops.opt_where == null)
+            warningPromise = showConfirmationDialog("Warning","Query contains DELETE with no WHERE clause. Such a query would delete all documents. Proceed anyway?");
+        }
       }
-      else
-        doneWithQuery();
+      catch (except) {/*console.log("Error parsing queries: " + except);*/}
+
+      // if there is a warning, make sure they want to proceed
+      if (warningPromise)
+        warningPromise.then(
+            function success() {
+              var promise = qwQueryService.executeUserQuery(explainOnly);
+              // also have the input grab focus at the end
+              if (promise)
+                promise.then(doneWithQuery,doneWithQuery);
+              else
+                doneWithQuery();
+            },
+            function error() {/* they cancelled, nothing to do */}
+        );
+      // otherwise just proceed
+
+      else {
+        var promise = qwQueryService.executeUserQuery(explainOnly);
+        // also have the input grab focus at the end
+        if (promise)
+          promise.then(doneWithQuery,doneWithQuery);
+        else
+          doneWithQuery();
+      }
     };
 
     //
@@ -1197,6 +1232,7 @@
     //
 
     function showErrorMessage(message) {
+      var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
 
@@ -1204,6 +1240,19 @@
         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
         scope: dialogScope
       });
+    }
+
+    function showConfirmationDialog(title,message) {
+      var dialogScope = $rootScope.$new(true);
+      dialogScope.error_title = title;
+      dialogScope.error_detail = message;
+
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      return promise;
     }
 
     //
