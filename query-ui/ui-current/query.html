@@ -37,7 +37,7 @@
 <!-- query editor header, main editor area, and results footer --------------->
     <div class="wb-query-editor">
 <!-- Editor "header row" ----------------------------------------------------->
-      <div class="wb-query-editor-header">
+      <div class="wb-query-editor-header"  ng-click="qc.handleClick('editor')">
         <h4>Query Editor</h4>
         <span class="wb-history-controls">
           <span
@@ -66,14 +66,14 @@
         </div>
       </div>
 <!-- Ace editor -------------------------------------------------------------->
-      <div
-         class="wb-ace-editor"
+      <div ng-click="qc.handleClick('editor')"
+         class="wb-ace-editor smooth-height-transition"
          ui-ace="qc.aceInputOptions"
          ng-model="qc.lastResult().query">
       </div>
 
 <!-- wrapper under query editor for button and stats ------------------------->
-      <div class="wb-query-editor-footer">
+      <div class="wb-query-editor-footer smooth-height-transition"  ng-click="qc.handleClick('results')">
         <span class="wb-button-wrapper nowrap">
           <button ng-click="qc.query()" class="wb-button-execute">
             <div ng-if="!qc.lastResult().busy">Execute</div>
@@ -137,7 +137,7 @@
     </div>
 
 <!-- query results ------------------------------------------------------------>
-    <div class="wb-results-header"> <!-- ng-show="qc.lastResult().hasData()" -->
+    <div class="wb-results-header smooth-height-transition" ng-click="qc.handleClick('results')"> <!-- ng-show="qc.lastResult().hasData()" -->
       <h4>Query Results
         <span
            class="icon fa-copy"
@@ -173,32 +173,32 @@
       </span>
     </div>
 
-    <div class="wb-results-wrapper">
+    <div class="wb-results-wrapper smooth-height-transition" ng-click="qc.handleClick('results')">
       <div class="wb-results-show-anyway" ng-if="!qc.showBigDatasets && qc.dataTooBig()">
         <div ng-bind-html="qc.getBigDataMessage()"> </div>
         <a ng-click="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span class="icon fa-angle-right"></span></a>
       </div>
 
-      <div class="wb-results-json" ui-ace="qc.aceOutputOptions"
+      <div class="wb-results-json smooth-height-transition" ui-ace="qc.aceOutputOptions"
         ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
         ng-model="qc.lastResult().result"></div>
 
-      <div class="wb-results-table"
+      <div class="wb-results-table smooth-height-transition"
         ng-if="qc.isSelected(2) && qc.lastResult().data"
         qw-json-data-table="qc.lastResult().data"></div>
 
-      <div class="wb-results-tree"
+      <div class="wb-results-tree smooth-height-transition"
         ng-if="qc.isSelected(3) && (!qc.dataTooBig() || qc.showBigDatasets)"
         qw-json-tree="qc.lastResult().data"></div>
 
-      <div class="wb-results-explain" ng-if="qc.isSelected(4)"
+      <div class="wb-results-explain smooth-height-transition" ng-if="qc.isSelected(4)"
         qw-explain-viz-d3="qc.lastResult().explainResult"></div>
 
-      <div class="wb-results-explain-text" ng-if="qc.isSelected(5)"
+      <div class="wb-results-explain-text smooth-height-transition" ng-if="qc.isSelected(5)"
         ui-ace="qc.acePlanOptions"
         ng-model="qc.lastResult().explainResultText"></div>
 
-      <div class="wb-results-advice" ng-if="qc.isSelected(6)"
+      <div class="wb-results-advice smooth-height-transition" style="overflow:auto" ng-if="qc.isSelected(6)"
         qw-advice-viz="qc.lastResult().advice || qc.lastResult().query"></div>
     </div>
   </div>

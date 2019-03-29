@@ -1730,9 +1730,11 @@
       // let's run ADVISE on the query to see if there's a better way to do it
       //
 
-      var advise_promise = runAdvise(queryText,newResult);
-      if (advise_promise != null)
-        promises.push(advise_promise);
+      if (!explainOnly) {
+        var advise_promise = runAdvise(queryText,newResult);
+        if (advise_promise != null)
+          promises.push(advise_promise);
+      }
 
       // return a promise wrapping the one or two promises
       // when the queries are done, call finishQuery
