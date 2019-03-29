@@ -691,10 +691,7 @@
       var remainingHeight = totalHeight - queryEditorHeight - resultsHeaderHeight - queryEditorFooterHeight;
 
       switch (qwQueryService.outputTab) {
-      case 1:
-        $('.wb-results-json').height(remainingHeight - 24);
-        if (qc.outputEditor && qc.outputEditor.resize) $timeout(qc.outputEditor.resize,300);
-        break;
+      case 1: $('.wb-results-json').height(remainingHeight - 24); $timeout(resizeOutputEditor,300); break;
       case 2: $('.wb-results-table').height(remainingHeight + 8); break;
       case 3: $('.wb-results-tree').height(remainingHeight - 8); break;
       case 4: $('.wb-results-explain').height(remainingHeight + 8); break;
@@ -705,9 +702,22 @@
 
     $(window).resize(updateEditorSizes);
 
+    //
+    // convenience functions for safely refreshing the ACE editors
+    //
+
     function resizeInputEditor() {
+      try {
       if (qc.inputEditor && qc.inputEditor.renderer && qc.inputEditor.resize)
         qc.inputEditor.resize();
+      } catch (e) {console.log("Input error: " + e);/*ignore*/}
+    }
+
+    function resizeOutputEditor() {
+      try {
+        if (qc.outputEditor && qc.outputEditor.renderer && qc.outputEditor.resize)
+          qc.outputEditor.resize();
+        } catch (e) {console.log("Output error: " + e);/*ignore*/}
     }
     //
     // keep track of which parts of the UI the user is clicking, indicating their interest
