@@ -419,9 +419,15 @@
     //
     // bring up the JSON editing dialog for edit or create new documents
     //
+    var config = require("ace/config" );
 
     function showDocEditor(id,json,meta,readonly) {
       var dialogScope = $rootScope.$new(true);
+
+      dialogScope.searchDoc = function() {
+        config.loadModule("ace/ext/cb-searchbox",
+        function(e) {if (dialogScope.editor) e.Search(dialogScope.editor)});
+      }
 
       // use an ACE editor for editing the JSON document
       dialogScope.ace_options = {
@@ -435,6 +441,7 @@
             }
           },
           onLoad: function(_editor) {
+            dialogScope.editor = _editor;
             _editor.$blockScrolling = Infinity;
             _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
             dialogScope.editor = _editor;

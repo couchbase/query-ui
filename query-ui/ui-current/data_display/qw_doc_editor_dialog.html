@@ -6,7 +6,7 @@
   <div class="alert alert-warning" ng-if="error_message">{{error_message}}</div>
   <div class="panel-content" ng-style="{ height: error_message ? 'calc(100% - 120px)' : 'calc(100% - 100px)'}">
     <div class="row margin-bottom-half">
-      <h4 class="ellipsis margin-right-half">{{doc_id}}</h4>
+      <h4 class="ellipsis margin-right-half">{{doc_id}}&nbsp; <span class="icon fa-search" ng-click="searchDoc()"></span></h4>
       <span
          ng-show="doc_meta"
          class="blue-1 text-small nowrap cursor-pointer"
