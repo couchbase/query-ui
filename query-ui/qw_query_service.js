@@ -67,6 +67,7 @@
     qwQueryService.prevResult = prevResult;
     qwQueryService.nextResult = nextResult;
     qwQueryService.addNewQueryAtEndOfHistory = addNewQueryAtEndOfHistory;
+    qwQueryService.addSavedQueryAtEndOfHistory = addSavedQueryAtEndOfHistory;
 
     qwQueryService.canCreateBlankQuery = canCreateBlankQuery;
 
@@ -94,6 +95,7 @@
     qwQueryService.executeQueryUtil = executeQueryUtil;
 
     qwQueryService.saveStateToStorage = saveStateToStorage;
+    qwQueryService.getQueryHistory = getQueryHistory;
 
     // update store the metadata about buckets
 
@@ -521,12 +523,7 @@
     }
 
 
-
-    function saveStateToStorage() {
-      // nop if we don't have local storage
-      if (!hasLocalStorage)
-        return;
-
+    function getQueryHistory(full) {
       // create a structure to hold the current state. To save state we will only
       // save queries, and not their results (which might well exceed the 5MB
       // we have available
@@ -558,8 +555,20 @@
       savedState.monitoringOptions = monitoringOptions;
 
       _.forEach(pastQueries,function(queryRes,index) {
-        savedState.pastQueries.push(queryRes.clone_for_storage());
+        if (full)
+          savedState.pastQueries.push(queryRes.clone());
+        else
+          savedState.pastQueries.push(queryRes.clone_for_storage());
       });
+
+      return(JSON.stringify(savedState));
+    }
+
+
+    function saveStateToStorage() {
+      // nop if we don't have local storage
+      if (!hasLocalStorage)
+        return;
 
       //console.log("saving state, len: " + JSON.stringify(savedState).length);
 
@@ -567,7 +576,7 @@
       // storage space is available. When we get an exception, warn the user
       // and let them figure out what to do
       try {
-        localStorage[localStorageKey] = JSON.stringify(savedState);
+        localStorage[localStorageKey] = getQueryHistory();
       } catch (e) {
         // if the save failed, notify the user
         showWarningDialog("Warning: Unable to save query history, browser local storage exhausted. You can still run queries, but they won't be saved for future sessions. Try removing large queries from history.")
@@ -812,6 +821,25 @@
           newResult.query  = query;
         else
           newResult.query = "";
+        pastQueries.push(newResult);
+      }
+
+      currentQueryIndex = pastQueries.length - 1;
+    }
+
+    function addSavedQueryAtEndOfHistory(query) {
+      var newResult = new QueryResult(); // create the right object
+      newResult.copyIn(query);
+
+      // if the end of the history is a blank query, add it there.
+
+      if (pastQueries.length > 0 && pastQueries[pastQueries.length -1].query.length == 0) {
+        pastQueries[pastQueries.length -1].query = newResult;
+      }
+
+      // otherwise, add a new query at the end of history
+
+      else {
         pastQueries.push(newResult);
       }
 

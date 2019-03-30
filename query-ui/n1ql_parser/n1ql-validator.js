@@ -4,12 +4,16 @@ var parser = require("./n1ql").parser;
 
 function queryArray() {
     var queries = [
+      "Update default set foo = 'bar'",
+      "delete from default",
+      "delete from default where foo = bar",
+      "select count(*) from default; select max(foo) from bar"
+      /*
         "MERGE INTO orders USING orders o USE KEYS ['subqexp_1235', 'subqexp_1236'] ON KEY id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
         "MERGE INTO orders USING (SELECT 's'||id  AS id FROM orders WHERE test_id = 'subqexp' ) o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
         "MERGE INTO orders USING (SELECT 'se'||id  AS id, (SELECT RAW SUM(orderlines.price) FROM orders.orderlines)[0] AS total FROM orders WHERE test_id = 'subqexp') o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id, o.total, 'test_id':'subqexp'};",
         "MERGE INTO orders USING [{'id':'c1235'},{'id':'c1236'}] o ON KEY id WHEN NOT MATCHED THEN INSERT {o.id, 'test_id':'subqexp'};",
 
-/*
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.customerId = \"unknown\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10",
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.purchaseId = \"purchase8992\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10 OFFSET 10",
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId IN [ c.customerId, \"unknown\" ] WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10 OFFSET 20",
@@ -145,9 +149,9 @@ function queryArray() {
     for (var i=0; i< queries.length; i++) {
         var query = queries[i];
         try {
-           // console.log("\n\nParsing: \n\n" + query + "\n");
+            console.log("\n\nParsing: \n\n" + query + "\n");
             var result = parser.parse(query);
-           // console.log("\nresult is: \n\n" + JSON.stringify(result,null,2));
+            console.log("\nresult is: \n\n" + JSON.stringify(result,null,2));
         }
         catch (err) {
             console.log("\n\nParse error for \n\n" + query + "\n\nis: " + err.message);
@@ -168,6 +172,7 @@ function queryFile() {
         try {
             var result = parser.parse(line);
             //console.log("Parsed line " + ++lineNum + " ok.");
+            //console.log("Result: " + JSON.stringify(result));
             //if (result && result[0])
             //  console.log("paths used: \n\n" + JSON.stringify(result[0].pathsUsed,null,2));
         }
@@ -178,6 +183,7 @@ function queryFile() {
     });
 }
 
+console.log("Hello world");
 
-queryFile();
-//queryArray();
+//queryFile();
+queryArray();

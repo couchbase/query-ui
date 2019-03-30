@@ -15,11 +15,11 @@
          id="loadQuery"
          name="files"
          style="display:none"
-         accept="text/plain">
+         accept=".txt,.json">
       <a
-         ng-if="qc.fileSupport"
+         
          id="loadQueryButton"
-         ng-click="qc.load_query()"
+         ng-click="qc.do_import()"
          class="outline resp-hide-sml"
          onchange="console.log('changed files')">
         IMPORT

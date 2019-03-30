@@ -86,7 +86,7 @@
     qc.unified_save = unified_save;
     qc.options = options;
 
-    qc.load_query = load_query;
+    qc.do_import = do_import;
 
     qc.isDeveloperPreview = function() {return qwQueryService.pools.isDeveloperPreview;};
 
@@ -533,10 +533,49 @@
     }
 
     //
-    // When they drop the file, take the contents and put in the
+    // This can get called on drag-and-drop or after the dialog.
     //
     function handleFileSelect() {
-      loadQueryFileList(this.files);
+      if (dialogScope && dialogScope.selected && dialogScope.selected.item == 1)
+        loadHistoryFileList(this.files);
+      else
+        loadQueryFileList(this.files);
+    }
+
+    function loadHistoryFileList(files) {
+      dialogScope.selected.item = 0; // reset
+      // make sure we have a file
+      if (files.length == 0)
+        return;
+
+      // make sure the file ends .n1ql
+      var file = files.item(0);
+      if (!file.name.toLowerCase().endsWith(".json")) {
+        showErrorMessage("Can't load: " + file.name + ".\nHistory import only supports files ending in '.json'")
+        return;
+      }
+
+      // files is a FileList of File objects. load the first one into the editor, if any.
+      var reader = new FileReader();
+      reader.addEventListener("loadend",function() {
+        try {
+          var newHistory = JSON.parse(reader.result);
+          if (!_.isArray(newHistory.pastQueries)) {
+            showErrorMessage("Unrecognized query history format.");
+            return;
+          }
+
+          newHistory.pastQueries.forEach(function(aResult) {
+            // make sure it at least has query text
+            if (_.isString(aResult.query)) {
+              qwQueryService.addSavedQueryAtEndOfHistory(aResult);
+            }
+          });
+        } catch (e) {
+          showErrorMessage("Error processing history file: " + e);
+        }
+      });
+      reader.readAsText(files[0]);
     }
 
 
@@ -566,9 +605,31 @@
       reader.readAsText(files[0]);
     }
 
-    // when they click the Load Query button
+    // when they click the Import button
 
-    function load_query() {
+    function do_import() {
+      // but for those that do, get a name for the file
+      dialogScope.file_type = 'query';
+      dialogScope.file = dialogScope.file;
+      dialogScope.file_options = [
+        {kind: "txt", label:  "Query - load the contents of a text file into the query editor."},    // 0
+        {kind: "json", label: "Query History - load a file into the end of the current query history."}, // 1
+        ];
+      dialogScope.selected = {item: "0"};
+
+      var promise = $uibModal.open({
+        templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_query_file_import_dialog.html',
+        scope: dialogScope
+      }).result;
+
+      // now save it
+      promise.then(function success(res) {
+        load_file();
+      });
+
+    }
+
+    function load_file() {
       $("#loadQuery")[0].value = null;
       $("#loadQuery")[0].addEventListener('change',handleFileSelect,false);
       $("#loadQuery")[0].click();
@@ -953,11 +1014,13 @@
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.file;
       dialogScope.file_options = [
-        {kind: "json", label: "Query Results"},
-        {kind: "txt", label: "Results as tab-separated"},
+        {kind: "json", label: "Current Query Results"},           // 0
+        {kind: "txt", label: "Current Results as tab-separated"}, // 1
+        {kind: "json", label: "Query History"},                   // 2
+        {kind: "json", label: "Query History Including Results"}  // 3
         ];
       if (qc.lastResult().query && qc.lastResult().query.length > 0)
-        dialogScope.file_options.push({kind: "txt", label: "Query Statement"});
+        dialogScope.file_options.push({kind: "txt", label: "Current Query Statement"}); // 4
       dialogScope.selected = {item: "0"};
 
       var promise = $uibModal.open({
@@ -987,6 +1050,16 @@
           break;
 
         case "2":
+          file = new Blob([qwQueryService.getQueryHistory()],{type: "text/json", name: "query_history.json"});
+          file_extension = ".json";
+          break;
+
+        case "3":
+          file = new Blob([qwQueryService.getQueryHistory(true)],{type: "text/json", name: "query_history_full.json"});
+          file_extension = ".json";
+          break;
+
+        case "4":
           file = new Blob([qc.lastResult().query],{type: "text/plain", name: "query.txt"});
           file_extension = ".txt";
           break;
@@ -1235,6 +1308,7 @@
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
+      dialogScope.hide_cancel = true;
 
       $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
