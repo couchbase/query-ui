@@ -723,43 +723,115 @@
     // since it doesn't auto-resize
     //
 
+//    function updateEditorSizes() {
+//      var totalHeight = $('.wb-main-wrapper').height(); // overall height calculated in CSS
+//      var queryEditorHeight = 0;
+//
+//      // how much does the query editor need?
+//      if (qc.inputEditor) {
+//        var lines = qc.inputEditor.getSession().getLength();                  // how long in the query?
+//        var desiredQueryHeight = Math.max(140,((lines)*21)+60);               // make sure height no less than 140
+//
+//        // if the user has been clicking on the query editor, give it more space
+//        if (qc.userInterest == 'editor')
+//          queryEditorHeight = Math.min(totalHeight*3/4,desiredQueryHeight); // 3/4 space for query editor
+//        else
+//          queryEditorHeight = Math.min(totalHeight/3,desiredQueryHeight);   // 1/3 space for editor, more for results
+//
+//        $(".wb-query-editor").height(queryEditorHeight);
+//        $(".wb-ace-editor").height(queryEditorHeight - 100);
+//        $timeout(resizeInputEditor,300); // wait until after transition
+//      }
+//
+//      //
+//      // now that the query editor has space, there are some fixed size panels, the rest of the space goes for the results
+//      //
+//
+//      var queryEditorFooterHeight = $('.wb-query-editor-footer').height(); // area below query editor
+//      var resultsHeaderHeight = $('.wb-results-header').height();          // header above results
+//      var remainingHeight = totalHeight - queryEditorHeight - resultsHeaderHeight - queryEditorFooterHeight - 300;
+//
+//      switch (qwQueryService.outputTab) {
+//      case 1: $('.wb-results-json').height(remainingHeight - 24); $timeout(resizeOutputEditor,300); break;
+//      case 2: $('.wb-results-table').height(remainingHeight + 8); break;
+//      case 3: $('.wb-results-tree').height(remainingHeight - 8); break;
+//      case 4: $('.wb-results-explain').height(remainingHeight + 8); break;
+//      case 5: $('.wb-results-explain-text').height(remainingHeight + 8); break;
+//      case 6: $('.wb-results-advice').height(remainingHeight - 40); break;
+//      }
+//    }
+
+
+    //
+    // called when the JSON output changes. We need to make sure the editor is the correct size,
+    // since it doesn't auto-resize
+    //
+
     function updateEditorSizes() {
-      var totalHeight = $('.wb-main-wrapper').height(); // overall height calculated in CSS
-      var queryEditorHeight = 0;
+      var margins = 90;
+      var windowHeight = window.innerHeight;
+      var pageFooterHeight = 96;
+      var headerNavHeight = 47;
+      var queryBoxHeight = $('.wb-query-editor').height();
+      //var sidebarHeaderHeight =  $('#sidebar_header').height();
 
-      // how much does the query editor need?
+      var otherStuff = pageFooterHeight + headerNavHeight + queryBoxHeight;
+
+      if (headerNavHeight == null || queryBoxHeight == null) {
+        return;
+      }
+
+      var editor_size = windowHeight - otherStuff - margins;
+      if (editor_size > 1000)
+        editor_size = 1150;
+      if (editor_size < 0)
+        editor_size = 0;
+
+//    console.log("pageHeaderHeight: " + pageHeaderHeight);
+//    console.log("pageFooterHeight: " + pageFooterHeight);
+//    console.log("headerNavHeight: " + headerNavHeight);
+//    console.log("queryBoxHeight: " + queryBoxHeight);
+//      console.log("windowHeight: " + windowHeight);
+//      console.log("resultHeaderHeight: " + resultHeaderHeight);
+//      console.log("resultSummaryHeight: " + resultSummaryHeight + "\n\n");
+//      console.log(" editor_size: " + editor_size);
+
+      var sidebarHeight = windowHeight - pageFooterHeight - 40;
+
+      $('.insights-sidebar').height(sidebarHeight);
+      $('.wb-results-json').height(editor_size);
+      $('.wb-results-table').height(editor_size + 32);
+      $('.wb-results-tree').height(editor_size + 15);
+      $('.wb-results-explain').height(editor_size + 32);
+      $('.wb-results-explain-text').height(editor_size + 32);
+      $('.wb-results-advice').height(editor_size - 10);
+
+      // allow the query editor to grow and shrink a certain amount based
+      // on the number of lines in the query
+      //
+      // as the query is edited, allow it more vertical space, but make sure it
+      // doesn't have fewer than 5 lines or more than ~50% of the window
+
       if (qc.inputEditor) {
-        var lines = qc.inputEditor.getSession().getLength();                  // how long in the query?
-        var desiredQueryHeight = Math.max(140,((lines)*21)+60);               // make sure height no less than 140
+        var queryAreaHeight = Math.max($('.wb-main-wrapper').height(),240);
+        var queryHeaderHeight = $('.wb-query-editor-header').height();
+        var curSession = qc.inputEditor.getSession();
+        var lines = curSession.getLength();
+        var halfScreen = queryAreaHeight/2-queryHeaderHeight*4;
+        var height = Math.max(75,((lines-1)*21)-10); // make sure height no less than 75
+        if (halfScreen > 75 && height > halfScreen)
+          height = halfScreen;
 
-        // if the user has been clicking on the query editor, give it more space
-        if (qc.userInterest == 'editor')
-          queryEditorHeight = Math.min(totalHeight*3/4,desiredQueryHeight); // 3/4 space for query editor
-        else
-          queryEditorHeight = Math.min(totalHeight/3,desiredQueryHeight);   // 1/3 space for editor, more for results
+        //console.log("QueryAreaHeight: " + queryAreaHeight + ", queryHeaderHeight: " + queryHeaderHeight);
+        //console.log("Half screen: " + halfScreen + ", Area height: " + queryAreaHeight + ", header: " + queryHeaderHeight + ", setting height to: " + height);
 
-        $(".wb-query-editor").height(queryEditorHeight);
-        $(".wb-ace-editor").height(queryEditorHeight - 100);
-        $timeout(resizeInputEditor,300); // wait until after transition
+        $(".wb-ace-editor").height(height);
       }
 
-      //
-      // now that the query editor has space, there are some fixed size panels, the rest of the space goes for the results
-      //
-
-      var queryEditorFooterHeight = $('.wb-query-editor-footer').height(); // area below query editor
-      var resultsHeaderHeight = $('.wb-results-header').height();          // header above results
-      var remainingHeight = totalHeight - queryEditorHeight - resultsHeaderHeight - queryEditorFooterHeight;
-
-      switch (qwQueryService.outputTab) {
-      case 1: $('.wb-results-json').height(remainingHeight - 24); $timeout(resizeOutputEditor,300); break;
-      case 2: $('.wb-results-table').height(remainingHeight + 8); break;
-      case 3: $('.wb-results-tree').height(remainingHeight - 8); break;
-      case 4: $('.wb-results-explain').height(remainingHeight + 8); break;
-      case 5: $('.wb-results-explain-text').height(remainingHeight + 8); break;
-      case 6: $('.wb-results-advice').height(remainingHeight - 40); break;
-      }
     }
+
+
+
 
     $(window).resize(updateEditorSizes);
 
