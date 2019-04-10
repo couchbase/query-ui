@@ -3414,7 +3414,7 @@ function_name opt_exprs RPAREN opt_nulls_treatment opt_window_clause
     $$ = expression.NewFunction($1,$2);
 }
 |
-function_name DISTINCT expr RPAREN opt_window_clause
+function_name agg_quantifier expr RPAREN opt_window_clause
 {
     $$ = expression.NewFunction($1,$3,true);
 }
@@ -3422,6 +3422,11 @@ function_name DISTINCT expr RPAREN opt_window_clause
 function_name STAR RPAREN opt_window_clause
 {
     $$ = expression.NewFunction($1,"star");
+}
+|
+namespace_term keyspace_name LPAREN opt_exprs RPAREN
+{
+    $$ = expression.NewFunction($2,$4);
 }
 ;
 

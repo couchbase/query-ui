@@ -4,10 +4,12 @@ var parser = require("./n1ql").parser;
 
 function queryArray() {
     var queries = [
-      "Update default set foo = 'bar'",
-      "delete from default",
-      "delete from default where foo = bar",
-      "select count(*) from default; select max(foo) from bar"
+      "select default:func('hotel') from `travel-sample`;",
+      "default:func('hotel')"
+      //"Update default set foo = 'bar'",
+      //"delete from default",
+      //"delete from default where foo = bar",
+      //"select count(*) from default; select max(foo) from bar"
       /*
         "MERGE INTO orders USING orders o USE KEYS ['subqexp_1235', 'subqexp_1236'] ON KEY id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
         "MERGE INTO orders USING (SELECT 's'||id  AS id FROM orders WHERE test_id = 'subqexp' ) o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
