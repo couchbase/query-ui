@@ -811,7 +811,7 @@
           var docInfo = resp.data;
           var docId = docInfo.meta.id;
 
-          if (!sizeWarning.warnedYet && docInfo.json.length > largeDoc) {
+          if (!sizeWarning.warnedYet && docInfo.json && docInfo.json.length > largeDoc) {
             sizeWarning.warnedYet = true;
             showErrorDialog("Warning: large documents.", "Some of the documents in the result set are large, and processing them may take some time.", true);
           }
@@ -831,7 +831,7 @@
           else if (docInfo && docInfo.meta && (docInfo.base64 === "" || docInfo.base64)) {
             docInfo.meta.type = "base64";
             dec.options.current_result[position] =
-              {id: docInfo.meta.id, base64: docInfo.base64, meta: docInfo.meta, xattrs: docInfo.xattrs};
+              {id: docInfo.meta.id, base64: atob(docInfo.base64), meta: docInfo.meta, xattrs: docInfo.xattrs};
           }
 
           else
