@@ -137,7 +137,7 @@
     </div>
 
 <!-- query results ------------------------------------------------------------>
-    <div class="wb-results-header smooth-height-transition" ng-click="qc.handleClick('results')"> <!-- ng-show="qc.lastResult().hasData()" -->
+    <div  ng-click="qc.handleClick('results')" class="wb-results-header smooth-height-transition">
       <h4>Query Results
         <span
            class="icon fa-copy"
@@ -179,26 +179,26 @@
         <a ng-click="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span class="icon fa-angle-right"></span></a>
       </div>
 
-      <div class="wb-results-json smooth-height-transition" ui-ace="qc.aceOutputOptions"
+      <div class="wb-results-json" ui-ace="qc.aceOutputOptions"
         ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
         ng-model="qc.lastResult().result"></div>
 
-      <div class="wb-results-table smooth-height-transition"
+      <div class="wb-results-table"
         ng-if="qc.isSelected(2) && qc.lastResult().data"
         qw-json-data-table="qc.lastResult().data"></div>
 
-      <div class="wb-results-tree smooth-height-transition"
+      <div class="wb-results-tree"
         ng-if="qc.isSelected(3) && (!qc.dataTooBig() || qc.showBigDatasets)"
         qw-json-tree="qc.lastResult().data"></div>
 
-      <div class="wb-results-explain smooth-height-transition" ng-if="qc.isSelected(4)"
+      <div class="wb-results-explain" ng-if="qc.isSelected(4)"
         qw-explain-viz-d3="qc.lastResult().explainResult"></div>
 
-      <div class="wb-results-explain-text smooth-height-transition" ng-if="qc.isSelected(5)"
+      <div class="wb-results-explain-text" ng-if="qc.isSelected(5)"
         ui-ace="qc.acePlanOptions"
         ng-model="qc.lastResult().explainResultText"></div>
 
-      <div class="wb-results-advice smooth-height-transition" style="overflow:auto" ng-if="qc.isSelected(6)"
+      <div class="wb-results-advice" style="overflow:auto" ng-if="qc.isSelected(6)"
         qw-advice-viz="qc.lastResult().advice || qc.lastResult().query"></div>
     </div>
   </div>

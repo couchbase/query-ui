@@ -314,10 +314,31 @@ ul.wb-explain-tooltip-list li ul li {
 }
 
 .wb-main-wrapper {
-  height: calc(100vh - 130px);
+  height: calc(100vh - 130px); /* magic number - 130px for the header */
+  display: flex;
+  flex-direction: column;
 }
 
 .smooth-height-transition {
   transition-property:height left top position;
-  transition-duration: 0.25s;
+  transition-duration: 0.125s;
+}
+
+.wb-query-editor {
+  flex: 0 0; /* don't expand or shrink, size will be set in .js */
+}
+
+.wb-results-wrapper {
+  flex: 1;   /* expand with the available space, make contents scroll */
+  overflow: auto;
+}
+
+.wb-results-json,
+.wb-results-table,
+.wb-results-tree,
+.wb-results-explain,
+.wb-results-explain-text,
+.wb-results-advice
+ {
+  height: 100%;
 }

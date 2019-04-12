@@ -198,7 +198,7 @@ td.ajtd-type-array {
 
 .data-table-wrapper {
   width: 100%;
-  height: calc(100% - 51px);
+  height: calc(100% - 28px);
   overflow: scroll;
   position: relative;
 }
