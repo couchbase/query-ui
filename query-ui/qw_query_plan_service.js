@@ -1033,7 +1033,7 @@
     {
       // regex for parsing time values like 3m23.7777s or 234.9999ms or 3.8888s
       // groups: 1: minutes, 2: secs, 3: millis, 4: microseconds
-      var durationExpr = /(?:(\d+)m)?(?:(\d+\.\d+)s)?(?:(\d+\.\d+)ms)?(?:(\d+\.\d+)µs)?/;
+      var durationExpr = /(?:(\d+)h)?(?:(\d+)m)?(?:(\d+\.\d+)s)?(?:(\d+\.\d+)ms)?(?:(\d+\.\d+)µs)?/;
       var result = 0.0;
 
       var m = timeValue.match(durationExpr);
@@ -1041,20 +1041,23 @@
 
       if (m) {
         // minutes
-        if (m[1]) // minutes value, should be an int
-          result += parseInt(m[1])*60;
+        if (m[1]) // hours value, should be an int
+          result += parseInt(m[1])*3600;
+
+        if (m[2]) // minutes value, should be an int
+          result += parseInt(m[2])*60;
 
         // seconds
-        if (m[2])
-          result += parseFloat(m[2]);
+        if (m[3])
+          result += parseFloat(m[3]);
 
         // milliseconds
-        if (m[3])
-          result += parseFloat(m[3])/1000;
+        if (m[4])
+          result += parseFloat(m[4])/1000;
 
         // ooh, microseconds!
-        if (m[4])
-          result += parseFloat(m[4])/1000000;
+        if (m[5])
+          result += parseFloat(m[5])/1000000;
       }
 
       return(result);

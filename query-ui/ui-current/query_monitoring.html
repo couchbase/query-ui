@@ -6,9 +6,9 @@
 <!-- top row w/ title/time/pill selectors -->
     <div class="row">
       <h4 class="inline">
-        <span ng-if="qmc.isSelected(1)">Slowest Active Queries</span>
+        <span ng-if="qmc.isSelected(1)">Active Queries</span>
         <span ng-if="qmc.isSelected(2)">Slowest Completed Queries</span>
-        <span ng-if="qmc.isSelected(3)">Slowest Prepared Queries</span>
+        <span ng-if="qmc.isSelected(3)">Prepared Queries</span>
         <small>
           {{qmc.updatedTime()}}
           <span ng-if="qmc.get_update_flag()" class="loading"></span>
@@ -168,7 +168,7 @@
              tooltip-placement="top"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
-            {{result.requestTime | limitTo:8:11}} {{result.requestTime | limitTo:3:-3}}
+            {{result.requestTime | limitTo:16}}
           </span>
           <span class="cbui-table-cell">
             {{result.users}}

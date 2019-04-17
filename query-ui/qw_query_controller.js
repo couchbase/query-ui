@@ -842,7 +842,7 @@
         if (_.isArray(parseTrees)) for (var i=0; i< parseTrees.length; i++) {
           var tree = parseTrees[i];
           // individual tree should be object with 'type' at the top level. Look for 'type' = 'Update' or 'Delete'
-          if (tree && tree.type == 'Update' && tree.where == null)
+          if (tree && tree.type == 'Update' && tree.where == null && tree.ops.where == null)
             warningPromise = showConfirmationDialog("Warning","Query contains UPDATE with no WHERE clause. Such a query would update all documents. Proceed anyway?");
           else if (tree && tree.type == 'Delete' && tree.ops && tree.ops.opt_where == null)
             warningPromise = showConfirmationDialog("Warning","Query contains DELETE with no WHERE clause. Such a query would delete all documents. Proceed anyway?");
