@@ -158,6 +158,7 @@
         timings: true,
         auto_infer: true,
         auto_format: false,
+        dont_save_queries: false,
         max_parallelism: "",
         scan_consistency: "not_bounded",
         positional_parameters: [],
@@ -171,6 +172,7 @@
           timings: qwQueryService.options.timings,
           auto_infer: qwQueryService.options.auto_infer,
           auto_format: qwQueryService.options.auto_format,
+          dont_save_queries: qwQueryService.options.dont_save_queries,
           max_parallelism: qwQueryService.options.max_parallelism,
           scan_consistency: qwQueryService.options.scan_consistency,
           positional_parameters: qwQueryService.options.positional_parameters.slice(0),
@@ -482,43 +484,55 @@
           });
         }
 
-        if (savedState.currentQueryIndex) {
+        // handle case of no queries in history
+        if (pastQueries.length == 0)
+          pastQueries.push(newQueryTemplate.clone());
+
+        if (savedState.currentQueryIndex && savedState.currentQueryIndex < pastQueries.length)
           setCurrentIndex(savedState.currentQueryIndex);
-          getCurrentResult().savedQuery = getCurrentResult().query; // remember query if edited later
+        else
+          setCurrentIndex(pastQueries.length - 1);
+
+        getCurrentResult().savedQuery = getCurrentResult().query; // remember query if edited later
+
+        if (savedState.outputTab)
           qwQueryService.selectTab(savedState.outputTab);
-          if (savedState.options)
-            qwQueryService.options = savedState.options;
-          if (savedState.doc_editor_options) {
-            if (!savedState.doc_editor_options.hasOwnProperty('show_tables'))
-              savedState.doc_editor_options.show_tables = false;
-            if (!savedState.doc_editor_options.hasOwnProperty('show_id'))
-              savedState.doc_editor_options.show_id = true;
-            qwQueryService.doc_editor_options = savedState.doc_editor_options;
-          }
-          if (savedState.query_plan_options) {
-            qwQueryService.query_plan_options = savedState.query_plan_options;
-          }
-
-          if (savedState.monitoringOptions) {
-            monitoringOptions = savedState.monitoringOptions;
-            // handle backward compatibility
-            if (!monitoringOptions.active_sort_by) {
-              monitoringOptions.active_sort_by = 'elapsedTime';
-              monitoringOptions.active_sort_reverse = true;
-              monitoringOptions.completed_sort_by = 'elapsedTime';
-              monitoringOptions.completed_sort_reverse = true;
-              monitoringOptions.prepared_sort_by = 'elapsedTime';
-              monitoringOptions.prepared_sort_reverse = true;
-            }
-          }
-
-          // handle case where auto_infer is not yet defined, and set it to true
-          if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false)
-            qwQueryService.options.auto_infer = true;
-
-          if (qwQueryService.options.auto_format !== true && qwQueryService.options.auto_format !== false)
-            qwQueryService.options.auto_format = false;
+        if (savedState.options)
+          qwQueryService.options = savedState.options;
+        if (savedState.doc_editor_options) {
+          if (!savedState.doc_editor_options.hasOwnProperty('show_tables'))
+            savedState.doc_editor_options.show_tables = false;
+          if (!savedState.doc_editor_options.hasOwnProperty('show_id'))
+            savedState.doc_editor_options.show_id = true;
+          qwQueryService.doc_editor_options = savedState.doc_editor_options;
         }
+        if (savedState.query_plan_options) {
+          qwQueryService.query_plan_options = savedState.query_plan_options;
+        }
+
+        if (savedState.monitoringOptions) {
+          monitoringOptions = savedState.monitoringOptions;
+          // handle backward compatibility
+          if (!monitoringOptions.active_sort_by) {
+            monitoringOptions.active_sort_by = 'elapsedTime';
+            monitoringOptions.active_sort_reverse = true;
+            monitoringOptions.completed_sort_by = 'elapsedTime';
+            monitoringOptions.completed_sort_reverse = true;
+            monitoringOptions.prepared_sort_by = 'elapsedTime';
+            monitoringOptions.prepared_sort_reverse = true;
+          }
+        }
+
+        // handle case where auto_infer is not yet defined, and set it to true
+        if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false)
+          qwQueryService.options.auto_infer = true;
+
+        if (qwQueryService.options.auto_format !== true && qwQueryService.options.auto_format !== false)
+          qwQueryService.options.auto_format = false;
+
+        if (qwQueryService.options.dont_save_queries !== true && qwQueryService.options.dont_save_queries !== false)
+          qwQueryService.options.dont_save_queries = false;
+
       } catch (err) {console.log("Error loading state: " + err);}
     }
 
@@ -554,7 +568,7 @@
 
       savedState.monitoringOptions = monitoringOptions;
 
-      _.forEach(pastQueries,function(queryRes,index) {
+      if (!qwQueryService.options.dont_save_queries) _.forEach(pastQueries,function(queryRes,index) {
         if (full)
           savedState.pastQueries.push(queryRes.clone());
         else
