@@ -20,6 +20,7 @@
     qwQueryPlanService.analyzePlan = analyzePlan;
     qwQueryPlanService.analyzeAnalyticsPlan = analyzeAnalyticsPlan;
     qwQueryPlanService.convertTimeToNormalizedString = convertTimeToNormalizedString;
+    qwQueryPlanService.convertTimeFloatToFormattedString = convertTimeFloatToFormattedString;
     qwQueryPlanService.convertTimeStringToFloat = convertTimeStringToFloat;
 
     //
@@ -1080,7 +1081,7 @@
 
       var secondsStr = (seconds < 10 ? '0' : '') + seconds.toString();
       if (secondsStr.length > 7)
-        secondsStr = secondsStr.substring(0,7);
+        secondsStr = secondsStr.substring(0,6);
 
       return(minutesStr + ":" + secondsStr);
     }
