@@ -229,16 +229,22 @@
     </div>
   </div>
 
-<!-- QUERY STATISTICS ****************************************************** -->
-  <div class="qm-stats" ng-if="qc.validated.monitoringAllowed()">
-
+<!-- Query Service-Level Stats --------------------------------------------- -->
+  <footer ng-if="qc.validated.monitoringAllowed()">
     <div class="column vertical-divider" ng-if="qc.validated.clusterStatsAllowed()">
-      <span class="width-6" ng-if="qmc.getSummaryStat('query_requests_250ms') != null">{{qmc.stats["query_requests_250ms"].title}} - last minute</span> <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_250ms") | number:0}}</span><br>
-      <span class="width-6" ng-if="qmc.getSummaryStat('query_requests_500ms') != null">{{qmc.stats["query_requests_500ms"].title}} - last minute</span> <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_500ms") | number:0}}</span><br>
-      <span class="width-6" ng-if="qmc.getSummaryStat('query_requests_1000ms') != null">{{qmc.stats["query_requests_1000ms"].title}} - last minute</span> <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_1000ms") | number:0}}</span><br>
-      <span class="width-6" ng-if="qmc.getSummaryStat('query_requests_5000ms') != null">{{qmc.stats["query_requests_5000ms"].title}} - last minute</span> <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_5000ms") | number:0}}</span><br>
+      <span class="width-6">Queries &gt; 250ms - last min</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_250ms") | number:0 }}</span>
+      <br>
+      <span class="width-6">Queries &gt; 500ms - last min</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_500ms") | number:0}} </span>
+      <br>
+      <span class="width-6">Queries &gt; 1000ms - last min</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_1000ms") | number:0}}</span>
+      <br>
+      <span class="width-6">Queries &gt; 5000ms - last min</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_5000ms") | number:0}}</span>
+      <br>
     </div>
-
     <div class="column wide vertical-divider text-center" ng-if="qc.validated.clusterStatsAllowed()">
       <div class="width-12 text-center semi-bold">Last Minute</div>
       <span class="text-center">
@@ -262,7 +268,6 @@
       <hr>
       <desc>Memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
     </div>
-
     <div class="column wide vertical-divider text-center" ng-if="!qc.validated.clusterStatsAllowed()">
       <desc>memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
       <br>
@@ -270,12 +275,18 @@
       <br>
       <br>
     </div>
-
     <div class="column">
-      <span class="width-6">requests/sec - last minute</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}}</span><br>
-      <span class="width-6">requests/sec - last 5 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}}</span><br>
-      <span class="width-6">requests/sec - last 15 minutes</span> <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}}</span><br>
-      <span class="width-6">mean request time</span> <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:1}}</span><br>
+      <span class="width-6">N1QL Request Rate - last min</span>
+      <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}} / sec</span>
+      <br>
+      <span class="width-6">N1QL Request Rate - last 5 min</span>
+      <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}} / sec</span>
+      <br>
+      <span class="width-6">N1QL Request Rate - last 15 min</span>
+      <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}} / sec</span>
+      <br>
+      <span class="width-6">Query Request Time</span>
+      <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:1}} secs</span>
     </div>
-  </div>
+  </footer>
 </div>
