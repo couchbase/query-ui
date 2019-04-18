@@ -247,6 +247,18 @@
             <div bucket-display="bucket"></div>
           </span>
       </section>
+<!-- bucket insights refresh button ---------------------------------------- -->
+      <div class="row flex-right fix-position-br wb-refresh-btn">
+        <button
+           title="Refresh dataset insights"
+           ng-click="qc.updateBuckets()"
+           class="outline"
+           ng-disabled="qc.qqs.loadingBuckets">
+          Refresh &nbsp;
+          <span ng-if="qc.qqs.loadingBuckets" class="icon fa-refresh"></span>
+          <span ng-if="!qc.qqs.loadingBuckets" class="icon fa-refresh"></span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
