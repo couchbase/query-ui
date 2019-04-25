@@ -100,6 +100,7 @@
         var injector = $injector || $transition$.injector();
         var qwQueryService = injector.get("qwQueryService");
         qwQueryService.updateBuckets();
+        qwQueryService.loadStateFromStorage();
       });
 
       mnPermissionsProvider.set("cluster.n1ql.meta!read"); // system catalogs

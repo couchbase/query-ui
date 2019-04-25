@@ -95,6 +95,7 @@
     qwQueryService.executeQueryUtil = executeQueryUtil;
 
     qwQueryService.saveStateToStorage = saveStateToStorage;
+    qwQueryService.loadStateFromStorage = loadStateFromStorage;
     qwQueryService.getQueryHistory = getQueryHistory;
 
     // update store the metadata about buckets
@@ -596,7 +597,7 @@
         showWarningDialog("Warning: Unable to save query history, browser local storage exhausted. You can still run queries, but they won't be saved for future sessions. Try removing large queries from history.")
       }
       //
-      //console.log("Saving state to storage: " + JSON.stringify(savedState));
+      //console.log("Saving state to storage: ");
     }
 
     //
