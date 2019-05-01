@@ -190,19 +190,16 @@
       </label>
       enable field editing
     </div>
-    <div class="text-right nowrap">
-      <button
+    <div class="text-right nowrap pagination padding-right-min">
+      <a
          ng-click="dec.prevBatch()"
-         class="outline tight text-small"
-         ng-disabled="dec.options.offset <= 0 || dec.options.doc_id">
-        < Prev Batch
-      </button>
-      <button
+         ng-class="{'disabled-link' : dec.options.offset <= 0 || dec.options.doc_id}">
+        &lt; prev batch</a>
+      <span class="text-smaller grayblack-3">&nbsp; |</span>
+      <a
          ng-click="dec.nextBatch()"
-         class="outline tight text-small"
-         ng-disabled="dec.options.doc_id || dec.options.current_result.length == 0 || dec.options.current_query.startsWith('top keys')">
-        Next Batch >
-      </button>
+         ng-class="{'disabled-link' : dec.options.doc_id || dec.options.current_result.length == 0 || dec.options.current_query.startsWith('top keys')}">
+        next batch &gt;</a>
     </div>
   </div>
 

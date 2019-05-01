@@ -28,7 +28,7 @@
 }
 .doc-editor-results {
   overflow: auto;
-  height: calc(100vh - 245px);
+  height: calc(100vh - 226px);
   width: 100%;
 }
 
