@@ -55,19 +55,14 @@
         $stateProvider
         .state(parent + '.monitoring', {
           url: '/monitoring',
-          controller: 'qwQueryMonitorController',
+          controller: 'qwQueryMonitorController as qmc',
           templateUrl: '../_p/ui/query/ui-current/query_monitoring.html'
         })
         .state(parent + '.workbench', {
           url: '/workbench?query',
-          controller: 'qwQueryController',
+          controller: 'qwQueryController as qc',
           templateUrl: '../_p/ui/query/ui-current/query.html'
         })
-//        .state(parent + '.doc_editor', {
-//          url: '/doc_editor',
-//          controller: 'qwDocEditorController',
-//          templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
-//        })
         ;
       }
 
