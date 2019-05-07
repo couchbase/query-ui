@@ -4,17 +4,6 @@
  *
  *  Extended for trees by Eben Haber at Couchbase.
  *
- *  This class takes a JS object or JSON string, and displays it as an HTML
- *  table. Generally, it expects an array of something. If it's an array of objects,
- *  then each row corresponds to one object, and the columns are the union of all
- *  fields of the objects. If an object doesn't have a field, that cell is blank.
- *
- *
- *  , which object members indented. This is similar to pretty-printing
- *  JSON, but is more compact (no braces or commas), and permits using colors
- *  to highlight field names vs. values, and one line from the next.
- *
- *  For usage, see the header to qw-json-table.
  */
 /* global _, angular */
 (function() {
@@ -34,10 +23,37 @@
           //console.log("Got advice data: " + JSON.stringify(advice));
           scope.advice = null;
 
+          // do we have covered indexes to recommend for a given advice element?
+          scope.has_covered = function(element) {
+              return(element && element.recommended_indexes && element.recommended_indexes.covering_indexes &&
+                  element.recommended_indexes.covering_indexes.length > 0);
+          };
+
+          scope.get_covered_indexes = function(element) {
+            var covered = [];
+            if (element.recommended_indexes && _.isArray(element.recommended_indexes.covering_indexes))
+              element.recommended_indexes.covering_indexes.forEach(function (item) {covered.push(item.index_statement);});
+            return(covered);
+          };
+
+          // get the regular indexes that are not part of the covering indexes
+          scope.get_regular_indexes = function(element) {
+            var indexes = [];
+            var covered = scope.get_covered_indexes(element);
+            if (element.recommended_indexes && _.isArray(element.recommended_indexes.indexes))
+              element.recommended_indexes.indexes.forEach(function (item) {
+                if (!covered.some(function (c_stmt) {
+                  return(c_stmt == item.index_statement);
+                }))
+                  indexes.push(item.index_statement);
+                });
+            return(indexes);
+           };
+
           // create the recommended indexes
-          scope.create_option = function(index) {
+          scope.create_option = function(type,index) {
             if (_.isArray(advice[index].recommended_indexes))
-              advice[index].recommended_indexes.forEach(function(reco) {
+              advice[index][type].forEach(function(reco) {
                 qwQueryService.executeQueryUtil(reco.index_statement,false);
               });
 

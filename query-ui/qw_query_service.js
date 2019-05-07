@@ -26,7 +26,7 @@
         break;
 
       case 6: // advice is only available in EE and developer preview
-        if (!mnPools.export.isEnterprise || !qwQueryService.pools.isDeveloperPreview)
+        if (!mnPools.export.isEnterprise || (qwQueryService.pools && !qwQueryService.pools.isDeveloperPreview))
           newTab = 1;
         break;
       }
@@ -1285,7 +1285,7 @@
           },
           function error() {qwQueryService.selectTab(1);}) // error, go to tab 1
           // when done, save the current state
-          .finally(function() {saveStateToStorage(); finishQuery(newResult);});
+          .finally(function() {saveStateToStorage(); /*finishQuery(newResult);*/});
 
       return(queryExecutionPromise);
     }
@@ -1810,7 +1810,8 @@
     };
 
     function runAdvise(queryText,queryResult) {
-      var queryIsAdvisable = qwQueryService.pools.isDeveloperPreview && /^\s*select|merge|update|delete/gmi.test(queryText);
+      var queryIsAdvisable = qwQueryService.pools && qwQueryService.pools &&
+        qwQueryService.pools.isDeveloperPreview && /^\s*select|merge|update|delete/gmi.test(queryText);
 
       if (queryIsAdvisable && !multipleQueries(queryText)) {
         var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options);
