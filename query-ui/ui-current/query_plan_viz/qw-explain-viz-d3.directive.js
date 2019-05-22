@@ -241,8 +241,10 @@
     //console.log("Got expected width: " + width + ", height: " + height);
 
     svg = d3.select(wrapperElement[0]).append('svg:svg')
-        .attr("width", canvas_width)
-        .attr("height", canvas_height)
+//        .attr("width", canvas_width)
+//        .attr("height", canvas_height)
+        .attr("width", "100%")
+        .attr("height", "100%")
         .attr("id", "outer_svg")
         .style("overflow", "scroll")
          .on("click",removeAllTooltips)
