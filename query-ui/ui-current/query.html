@@ -121,12 +121,12 @@
           <span ng-if="qc.lastResult().resultSize" class="nowrap pipe">
             size: {{qc.lastResult().resultSize}} bytes
           </span>
-
         </div>
+
         <div>
           <a
              ng-disabled="qc.executingQuery.busy"
-             ng-click="qc.format()"
+             ng-click="$event.stopPropagation(); qc.format(); qc.handleClick('editor');"
              class="text-smallish nowrap resp-hide-xsml">
             <span class="icon fa-align-right"></span>
             format
@@ -159,12 +159,13 @@
         <a ng-click="qc.selectTab(1)"
            ng-class="{selected: qc.isSelected(1)}">JSON</a>
         <a ng-click="qc.selectTab(3)"
-           ng-class="{selected: qc.isSelected(3)}">Tree</a>
+           ng-class="{selected: qc.isSelected(3)}"
+           class="resp-hide-med">Tree</a>
         <a ng-click="qc.selectTab(4)" ng-if="qc.isEnterprise"
            ng-class="{selected: qc.isSelected(4)}">Plan</a>
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}"
-           class="resp-hide-xsml">Plan Text</a>
+           class="resp-hide-med">Plan Text</a>
         <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise && qc.isDeveloperPreview()"
            ng-class="{selected: qc.isSelected(6)}">Advice
              <span ng-if="qc.lastResult().advice">*</span>
@@ -247,9 +248,9 @@
           </span>
       </section>
 <!-- bucket insights refresh button ---------------------------------------- -->
-      <div class="row flex-right fix-position-br wb-refresh-btn">
+      <div class="row flex-right fix-position-br wb-refresh-btn" ng-if="!qc.fullscreen">
         <button
-           title="Refresh dataset insights"
+           title="Refresh bucket insights"
            ng-click="qc.updateBuckets()"
            class="outline"
            ng-disabled="qc.qqs.loadingBuckets">
