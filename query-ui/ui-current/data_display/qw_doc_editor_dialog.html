@@ -7,18 +7,24 @@
   <div class="panel-content" ng-style="{ height: error_message ? 'calc(100% - 120px)' : 'calc(100% - 100px)'}">
     <div class="row margin-bottom-half">
       <h4 class="ellipsis margin-right-half">{{doc_id}}&nbsp; <span class="icon fa-search" ng-click="searchDoc()"></span></h4>
-      <span
-         ng-show="doc_meta"
-         class="blue-1 text-small nowrap cursor-pointer"
-         uib-tooltip-html="{{doc_meta}}"
-         tooltip-placement="auto right-top"
-         tooltip-append-to-body="true"
-         tooltip-trigger="'mousedown'"
-         tooltip-class="tooltip-maxheight">metadata</span>
+      <span class="pills" ng-show="doc_meta">
+        <a ng-click="setShowData(true)"
+           ng-class="{selected: getShowData()}">Data</a>
+        <a ng-click="setShowData(false)"
+           ng-class="{selected: !getShowData()}">Metadata</a>
+      </span>
     </div>
     <div
+       ng-if="showData"
        ui-ace="ace_options"
        ng-model="doc_json"
+       style="height:98%;"
+       class="wb-ace-editor column flex-grow-2">
+    </div>
+    <div
+       ng-if="!showData"
+       ui-ace="meta_ace_options"
+       ng-model="doc_meta" 
        style="height:98%;"
        class="wb-ace-editor column flex-grow-2">
     </div>

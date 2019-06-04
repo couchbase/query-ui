@@ -411,7 +411,7 @@
 
       var meta_obj = {meta: dec.options.current_result[row].meta,
           xattrs: dec.options.current_result[row].xattrs};
-      var meta_str = "'" + JSON.stringify(meta_obj,null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;') + "'";
+      var meta_str = JSON.stringify(meta_obj,null,2);
       var res = showDocEditor(dec.options.current_result[row].id, doc_string,meta_str,readonly);
       res.promise.then(getSaveDocClosure(res.scope,row));
     }
@@ -426,8 +426,14 @@
 
       dialogScope.searchDoc = function() {
         config.loadModule("ace/ext/cb-searchbox",
-        function(e) {if (dialogScope.editor) e.Search(dialogScope.editor)});
+        function(e) {
+          if (dialogScope.showData && dialogScope.editor) e.Search(dialogScope.editor);
+          else if (!dialogScope.showData && dialogScope.meta_editor) e.Search(dialogScope.meta_editor);
+          });
       }
+
+      dialogScope.setShowData = function(show) {dialogScope.showData = show;};
+      dialogScope.getShowData = function() {return(dialogScope.showData);};
 
       // use an ACE editor for editing the JSON document
       dialogScope.ace_options = {
@@ -454,7 +460,7 @@
                   dialogScope.$applyAsync(function() {});
                   return;
                 }
-              if (dialogScope.editor /*&& dialogScope.editor.getSession().getValue().length < 1024*1024*/) {
+              if (dialogScope.editor) {
                 dialogScope.error_message = null; // no errors found
                 dialogScope.$applyAsync(function() {});
               }
@@ -464,13 +470,28 @@
           },
           $blockScrolling: Infinity
       };
+      // the document's metadata and xattrs will be shown in a separate ACE editor,
+      // which needs slightly different options
+      dialogScope.meta_ace_options = {
+          mode: 'json',
+          showGutter: true,
+          useWrapMode: true,
+          onLoad: function(_editor) {
+            dialogScope.meta_editor = _editor;
+            _editor.$blockScrolling = Infinity;
+            _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
+            _editor.setReadOnly(true);
+            if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
+              _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
+          }
+      };
 
       dialogScope.doc_id = id;
       dialogScope.doc_json = json;
       dialogScope.doc_meta = meta;
       dialogScope.header = "Edit Document";
       dialogScope.readonly = readonly;
-
+      dialogScope.showData = true;
 
       // are there any syntax errors in the editor?
       dialogScope.errors = function() {
