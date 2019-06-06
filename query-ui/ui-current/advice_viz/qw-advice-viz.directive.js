@@ -52,15 +52,19 @@
 
           // create the recommended indexes
           scope.create_option = function(type,index) {
-            if (_.isArray(advice[index].recommended_indexes))
-              advice[index][type].forEach(function(reco) {
+            if (advice[index].recommended_indexes && _.isArray(advice[index].recommended_indexes[type])) {
+              advice[index].recommended_indexes[type].forEach(function(reco) {
                 qwQueryService.executeQueryUtil(reco.index_statement,false);
               });
 
-            // bring up a dialog to warn that building indexes may take time.
-            qwQueryService.showWarningDialog("Creating indexes, it may take time before they are fully built. Update the advice to see if the index is built.");
+              // bring up a dialog to warn that building indexes may take time.
+              qwQueryService.showWarningDialog("Creating indexes, it may take time before they are fully built. Update the advice to see if the index is built.");
+            }
+
+            else
+              qwQueryService.showWarningDialog("Internal error parsing index definitions to create.");
           };
-          scope.update_advice = function() {qwQueryService.runAdviseOnLatest();};
+          //scope.update_advice = function() {qwQueryService.runAdviseOnLatest();};
 
           // make sure that advise is possible
           if (!queryIsAdvisable(qwQueryService.getCurrentResult()))

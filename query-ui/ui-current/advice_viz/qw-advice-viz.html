@@ -31,7 +31,7 @@
     </div>
 
     <div
-      ng-if="get_regular_indexes(element).length > 1">
+      ng-if="get_regular_indexes(element).length > 0">
       <h5>Index Recommendations</h5>
       <div class="margin-bottom-1">
         <p class="margin-bottom-0 indent-1" ng-repeat="stmt in get_regular_indexes(element)">{{stmt}}</p>
