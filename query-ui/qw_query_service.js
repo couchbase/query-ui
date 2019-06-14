@@ -1427,6 +1427,7 @@
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
+      var queryIsAdvise  = /^\s*advise/gmi.test(queryText);
       var explain_promise, advise_promise;
 
       if (!queryIsExplain && (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
@@ -1773,7 +1774,7 @@
       // let's run ADVISE on the query to see if there's a better way to do it
       //
 
-      if (!explainOnly) {
+      if (!explainOnly && !queryIsAdvise) {
         var advise_promise = runAdvise(queryText,newResult);
         if (advise_promise != null)
           promises.push(advise_promise);
@@ -1795,6 +1796,15 @@
     function runAdviseOnLatest() {
       // if the user edited an already-run query, add the edited query to the end of the history
       var query = getCurrentResult();
+      var queryIsAdvise  = /^\s*advise/gmi.test(query.query);
+
+      // if the query already starts with 'advise', run it as a regular query
+      if (queryIsAdvise) {
+        executeUserQuery(false);
+        qwQueryService.selectTab(1);
+        return;
+      }
+
       if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
         var result = executingQueryTemplate.clone();
         result.query = query.query.trim();
@@ -1806,10 +1816,20 @@
 
       getCurrentResult().advice = "Getting advice for current query...";
       qwQueryService.selectTab(6);
-      runAdvise(getCurrentResult().query,getCurrentResult());
+      runAdvise(getCurrentResult().query,getCurrentResult()).then(
+          function success() {
+            finishQuery(query);
+            if (_.isString(query.advice))
+              query.status = "error";
+            else
+              query.status = "success";
+            },
+          function err() {finishQuery(query); query.status = "advise error";});
     };
 
     function runAdvise(queryText,queryResult) {
+      queryResult.lastRun = new Date();
+
       var queryIsAdvisable = qwQueryService.pools && qwQueryService.pools &&
         qwQueryService.pools.isDeveloperPreview && /^\s*select|merge|update|delete/gmi.test(queryText);
 
@@ -1840,17 +1860,23 @@
           // if status != success
           else if (data.errors) {
             console.log("Advise errors: " + JSON.stringify(data.errors, null, '    '));
+            queryResult.advice = "Error getting index advice, status: " + status;
+            if (data && _.isArray(data.errors))
+              data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
           }
           else {
             console.log("Unknown advise response: " + JSON.stringify(resp));
+            queryResult.advice = "Unknown response from server.";
           }
         },
         /* error response from $http, log error but otherwise ignore */
         function error(resp) {
           var data = resp.data, status = resp.status;
-          console.log("Advise error Data: " + JSON.stringify(data));
-          console.log("Advise error Status: " + JSON.stringify(status));
-          queryResult.advice = "Error getting index advice: " + status;
+          //console.log("Advise error Data: " + JSON.stringify(data));
+          //console.log("Advise error Status: " + JSON.stringify(status));
+          queryResult.advice = "Error getting index advice, status: " + status;
+          if (data && _.isArray(data.errors))
+            data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
         });
 
         return advise_promise;

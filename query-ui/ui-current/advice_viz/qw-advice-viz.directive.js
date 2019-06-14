@@ -75,7 +75,7 @@
 
           // the query might or might not have advice already
           else if (!advice || advice === qwQueryService.getCurrentResult().query) {
-              scope.error = null;
+              scope.error = "Click 'Advise' to generate query index advice.";
               scope.advice = null;
           }
 

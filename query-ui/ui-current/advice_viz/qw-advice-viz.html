@@ -41,9 +41,14 @@
       </button>
     </div>
     <div
-       ng-if="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0"
+       ng-if="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && element.current_indexes.length > 0"
        class="success">
       Existing indexes are sufficient.
+    </div>
+    <div
+       ng-if="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && !element.current_indexes.length"
+       class="success">
+       No index recommendation at this time.
     </div>
   </div>
 </div>
