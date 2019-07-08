@@ -185,7 +185,7 @@ function queryFile() {
     });
 }
 
-console.log("Hello world");
+console.log("Hello world, starting query parsing...");
 
-//queryFile();
-queryArray();
+queryFile();
+//queryArray();

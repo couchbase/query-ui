@@ -231,7 +231,8 @@
      var algebra = {};
      algebra.EMPTY_USE = new expr("EMPTY_USE");
      algebra.GetAggregate = function(name, dummy, has_window)                {var a = new expr("Aggregate"); a.ops.name = name; return a;}
-     algebra.MapPairs = function(pairs)                                       {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
+     algebra.MapPairs = function(pairs)                                      {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
+     algebra.NewAdvise = function(statement)                                 {var a = new expr("Advise"); a.ops.statement = statement; return a;};
      algebra.NewAlterIndex = function(keyspace, index_name, opt_using, rename){var a = new expr("AlterIndex"); a.ops.keyspace = keyspace; a.ops.index_name = index_name; a.ops.opt_using = opt_using; a.ops.rename = rename; return a;};
      algebra.NewAnsiJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewAnsiNest = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
@@ -310,6 +311,7 @@
      algebra.NewUnsetTerm = function(path,update_for)                         {var a = new expr("UnsetTerm"); a.ops.path = path; a.ops.update_for = update_for; return a;};
      algebra.NewUpdate = function(keyspace,use_keys,use_indexes,set,unset,where,limit,returning) {var a = new expr("Update"); a.ops.keyspace = keyspace; a.ops.use_keys = use_keys; a.ops.use_indexes = use_indexes; a.ops.set = set; a.ops.unset = unset; a.ops.where = where; a.ops.limit = limit; a.ops.returning = returning; return a;};
      algebra.NewUpdateFor = function(update_dimensions,when)                  {var a = new expr("UpdateFor"); a.ops.update_dimensions = update_dimensions; a.ops.when = when; return a;};
+     algebra.NewUpdateStatistics = function(keyspace,terms,with_expr)         {var a = new expr("UpdateStatistics"); a.ops.keyspace = keyspace; a.ops.terms = terms; a.ops.with_expr = with_expr; return a;};
      algebra.NewUpsertSelect = function(keyspace,key_expr,value_expr,fullselect,returning) {var a = new expr("UpsertSelect"); a.ops.keyspace = keyspace; a.ops.key_expr = key_expr; a.ops.value_expr = value_expr; a.ops.fullselect = fullselect; a.ops.returning = returning; return a;};
      algebra.NewUpsertValues = function(keyspace,values_list,returning)       {var a = new expr("UpsertValues"); a.ops.keyspace = keyspace; a.ops.values_list = values_list; a.ops.returning = returning; return a;};
      algebra.NewUse = function(keys,index, hint)                              {var a = new expr("Use"); a.ops.keys = keys; a.ops.index = index; a.ops.hint = hint; 
@@ -431,6 +433,7 @@ qid                         [`](([`][`])|[^`])+[`]
 \?                         { return 'NEXT_PARAM'; }
 
 
+"advise"                        { return("ADVISE"); }
 "all"                           { return("ALL"); }
 "alter"                         { return("ALTER"); }
 "analyze"                       { return("ANALYZE"); }
@@ -513,6 +516,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "intersect"                     { return("INTERSECT"); }
 "into"                          { return("INTO"); }
 "is"                            { return("IS"); }
+"javascript"                    { return("JAVASCRIPT"); }
 "join"                          { return("JOIN"); }
 "key"                           { return("KEY"); }
 "keys"                          { return("KEYS"); }
@@ -728,6 +732,8 @@ expr_input
 /*;*/
 
 stmt_body:
+advise
+|
 explain
 |
 prepare
@@ -746,9 +752,27 @@ ddl_stmt
 |
 infer
 |
+update_statistics
+|
 role_stmt
 |
 function_stmt
+;
+
+advise:
+ADVISE opt_index stmt
+{
+    $$ = algebra.NewAdvise($3)
+}
+;
+
+opt_index:
+/* empty */
+|
+INDEX
+{
+    /* yylex.(*lexer).setOffset($<tokOffset>1) */
+}
 ;
 
 explain:
@@ -831,7 +855,7 @@ infer_keyspace
 ;
 
 infer_keyspace:
-INFER opt_keyspace keyspace_ref opt_infer_using opt_infer_with
+INFER opt_keyspace keyspace_ref opt_infer_using opt_infer_ustat_with
 {
     $$ = algebra.NewInferKeyspace($3, $4, $5)
 }
@@ -852,16 +876,16 @@ opt_infer_using:
 }
 ;
 
-opt_infer_with:
+opt_infer_ustat_with:
 /* empty */
 {
     $$ = nil
 }
 |
-infer_with
+infer_ustat_with
 ;
 
-infer_with:
+infer_ustat_with:
 WITH expr
 {
     $$ = $2;
@@ -1114,12 +1138,12 @@ projects COMMA project
 project:
 STAR
 {
-    $$ = algebra.NewResultTerm(expression.SELF, true, "");
+    $$ = algebra.NewResultTerm(expression.SELF, true, "")
 }
 |
 expr DOT STAR
 {
-    $$ = algebra.NewResultTerm($1, true, "");
+    $$ = algebra.NewResultTerm($1, true, "")
 }
 |
 expr opt_as_alias
@@ -2749,6 +2773,19 @@ LANGUAGE GOLANG AS LBRACE STR COMMA STR RBRACE
     }
     */
 }
+|
+LANGUAGE JAVASCRIPT AS LBRACE STR COMMA STR RBRACE
+{
+   $$ = [$5,$7]
+   /*
+    body, err := javascript.NewJavascriptBody($5, $7)
+    if err != nil {
+        yylex.Error(err.Error())
+    } else {
+        $$ = body
+    } 
+   */
+}
 ;
 
 /*************************************************
@@ -2777,6 +2814,42 @@ EXECUTE FUNCTION func_name LPAREN opt_exprs RPAREN
 }
 ;
 
+
+/*************************************************
+ *
+ * UPDATE STATISTICS
+ *
+ *************************************************/
+
+update_statistics:
+UPDATE STATISTICS opt_for named_keyspace_ref LPAREN update_stat_terms RPAREN opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($4, $6, $8)
+}
+;
+
+opt_for:
+/* empty */
+|
+FOR
+;
+
+update_stat_terms:
+update_stat_term
+{
+    $$ = [$1]
+}
+|
+update_stat_terms COMMA update_stat_term
+{
+    $1.push($3);
+    $$ = $1;
+}
+;
+
+update_stat_term:
+index_term_expr
+;
 
 /*************************************************
  *
