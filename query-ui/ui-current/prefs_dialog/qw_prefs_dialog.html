@@ -51,6 +51,13 @@
           <option value="statement_plus">statement_plus</option>
         </select>
       </div>
+      <div class="formrow" ng-hide="mode != 'analytics'">
+        <label>Scan Consistency</label>
+        <select ng-model="options.scan_consistency">
+          <option value="not_bounded">not_bounded</option>
+          <option value="request_plus">request_plus</option>
+        </select>
+      </div>
       <div class="formrow">
         <div class="row">
           <label>Positional Parameters</label>
