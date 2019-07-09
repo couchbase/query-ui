@@ -676,8 +676,23 @@
         return;
       }
 
-      // use n1ql service if we can
+      // validate fields
+      if (!_.isNumber(dec.options.limit) || dec.options.limit < 1 || dec.options.limit > 200) {
+        dec.options.current_result = "Invalid value for 'limit': Limit must be a number between 1 and 200";
+        return;
+      }
 
+      if (!_.isNumber(dec.options.offset) || dec.options.offset < 0) {
+        dec.options.current_result = "Invalid value for 'offset': Offset must be a number >= 0";
+        return;
+      }
+
+      if (!_.isString(dec.options.selected_bucket) || dec.options.selected_bucket == "") {
+        dec.options.current_result = "No selected bucket.";
+        return;
+      }
+
+      // use n1ql service if we can
       //console.log("Querying via: " + how_to_query());
       switch (how_to_query()) {
       case N1QL: retrieveDocs_n1ql(); break;
@@ -919,22 +934,6 @@
         return;
 
       dec.options.current_query = dec.options.selected_bucket;
-
-      // validate fields
-      if (!_.isNumber(dec.options.limit) || dec.options.limit < 1 || dec.options.limit > 200) {
-        dec.options.current_result = "Invalid value for 'limit': Limit must be a number between 1 and 200";
-        return;
-      }
-
-      if (!_.isNumber(dec.options.offset) || dec.options.offset < 0) {
-        dec.options.current_result = "Invalid value for 'offset': Offset must be a number >= 0";
-        return;
-      }
-
-      if (!_.isString(dec.options.selected_bucket) || dec.options.selected_bucket == "") {
-        dec.options.current_result = "No selected bucket.";
-        return;
-      }
 
       if (dec.options.doc_id && dec.options.show_id)
         dec.options.current_query += ', document id: ' + dec.options.doc_id;

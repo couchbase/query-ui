@@ -1448,7 +1448,7 @@
       if (!qwQueryService.pollSizes) {
         qwQueryService.pollSizes = $interval(function () {
         $rootScope.$broadcast("checkBucketCounts");
-      }, 5000);
+      }, 10000);
 
       $scope.$on('$destroy', function () {
         $interval.cancel(qwQueryService.pollSizes);

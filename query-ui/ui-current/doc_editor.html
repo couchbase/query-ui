@@ -56,12 +56,15 @@
       </div>
       <input
          type="number"
+         name="limit"
          min="1"
          max="200"
          required
          ng-disabled="dec.options.doc_id.length"
          ng-submit="dec.retrieveDocs()"
-         ng-model="dec.options.limit">
+         ng-model="dec.options.limit"
+         ng-class="{'ng-invalid-number': searchForm.limit.$invalid}"
+         >
     </div>
 
     <div class="column">
@@ -76,10 +79,12 @@
       </div>
       <input
          type="number"
+         name="offset"
          min="0"
          required
          ng-disabled="dec.options.doc_id.length"
          ng-submit="dec.retrieveDocs()"
+         ng-class="{'ng-invalid-number': searchForm.offset.$invalid}"
          ng-model="dec.options.offset">
     </div>
 
