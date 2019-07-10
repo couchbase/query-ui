@@ -62,7 +62,7 @@
 
     dec.updatingRow = -1;
 
-    dec.bucketChanged = function(item) {if (!item) return; $state.go('app.admin.doc_editor',{bucket: item});};
+    dec.bucketChanged = bucketChanged;
     dec.rbac = mnPermissions.export;
 
     var N1QL = "N1QL";
@@ -697,6 +697,8 @@
       switch (how_to_query()) {
       case N1QL: retrieveDocs_n1ql(); break;
       case KV: retrieveDocs_rest(); break;
+      case false: // error status
+        dec.options.current_query = dec.options.selected_bucket; break;
       }
     }
 
@@ -1129,6 +1131,10 @@
       return(promise);
     }
 
+    //
+    // bucket names comes in when we navigate here
+    //
+
     function handleBucketParam() {
 
       // if we get a bucket as a parameter, that overrides current defaults
@@ -1147,6 +1153,19 @@
           retrieveDocs_inner();
       }
     }
+
+    //
+    // bucket changed via menu
+    //
+
+    function bucketChanged(item) {
+      if (!item) return;
+
+      dec.options.where_clause = ''; // reset the where clause
+      dec.options.offset = 0; // start off from the beginning
+      dec.options.bucket = item;
+      retrieveDocs_inner();
+    };
 
     //
     // if the user updates something, we like to refresh the results, unless
