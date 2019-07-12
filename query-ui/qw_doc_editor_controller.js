@@ -379,7 +379,7 @@
     }
 
     function deleteDoc_rest(row) {
-      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
+      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
      "/docs/" + encodeURIComponent(dec.options.current_result[row].id);
 
       return $http({
@@ -590,7 +590,7 @@
 
 
     function saveDoc_rest(row,newJson,newKey) {
-      var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) +
+      var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
       "/docs/" + (newKey ? encodeURIComponent(newKey) : encodeURIComponent(dec.options.current_result[row].id));
 
 
@@ -672,7 +672,6 @@
           (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]) &&
           !qwQueryService.buckets.length) { // no bucket info yet
         dec.options.current_query = dec.options.selected_bucket;
-        dec.options.current_bucket = dec.options.selected_bucket;
         dec.options.current_result =  "Connection to query service not quite ready. Click 'Retrieve Docs' to see data.";
         return;
       }
@@ -737,7 +736,6 @@
       }
 
       dec.options.current_query = query;
-      dec.options.current_bucket = dec.options.selected_bucket;
       dec.options.current_result = [];
 
       dec.options.queryBusy = true;
@@ -954,7 +952,6 @@
 
       // can only use REST API to retrieve single docs from emphemeral buckets
       if (!dec.options.doc_id && dec.buckets_ephemeral[dec.options.selected_bucket]) {
-        dec.options.current_bucket = dec.options.selected_bucket;
         dec.options.current_result =
             "Ephemeral buckets can only be queried by document ID, or via a primary or secondary GSI index.";
         return;
@@ -975,7 +972,7 @@
       }
 
       // otherwise use skip, offset, and optionally start & end keys
-      var rest_url = "../pools/default/buckets/" + dec.options.selected_bucket +
+      var rest_url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
         "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
 
       if (!dec.options.show_id && dec.options.doc_id_start)
@@ -989,7 +986,6 @@
         method: "GET"
       }).then(function success(resp) {
         if (resp && resp.status == 200 && resp.data) {
-          dec.options.current_bucket = dec.options.selected_bucket;
           dec.options.current_result.length = 0;
 
           var data = resp.data;
@@ -1039,10 +1035,9 @@
 
       dec.options.queryBusy = true;
       dec.options.current_query = "top keys for bucket: " + dec.options.selected_bucket;
-      dec.options.current_bucket = dec.options.selected_bucket;
       dec.options.current_result = [];
 
-      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.current_bucket) + "/stats";
+      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) + "/stats";
       var promise = $http({
         url: Url,
         method: "GET"

@@ -198,7 +198,6 @@
         doc_id_start: '',
         doc_id_end: '',
         current_query: '',
-        current_bucket: '',
         current_result: []
     };
 
@@ -559,7 +558,6 @@
           offset: qwQueryService.doc_editor_options.offset,
           where_clause: qwQueryService.doc_editor_options.where_clause,
           current_query: '',
-          current_bucket: qwQueryService.doc_editor_options.current_bucket,
           current_result: [] // don't want to save the results - they could be big
       };
 
