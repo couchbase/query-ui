@@ -128,7 +128,8 @@
         if (has_prim)
           return(N1QL);
         else if (dec.buckets_ephemeral[dec.options.selected_bucket]) { // ephemeral, no primary key
-          dec.options.current_result = "Limit/offset and key range queries not supported for ephemeral buckets with no primary index.";
+          dec.options.current_result =
+            "Ephemeral buckets can only be queried by document ID, or via a primary or secondary GSI index.";
           return(false);
         }
         else

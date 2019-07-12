@@ -159,8 +159,8 @@
         //     now the real flavor
         '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure row" ng-class="{disclosed: flavor.Show}" ' +
         '      ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
-        '      <span>{{flavor.Flavor || "schema " + ($index+1)}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
-        '      <div ng-hide="flavor.hasFields">No fields found, perhaps binary data, not JSON?</div>' +
+        '      <span>{{flavor.Flavor || "schema " + ($index+1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
+        '      <div ng-show="flavor.Show && flavor.hasFields !== true"><ul><li>No fields found.</li></ul></div>' +
 
         '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
 
