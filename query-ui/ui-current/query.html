@@ -204,11 +204,11 @@
   </div>
 
 <!-- data insights sidebar ------------------------------------------------ -->
-  <div class="insights-sidebar width-3 show-scrollbar resp-hide-sml">
+  <div class="insights-sidebar width-3 resp-hide-sml">
     <div ng-if="qc.qqs.bucket_errors" class="insights-sidebar-body">
       {{qc.qqs.bucket_errors}}
     </div>
-    <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body">
+    <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body narrow-scrollbar">
       <div class="row margin-bottom-half">
         <h4>Data Insights</h4>
         <div class="insights-sidebar-expand" ng-click="qc.toggleAnalysisSize()">
@@ -252,9 +252,9 @@
         <button
            title="Refresh bucket insights"
            ng-click="qc.updateBuckets()"
-           class="outline"
+           class="outline small-button"
            ng-disabled="qc.qqs.loadingBuckets">
-          Refresh &nbsp;
+          
           <span ng-if="qc.qqs.loadingBuckets" class="icon fa-refresh"></span>
           <span ng-if="!qc.qqs.loadingBuckets" class="icon fa-refresh"></span>
         </button>
