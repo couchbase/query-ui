@@ -523,7 +523,7 @@
           }
         }
 
-        // handle case where auto_infer is not yet defined, and set it to true
+        // handle case where stored value of options might be not yet defined
         if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false)
           qwQueryService.options.auto_infer = true;
 
@@ -1043,6 +1043,10 @@
       // protected buckets
       //
 
+      if (!_.isNumber(qwQueryService.options.query_timeout) ||
+          qwQueryService.options.query_timeout == 0)
+          qwQueryService.options.query_timeout = 600;
+
       var queryData = {statement: queryText, pretty: false, timeout: (qwQueryService.options.query_timeout + 's')};
 
       if (qwConstantsService.sendCreds) {
@@ -1104,10 +1108,6 @@
       var userAgent = 'Couchbase Query Workbench';
       if (mnPoolDefault.export.thisNode && mnPoolDefault.export.thisNode.version)
         userAgent += ' (' + mnPoolDefault.export.thisNode.version + ')';
-
-      if (!_.isNumber(qwQueryService.options.query_timeout) ||
-          qwQueryService.options.query_timeout == 0)
-          qwQueryService.options.query_timeout = 600;
 
       if (mnPoolDefault.export.compat && mnPoolDefault.export.compat.atLeast45) {
 
