@@ -6,6 +6,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
+  flex-wrap: wrap;
   margin: .5rem 0 1.5rem 0;
   font-size: .875rem;
 }
@@ -13,6 +14,10 @@
   margin-right: .5rem;
   white-space: nowrap;
   min-width: 0;
+  margin-top: .25rem;
+}
+.controls .column button {
+  margin-top: .25rem;
 }
 .doc-editor .controls .column:last-child {
   margin-right: 0;
