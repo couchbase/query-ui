@@ -379,8 +379,8 @@
     }
 
     function deleteDoc_rest(row) {
-      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
-     "/docs/" + encodeURIComponent(dec.options.current_result[row].id);
+      var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
+     "/docs/" + myEncodeURIComponent(dec.options.current_result[row].id);
 
       return $http({
         method: "DELETE",
@@ -590,9 +590,8 @@
 
 
     function saveDoc_rest(row,newJson,newKey) {
-      var Url = "/pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
-      "/docs/" + (newKey ? encodeURIComponent(newKey) : encodeURIComponent(dec.options.current_result[row].id));
-
+      var Url = "/pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
+      "/docs/" + (newKey ? myEncodeURIComponent(newKey) : myEncodeURIComponent(dec.options.current_result[row].id));
 
       if (newJson.length > largeDoc) {
         showErrorDialog("Warning: large documents.",
@@ -820,14 +819,14 @@
       dec.options.current_result.length = idArray.length;
 
       for (var i=0; i< idArray.length; i++) {
-        var rest_url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
-          "/docs/" + encodeURIComponent(idArray[i]);
+        var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
+          "/docs/" + myEncodeURIComponent(idArray[i]);
         //console.log("  url: " + rest_url);
 
         promiseArray.push($http({
           url: rest_url,
           method: "GET"
-        }).then(getDocReturnHandler(i,sizeWarning),
+        }).then(getDocReturnHandler(i,sizeWarning,idArray),
             getDocReturnErrorHandler(i,idArray)));
       }
 
@@ -841,9 +840,9 @@
     // results array
     //
 
-    function getDocReturnHandler(position,sizeWarning) {
+    function getDocReturnHandler(position,sizeWarning,idArray) {
       return function success(resp) {
-        if (resp && resp.status == 200 && resp.data) {
+        if (resp && resp.status == 200 && resp.data) try {
 
           var docInfo = resp.data;
           var docId = docInfo.meta.id;
@@ -873,6 +872,8 @@
 
           else
             console.log("Unknown document: " + JSON.stringify(docInfo));
+        } catch (e) {
+          dec.options.current_result[position] = {id: idArray[position], data: "ERROR retrieving document.", meta: {type:"json"}, xattrs: {}, error: true};
         }
       }
     }
@@ -972,14 +973,14 @@
       }
 
       // otherwise use skip, offset, and optionally start & end keys
-      var rest_url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) +
+      var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
         "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
 
       if (!dec.options.show_id && dec.options.doc_id_start)
-        rest_url += "&startkey=%22" + encodeURIComponent(dec.options.doc_id_start) + '%22';
+        rest_url += "&startkey=%22" + myEncodeURIComponent(dec.options.doc_id_start) + '%22';
 
       if (!dec.options.show_id && dec.options.doc_id_end)
-        rest_url += "&endkey=%22" + encodeURIComponent(dec.options.doc_id_end) + '%22';
+        rest_url += "&endkey=%22" + myEncodeURIComponent(dec.options.doc_id_end) + '%22';
 
       $http({
         url: rest_url,
@@ -1037,7 +1038,7 @@
       dec.options.current_query = "top keys for bucket: " + dec.options.selected_bucket;
       dec.options.current_result = [];
 
-      var Url = "../pools/default/buckets/" + encodeURIComponent(dec.options.selected_bucket) + "/stats";
+      var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) + "/stats";
       var promise = $http({
         url: Url,
         method: "GET"
@@ -1182,6 +1183,18 @@
       else {
         showErrorDialog("Info",
             "Because you have unsaved document edits, some changes won't be shown until you retrieve docs.",true);
+      }
+    }
+
+    //
+    // the default encodeURIComponent doesn't encode "." or "..", even though can mess up an URL.
+    //
+
+    function myEncodeURIComponent(name) {
+      if (name) switch (name) {
+      case ".": return("%2E");
+      case "..": return("%2E%2E");
+      default: return(encodeURIComponent(name));
       }
     }
 
