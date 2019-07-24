@@ -1428,6 +1428,38 @@
       var queryIsAdvise  = /^\s*advise/gmi.test(queryText);
       var explain_promise, advise_promise;
 
+      // the result tabs can show data, explain results, or show advice. Make sure the tab setting is
+      // appropriate for the query type
+      switch (qwQueryService.outputTab) {
+      case 1: // JSON
+      case 2: // Table
+      case 3: // Tree
+        if (explainOnly)
+          if (mnPools.export.isEnterprise)
+            qwQueryService.selectTab(4); // explain plan
+          else
+            qwQueryService.selectTab(5); // explain text for CE
+        else if (queryIsAdvise)
+          qwQueryService.selectTab(6);
+        // otherwise don't change it
+        break;
+      case 4: // visual plan
+      case 5: // plan text
+        if (!queryIsExplain && !explainOnly && !queryIsAdvise)
+          qwQueryService.selectTab(1);
+        else if (queryIsAdvise)
+          qwQueryService.selectTab(6);
+        break;
+      case 6:
+        if (!queryIsExplain && !explainOnly && !queryIsAdvise)
+          qwQueryService.selectTab(1);
+        break;
+      }
+
+      //
+      // run the explain version of the query, if appropriate
+      //
+
       if (!queryIsExplain && (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
 
         var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options);
@@ -1898,7 +1930,7 @@
     }
 
     //
-    // whenever a query finishes, we need to set the state to indicate teh query
+    // whenever a query finishes, we need to set the state to indicate the query
     // is not longer running.
     //
 
