@@ -733,7 +733,7 @@
     function analyzePlan(plan, lists) {
 
       if (!lists)
-        lists = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0};
+        lists = {buckets : {}, fields : {}, indexes: {}, aliases: [], total_time: 0.0, warnings: []};
 
       // make
 
@@ -754,6 +754,12 @@
       // iterate over fields, look for "#operator" field
       var operatorName = plan['#operator'];
       //console.log("Analyzing plan node: " + operatorName);
+
+      // some operators might have a warning status. Right now that is only
+      // the NestedLoopJoin, which has "hint_not_followed"
+
+      if (plan.hint_not_followed)
+        lists.warnings.push("Hint not followed: " + plan.hint_not_followed);
 
       // at this point we should have an operation name and a field array
       //console.log("  after analyze, got op name: " + operatorName);

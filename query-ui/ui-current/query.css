@@ -296,3 +296,9 @@ ul.wb-explain-tooltip-list li ul li {
 .index-header {
   font-style: italic;
 }
+
+/* need to be able to override parent style for warning icon */
+
+.force-orange-3 {
+  color: #f9ca7b !important;
+}

@@ -1458,6 +1458,9 @@
                   plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
               };
 
+              if (_.isArray(lists.warnings) && lists.warnings.length > 0)
+                newResult.warnings = JSON.stringify(lists.warnings);
+
               // let's check all the fields to make sure they are all valid
               var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
               if (problem_fields.length > 0)
