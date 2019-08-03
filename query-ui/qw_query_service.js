@@ -3,11 +3,11 @@
   angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
 
   getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper',
-    'validateQueryService', '$httpParamSerializer','qwConstantsService','qwQueryPlanService','mnPoolDefault',
+    'validateQueryService', 'qwConstantsService','qwQueryPlanService','mnPoolDefault',
     'mnPools','mnAuthService', 'mnServersService', 'qwFixLongNumberService'];
 
   function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService,
-      $httpParamSerializer,qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools,mnAuthService,
+      qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools,mnAuthService,
       mnServersService,qwFixLongNumberService) {
 
     var qwQueryService = {};
@@ -1049,25 +1049,10 @@
 
       var queryData = {statement: queryText, pretty: false, timeout: (qwQueryService.options.query_timeout + 's')};
 
-      if (qwConstantsService.sendCreds) {
-        var credArray = [];
-
-        if (!qwQueryService.bucket_errors) for (var i = 0; i < qwQueryService.buckets.length; i++) {
-          var pw = qwQueryService.buckets[i].password ? qwQueryService.buckets[i].password : "";
-          credArray.push({user:"local:"+qwQueryService.buckets[i].id,pass: pw });
-        }
-
-        if (credArray.length > 0) {
-          queryData.creds = credArray;
-        }
-      }
-      //console.log("Creds was: " + JSON.stringify(queryData.creds));
-
       // are there options we need to add to the query request?
 
       if (queryOptions) {
-        if (queryOptions.timings && mnPoolDefault.export.compat &&
-            mnPoolDefault.export.compat.atLeast50) // keep track of timings for each op?
+        if (queryOptions.timings) // keep track of timings for each op?
           queryData.profile = "timings";
 
         if (queryOptions.max_parallelism && queryOptions.max_parallelism.length > 0)
@@ -1100,8 +1085,7 @@
       //console.log("Got context: " + queryData.client_context_id + ", query: " + queryText);
 
       //
-      // build the query request appropriately for the server version. 4.5 and later
-      // work with JSON encoding, 4.1 requires URL encoding
+      // build the query request
       //
 
       var queryRequest;
@@ -1109,52 +1093,18 @@
       if (mnPoolDefault.export.thisNode && mnPoolDefault.export.thisNode.version)
         userAgent += ' (' + mnPoolDefault.export.thisNode.version + ')';
 
-      if (mnPoolDefault.export.compat && mnPoolDefault.export.compat.atLeast45) {
-
-        // An alternate way to get around Angular's encoding is "isNotForm: true". But
-        // that triggers bug MB-16964, where the server currently fails to parse creds
-        // when they are JSON encoded.
-        // MB-16964 is fixed as of 4.5, so for that version we'll send queries this
-        // way and avoid URL encoding
-
-        //console.log("JSON Encoding Query");
-        var queryRequest = {
-            url: qwConstantsService.queryURL,
-            method: "POST",
-            headers: {'Content-Type':'application/json','ns-server-proxy-timeout':
-                          (qwQueryService.options.query_timeout+1)*1000,
-                      'ignore-401':'true','CB-User-Agent': userAgent},
-            data: queryData,
-            mnHttp: {
-              isNotForm: true,
-              group: "global"
-            }
-        };
-      }
-
-      // Because Angular automatically urlencodes JSON parameters, but has a special
-      // algorithm that doesn't encode semicolons, any semicolons inside the query
-      // will get mis-parsed by the server as the end of the parameter (see MB-18621
-      // for an example). To bypass this, we will url-encode ahead of time, and then
-      // make sure the semicolons get urlencoded as well.
-
-      else {
-        //console.log("URL Encoding Query");
-        if (queryData.creds)
-          queryData.creds = JSON.stringify(queryData.creds);
-        var encodedQuery = $httpParamSerializer(queryData).replace(/;/g,"%3B");
-        queryRequest = {url: qwConstantsService.queryURL,
-            method: "POST",
-            headers: {'Content-Type': 'application/x-www-form-urlencoded',
-                      'ns-server-proxy-timeout':(qwQueryService.options.query_timeout+1)*1000,'CB-User-Agent': userAgent},
-            data: encodedQuery,
-            mnHttp: {
-              group: "global"
-            }
-        };
-        //console.log("Query data: " + JSON.stringify(queryData));
-        //console.log("Encoded query: " + encodedQuery);
-      }
+      var queryRequest = {
+        url: qwConstantsService.queryURL,
+        method: "POST",
+        headers: {'Content-Type':'application/json','ns-server-proxy-timeout':
+                  (qwQueryService.options.query_timeout+1)*1000,
+                  'ignore-401':'true','CB-User-Agent': userAgent},
+        data: queryData,
+        mnHttp: {
+          isNotForm: true,
+          group: "global"
+        }
+      };
 
       // if it's a userQuery, make sure to handle really long ints, and remember the
       // request in case we need to cancel
@@ -2098,7 +2048,6 @@
           var bucket = data.results[i];
           bucket.expanded = false;
           bucket.schema = [];
-          //bucket.passwordNeeded = qwConstantsService.sendCreds; // only need password if creds supported
           bucket.indexes = [];
           bucket.validated = !validateQueryService.validBuckets ||
             _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1 ||
@@ -2258,9 +2207,6 @@
         else if (data.errors && _.isArray(data.errors) && data.errors.length > 0 &&
             (data.errors[0].code == 10000 || data.errors[0].code == 13014)) {
           bucket.schema_error = data.errors[0].msg;
-          // passwords only supported 4.5 and below
-          if (mnPoolDefault.export.compat && !mnPoolDefault.export.compat.atLeast50)
-            bucket.passwordNeeded = true;
           failure();
         }
 
@@ -2272,12 +2218,9 @@
       // error status from query about indexes
       function errorCallback(resp) {
         var data = resp.data, status = resp.status;
-        // for 4.5+, auth errors come back here
+        // auth errors come back here
         if (data && data.errors && _.isArray(data.errors) && data.errors.length > 0 &&
             (data.errors[0].code == 10000 || data.errors[0].code == 13014)) {
-          // passwords only supported 4.5 and below
-          if (mnPoolDefault.export.compat && !mnPoolDefault.export.compat.atLeast50)
-            bucket.passwordNeeded = true;
           bucket.schema_error = data.errors[0].msg;
         }
         failure();
@@ -2290,10 +2233,10 @@
 
     function getSchemaForBucket(bucket) {
 
-      // no schema inferencing until version 4.5, and then only enterprise
+      // no schema inferencing unless enterprise edition
 
-      if (!mnPoolDefault.export.compat.atLeast45 || !mnPools.export.isEnterprise) {
-        bucket.schema_error = "Version 4.5 EE or above needed for Schema inferencing.";
+      if (!mnPools.export.isEnterprise) {
+        bucket.schema_error = "Enterprise Edition needed for Schema inferencing.";
         return;
       }
 
