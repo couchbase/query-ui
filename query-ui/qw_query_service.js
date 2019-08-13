@@ -1385,10 +1385,7 @@
       case 2: // Table
       case 3: // Tree
         if (explainOnly)
-          if (mnPools.export.isEnterprise)
-            qwQueryService.selectTab(4); // explain plan
-          else
-            qwQueryService.selectTab(5); // explain text for CE
+          qwQueryService.selectTab(mnPools.export.isEnterprise ? 4 : 5); // vis for EE, text for CE
         else if (queryIsAdvise)
           qwQueryService.selectTab(6);
         // otherwise don't change it
@@ -1400,9 +1397,11 @@
         else if (queryIsAdvise)
           qwQueryService.selectTab(6);
         break;
-      case 6:
+      case 6: // advice tab
         if (!queryIsExplain && !explainOnly && !queryIsAdvise)
           qwQueryService.selectTab(1);
+        else if (queryIsExplain || explainOnly)
+          qwQueryService.selectTab(mnPools.export.isEnterprise ? 4 : 5); // vis for EE, text for CE
         break;
       }
 
