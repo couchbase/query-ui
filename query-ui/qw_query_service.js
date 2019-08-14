@@ -111,6 +111,7 @@
     qwQueryService.runAdvise = runAdvise;
     qwQueryService.runAdviseOnLatest = runAdviseOnLatest;
     qwQueryService.showWarningDialog = showWarningDialog;
+    qwQueryService.hasRecommendedIndex = hasRecommendedIndex;
 
     mnPools.get().then(function (pools) {qwQueryService.pools = pools;});
 
@@ -1662,6 +1663,16 @@
             //newResult.explainResultText = "Internal error generating query plan: " + exception;
           }
 
+          // if the query was "advice select...", make sure the result gets put into advice
+
+          if (queryIsAdvise) {
+            if (data && data.status == "success" && data.results && data.results.length > 0)
+              newResult.advice = data.results[0].advice.adviseinfo;
+            else
+              newResult.advice = newResult.result; // get the error message
+          }
+
+
           // errors should appear in the first tab
 //          if (queryIsExplain && data.errors)
 //            qwQueryService.selectTab(1);
@@ -1867,6 +1878,18 @@
       return null;
     }
 
+    // convenience function to determine whether a query result has actionable advice
+    function hasRecommendedIndex(queryResult) {
+      if (!queryResult || !queryResult.advice || !_.isArray(queryResult.advice))
+        return false;
+
+      return(queryResult.advice.some(function (element) {
+        return element.recommended_indexes &&
+          (element.recommended_indexes.covering_indexes || element.recommended_indexes.indexes);
+      }));
+    }
+
+    // split a set of semi-colon-delimited queries into an array of queries
     function multipleQueries(queryText) {
       var findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\/\*(?:.|[\n\r])*\*\/)|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;
       var matchArray = findSemicolons.exec(queryText);

@@ -31,6 +31,7 @@
     //qc.executingQuery = qwQueryService.executingQuery;
     qc.emptyQuery = function() {return(qwQueryService.getResult().query.length == 0);}
     qc.emptyResult = qwQueryService.emptyResult;
+    qc.hasRecommendedIndex = qwQueryService.hasRecommendedIndex;
 
     // some functions for handling query history, going backward and forward
 

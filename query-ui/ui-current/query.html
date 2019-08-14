@@ -168,7 +168,7 @@
            class="resp-hide-med">Plan Text</a>
         <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise && qc.isDeveloperPreview()"
            ng-class="{selected: qc.isSelected(6)}">Advice
-             <span ng-if="qc.lastResult().advice">*</span>
+             <span ng-if="qc.hasRecommendedIndex(qc.lastResult())">*</span>
          </a>
       </span>
     </div>

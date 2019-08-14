@@ -66,28 +66,28 @@
           };
           //scope.update_advice = function() {qwQueryService.runAdviseOnLatest();};
 
-          // make sure that advise is possible
-          if (!queryIsAdvisable(qwQueryService.getCurrentResult()))
-            scope.error = 'Advise supports SELECT, MERGE, UPDATE and DELETE statements only.';
+          // handle possible error conditions
+          if (!advice || _.isString(advice)) {
+            if (multipleQueries(qwQueryService.getCurrentResult()))
+              scope.error = 'Advise does not support multiple queries.';
 
-          else if (multipleQueries(qwQueryService.getCurrentResult()))
-            scope.error = 'Advise does not support multiple queries.';
-
-          // the query might or might not have advice already
-          else if (!advice || advice === qwQueryService.getCurrentResult().query) {
+            // the query might or might not have advice already
+            else if (!advice || advice === qwQueryService.getCurrentResult().query) {
               scope.error = "Click 'Advise' to generate query index advice.";
               scope.advice = null;
-          }
+            }
 
-          else if (_.isString(advice))
+            else if (!queryIsAdvisable(qwQueryService.getCurrentResult()))
+              scope.error = 'Advise supports SELECT, MERGE, UPDATE and DELETE statements only.';
+
+            else if (_.isString(advice))
               scope.error = advice;
 
-          // is there actually advice to create an index? See if we have some array of recommendations
-          //else if (_.isArray(advice) &&
-          //    !advice.some(function (element) {return(_.isArray(element.recommended_indexes));})) {
-          //  scope.error = 'No index recommendation at this time.';
-          //}
+            else
+              scope.error = "Unknown error getting advice.";
+          }
 
+          // we have some kind of advice, let's display it
           else {
             scope.error = null;
             scope.advice = advice;
