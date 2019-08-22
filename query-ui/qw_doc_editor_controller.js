@@ -537,8 +537,9 @@
     function getSaveDocClosure(dialogScope,row) {
       return function(res) {
         var newJson = dialogScope.editor.getSession().getValue();
-        // reformat the doc for compactness
-        newJson = JSON.stringify(JSON.parse(newJson));
+        // reformat the doc for compactness, but only if no long numbers present
+        if (!qwFixLongNumberService.hasLongInt(newJson) && !qwFixLongNumberService.hasLongFloat(newJson))
+          newJson = JSON.stringify(JSON.parse(newJson));
         saveDoc(row,newJson).then(refreshUnlessUnsaved(newJson.length));
       }
     }

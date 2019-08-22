@@ -16,6 +16,8 @@
     var qflns = {};
 
     qflns.fixLongInts = fixLongInts;
+    qflns.hasLongInt = hasLongInt;
+    qflns.hasLongFloat = hasLongFloat;
 
     //
     // javascript can't handle long ints - any number more than 53 bits cannot be represented
@@ -27,6 +29,58 @@
     //    views
     //
 
+    // match ints with 16 or 17 digits - long enough to cause problems
+    var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
+
+    // we also can't handle floats bigger than Number.MAX_VALUE: 1.798e+308, these help us detect them
+    var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]+(?:\.[0-9]+)?[eE]\+[0-9]{3,})[,\s}]/ig;
+    // take float apart into the characteristic and exponent
+    var deconstructFloat = /[:\s]\-?([0-9]+)(?:\.[0-9]+)?[eE]\+([0-9]{3,})/ig;
+
+    // see if there is at least one overly large float in the JSON string
+    function hasLongFloat(rawBytes) {
+      var hasLongFloats = false;
+
+      // look for overly large floats
+      var matchArray = matchNonQuotedBigFloats.exec(rawBytes);
+      while (matchArray != null) {
+        if (matchArray[1]) { // found a potentially big float, check out length of exponent and characteristic
+          var subMatch = deconstructFloat.exec(matchArray[1]);
+          if (subMatch[1] && subMatch[2]) {
+            if ((subMatch[1].length + subMatch[2].length >= 5) || // number big enough based on digits
+                (subMatch[1].length + Number(subMatch[2]) >= 309)) { //
+              hasLongFloats = true;
+              break;
+            }
+          }
+        }
+        matchArray = matchNonQuotedBigFloats.exec(rawBytes);
+      }
+      return hasLongFloats;
+    }
+
+    // see if there is at least one overly large int in the JSON string
+    function hasLongInt(rawBytes) {
+      var hasLongInts = false;
+
+      // look for overly large ints
+      var matchArray = matchNonQuotedLongInts.exec(rawBytes);
+      while (matchArray != null) {
+        if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
+          result = JSON.parse(rawBytes);
+          result.rawJSON = rawBytes;
+          hasLongInts = true;
+          break;
+        }
+        matchArray = matchNonQuotedLongInts.exec(rawBytes);
+      }
+      return(hasLongInts);
+    }
+
+    //
+    // if the JSON string has long ints or floats, change them to strings
+    //
+
     function fixLongInts(rawBytes) {
       if (!rawBytes)
         return rawBytes;
@@ -34,44 +88,8 @@
       // add a try/catch in case the regex fails
 
       try {
-        var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
-
-        // we also can't handle floats bigger than Number.MAX_VALUE: 1.798e+308, these help us detect them
-        var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]+(?:\.[0-9]+)?[eE]\+[0-9]{3,})[,\s}]/ig;
-        var deconstructFloat = /[:\s]\-?([0-9]+)(?:\.[0-9]+)?[eE]\+([0-9]{3,})/ig;
-
-        var hasLongInts = false;
-        var hasLongFloats = false;
-
-        // look for overly large floats
-        var matchArray = matchNonQuotedBigFloats.exec(rawBytes);
-        while (matchArray != null) {
-          if (matchArray[1]) { // found a potentially big float, check out length of exponent and characteristic
-            var subMatch = deconstructFloat.exec(matchArray[1]);
-            if (subMatch[1] && subMatch[2]) {
-              if ((subMatch[1].length + subMatch[2].length >= 5) || // number big enough based on digits
-                  (subMatch[1].length + Number(subMatch[2]) >= 309)) { //
-                hasLongFloats = true;
-                break;
-              }
-            }
-          }
-          matchArray = matchNonQuotedBigFloats.exec(rawBytes);
-        }
-
-        // look for overly large ints
-        matchArray = matchNonQuotedLongInts.exec(rawBytes);
-        while (matchArray != null) {
-          if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
-            result = JSON.parse(rawBytes);
-            result.rawJSON = rawBytes;
-            hasLongInts = true;
-            break;
-          }
-          matchArray = matchNonQuotedLongInts.exec(rawBytes);
-        }
-
-       //console.log("Got response, longInts: " + hasLongInts /*+ ", raw bytes: " + rawBytes*/);
+        var hasLongInts = hasLongInt(rawBytes);
+        var hasLongFloats = hasLongFloat(rawBytes);
 
         // if no long ints, just return the original bytes parsed
 
