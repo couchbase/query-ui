@@ -3,9 +3,9 @@
 
   angular.module('qwQuery').controller('qwQueryMonitorController', queryMonController);
 
-  queryMonController.$inject = ['$http','$rootScope', '$scope', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService','qwQueryPlanService'];
+  queryMonController.$inject = ['$http','$rootScope', '$scope', '$state', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService','qwQueryPlanService'];
 
-  function queryMonController ($http, $rootScope, $scope, $uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService, qwQueryPlanService) {
+  function queryMonController ($http, $rootScope, $scope, $state,$uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService, qwQueryPlanService) {
 
     var qmc = this;
 
@@ -52,6 +52,39 @@
       "cpu utilization","# cores"];
     qmc.getVital = getVital;
     qmc.showPlan = showPlan;
+
+    qmc.charts = [
+      {
+        stats: {"@query.query_requests": true},
+        size: "tiny",
+        specificStat: true
+      },
+      {
+        stats: {"@query.query_avg_req_time": true},
+        size: "tiny",
+        specificStat: true
+      },
+      {
+        stats: {"@query.query_avg_svc_time": true},
+        size: "tiny",
+        specificStat: true
+      }
+    ];
+
+    qmc.openDetailedChartDialog = openDetailedChartDialog;
+
+    function openDetailedChartDialog(c) {
+      $state.params.scenarioBucket = qmc.buckets[1];
+      $uibModal.open(
+        {
+        templateUrl: 'app/mn_admin/mn_statistics/mn_statistics_detailed_chart.html',
+        controller: 'mnStatisticsDetailedChartController as detailedChartCtl',
+        windowTopClass: "chart-overlay",
+        resolve: {
+          chart: qmc.charts[c]
+        }
+      });
+  }
 
     // are we enterprise?
 
@@ -292,23 +325,13 @@
       // we need to pass in the name of a bucket to which we have access, even though
       // the query stats are not bucket-specific
 
-      var buckets = validateQueryService.validBuckets();
-      //console.log("Got buckets: "+ JSON.stringify(buckets));
+      qmc.buckets = validateQueryService.validBuckets();
+      //console.log("Got buckets: "+ JSON.stringify(qmc.buckets));
 
-      if (buckets && buckets.length > 1) mnAnalyticsService.getStats({$stateParams:{
-        bucket: buckets[1],
+      if (qmc.buckets && qmc.buckets.length > 1) mnAnalyticsService.getStats({$stateParams:{
+        bucket: qmc.buckets[1],
         "graph": "ops",
         "zoom": "minute"
-//        "#": null,
-//        specificStat: "query_selects",
-//        enableInternalSettings: null,
-//        disablePoorMansAlerts: null,
-//        list: "active",
-//        statsHostname: "127.0.0.1:9091",
-//        bucket: "*",
-//        openedStatsBlock: [
-//          "Query"
-//        ],
           }}).then(function success(data) {
             if (data && data.statsByName) {
               qmc.stats = data.statsByName;

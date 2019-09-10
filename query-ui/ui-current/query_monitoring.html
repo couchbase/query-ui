@@ -243,25 +243,21 @@
       <br>
     </div>
     <div class="column wide vertical-divider text-center" ng-if="qc.validated.clusterStatsAllowed()">
-      <div class="width-12 text-center semi-bold">Last Minute</div>
-      <span class="text-center">
-        <div mn-plot mn-plot-config="qmc.stats['query_requests'].config"
-          is-small-graph="true" style="width: 100px; height: 25px;">
-        </div>
-        <desc>requests per sec: {{qmc.getAverageStat("query_requests") | number:1}}</desc>
-      </span>
-      <span class="text-center indent-2">
-        <div mn-plot mn-plot-config="qmc.stats['query_avg_req_time'].config"
-          is-small-graph="true" style="width: 100px; height: 25px;">
-        </div>
-        <desc>avg. request time: {{qmc.getAverageStat("query_avg_req_time") | number:1}} sec</desc>
-      </span>
-      <span class="text-center indent-2">
-        <div mn-plot mn-plot-config="qmc.stats['query_avg_svc_time'].config"
-          is-small-graph="true" style="width: 100px; height: 25px;" >
-        </div>
-        <desc>avg. service time: {{qmc.getAverageStat("query_avg_svc_time") | number:1}} sec</desc>
-      </span>
+        <div style="width:500px" ng-if="qmc.buckets[1]">
+        <span ng-repeat="chart in qmc.charts track by $index" style="width: 33%">
+          <mn-statistics-chart
+           class="tiny"
+           style="display:block;"
+           nvd3-options="{showLegend: false}"
+           zoom="minute"
+           rbac="rbac"
+           bucket="{{qmc.buckets[1]}}"
+           ng-click="qmc.openDetailedChartDialog($index)"
+           config="chart">
+          </mn-statistics-chart>
+         </span>
+      </div>
+
       <hr>
       <desc>Memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
     </div>
