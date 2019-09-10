@@ -106,7 +106,6 @@
     qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
     qwQueryService.updateBucketCounts = updateBucketCounts;   // get list of buckets
     qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
-    qwQueryService.testAuth = testAuth; // check passward
 
     qwQueryService.runAdvise = runAdvise;
     qwQueryService.runAdviseOnLatest = runAdviseOnLatest;
@@ -2038,8 +2037,34 @@
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
-    function updateBucketCounts(event,data) {
-      getInfoForBucketBackground(qwQueryService.buckets,0,true); // update bucket counts after each successful query
+    // get the number of docs in each bucket for which we have access
+    function updateBucketCounts() {
+      // build a query to get the doc count for each bucket that we know about
+      var queryString = "select raw {";
+      var bucketCount = 0;
+      qwQueryService.buckets.forEach(function (bucket) {
+        if (!bucket.schema_error) {
+          if (bucketCount > 0) // second and subsequent buckets need a comma
+            queryString += ',';
+
+          bucketCount++;
+          queryString += '"' + bucket.id + '" : (select raw count(*) from `' + bucket.id + '`)[0]';
+        }
+      });
+      queryString +=  '}';
+
+      // run the query, extract the document counts
+      executeQueryUtil(queryString, false)
+      .then(function success(resp) {
+        if (resp && resp.data && resp.data.results && resp.data.results.length)
+          qwQueryService.buckets.forEach(function (bucket) {
+            if (_.isNumber(resp.data.results[0][bucket.id]))
+              bucket.count = resp.data.results[0][bucket.id];
+          });
+      },
+      function error(resp) {
+        console.log("bucket count error: " + JSON.stringify(resp));
+      });
     }
 
     function updateBucketsCallback() {
@@ -2101,7 +2126,7 @@
         /////////////////////////////////////////////////////////////////////////
 
         if (qwConstantsService.showSchemas) {
-          queryText = 'select indexes.* from system:indexes where type = "online"';
+          queryText = 'select indexes.* from system:indexes where state = "online"';
 
           res1 = executeQueryUtil(queryText, false)
           //res1 = $http.post("/_p/query/query/service",{statement : queryText})
@@ -2179,78 +2204,23 @@
     //
     // this method uses promises and recursion to get the schemas for a list of
     // buckets in sequential order, waiting for each one before moving on to the next.
-    // the first thing we do is get the count of documents in the bucket. This might
-    // return an authentication error, meaning that the bucket is locked to us. Once
-    // we have the count information, and validate access, we get the schema for the bucket
     //
 
     function getInfoForBucketBackground(bucketList,currentIndex,countsOnly) {
-      // if we've run out of buckets, nothing more to do
-      if (currentIndex < 0 || currentIndex >= bucketList.length)
+      // if we've run out of buckets, nothing more to do except get the bucket counts
+      if (currentIndex < 0 || currentIndex >= bucketList.length) {
+        updateBucketCounts();
         return;
+      }
 
-      //console.log("Getting info for: " + bucketList[currentIndex].id);
-
-      testAuth(bucketList[currentIndex],
-      function() { // authentication succeeded, get the schema for the bucket unless we're doing counts only
-        var res = countsOnly ? null : getSchemaForBucket(bucketList[currentIndex]);
-        if (res && res.then)
-          res.then(function successCallback(response) {
-            getInfoForBucketBackground(bucketList,currentIndex+1);
-          }, function errorCallback(response) {
-            getInfoForBucketBackground(bucketList,currentIndex+1);
-          });
-        // if they wanted counts only, just get the count for the next one
-        else
-          getInfoForBucketBackground(bucketList,currentIndex+1,countsOnly);
-      },
-      function() { // authentication failed, just move on to the next bucket
-        getInfoForBucketBackground(bucketList,currentIndex+1,countsOnly);
+      getSchemaForBucket(bucketList[currentIndex]) // get the schema, pause, then get the next one
+      .then(function successCallback(response) {
+        $timeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
+      }, function errorCallback(response) {
+        $timeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
       });
     }
 
-
-    //
-    // test authentication for a bucket by asking for the document count, if no permissions error 10000 comes back
-    //
-
-    function testAuth(bucket, success, failure) {
-      // start by getting the document count for each bucket
-      queryText = "select count(*) cnt from `" + bucket.id + '`';
-
-      res1 = executeQueryUtil(queryText, false)
-      .then(function successCallback(resp) {
-        var data = resp.data, status = resp.status;
-
-        // data might have a result array with an object {cnt: <count> }
-        if (data && _.isArray(data.results) && data.results.length > 0 && _.isNumber(data.results[0].cnt)) {
-          bucket.count = data.results[0].cnt;
-          success();
-        }
-
-        // data might have authorization error
-        else if (data.errors && _.isArray(data.errors) && data.errors.length > 0 &&
-            (data.errors[0].code == 10000 || data.errors[0].code == 13014)) {
-          bucket.schema_error = data.errors[0].msg;
-          failure();
-        }
-
-        // otherwise, failure
-        else
-          failure();
-      },
-
-      // error status from query about indexes
-      function errorCallback(resp) {
-        var data = resp.data, status = resp.status;
-        // auth errors come back here
-        if (data && data.errors && _.isArray(data.errors) && data.errors.length > 0 &&
-            (data.errors[0].code == 10000 || data.errors[0].code == 13014)) {
-          bucket.schema_error = data.errors[0].msg;
-        }
-        failure();
-      });
-    }
 
     //
     // Get a schema for a given, named bucket.
