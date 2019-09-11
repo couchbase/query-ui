@@ -227,8 +227,8 @@
   </div>
 
 <!-- Query Service-Level Stats --------------------------------------------- -->
-  <footer ng-if="qc.validated.monitoringAllowed()">
-    <div class="column vertical-divider" ng-if="qc.validated.clusterStatsAllowed()">
+  <footer ng-if="qc.validated.monitoringAllowed()" class="footer-querymonitor">
+    <div class="column vertical-divider margin-0" ng-if="qc.validated.clusterStatsAllowed()">
       <span class="width-6">Queries &gt; 250ms - last min</span>
       <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_250ms") | number:0 }}</span>
       <br>
@@ -242,11 +242,10 @@
       <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_5000ms") | number:0}}</span>
       <br>
     </div>
-    <div class="column wide vertical-divider text-center" ng-if="qc.validated.clusterStatsAllowed()">
-        <div style="width:500px" ng-if="qmc.buckets[1]">
-        <span ng-repeat="chart in qmc.charts track by $index" style="width: 33%">
+    <div class="column wide vertical-divider text-center max-width-50 padding-0" ng-if="qc.validated.clusterStatsAllowed()">
+      <div ng-if="qmc.buckets[1]">
+        <span ng-repeat="chart in qmc.charts track by $index" class="statistics-tiny">
           <mn-statistics-chart
-           class="tiny"
            style="display:block;"
            nvd3-options="{showLegend: false}"
            zoom="minute"
@@ -257,9 +256,6 @@
           </mn-statistics-chart>
          </span>
       </div>
-
-      <hr>
-      <desc>Memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
     </div>
     <div class="column wide vertical-divider text-center" ng-if="!qc.validated.clusterStatsAllowed()">
       <desc>memory utilization (this node): {{qmc.getVital("memory_util") | number:0}}%</desc>
@@ -270,13 +266,13 @@
     </div>
     <div class="column">
       <span class="width-6">N1QL Request Rate - last min</span>
-      <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}} / sec</span>
+      <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:1}}/sec</span>
       <br>
       <span class="width-6">N1QL Request Rate - last 5 min</span>
-      <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}} / sec</span>
+      <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:1}}/sec</span>
       <br>
       <span class="width-6">N1QL Request Rate - last 15 min</span>
-      <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}} / sec</span>
+      <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:1}}/sec</span>
       <br>
       <span class="width-6">Query Request Time</span>
       <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:1}} secs</span>
