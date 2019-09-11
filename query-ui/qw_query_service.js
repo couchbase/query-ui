@@ -1285,6 +1285,12 @@
         parentResult.result = '';
         parentResult.explainResultText = '';
       }
+      // otherwise we need to create a new parent result array so that the
+      // directives doing $watch notice the change
+      else {
+        var newData = parentResult.data.slice();
+        parentResult.data = newData;
+      }
 
       // add the latest result
       parentResult.data.push({
@@ -2029,7 +2035,7 @@
     // whenever the system changes, we need to update the list of valid buckets
     //
 
-    //$rootScope.$on("indexStatusURIChanged",updateBuckets);
+    //$rootScope.$on("indexStatusURIChanged",function() {console.log("indexStatusURIChanged")});
     $rootScope.$on("bucketUriChanged",updateBuckets);
     $rootScope.$on("checkBucketCounts",updateBucketCounts);
 
