@@ -482,11 +482,15 @@
     //
 
     function createHTMLforValue(item,fieldData,path) {
-      //console.log("Making html for value: " + JSON.stringify(item) /*+ ", field: " + JSON.stringify(fieldData,null,4)*/);
+      //console.log("Making html for value: " + JSON.stringify(item) + ", field: " + JSON.stringify(fieldData,null,4));
+
+      var defaultClass = "data-table-cell";
       if (!fieldData)
         return('<span class="' + defaultClass + ' cursor-pointer">NO FIELD ' + JSON.stringify(item) + '</span>');
 
-      var defaultClass = "data-table-cell";
+      if (fieldData.types.obj && fieldData.types.arr)
+        console.log("Both obj & array polymorphic");
+
       if (_.isArray(item) || _.isPlainObject(item)) // use a different cell type for arrays and objects
           defaultClass = "data-table-cell-special";
 
@@ -509,6 +513,14 @@
       else if (_.isArray(item)) {
         html += '<div class="data-table-array">'; // wrap arrays with a 1px border
 
+        // for polymorphic objects, compute size for object we don't have
+        var objectSize = 0;
+        if (fieldData.types.obj)
+          for (var fieldName in fieldData.innerKeys)
+            objectSize += fieldData.innerKeys[fieldName].size;
+
+        // iterate over the array
+
         if (item.length) { // does the array have any items?
 
           //console.log("Creating HTML for array length: " + item.length + ", fieldData: ");
@@ -519,6 +531,13 @@
             html += createHTMLheader(fieldData, true);
             for (var i=0; i< item.length; i++) {
               html += '<div>'; // one div for each row
+
+              // for polymorphic case, we might need to leave space for other items before the array
+              if (fieldData.types.obj) {
+                objectSize = Math.max(fieldData.maxObjectSize,objectSize);
+                html += '<span style="max-width:' + objectSize + 'ch;min-width:' + objectSize +
+                'ch;" class="data-table-cell cursor-pointer"></span>';
+              }
 
               //console.log("  item: " + JSON.stringify(item[i]));
               // if we have non-objects in the array as well, output them first
@@ -536,7 +555,6 @@
                   innerVal = item[i][innerKey];
                 html += createHTMLforValue(innerVal,fieldData.arrayInnerObjects.innerKeys[innerKey],
                       path + "[" + i + "]." + innerKey);
-
               });
 
               // finish the row
@@ -816,9 +834,6 @@
 
     function finalizeFieldWidths(fieldInfo) {
 
-      // fields can have multiple types, figure out an appropriate size
-      // even in that case.
-
       // how much space should we give to a field?
       // - for an array, or string, use the max size, unless it's too long
       // - for a subobject, it was computed in recursive call above
@@ -833,7 +848,7 @@
 
       // an array can be arbitrarily large
       if (fieldInfo.types.arr) {
-        var arraySize = 0;
+        var arraySize = fieldInfo.size || 0;
         if (fieldInfo.arrayInnerObjects)
           arraySize = finalizeFieldWidths(fieldInfo.arrayInnerObjects) + 0.5;
         if (fieldInfo.arrayInnerPrims)
@@ -849,7 +864,7 @@
 
       // for objects, sum up the size of each child
       if (fieldInfo.types.obj) {
-        var size = 0;
+        var size = fieldInfo.size || 0;
         for (var fieldName in fieldInfo.innerKeys) {
           var dataSize = finalizeFieldWidths(fieldInfo.innerKeys[fieldName]);
           var nameSize = fieldName.length + characterPadding;
