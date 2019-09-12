@@ -964,7 +964,7 @@
       dec.options.current_result = [];
 
       // we just get a single ID if they specified a doc_id
-      if (dec.options.doc_id && dec.options.doc_id.length) {
+      if (dec.options.show_id && dec.options.doc_id && dec.options.doc_id.length) {
         getDocsForIdArray([dec.options.doc_id]).then(function()
             {
               //console.log("results: " + JSON.stringify(dec.options.current_result));
