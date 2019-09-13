@@ -91,6 +91,11 @@
 
     qc.isDeveloperPreview = function() {return qwQueryService.pools.isDeveloperPreview;};
 
+    // show we expand the query editor or the results pane?
+
+    qc.setUserInterest = function(interest) {if (interest != qwQueryService.workbenchUserInterest) {qwQueryService.workbenchUserInterest = interest;updateEditorSizes();}}
+    qc.getUserInterest = function()         {return(qwQueryService.workbenchUserInterest);}
+
     //
     // options for the two Ace editors, the input and the output
     //
@@ -455,6 +460,8 @@
 
       qc.inputEditor = _editor;
 
+      // if they scroll the query window and it's not already of interest, make it so
+      _editor.getSession().on('changeScrollTop',function() {qc.setUserInterest('editor');});
       focusOnInput();
 
       //
@@ -657,12 +664,13 @@
       if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
         _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
 
+      _editor.getSession().on('changeScrollTop',function() {qc.setUserInterest('results');});
+
       qc.outputEditor = _editor;
       updateEditorSizes();
     };
 
     function aceOutputChanged(e) {
-      qc.userInterest =  'results'; // focus on results, since they just changed
       updateEditorSizes();
 
       // show a placeholder when nothing has been typed
@@ -743,7 +751,7 @@
         var maxEditorSize = Math.min(totalHeight*3/4,totalHeight - 270);
 
         // if the user has been clicking on the results, minimize the query editor
-        if (qc.userInterest == 'results')
+        if (qc.getUserInterest() == 'results')
           aceEditorHeight = 23;//Math.min(totalHeight/5,desiredQueryHeight); // 1/5 space for editor, more for results
         else
           aceEditorHeight = Math.min(maxEditorSize,desiredQueryHeight);      // don't give it more than it wants
@@ -785,7 +793,7 @@
     //
 
     qc.handleClick = function(detail) {
-      qc.userInterest = detail;
+      qc.setUserInterest(detail);
       updateEditorSizes();
     }
 
@@ -941,7 +949,7 @@
       // now update everything
       //qc.inputEditor.setReadOnly(false);
       qc.markerIds = markerIds;
-      qc.userInterest =  'results';
+      qc.setUserInterest('results');
       updateEditorSizes();
       focusOnInput();
     }

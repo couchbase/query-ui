@@ -112,6 +112,8 @@
     qwQueryService.showWarningDialog = showWarningDialog;
     qwQueryService.hasRecommendedIndex = hasRecommendedIndex;
 
+    qwQueryService.workbenchUserInterest = 'editor';
+
     mnPools.get().then(function (pools) {qwQueryService.pools = pools;});
 
 //    mnAuthService.whoami().then(function (resp) {
