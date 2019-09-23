@@ -1023,13 +1023,13 @@
       dialogScope.file_type = 'query';
       dialogScope.file = dialogScope.file;
       dialogScope.file_options = [
-        {kind: "json", label: "Current Query Results"},           // 0
-        {kind: "txt", label: "Current Results as tab-separated"}, // 1
-        {kind: "json", label: "Query History"},                   // 2
-        {kind: "json", label: "Query History Including Results"}  // 3
+        {kind: "json", label: "Current query results (JSON)"},           // 0
+        {kind: "txt", label: "Current results as tab-separated (text)"}, // 1
+        {kind: "json", label: "Query history (JSON)"},                   // 2
+        {kind: "json", label: "Query history including results (JSON)"}  // 3
         ];
       if (qc.lastResult().query && qc.lastResult().query.length > 0)
-        dialogScope.file_options.push({kind: "txt", label: "Current Query Statement"}); // 4
+        dialogScope.file_options.push({kind: "txt", label: "Current Query Statement (txt)"}); // 4
       dialogScope.selected = {item: "0"};
 
       var promise = $uibModal.open({
