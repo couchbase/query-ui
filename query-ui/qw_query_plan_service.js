@@ -103,10 +103,13 @@
 
       else if (plan["expressions"]) {
         var exp = plan["expressions"];
-        if (exp.startsWith("index-search(")) {
-          extractSourceFromExpression(exp, lists.datasets, lists.indexes);
-        } else if (exp.includes(".getField")) {
-          extractFieldsFromExpression(exp, lists.fields);
+        if (_.isArray(exp)) {
+          for (let i = 0; i < exp.length; i++) {
+            var exprStr = exp[i];
+            processExpressionsField(exprStr, lists.datasets, lists.indexes, lists.fields);
+          }
+        } else {
+          processExpressionsField(exp, lists.datasets, lists.indexes, lists.fields);
         }
       }
 
@@ -126,8 +129,18 @@
     //
     //
 
+    function processExpressionsField(exprStr, datasets, indexes, fields) {
+      if (_.isString(exprStr)) {
+        if (exprStr.startsWith("index-search(")) {
+          extractSourceFromExpression(exprStr, datasets, indexes);
+        } else if (exprStr.includes(".getField")) {
+          extractFieldsFromExpression(exprStr, fields);
+        }
+      }
+    }
+
     function extractSourceFromExpression(expression, datasets, indexes) {
-      let idxBegin = expression.indexOf("(") + 2;
+      let idxBegin = expression.indexOf("(") + 1;
       let params = expression.substring(idxBegin).split(",");
       let indexName = params[0].trim();
       let dataverseName = params[2].trim();
