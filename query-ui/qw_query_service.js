@@ -1814,27 +1814,28 @@
         saveStateToStorage();
       }
 
-      getCurrentResult().advice = "Getting advice for current query...";
-      getCurrentResult().result = getCurrentResult().advice;
-      getCurrentResult().data = {status: getCurrentResult().result};
-      getCurrentResult().warnings = null;
+      query.advice = "Getting advice for current query...";
+      query.result = query.advice;
+      query.data = {status: query.result};
+      query.warnings = null;
       qwQueryService.selectTab(6);
       runAdvise(getCurrentResult().query,getCurrentResult()).then(
           function success(resp) {
+            query.result = JSON.stringify(query.advice,null,2);
+            query.data = {adviseResult: query.advice};
             finishQuery(query);
-            getCurrentResult().result = JSON.stringify(query.advice);
-            getCurrentResult().data = {adviseResult: query.advice};
 
             if (_.isString(query.advice))
-              getCurrentResult().status = "error";
+              query.status = "error";
             else
-              getCurrentResult().status = "success";
+              query.status = "success";
           },
-          function err() {
+          function err(resp) {
+              query.advice = 'Query not advisable';
+              query.result = "Error getting advice."
+              query.data = {adviseResult: query.result};
+              query.status = "advise error";
               finishQuery(query);
-              getCurrentResult().result = JSON.stringify(query.advice);
-              getCurrentResult().data = {adviseResult: query.advice};
-              getCurrentResult().status = "advise error";
           });
     };
 
@@ -1881,8 +1882,6 @@
             console.log("Unknown advise response: " + JSON.stringify(resp));
             queryResult.advice = "Unknown response from server.";
           }
-
-          return advise_promise;
         },
         /* error response from $http, log error but otherwise ignore */
         function error(resp) {
@@ -1899,7 +1898,7 @@
         return advise_promise;
       }
 
-      return null;
+      return(Promise.reject("Query is not advisable"));
     }
 
     // convenience function to determine whether a query result has actionable advice
