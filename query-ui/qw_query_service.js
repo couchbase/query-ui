@@ -1815,16 +1815,27 @@
       }
 
       getCurrentResult().advice = "Getting advice for current query...";
+      getCurrentResult().result = getCurrentResult().advice;
+      getCurrentResult().data = {status: getCurrentResult().result};
+      getCurrentResult().warnings = null;
       qwQueryService.selectTab(6);
       runAdvise(getCurrentResult().query,getCurrentResult()).then(
-          function success() {
+          function success(resp) {
             finishQuery(query);
+            getCurrentResult().result = JSON.stringify(query.advice);
+            getCurrentResult().data = {adviseResult: query.advice};
+
             if (_.isString(query.advice))
-              query.status = "error";
+              getCurrentResult().status = "error";
             else
-              query.status = "success";
-            },
-          function err() {finishQuery(query); query.status = "advise error";});
+              getCurrentResult().status = "success";
+          },
+          function err() {
+              finishQuery(query);
+              getCurrentResult().result = JSON.stringify(query.advice);
+              getCurrentResult().data = {adviseResult: query.advice};
+              getCurrentResult().status = "advise error";
+          });
     };
 
     function runAdvise(queryText,queryResult) {
@@ -1861,6 +1872,8 @@
           else if (data.errors) {
             console.log("Advise errors: " + JSON.stringify(data.errors, null, '    '));
             queryResult.advice = "Error getting index advice, status: " + status;
+            if (status == 504)
+              queryResult.advice += " (server timeout)";
             if (data && _.isArray(data.errors))
               data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
           }
@@ -1868,6 +1881,8 @@
             console.log("Unknown advise response: " + JSON.stringify(resp));
             queryResult.advice = "Unknown response from server.";
           }
+
+          return advise_promise;
         },
         /* error response from $http, log error but otherwise ignore */
         function error(resp) {
@@ -1875,6 +1890,8 @@
           //console.log("Advise error Data: " + JSON.stringify(data));
           //console.log("Advise error Status: " + JSON.stringify(status));
           queryResult.advice = "Error getting index advice, status: " + status;
+          if (status == 504)
+            queryResult.advice += " (server timeout)";
           if (data && _.isArray(data.errors))
             data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
         });
