@@ -76,15 +76,15 @@
     function openDetailedChartDialog(c) {
       $state.params.scenarioBucket = qmc.buckets[1];
       $uibModal.open(
-        {
-        templateUrl: 'app/mn_admin/mn_statistics/mn_statistics_detailed_chart.html',
-        controller: 'mnStatisticsDetailedChartController as detailedChartCtl',
-        windowTopClass: "chart-overlay",
-        resolve: {
-          chart: qmc.charts[c]
-        }
-      });
-  }
+          {
+            templateUrl: 'app/mn_admin/mn_statistics/mn_statistics_detailed_chart.html',
+            controller: 'mnStatisticsDetailedChartController as detailedChartCtl',
+            windowTopClass: "chart-overlay",
+            resolve: {
+              chart: qmc.charts[c]
+            }
+          });
+    }
 
     // are we enterprise?
 

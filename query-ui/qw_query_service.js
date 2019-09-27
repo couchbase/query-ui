@@ -2037,7 +2037,7 @@
     // whenever the system changes, we need to update the list of valid buckets
     //
 
-    //$rootScope.$on("indexStatusURIChanged",function() {console.log("indexStatusURIChanged")});
+    //$rootScope.$on("indexStatusURIChanged",updateBuckets/*function() {console.log("indexStatusURIChanged")}*/);
     $rootScope.$on("bucketUriChanged",updateBuckets);
     $rootScope.$on("checkBucketCounts",updateBucketCounts);
 

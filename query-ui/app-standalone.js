@@ -6,7 +6,6 @@
                     "mnJquery",
                     'qwJsonTree',
                     'qwJsonDataTable',
-                    'qwJsonTable',
                     'qwExplainVizD3',
                     'qwLongPress',
                     'mnBucketsService',

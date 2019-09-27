@@ -5,7 +5,6 @@
   .module('qwQuery', ["ui.router", "mnPluggableUiRegistry", "mnJquery",
     'qwJsonTree',
     'qwJsonDataTable',
-    'qwJsonTable',
     'qwJsonTableEditor',
     'qwExplainVizD3',
     'qwLongPress',

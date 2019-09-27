@@ -488,9 +488,6 @@
       if (!fieldData)
         return('<span class="' + defaultClass + ' cursor-pointer">NO FIELD ' + JSON.stringify(item) + '</span>');
 
-      if (fieldData.types.obj && fieldData.types.arr)
-        console.log("Both obj & array polymorphic");
-
       if (_.isArray(item) || _.isPlainObject(item)) // use a different cell type for arrays and objects
           defaultClass = "data-table-cell-special";
 

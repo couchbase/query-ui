@@ -9,7 +9,6 @@
  *  JSON, but is more compact (no braces or commas), and permits using colors
  *  to highlight field names vs. values, and one line from the next.
  *
- *  For usage, see the header to qw-json-table.
  */
 /* global _, angular */
 

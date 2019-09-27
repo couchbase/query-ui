@@ -1,20 +1,6 @@
 /**
- * Angular directive to convert JSON into HTML tree. Inspired by Brian Park's
- * MIT Licensed "angular-json-human.js" which turns JSON to HTML tables.
- *
- *  Extended for trees by Eben Haber at Couchbase.
- *
- *  This class takes a JS object or JSON string, and displays it as an HTML
- *  table. Generally, it expects an array of something. If it's an array of objects,
- *  then each row corresponds to one object, and the columns are the union of all
- *  fields of the objects. If an object doesn't have a field, that cell is blank.
- *
- *
- *  , which object members indented. This is similar to pretty-printing
- *  JSON, but is more compact (no braces or commas), and permits using colors
- *  to highlight field names vs. values, and one line from the next.
- *
- *  For usage, see the header to qw-json-table.
+ * Angular directive that takes a query plan data structure and renders it as
+ * a D3 graph.
  */
 /* global _, angular */
 (function() {
