@@ -463,7 +463,7 @@
         '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + ' || ' + docError + '" ' +
         'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)" ' +
-        'title="Edit document as JSON"><span class="icon fa-edit"></span></a>' +
+        'title="Edit document as JSON"><span class="icon fa-pencil"></span></a>' +
 
         '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
