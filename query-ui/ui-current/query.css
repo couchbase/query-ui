@@ -139,6 +139,9 @@ input.ng-invalid-number {
   padding: 0 0.5rem;
 }
 
+.wb-refresh-btn {
+  margin: .5rem .75rem;
+}
 /* query monitoring tables ------------------------------------------------- */
 .qm-table-active .cbui-table-header,
 .qm-table-completed .cbui-table-header,
