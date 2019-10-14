@@ -25,8 +25,8 @@
 
           // do we have covered indexes to recommend for a given advice element?
           scope.has_covered = function(element) {
-              return(element && element.recommended_indexes && element.recommended_indexes.covering_indexes &&
-                  element.recommended_indexes.covering_indexes.length > 0);
+            return(element && element.recommended_indexes && element.recommended_indexes.covering_indexes &&
+                element.recommended_indexes.covering_indexes.length > 0);
           };
 
           scope.get_covered_indexes = function(element) {
@@ -46,9 +46,9 @@
                   return(c_stmt == item.index_statement);
                 }))
                   indexes.push(item.index_statement);
-                });
+              });
             return(indexes);
-           };
+          };
 
           // create the recommended indexes
           scope.create_option = function(type,index) {

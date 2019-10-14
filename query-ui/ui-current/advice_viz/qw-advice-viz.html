@@ -48,7 +48,7 @@
     <div
        ng-if="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && !element.current_indexes.length"
        class="success">
-       No index recommendation at this time.
+       {{element.recommended_indexes}}
     </div>
   </div>
 </div>
