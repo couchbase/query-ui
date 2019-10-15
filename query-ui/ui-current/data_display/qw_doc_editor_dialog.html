@@ -18,15 +18,13 @@
        ng-if="showData"
        ui-ace="ace_options"
        ng-model="doc_json"
-       style="height:98%;"
-       class="wb-ace-editor column flex-grow-2">
+       class="doc-ace-editor">
     </div>
     <div
        ng-if="!showData"
        ui-ace="meta_ace_options"
-       ng-model="doc_meta" 
-       style="height:98%;"
-       class="wb-ace-editor column flex-grow-2">
+       ng-model="doc_meta"
+       class="doc-ace-editor">
     </div>
   </div>
   <div class="panel-footer">
