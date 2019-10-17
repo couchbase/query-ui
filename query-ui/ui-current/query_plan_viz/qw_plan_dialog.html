@@ -5,7 +5,7 @@
 
     <div class="panel-content" style="height:calc(100% - 120px)">
       <span class="pills">
-        <a ng-click="set_show_plan(true)" ng-if="isEnterprise"
+        <a ng-click="set_show_plan(true)"
            ng-class="{selected: show_plan}">Plan</a>
         <a ng-click="set_show_plan(false)"
            ng-class="{selected: !show_plan}"
@@ -13,7 +13,7 @@
         </span>
             
       <div class="wb-results-wrapper" style="height:calc(100% - 20px)">
-         <div class="wb-results-explain" ng-if="show_plan && isEnterprise" qw-explain-viz-d3="plan" style="height:100%"></div>
+         <div class="wb-results-explain" ng-if="show_plan" qw-explain-viz-d3="plan" style="height:100%"></div>
          <div class="wb-results-explain-text" ng-if="!show_plan" ui-ace="acePlanOptions" ng-model="planText" style="height:100%"></div>
       </div>
 

@@ -20,11 +20,6 @@
     qwQueryService.selectTab = function(newTab) {
       // some tabs are not available in some modes
       switch (newTab) {
-      case 4: // plan is only available in EE
-        if (!mnPools.export.isEnterprise)
-          newTab = 1;
-        break;
-
       case 6: // advice is only available in EE and developer preview
         if (!mnPools.export.isEnterprise || (qwQueryService.pools && !qwQueryService.pools.isDeveloperPreview))
           newTab = 1;
@@ -1393,7 +1388,7 @@
       case 2: // Table
       case 3: // Tree
         if (explainOnly)
-          qwQueryService.selectTab(mnPools.export.isEnterprise ? 4 : 5); // vis for EE, text for CE
+          qwQueryService.selectTab(4); // vis for EE, text for CE
         else if (queryIsAdvise)
           qwQueryService.selectTab(6);
         // otherwise don't change it
@@ -1409,7 +1404,7 @@
         if (!queryIsExplain && !explainOnly && !queryIsAdvise)
           qwQueryService.selectTab(1);
         else if (queryIsExplain || explainOnly)
-          qwQueryService.selectTab(mnPools.export.isEnterprise ? 4 : 5); // vis for EE, text for CE
+          qwQueryService.selectTab(4); // vis for EE, text for CE
         break;
       }
 
@@ -2251,13 +2246,6 @@
     //
 
     function getSchemaForBucket(bucket) {
-
-      // no schema inferencing unless enterprise edition
-
-      if (!mnPools.export.isEnterprise) {
-        bucket.schema_error = "Enterprise Edition needed for Schema inferencing.";
-        return;
-      }
 
       //console.log("Getting schema for : " + bucket.id);
 

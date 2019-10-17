@@ -86,10 +86,6 @@
           });
     }
 
-    // are we enterprise?
-
-    qmc.isEnterprise = validateQueryService.isEnterprise;
-
     //
     // sorting for each of the three result tables
     //
@@ -146,19 +142,19 @@
     function showPlan(statement, plan) {
       var dialogScope = $rootScope.$new(true);
       dialogScope.planText = JSON.stringify(plan,null,'  ');
-      dialogScope.show_plan = dialogScope.isEnterprise = qmc.isEnterprise();
+      dialogScope.show_plan = true;
       dialogScope.statement = statement;
       dialogScope.set_show_plan = function(val) {dialogScope.show_plan = val;};
 
-      // only analyze the plan if we are EE
-      if (dialogScope.isEnterprise) try {
+      // analyze the plan
+      try {
         var lists = qwQueryPlanService.analyzePlan(plan,null);
         dialogScope.plan =
         {explain: {plan: plan, text: statement},
             analysis: lists,
             plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(plan, null, lists)
         };
-      } catch (exception) {console.log("Got exception: " + JSON.stringify(exception))}
+      } catch (exception) {console.log("Got exception analyzing plan: " + JSON.stringify(exception))}
 
       dialogScope.acePlanOptions = {
           mode: 'json',

@@ -309,10 +309,10 @@
       //console.log("current query: " + qc.lastResult.query);
 
       //
-      // only support auto-complete if we're in enterprise mode
+      // set up auto-complete
       //
 
-      if (qc.isEnterprise() && !qc.inputEditor.getOption("enableBasicAutocompletion")) {
+      if (!qc.inputEditor.getOption("enableBasicAutocompletion")) {
         // make autocomplete work with 'tab', and auto-insert if 1 match
         autocomplete.Autocomplete.startCommand.bindKey = "Ctrl-Space|Ctrl-Shift-Space|Alt-Space|Tab";
         autocomplete.Autocomplete.startCommand.exec = autocomplete_exec;
