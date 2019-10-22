@@ -1529,6 +1529,8 @@
               newResult.sortCount = data.metrics.sortCount;
             }
           }
+
+          return(Promise.resolve()); // don't want to short circuit resolution of other promises
         });
 
         promises.push(explain_promise);
@@ -1675,9 +1677,6 @@
           }
 
 
-          // errors should appear in the first tab
-//          if (queryIsExplain && data.errors)
-//            qwQueryService.selectTab(1);
         },
         /* error response from $http */
         function error(resp) {
@@ -1760,6 +1759,8 @@
             if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
               qwQueryService.selectTab(1);
           }
+
+          return(Promise.resolve()); // don't want to short circuit resolution of other promises
         });
 
         promises.push(query_promise);
@@ -1785,7 +1786,7 @@
     }
 
     //
-    // run ADVISE for a given query and queryResult
+    // run ADVISE for a given query and queryResult, without also running the query or explain
     //
 
     function runAdviseOnLatest() {
@@ -1809,15 +1810,20 @@
         saveStateToStorage();
       }
 
-      query.advice = "Getting advice for current query...";
+      var initialAdvice = "Getting advice for current query...";
+      query.advice = initialAdvice;
       query.result = query.advice;
       query.data = {status: query.result};
       query.warnings = null;
       qwQueryService.selectTab(6);
       runAdvise(getCurrentResult().query,getCurrentResult()).then(
           function success(resp) {
-            query.result = JSON.stringify(query.advice,null,2);
-            query.data = {adviseResult: query.advice};
+            if (query.advice == initialAdvice)
+              query.data = {adviseResult: resp};
+            else
+              query.data = {adviseResult: query.advice};
+
+            query.result = JSON.stringify(query.data,null,2);
             finishQuery(query);
 
             if (_.isString(query.advice))
@@ -1888,12 +1894,14 @@
             queryResult.advice += " (server timeout)";
           if (data && _.isArray(data.errors))
             data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
+
+          return(Promise.resolve()); // don't want to short circuit resolution of other promises
         });
 
         return advise_promise;
       }
 
-      return(Promise.reject("Query is not advisable"));
+      return(Promise.resolve("Query is not advisable"));
     }
 
     // convenience function to determine whether a query result has actionable advice
