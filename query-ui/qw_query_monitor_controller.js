@@ -3,9 +3,11 @@
 
   angular.module('qwQuery').controller('qwQueryMonitorController', queryMonController);
 
-  queryMonController.$inject = ['$http','$rootScope', '$scope', '$state', '$uibModal', '$timeout', 'qwQueryService', 'validateQueryService', 'mnAnalyticsService','qwQueryPlanService'];
+  queryMonController.$inject = ['$http','$rootScope', '$scope', '$state', '$uibModal', '$timeout', 'qwQueryService',
+    'validateQueryService', 'mnAnalyticsService','qwQueryPlanService', 'mnPoller', 'mnStatisticsNewService','mnHelper'];
 
-  function queryMonController ($http, $rootScope, $scope, $state,$uibModal, $timeout, qwQueryService, validateQueryService, mnAnalyticsService, qwQueryPlanService) {
+  function queryMonController ($http, $rootScope, $scope, $state,$uibModal, $timeout, qwQueryService,
+      validateQueryService, mnAnalyticsService, qwQueryPlanService, mnPoller,mnStatisticsNewService,mnHelper) {
 
     var qmc = this;
 
@@ -35,12 +37,6 @@
     qmc.get_update_flag = function() {return(qwQueryService.getMonitoringAutoUpdate());}
     qmc.options = qwQueryService.getMonitoringOptions;
 
-    qmc.stats = {};
-    qmc.stat_names = ["query_requests","query_selects","query_avg_req_time","query_avg_svc_time",
-      "query_errors", "query_warnings","query_avg_response_size","query_avg_result_count",
-      "query_requests_250ms","query_requests_500ms", "query_requests_1000ms","query_requests_5000ms"];
-    qmc.getLatestStat = getLatestStat;
-    qmc.getAverageStat = getAverageStat;
     qmc.getSummaryStat = getSummaryStat;
 
     qmc.vitals = {};
@@ -71,6 +67,15 @@
       }
     ];
 
+    qmc.statsConfig = {
+        bucket: "",
+        node: "all",
+        zoom: 60000,
+        step: 1,
+        stats: ['query_requests_250ms','query_requests_500ms','query_requests_1000ms',
+          'query_requests_5000ms']
+    };
+
     qmc.openDetailedChartDialog = openDetailedChartDialog;
 
     function openDetailedChartDialog(c) {
@@ -81,7 +86,8 @@
             controller: 'mnStatisticsDetailedChartController as detailedChartCtl',
             windowTopClass: "chart-overlay",
             resolve: {
-              chart: qmc.charts[c]
+              items: mnHelper.wrapInFunction({}),
+              chart: mnHelper.wrapInFunction(qmc.charts[c])
             }
           });
     }
@@ -239,10 +245,11 @@
       if (qmc.monitoring.prepareds_updated == "never")
         qwQueryService.updateQueryMonitoring(3);
 
-      // start auto-updating if necessary
+      // runs the queries and gets query engine stats
+      new mnPoller($scope, update).setInterval(5000).cycle(); // run update() every 5 seconds
 
-      if (qwQueryService.getMonitoringAutoUpdate())
-        update();
+      // subscribe to stats
+      qmc.statsPoller = mnStatisticsNewService.subscribeUIStatsPoller(qmc.statsConfig,$scope);
 
       // Prevent the backspace key from navigating back. Thanks StackOverflow!
       $(document).unbind('keydown').bind('keydown', function (event) {
@@ -275,19 +282,7 @@
     }
 
     function toggle_update() {
-      if (qwQueryService.getMonitoringAutoUpdate()) {
-        if (qmc.timer) { // stop any timers
-          $timeout.cancel(qmc.timer);
-          qmc.timer = null;
-        }
-        qwQueryService.setMonitoringAutoUpdate(false);
-      }
-      else {
-        qwQueryService.setMonitoringAutoUpdate(true);
-        update();
-      }
-
-      //qwQueryService.userAutoUpdate = qwQueryService.monitoringAutoUpdate;
+      qwQueryService.setMonitoringAutoUpdate(!qwQueryService.getMonitoringAutoUpdate());
     }
 
     function get_toggle_label() {
@@ -303,7 +298,8 @@
 
     function update() {
       // update the currently selected tab
-      qwQueryService.updateQueryMonitoring(qwQueryService.getMonitoringSelectedTab());
+      if (qwQueryService.getMonitoringAutoUpdate())
+        qwQueryService.updateQueryMonitoring(qwQueryService.getMonitoringSelectedTab());
 
       // get the stats from the Query service
       $http({
@@ -323,66 +319,26 @@
 
       qmc.buckets = validateQueryService.validBuckets();
       //console.log("Got buckets: "+ JSON.stringify(qmc.buckets));
-
-      if (qmc.buckets && qmc.buckets.length > 1) mnAnalyticsService.getStats({$stateParams:{
-        bucket: qmc.buckets[1],
-        "graph": "ops",
-        "zoom": "minute"
-          }}).then(function success(data) {
-            if (data && data.statsByName) {
-              qmc.stats = data.statsByName;
-              qmc.stats_updated_at = Date.now();
-            }
-          },function error(resp) {console.log("Error getting graph data");});
-
-      // do it again in 5 seconds
-      if (qwQueryService.getMonitoringAutoUpdate()) {
-        qmc.timer = $timeout(update,5000);
+      if (_.isArray(qmc.buckets) && qmc.buckets.length > 1) {
+        qmc.statsConfig.bucket = qmc.buckets[1];
       }
 
+      return Promise.resolve();
     }
 
     //
-    // since the stats come as arrays of values for the past minute, here is a convenience
-    // function to return the latest value for any named stat
-    //
-
-    function getLatestStat(name) {
-      if (qmc.stats && qmc.stats[name] && qmc.stats[name].config && _.isArray(qmc.stats[name].config.data))
-        return qmc.stats[name].config.data[qmc.stats[name].config.data.length - 1];
-      else
-        return null;
-    }
-
-
-    //
-    // since the stats come as arrays of values for the past minute, here is a convenience
-    // function to return the average value for any named stat
-    //
-
-    function getAverageStat(name) {
-      if (qmc.stats && qmc.stats[name] && qmc.stats[name].config && _.isArray(qmc.stats[name].config.data)) {
-        var sum = 0;
-        for (var i=0;i<qmc.stats[name].config.data.length;i++)
-          sum += qmc.stats[name].config.data[i];
-        //console.log("For stat: " + name + " got length: " + qmc.stats[name].config.data.length + " and sum: " + sum);
-        return sum/qmc.stats[name].config.data.length;
-      }
-      else
-        return null;
-    }
-
-    //
-    // average sometimes isn't right, for items like the number of queries > time over the past minute,
-    // we would like a sum
+    // for items like the number of queries > time over the past minute,
+    // we would like a sum of all values from the array
     //
 
     function getSummaryStat(name) {
-      if (qmc.stats && qmc.stats[name] && qmc.stats[name].config && _.isArray(qmc.stats[name].config.data)) {
+      if ($scope.mnUIStats &&
+          $scope.mnUIStats[$scope.stats.indexOf(name)] &&
+          $scope.mnUIStats[$scope.stats.indexOf(name)].stats.aggregate.samples) {
+        var stats = $scope.mnUIStats[$scope.stats.indexOf(name)].stats.aggregate.samples;
         var sum = 0;
-        for (var i=0;i<qmc.stats[name].config.data.length;i++)
-          sum += qmc.stats[name].config.data[i];
-        //console.log("For stat: " + name + " got length: " + qmc.stats[name].config.data.length + " and sum: " + sum + ", " + JSON.stringify(qmc.stats[name].config.data ));
+        for (var i=0;i< stats.length;i++)
+          sum += stats[i];
         return sum;
       }
       else
@@ -404,15 +360,6 @@
       else
         return(val);
     }
-
-    // when the controller is destroyed, stop the updates
-    $scope.$on('$destroy',function(){
-      //qwQueryService.setMonitoringAutoUpdate(false);
-      if (qmc.timer) {
-         $timeout.cancel(qmc.timer);
-         qmc.timer = null;
-      }
-    });
 
     //
     // all done, return the controller

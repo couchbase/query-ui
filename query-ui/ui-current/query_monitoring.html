@@ -227,7 +227,10 @@
   </div>
 
 <!-- Query Service-Level Stats --------------------------------------------- -->
-  <footer ng-if="qc.validated.monitoringAllowed()" class="footer-querymonitor">
+  <div ng-init="stats = ['query_requests_250ms','query_requests_500ms','query_requests_1000ms',
+                'query_requests_5000ms']">
+
+  <footer ng-if="qc.validated.monitoringAllowed()" class="footer-querymonitor"> 
     <div class="column vertical-divider margin-0" ng-if="qc.validated.clusterStatsAllowed()">
       <span class="width-6">Queries &gt; 250ms - last min</span>
       <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_250ms") | number:0 }}</span>
@@ -250,6 +253,7 @@
            nvd3-options="{showLegend: false}"
            zoom="minute"
            rbac="rbac"
+           node="all"
            bucket="{{qmc.buckets[1]}}"
            ng-click="qmc.openDetailedChartDialog($index)"
            config="chart">
@@ -278,4 +282,5 @@
       <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:1}} secs</span>
     </div>
   </footer>
+  </div>
 </div>
