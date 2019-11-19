@@ -240,6 +240,8 @@
           .attr("id", "svg_g")
       ;
 
+    const trans = svg.transition().duration(duration);
+
     // need a definition for arrows on lines
     var arrowhead_refX = vert ? 0 : 0;
     var arrowhead_refY = vert ?  2 : 2;
@@ -264,7 +266,7 @@
     ;
 
     // use nice curves between the nodes
-    var diagonal = d3.svg.diagonal().projection(getConnectionEndPoint);
+    var diagonal = getLink();
 
     // assign nodes and links
     var nodes = tree.nodes(root);
@@ -382,13 +384,11 @@
     ;
 
     // Transition nodes to their new position.
-    var nodeUpdate = node.transition()
-      .duration(duration)
+    var nodeUpdate = nodeEnter.transition(trans)
       .attr("transform", getNodeTranslation);
 
     //Transition exiting nodes to the parent's new position.
-    var nodeExit = node.exit().transition()
-      .duration(duration)
+    var nodeExit = node.exit().transition(trans)
       .attr("transform", function(d) { return "translate(" + root.y + "," + root.x + ")"; })
       .remove();
 
@@ -412,16 +412,13 @@
     .attr("d", function(d) {
       var o = {x: root.x0, y: root.y0};
       return diagonal({source: o, target: o});
-    });
-
+    })
     // Transition links to their new position.
-    link.transition()
-    .duration(duration)
+    .transition(trans)
     .attr("d", diagonal);
 
     // Transition exiting nodes to the parent's new position.
-    link.exit().transition()
-    .duration(duration)
+   link.exit().transition(trans)
     .attr("d", function(d) {
       var o = {x: root.x, y: root.y};
       return diagonal({root: o, target: o});
@@ -439,25 +436,28 @@
   // layout/size functions that differ based on the orientation of the tree
   //
 
-  function getConnectionEndPoint(node) {
-    // if the node is a clone, get the endpoint from the source
-   if (node.cloneOf)
-     return(getCloneConnectionEndPoint(node.cloneOf));
-
-    // otherwise base it on the graph orientation.
+  function getLink() {
     switch (queryService.query_plan_options.orientation) {
     case orientTB:
-      return [node.x, node.y + getHeight(node)/2];
+      return d3.linkVertical()
+        .x(function(node) {return(node.x)})
+        .y(function(node) {return(node.y + getHeight(node)/2)});
 
     case orientBT:
-      return [node.x, -node.y - getHeight(node)/2];
+      return d3.linkVertical()
+      .x(function(node) {return(node.x)})
+      .y(function(node) {return(-node.y - getHeight(node)/2)});
 
     case orientLR:
-      return [node.y + getWidth(node)/2, node.x];
+      return d3.linkHorizontal()
+      .x(function(node) {return(node.y + getWidth(node)/2)})
+      .y(function(node) {return(node.x)});
 
     case orientRL:
     default:
-      return [-node.y - getWidth(node)/2, node.x];
+      return d3.linkHorizontal()
+      .x(function(node) {return(-node.y - getWidth(node)/2)})
+      .y(function(node) {return(node.x)});
     }
   }
 

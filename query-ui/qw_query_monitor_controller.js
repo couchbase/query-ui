@@ -4,10 +4,11 @@
   angular.module('qwQuery').controller('qwQueryMonitorController', queryMonController);
 
   queryMonController.$inject = ['$http','$rootScope', '$scope', '$state', '$uibModal', '$timeout', 'qwQueryService',
-    'validateQueryService', 'mnAnalyticsService','qwQueryPlanService', 'mnPoller', 'mnStatisticsNewService','mnHelper'];
+                                'validateQueryService', 'mnAnalyticsService','qwQueryPlanService', 'mnPoller', 'mnStatisticsNewService',
+                                'mnHelper', 'mnPermissions'];
 
   function queryMonController ($http, $rootScope, $scope, $state,$uibModal, $timeout, qwQueryService,
-      validateQueryService, mnAnalyticsService, qwQueryPlanService, mnPoller,mnStatisticsNewService,mnHelper) {
+                               validateQueryService, mnAnalyticsService, qwQueryPlanService, mnPoller,mnStatisticsNewService,mnHelper,mnPermissions) {
 
     var qmc = this;
 
@@ -68,7 +69,6 @@
     ];
 
     qmc.statsConfig = {
-        bucket: "",
         node: "all",
         zoom: 60000,
         step: 1,
@@ -332,20 +332,15 @@
     //
 
     function getSummaryStat(name) {
-      if ($scope.mnUIStats &&
-          $scope.mnUIStats[$scope.stats.indexOf(name)] &&
-          $scope.mnUIStats[$scope.stats.indexOf(name)].stats.aggregate.samples) {
-        var stats = $scope.mnUIStats[$scope.stats.indexOf(name)].stats.aggregate.samples;
-        var sum = 0;
-        for (var i=0;i< stats.length;i++)
-          sum += stats[i];
-        return sum;
+      var s = $scope.mnUIStats;
+      if (s && s.stats && s.stats[name] && _.isArray(s.stats[name].aggregate)) {
+          var sum = 0;
+          s.stats[name].aggregate.forEach(function(n) {sum+=n});
+          return(sum);
       }
       else
         return null;
     }
-
-
 
     //
     // the vitals might be numbers, but they might be strings indicating a duration
