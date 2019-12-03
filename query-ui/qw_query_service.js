@@ -20,8 +20,8 @@
     qwQueryService.selectTab = function(newTab) {
       // some tabs are not available in some modes
       switch (newTab) {
-      case 6: // advice is only available in EE and developer preview
-        if (!mnPools.export.isEnterprise || (qwQueryService.pools && !qwQueryService.pools.isDeveloperPreview))
+      case 6: // advice is only available in EE
+        if (!mnPools.export.isEnterprise)
           newTab = 1;
         break;
       }
@@ -1844,7 +1844,7 @@
       queryResult.lastRun = new Date();
 
       var queryIsAdvisable = qwQueryService.pools && qwQueryService.pools &&
-        qwQueryService.pools.isDeveloperPreview && /^\s*select|merge|update|delete/gmi.test(queryText);
+        /^\s*select|merge|update|delete/gmi.test(queryText);
 
       if (queryIsAdvisable && !multipleQueries(queryText)) {
         var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options);
