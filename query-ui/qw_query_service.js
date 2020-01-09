@@ -1790,7 +1790,6 @@
     //
 
     function runAdviseOnLatest() {
-      // if the user edited an already-run query, add the edited query to the end of the history
       var query = getCurrentResult();
       var queryIsAdvise  = /^\s*advise/gmi.test(query.query);
 
@@ -1801,12 +1800,14 @@
         return;
       }
 
+      // if the user edited an already-run query, add the edited query to the end of the history
       if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
         var result = executingQueryTemplate.clone();
         result.query = query.query.trim();
         pastQueries.push(result);
         currentQueryIndex = pastQueries.length - 1; // after run, set current result to end
         query.query = query.savedQuery; // restore historical query to original value
+        query = getCurrentResult();
         saveStateToStorage();
       }
 
@@ -1824,12 +1825,13 @@
               query.data = {adviseResult: query.advice};
 
             query.result = JSON.stringify(query.data,null,2);
-            finishQuery(query);
 
             if (_.isString(query.advice))
               query.status = "error";
             else
               query.status = "success";
+
+            finishQuery(query);
           },
           function err(resp) {
               query.advice = 'Query not advisable';
