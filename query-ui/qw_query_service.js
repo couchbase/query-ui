@@ -1496,6 +1496,10 @@
           //console.log("Explain error Data: " + JSON.stringify(data));
           //console.log("Explain error Status: " + JSON.stringify(status));
 
+          // if we aren't running a regular query, set the status for explain-only
+          if (!((queryIsExplain && explainOnly) || !explainOnly))
+            newResult.status = status || "explain error";
+
           // we only want to pay attention to the result if the query hasn't finished
           // already and generated a more definitive query plan
 
