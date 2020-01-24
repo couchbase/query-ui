@@ -104,6 +104,7 @@
 
     qwQueryService.runAdvise = runAdvise;
     qwQueryService.runAdviseOnLatest = runAdviseOnLatest;
+    qwQueryService.showErrorDialog = showErrorDialog;
     qwQueryService.showWarningDialog = showWarningDialog;
     qwQueryService.hasRecommendedIndex = hasRecommendedIndex;
 
@@ -2394,10 +2395,11 @@
     // show an error dialog
     //
 
-    function showErrorDialog(message) {
+    function showErrorDialog(message,details_array) {
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Error";
       dialogScope.error_detail = message;
+      dialogScope.error_detail_array = details_array;
 
       $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
@@ -2405,10 +2407,11 @@
       });
     }
 
-    function showWarningDialog(message) {
+    function showWarningDialog(message,details_array) {
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = "Warning";
       dialogScope.error_detail = message;
+      dialogScope.error_detail_array = details_array;
 
       $uibModal.open({
         templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
