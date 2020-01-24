@@ -52,10 +52,33 @@
 
           // create the recommended indexes
           scope.create_option = function(type,index) {
+            var queries = [];
             if (advice[index].recommended_indexes && _.isArray(advice[index].recommended_indexes[type])) {
               advice[index].recommended_indexes[type].forEach(function(reco) {
-                qwQueryService.executeQueryUtil(reco.index_statement,false);
+                queries.push(reco.index_statement);
               });
+
+              var executeInSequence = function(index,queries) {
+                if (index >= queries.length)
+                  return;
+                qwQueryService.executeQueryUtil(queries[index],false)
+                .then(
+                     function success(resp)
+                     {executeInSequence(index+1,queries);},
+                     function error(resp)
+                     {
+                       var message = "Error creating index.";
+                       var message_details = [];
+                       if (resp && resp.config && resp.config.data && resp.config.data.statement)
+                         message_details.push(resp.config.data.statement);
+                       if (resp && resp.data && resp.data.errors)
+                         message_details.push(resp.data.errors);
+
+                       qwQueryService.showErrorDialog(message,message_details);
+                     });
+              };
+
+              executeInSequence(0,queries);
 
               // bring up a dialog to warn that building indexes may take time.
               qwQueryService.showWarningDialog("Creating indexes, it may take time before they are fully built. Update the advice to see if the index is built.");
