@@ -536,7 +536,7 @@
 
         // now the field values, if we are showing tables, but only if we have a non-null document
 
-        if (tdata[row].data) {
+        if (tdata[row].data || tdata[row].data === 0) {
           Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
             var item = tdata[row].data[key];
             var childSize = {width: 1};
