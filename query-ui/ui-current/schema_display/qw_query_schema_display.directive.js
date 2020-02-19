@@ -146,23 +146,18 @@
       //templateUrl: 'template/bucket-display.tmpl',
       template:
         '<h5 class="row">' +
-        '<img ng-show="bucket.passwordNeeded && !bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock.png" />' +
-        '<img ng-show="bucket.passwordNeeded && bucket.password" style="height:0.75em" src="../_p/ui/query/images/lock_unlock.png" />' +
         ' {{bucket.id}} <small ng-if="bucket.count > -1 && bucket.totalDocCount > 0"> sampled {{bucket.totalDocCount}} of {{bucket.count}}</small></h5>' +
         '  <ul class="text-small margin-bottom-half">' +
         //   error?
         '    <li class="text-smallish warning" ng-show="bucket.schema_error" title="{{bucket.schema_error}}">{{bucket.schema_error}}</li>' +
         //   for each flavor in the schema...
         '    <li class="insights-sidebar-schema text-smallish" ng-repeat="flavor in bucket.schema">' +
-        //     each schema starts with a pseudo-flavor giving a summary with the number of flavors
-      //'      <div ng-show="flavor.Summary" class="margin-bottom-half">{{flavor.Summary}}</div>' + //  if a summary line, show it
-        //     now the real flavor
         '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure row" ng-class="{disclosed: flavor.Show}" ' +
         '      ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
         '      <span>{{flavor.Flavor || "schema " + ($index+1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
         '      <div ng-show="flavor.Show && flavor.hasFields !== true"><ul><li>No fields found.</li></ul></div>' +
 
-        '      <schema-display ng-hide="flavor.Summary || !flavor.Show" schema="flavor" path=""></schema-display>' +
+        '      <schema-display ng-if="!flavor.Summary && flavor.Show" schema="flavor" path=""></schema-display>' +
 
         '      <li ng-show="bucket.indexes.length > 0">' +
         '        <div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">' +
