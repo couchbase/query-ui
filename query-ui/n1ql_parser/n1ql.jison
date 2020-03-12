@@ -303,7 +303,7 @@
      algebra.NewSortTerm = function(expression,desc,order_nulls_pos)          {var a = new expr("SortTerm"); a.ops.expression = expression; a.ops.desc = desc; a.order_nulls_pos = order_nulls_pos; return a;};
      algebra.NewSubquery = function(fullselect)                               {var a = new expr("Subquery"); a.ops.fullselect = fullselect; return a;};
      algebra.NewSubqueryTerm = function(select_term,as_alias)                 {var a = new expr("SubqueryTerm"); a.ops.select_term = select_term; a.ops.as_alias = as_alias; return a;};
-     algebra.NewSubselect = function(with_expr,from,let,where,group,select)   {var a = new expr("Subselect"); a.ops.with_expr = with_expr; a.ops.from = from; a.ops.let = let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
+     algebra.NewSubselect = function(with_expr,from,_let,where,group,select)   {var a = new expr("Subselect"); a.ops.with_expr = with_expr; a.ops.from = from; a.ops._let = _let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
      algebra.NewUnion = function(first,second)                                {var a = new expr("Union"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewUnionAll = function(first,second)                             {var a = new expr("UnionAll"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewUnnest = function(from,join_type,expression,as_alias)         {var a = new expr("Unnest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};

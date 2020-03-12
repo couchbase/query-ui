@@ -1,12 +1,15 @@
 /**
- * This directive can be applied to an HTML input to ensure that 
+ * This directive can be applied to an HTML input to ensure that
  * the value within is valid JSON.
  */
 /* global _, angular */
-(function() {
 
-  'use strict';
-  angular.module('qwValidJson', []).
+import angular from "/ui/web_modules/angular.js";
+import _ from "/ui/web_modules/lodash.js";
+
+export default "qwValidJson";
+
+angular.module('qwValidJson', []).
   directive('qwValidJson', function () {
 
     return {
@@ -25,7 +28,7 @@
             mCtrl.$setValidity('badJSON',true);
             return value;
           } catch (syntaxError) {
-            mCtrl.$setValidity('badJSON',false);			      
+            mCtrl.$setValidity('badJSON',false);
             return value;
           }
         }
@@ -34,5 +37,3 @@
       }
     };
   });
-
-})();

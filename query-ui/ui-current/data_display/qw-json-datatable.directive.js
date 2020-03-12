@@ -10,6 +10,12 @@
  *
  */
 /* global _, angular */
+
+import angular from "/ui/web_modules/angular.js";
+import _ from "/ui/web_modules/lodash.js";
+
+export default "qwJsonDataTable";
+
 (function() {
 
 	'use strict';

@@ -1,3 +1,8 @@
+import angular from "/ui/web_modules/angular.js";
+import _ from "/ui/web_modules/lodash.js";
+
+export default "qwFocusMe";
+
 (function() {
 
   //directive to allow password field to grab focus

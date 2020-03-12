@@ -1,7 +1,7 @@
-(function() {
-
-  angular.module('qwQuery').factory('qwQueryService', getQwQueryService);
-
+import angular from "/ui/web_modules/angular.js";
+import _ from "/ui/web_modules/lodash.js";
+import qwQueryUI from "/_p/ui/query/qw_query_controller.js";
+export default getQwQueryService;
   getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper',
     'validateQueryService', 'qwConstantsService','qwQueryPlanService','mnPoolDefault',
     'mnPools','mnAuthService', 'mnServersService', 'qwFixLongNumberService'];
@@ -209,7 +209,7 @@
     //
 
     function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult,mutationCount,warnings,sortCount,lastRun,status,advice) {
+        data,query,requestID,explainResult,mutationCount,warnings,sortCount,lastRun,advice) {
       this.status = status;
       this.resultCount = resultCount;
       this.mutationCount = mutationCount;
@@ -231,7 +231,6 @@
 
       // when last run?
       this.lastRun = lastRun;
-      this.status = status;
 
       // query advice
       this.advice = advice
@@ -259,7 +258,7 @@
     {
       return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
           this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
-          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status,this.advice);
+          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.advice);
     };
 
     QueryResult.prototype.status_success = function() {
@@ -290,7 +289,7 @@
           this.query,
           '',
           un_run_query_data,
-          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.status);
+          this.mutationCount,this.warnings,this.sortCount,this.lastRun);
 
       res.explainResultText = un_run_query_text;
 
@@ -1380,7 +1379,7 @@
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
       var queryIsAdvise  = /^\s*advise/gmi.test(queryText);
-      var explain_promise, advise_promise;
+      var explain_promise;
 
       // the result tabs can show data, explain results, or show advice. Make sure the tab setting is
       // appropriate for the query type
@@ -1860,7 +1859,7 @@
           console.log("Couldn't build Advise query. ");
           return(Promise.resolve("building advise query failed"));
         }
-        advise_promise = $http(advise_request)
+        var advise_promise = $http(advise_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //
@@ -2445,5 +2444,3 @@
 
     return qwQueryService;
   }
-
-})();
