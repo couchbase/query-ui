@@ -861,6 +861,7 @@ export default getQwQueryService;
     //
 
     function clearHistory() {
+      let i;
       // don't clear the history if any queries are running
       for (i = 0; i < pastQueries.length; i++)
         if (pastQueries[i].busy)
@@ -938,11 +939,13 @@ export default getQwQueryService;
     function cancelQuery(queryResult) {
       // if this is a batch query, with multiple child queries, we need to find which one
       // is currently running, and cancel that.
-      if (queryResult.batch_results)
+      if (queryResult.batch_results) {
+        let i;
         for (i=0; i<queryResult.batch_results.length; i++) if (queryResult.batch_results[i].busy) {
           queryResult = queryResult.batch_results[i]; // cancel this child
           break;
         }
+      }
 
       //console.log("Cancelling query, currentQuery: " + queryResult.client_context_id);
       if (queryResult && queryResult.client_context_id != null) {
@@ -2110,7 +2113,7 @@ export default getQwQueryService;
 
       var queryText = qwConstantsService.keyspaceQuery;
 
-      res1 = executeQueryUtil(queryText, false)
+      let res1 = executeQueryUtil(queryText, false)
       .then(function success(resp) {
         var data = resp.data, status = resp.status;
 
@@ -2159,9 +2162,9 @@ export default getQwQueryService;
         /////////////////////////////////////////////////////////////////////////
 
         if (qwConstantsService.showSchemas) {
-          queryText = 'select indexes.* from system:indexes where state = "online"';
+          let queryText = 'select indexes.* from system:indexes where state = "online"';
 
-          res1 = executeQueryUtil(queryText, false)
+          let res1 = executeQueryUtil(queryText, false)
           //res1 = $http.post("/_p/query/query/service",{statement : queryText})
           .then(function (resp) {
             var data = resp.data, status = resp.status;

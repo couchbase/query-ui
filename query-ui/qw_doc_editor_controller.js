@@ -3,6 +3,7 @@
  */
 
 import _ from "/ui/web_modules/lodash.js";
+import js_beautify from "/ui/web_modules/beautify.js";
 
 export default docEditorController;
 
