@@ -1,15 +1,18 @@
+import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
 import n1ql from "/_p/ui/query/n1ql_parser/n1ql.js";
 
-export default getQwQueryPlanService;
+export default 'qwQueryPlanService';
+
+angular
+  .module('qwQueryPlanService', [])
+  .factory('qwQueryPlanService', getQwQueryPlanService);
 
 
 //
 // the qwQueryPlanService contains utility functions for processing N1QL query
 // plans (a JSON tree-like structure) into other, more useful forms.
 //
-
-getQwQueryPlanService.$inject = [];
 
 function getQwQueryPlanService() {
 

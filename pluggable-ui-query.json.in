@@ -1,10 +1,14 @@
 {
   "service": "n1ql",
   "proxy-strategy": "sticky",
-  "rest-api-prefix": "query",
+  "rest-api-prefixes": {
+    "query": {
+      "portName": "query_port"
+    }
+  },
   "version-dirs": [
-    {"version": [4, 5], "dir": "ui-classic"},
     {"version": [5, 0], "dir": "ui-current"}
   ],
-  "doc-root": "@BIN_PREFIX@query-ui"
+  "doc-root": "@BIN_PREFIX@query-ui",
+  "module": "main.js"
 }

@@ -1,5 +1,11 @@
+import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
-export default getQwConstantsService;
+
+export default 'qwConstantsService';
+
+angular
+  .module('qwConstantsService', [])
+  .factory('qwConstantsService', getQwConstantsService);
 
 //
 // the qwConstantsService contains a number of constants used by the query workbench, such as
@@ -7,8 +13,6 @@ export default getQwConstantsService;
 // the Couchbase admin UI, a different version will be defined for CBAS, and for the stand-alone
 // version
 //
-
-getQwConstantsService.$inject = [];
 
 function getQwConstantsService() {
 

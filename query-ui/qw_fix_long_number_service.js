@@ -1,6 +1,11 @@
+import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
 
-export default getQwFixLongNumberService;
+export default 'qwFixLongNumberService';
+
+angular
+  .module('qwFixLongNumberService', [])
+  .factory('qwFixLongNumberService', getQwFixLongNumberService);
 
 //
 // the qwConstantsService contains a number of constants used by the query workbench, such as
@@ -8,8 +13,6 @@ export default getQwFixLongNumberService;
 // the Couchbase admin UI, a different version will be defined for CBAS, and for the stand-alone
 // version
 //
-
-getQwFixLongNumberService.$inject = [];
 
 function getQwFixLongNumberService() {
 

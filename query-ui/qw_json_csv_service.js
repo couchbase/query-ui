@@ -1,13 +1,16 @@
+import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
 
-export default getQwJsonCsvService;
+export default 'qwJsonCsvService';
+
+angular
+  .module('qwJsonCsvService', [])
+  .factory('qwJsonCsvService', getQwJsonCsvService);
 
 //
 // the qwJsonCsvService contains utility functions for converting
 // JSON documents to CSV
 //
-
-getQwJsonCsvService.$inject = [];
 
 function getQwJsonCsvService() {
 

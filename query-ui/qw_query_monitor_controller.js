@@ -2,12 +2,7 @@ import _ from "/ui/web_modules/lodash.js";
 
 export default queryMonController;
 
-queryMonController.$inject = ['$http','$rootScope', '$scope', '$state', '$uibModal', '$timeout', 'qwQueryService',
-                              'validateQueryService', 'mnAnalyticsService','qwQueryPlanService', 'mnPoller', 'mnStatisticsNewService',
-                              'mnHelper', 'mnPermissions'];
-
-function queryMonController ($http, $rootScope, $scope, $state,$uibModal, $timeout, qwQueryService,
-                             validateQueryService, mnAnalyticsService, qwQueryPlanService, mnPoller,mnStatisticsNewService,mnHelper,mnPermissions) {
+function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService, validateQueryService, qwQueryPlanService, mnPoller, mnStatisticsNewService, mnHelper) {
 
   var qmc = this;
 

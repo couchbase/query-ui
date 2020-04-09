@@ -1,14 +1,31 @@
 import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-import qwQueryUI from "/_p/ui/query/qw_query_controller.js";
-export default getQwQueryService;
-  getQwQueryService.$inject = ['$rootScope','$q', '$uibModal', '$timeout', '$http', 'mnPendingQueryKeeper',
-    'validateQueryService', 'qwConstantsService','qwQueryPlanService','mnPoolDefault',
-    'mnPools','mnAuthService', 'mnServersService', 'qwFixLongNumberService'];
+import uiBootstrap from "/ui/web_modules/angular-ui-bootstrap.js";
+import mnPendingQueryKeeper from "/ui/app/components/mn_pending_query_keeper.js";
+import validateQueryService from "/_p/ui/query/validate_query_service.js";
+import qwConstantsService from "/_p/ui/query/qw_constants_service.js";
+import qwQueryPlanService from "/_p/ui/query/qw_query_plan_service.js";
+import mnPoolDefault from "/ui/app/components/mn_pool_default.js";
+import mnPools from "/ui/app/components/mn_pools.js";
+import qwFixLongNumberService from "/_p/ui/query/qw_fix_long_number_service.js";
 
-  function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService,
-      qwConstantsService,qwQueryPlanService,mnPoolDefault,mnPools,mnAuthService,
-      mnServersService,qwFixLongNumberService) {
+import _ from "/ui/web_modules/lodash.js";
+
+export default 'qwQueryService';
+
+angular
+  .module('qwQueryService', [
+    uiBootstrap,
+    mnPendingQueryKeeper,
+    qwConstantsService,
+    qwQueryPlanService,
+    mnPoolDefault,
+    mnPools,
+    validateQueryService,
+    qwFixLongNumberService
+  ])
+  .factory('qwQueryService', getQwQueryService);
+
+function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, qwConstantsService, qwQueryPlanService, mnPoolDefault, mnPools, qwFixLongNumberService) {
 
     var qwQueryService = {};
 

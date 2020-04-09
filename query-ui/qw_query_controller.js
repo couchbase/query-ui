@@ -1,45 +1,11 @@
-import angular from "/ui/web_modules/angular.js";
+import saveAs from "/ui/web_modules/file-saver.js";
 import _ from "/ui/web_modules/lodash.js";
 import ace from '/ui/libs/ace/ace-wrapper.js';
-import qwQueryService from "/_p/ui/query/qw_query_service.js";
-import qwQueryPlanService from "/_p/ui/query/qw_query_plan_service.js";
-import qwFixLongNumberService from "/_p/ui/query/qw_fix_long_number_service.js";
-import qwQueryMonitorController from "/_p/ui/query/qw_query_monitor_controller.js";
-import qwDocEditorController from "/_p/ui/query/qw_doc_editor_controller.js";
-import qwConstantsService from "/_p/ui/query/qw_constants_service.js";
-import qwJsonCsvService from "/_p/ui/query/qw_json_csv_service.js";
-import {
-  getRecursionHelper,
-  getBucketDisplay,
-  getSchemaDisplay
-} from "/_p/ui/query/ui-current/schema_display/qw_query_schema_display.directive.js";
-import saveAs from "/ui/web_modules/file-saver.js";
 
-export default "qwQueryUI";
+export default queryController;
 
-ace.config.set('basePath','/ui/libs/ace');
-
-angular.module('qwQueryUI', [])
-  .controller('qwQueryController', queryController)
-  .factory('qwQueryService', qwQueryService)
-  .factory('qwQueryPlanService', qwQueryPlanService)
-  .factory('qwFixLongNumberService', qwFixLongNumberService)
-  .controller('qwQueryMonitorController', qwQueryMonitorController)
-  .controller('qwDocEditorController', qwDocEditorController)
-  .factory('qwConstantsService', qwConstantsService)
-  .factory('qwJsonCsvService', qwJsonCsvService)
-  .factory('MyRecursionHelper', getRecursionHelper)
-  .directive('bucketDisplay', getBucketDisplay)
-  .directive('schemaDisplay', getSchemaDisplay);
-
-
-queryController.$inject = ['$rootScope', '$stateParams', '$uibModal', '$timeout', 'qwQueryService',
-                           'validateQueryService','mnPools','$scope','$interval','$interpolate','qwConstantsService', 'mnPoolDefault',
-                           'mnServersService', 'qwJsonCsvService'];
-
-function queryController ($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
-                          validateQueryService, mnPools, $scope, $interval, $interpolate,qwConstantsService, mnPoolDefault,
-                          mnServersService, qwJsonCsvService) {
+function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, $scope, $interval, $interpolate, qwConstantsService, mnPoolDefault, mnServersService, qwJsonCsvService, jQuery) {
+  var $ = jQuery;
 
   var qc = this;
   //console.log("Start controller at: " + new Date().toTimeString());

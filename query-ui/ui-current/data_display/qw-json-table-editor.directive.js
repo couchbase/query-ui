@@ -17,13 +17,14 @@
 
 import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
+import mnPermissions from "/ui/app/components/mn_permissions.js";
 
 export default "qwJsonTableEditor";
 
 (function() {
 
   'use strict';
-  angular.module('qwJsonTableEditor', [])
+  angular.module('qwJsonTableEditor', [mnPermissions])
   .directive('qwJsonTableEditor', ['$compile','$timeout','mnPermissions',getTableEditor]);
 
   function getTableEditor($compile,$timeout,mnPermissions) {

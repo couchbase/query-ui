@@ -7,11 +7,7 @@ import js_beautify from "/ui/web_modules/js-beautify.js";
 
 export default docEditorController;
 
-docEditorController.$inject = ['$rootScope', '$scope', '$http','$uibModal', '$uibModalStack', '$timeout', '$q', '$stateParams',
-                               'qwQueryService', 'validateQueryService', 'qwConstantsService', 'mnPermissions','qwFixLongNumberService','$state'];
-
-function docEditorController ($rootScope, $scope, $http, $uibModal, $uibModalStack, $timeout, $q, $stateParams, qwQueryService,
-                              validateQueryService, qwConstantsService, mnPermissions, qwFixLongNumberService, $state) {
+function docEditorController($rootScope, $http, $uibModal, $uibModalStack, $timeout, $q, $stateParams, qwQueryService, validateQueryService, mnPermissions, qwFixLongNumberService) {
 
   var dec = this;
 
@@ -638,7 +634,7 @@ function docEditorController ($rootScope, $scope, $http, $uibModal, $uibModalSta
 
   function checkUnsavedChanges(ifOk,ifCancel) {
     // warn the user if they try to get more data when unsaved changes
-    if ($('#somethingChangedInTheEditor')[0]) {
+    if (document.getElementById('somethingChangedInTheEditor')) {
 
       var promise = showErrorDialog("Warning: Unsaved Changes", "You have unsaved changes. Continue and lose them?", false);
 
@@ -1177,7 +1173,7 @@ function docEditorController ($rootScope, $scope, $http, $uibModal, $uibModalSta
       return;
 
     // if nothing else on screen is dirty, refresh
-    else if (!$('#somethingChangedInTheEditor')[0]) {
+    else if (!document.getElementById('somethingChangedInTheEditor')) {
       retrieveDocs_inner();
     }
     // otherwise let the user know that updates are not yet visible
