@@ -68,6 +68,7 @@ function getQwFixLongNumberService() {
 
     // look for overly large ints
     var matchArray = matchNonQuotedLongInts.exec(rawBytes);
+    var result;
     while (matchArray != null) {
       if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
         result = JSON.parse(rawBytes);
