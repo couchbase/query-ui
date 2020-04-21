@@ -544,10 +544,50 @@
     // This can get called on drag-and-drop or after the dialog.
     //
     function handleFileSelect() {
-      if (dialogScope && dialogScope.selected && dialogScope.selected.item == 1)
-        loadHistoryFileList(this.files);
-      else
-        loadQueryFileList(this.files);
+      var importFileType = (dialogScope && dialogScope.selected && dialogScope.selected.item ? dialogScope.selected.item : "0");
+      switch (importFileType) {
+      case "0":
+        loadQueryFileList(this.files); // load a query
+        break;
+      case "1":
+        loadHistoryFileList(this.files); // load query history
+        break;
+      case "2":
+      case "3":
+        loadDataFileList(this.files,importFileType); // load a data file
+        break;
+      }
+    }
+
+    function loadDataFileList(files, fileType) {
+      console.log("Got files: " + JSON.stringify(files) + ", type: " + fileType);
+      dialogScope.selected.item = 0; // reset
+      // make sure we have a file
+      if (files.length == 0) {
+        showErrorMessage("Can't load data files, no files selected.");
+        return;
+      }
+
+      // files is a FileList of File objects. load the first one and parse as CSV or TSV or JSON
+      var reader = new FileReader();
+      reader.addEventListener("loadend",function() {
+        try {
+          // contents of the file are in reader.result
+          var data = [];
+          switch (fileType) {
+          case "2": // csv
+            data = d3.csvParse(reader.result);
+            break;
+          case "3": // tsv
+            data = d3.tsvParse(reader.result);
+            break;
+          }
+
+        } catch (e) {
+          showErrorMessage("Error processing data file: " + e);
+        }
+      });
+      reader.readAsText(files[0]);
     }
 
     function loadHistoryFileList(files) {
@@ -622,6 +662,8 @@
       dialogScope.file_options = [
         {kind: "txt", label:  "Query - load the contents of a text file into the query editor."},    // 0
         {kind: "json", label: "Query History - load a file into the end of the current query history."}, // 1
+        {kind: "csv", label: "CSV File - import a data file in comma-separated format into a bucket."}, // 2
+        {kind: "tsv", label: "TSV File - import a data file in tab-separated format into a bucket."}, // 3
         ];
       dialogScope.selected = {item: "0"};
 

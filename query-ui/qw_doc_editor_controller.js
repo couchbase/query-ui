@@ -1081,13 +1081,7 @@
     //
 
     function getBuckets() {
-        return getBuckets_rest();
-    }
 
-
-    function getBuckets_rest() {
-
-      // get the buckets from the REST API
       var promise = $http({
         url: "../pools/default/buckets/",
         method: "GET"
@@ -1205,14 +1199,11 @@
     //
 
     function activate() {
-      //getBuckets(); // for some reason this extra call is needed, otherwise the menu doesn't populate
+      // the following checks whether the query service is active, and if so updates the list of buckets and checks their index status
+      qwQueryService.updateBuckets();
 
-      //console.log("Activating DocEditor, got buckets.")
-
-      // see if we have access to a query service
+      // regardless, we need to use the REST API to find out which buckets are ephemeral, since they behave differently
       validateQueryService.getBucketsAndNodes(function() {
-        //console.log("Query service callback, getting ready to handle bucket param: " + $stateParams.bucket);
-
         var promise = getBuckets();
 
         // wait until after the buckets are retrieved to set the bucket name, if it was passed to us

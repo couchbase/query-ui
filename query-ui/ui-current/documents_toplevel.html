@@ -1,0 +1,14 @@
+<div ng-controller="qwDocEditorController as qc">
+
+  <mn-element-cargo depot="subnav">
+    <nav class="sub-nav">
+      <a ui-sref="app.admin.documents.editor" ui-sref-active="selected">
+        Document Editor</a>
+      <a ui-sref="app.admin.documents.import"
+       ng-class="{selected: ('app.admin.documents.import' | includedByState)}">
+        Import Documents</a>
+    </nav>
+  </mn-element-cargo>
+
+  <div ui-view=""></div>
+</div>

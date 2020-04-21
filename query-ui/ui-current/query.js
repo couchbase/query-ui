@@ -35,12 +35,13 @@
       });
 
       $stateProvider
-      .state('app.admin.doc_editor', {
-        url: '/doc_editor?bucket',
+      .state('app.admin.documents', {
+        abstract: true,
+        url: '/documents',
         views: {
           "main@app.admin": {
             controller: 'qwDocEditorController',
-            templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
+            templateUrl: '../_p/ui/query/ui-current/documents_toplevel.html'
           }
         },
         data: {
@@ -48,22 +49,33 @@
         }
       });
 
-      addQueryStates("app.admin.query");
-
-      function addQueryStates(parent) {
-        $stateProvider
-        .state(parent + '.monitoring', {
-          url: '/monitoring',
-          controller: 'qwQueryMonitorController as qmc',
-          templateUrl: '../_p/ui/query/ui-current/query_monitoring.html'
+      // documents panel includes doc_editor and doc importer
+      $stateProvider
+      .state('app.admin.documents.editor', {
+        url: '/editor?bucket',
+        controller: 'qwDocEditorController',
+        templateUrl: '../_p/ui/query/ui-current/doc_editor.html'
         })
-        .state(parent + '.workbench', {
-          url: '/workbench?query',
-          controller: 'qwQueryController as qc',
-          templateUrl: '../_p/ui/query/ui-current/query.html'
+      .state('app.admin.documents.import', {
+        url: '/import',
+        controller: 'qwImportController',
+        templateUrl: '../_p/ui/query/ui-current/import.html'
         })
         ;
-      }
+
+      // query panel includes query workbench and query monitoring
+      $stateProvider
+      .state('app.admin.query.monitoring', {
+        url: '/monitoring',
+        controller: 'qwQueryMonitorController as qmc',
+        templateUrl: '../_p/ui/query/ui-current/query_monitoring.html'
+      })
+      .state('app.admin.query.workbench', {
+        url: '/workbench?query',
+        controller: 'qwQueryController as qc',
+        templateUrl: '../_p/ui/query/ui-current/query.html'
+      })
+      ;
 
       mnPluggableUiRegistryProvider.registerConfig({
         name: 'Query',
@@ -75,8 +87,8 @@
 
       mnPluggableUiRegistryProvider.registerConfig({
         name: 'Documents',
-        state: 'app.admin.doc_editor',
-        includedByState: 'app.admin.doc_editor',
+        state: 'app.admin.documents.editor',
+        includedByState: 'app.admin.documents',
         plugIn: 'workbenchTab',
         ngShow: "rbac.cluster.bucket['.'].data.docs.read  && rbac.cluster.bucket['.'].data.xattr.read",
         index: 0
