@@ -68,11 +68,8 @@ function getQwFixLongNumberService() {
 
     // look for overly large ints
     var matchArray = matchNonQuotedLongInts.exec(rawBytes);
-    var result;
     while (matchArray != null) {
       if (matchArray[1] || matchArray[2]) { // group 1, a non-quoted long int, group 2, a long float)
-        result = JSON.parse(rawBytes);
-        result.rawJSON = rawBytes;
         hasLongInts = true;
         break;
       }
@@ -108,7 +105,7 @@ function getQwFixLongNumberService() {
       else {
         // the regex can fail on large documents, just return rawJSON, and tables will show incorrect values
         if (rawBytes.length > 5*1024*1024) {
-          result = JSON.parse(rawBytes);
+          var result = JSON.parse(rawBytes);
 
           var rawResult = findResult(rawBytes);
           if (rawResult)

@@ -156,8 +156,6 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   qc.setShowBigData = setShowBigData;
   qc.getBigDataMessage = getBigDataMessage;
 
-  qc.renderPage = function() {updateEditorSizes();};
-
   // should we have the extra explain tabs?
 
   qc.autoExplain = qwConstantsService.autoExplain;
