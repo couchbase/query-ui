@@ -13,8 +13,9 @@ import {linkVertical as d3LinkVertical,
 
 import {transition as d3Transition} from "/ui/web_modules/d3-transition.js";
 import {interpolate as d3Interpolate} from "/ui/web_modules/d3-interpolate.js";
-import {cluster as d3Cluster} from "/ui/web_modules/d3-hierarchy.js";
-import {zoom as d3Zoom} from "/ui/web_modules/d3-zoom.js";
+import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy.js";
+import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "/ui/web_modules/d3-zoom.js";
+import {hierarchy as d3Hierarchy} from "/ui/web_modules/d3-hierarchy.js";
 
 
 export default "qwExplainVizD3";
@@ -164,54 +165,17 @@ function changeOrient(newOrient) {
 // handle drag/zoom events
 
 function zoom() {
-  //var scale = d3.event.scale,
-  //    translation = d3.event.translate;
-  //console.log("scale: " + JSON.stringify(scale));
-  //console.log("translate: " + JSON.stringify(translation));
-  d3Select(".drawarea")
-    .attr("transform", "translate(" + zoomer.translate() + ")" +
-          " scale(" + zoomer.scale() + ")");
+  svg.attr("transform", d3Event.transform);
 }
 
 function zoomIn()  {zoomButton(false);}
 function zoomOut() {zoomButton(true); }
 
 function zoomButton(zoom_in) {
-  var scale = zoomer.scale(),
-      center = [canvas_width / 2 , canvas_height / 2],
-      extent = zoomer.scaleExtent(),
-      translate = zoomer.translate(),
-      x = translate[0], y = translate[1],
-      factor = zoom_in ? 2 : 1/2,
-      target_scale = scale * factor;
-
-  //  If we're already at an extent, done
-  if (target_scale === extent[0] || target_scale === extent[1]) { return false; }
-  //  If the factor is too much, scale it down to reach the extent exactly
-  var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
-  if (clamped_target_scale != target_scale){
-    target_scale = clamped_target_scale;
-    factor = target_scale / scale;
-  }
-
-  //  Center each vector, stretch, then put back
-  x = (x - center[0]) * factor + center[0];
-  y = (y - center[1]) * factor + center[1];
-
-  //  Transition to the new view over 100ms
-  d3Transition().duration(100).tween("zoom", function () {
-    var interpolate_scale = d3Interpolate(scale, target_scale),
-        interpolate_trans = d3Interpolate(translate, [x,y]);
-    return function (t) {
-      zoomer.scale(interpolate_scale(t))
-        .translate(interpolate_trans(t));
-      zoom();
-    };
-  })
-  //.each("end", function(){
-  //  if (pressed) zoomButton(zoom_in);
-  //  })
-  ;
+  if (zoom_in)
+    d3Select(wrapperElement[0]).transition().call(zoomer.scaleBy,2);
+  else
+    d3Select(wrapperElement[0]).transition().call(zoomer.scaleBy,0.5);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -234,24 +198,18 @@ function makeD3TreeFromSimpleTree(root) {
               queryService.query_plan_options.orientation == orientBT);
 
   canvas_width = $('.wb-explain-d3-wrapper').width();
-  canvas_height =  $('.wb-explain-d3-wrapper').height();
-
-  //console.log("Svg width: " + canvas_width + ", height: " + canvas_height);
-  //console.log("Got expected width: " + width + ", height: " + height);
+  canvas_height =  $('.wb-explain-d3-wrapper').height() - 40;
 
   svg = d3Select(wrapperElement[0]).append('svg:svg')
-  //        .attr("width", canvas_width)
-  //        .attr("height", canvas_height)
     .attr("width", "100%")
     .attr("height", "100%")
-    .attr("id", "outer_svg")
     .style("overflow", "scroll")
     .on("click",removeAllTooltips)
 
     .append("svg:g")
     .attr("class","drawarea")
     .attr("id", "svg_g")
-  ;
+    ;
 
   const trans = svg.transition().duration(duration);
 
@@ -273,17 +231,17 @@ function makeD3TreeFromSimpleTree(root) {
   // minimum fixed sizes for nodes, depending on orientation, to prevent overlap
   var minNodeSize = vert ? [minNodeWidthVert,lineHeight*7] : [lineHeight*6,minNodeWidth];
 
-  var tree = d3Cluster()
-  //.size([height, width])
-      .nodeSize(minNodeSize) // give nodes enough space to avoid overlap
+  var d3Root = d3Hierarchy(root);
+  var tree = d3Tree()
+      .nodeSize(minNodeSize)(d3Root); // give nodes enough space to avoid overlap
   ;
 
   // use nice curves between the nodes
   var diagonal = getLink();
 
   // assign nodes and links
-  var nodes = tree.nodes(root);
-  var links = tree.links(nodes);
+  var nodes = d3Root.descendants();
+  var links = d3Root.links();
 
   //
   // we want to pan/zoom so that the whole graph is visible.
@@ -295,7 +253,6 @@ function makeD3TreeFromSimpleTree(root) {
   var minX = canvas_width, maxX = 0, minY = canvas_height, maxY = 0;
   nodes.forEach(function(d)
                 {minX = Math.min(d.x,minX); minY = Math.min(d.y,minY); maxX = Math.max(d.x,maxX);maxY = Math.max(d.y,maxY);});
-  //console.log("Actual width: " + (maxX - minX) + ", height: " + (maxY - minY));
 
   // to make a horizontal tree, x and y are swapped
   var dx = (vert ? maxX - minX : maxY - minY);
@@ -310,20 +267,20 @@ function makeD3TreeFromSimpleTree(root) {
     x = -x;
 
   var scale = Math.max(0.15,Math.min(2,.85 / Math.max(dx / canvas_width, dy / canvas_height)));
-  var translate = [canvas_width / 2 - scale * x, canvas_height / 2 - scale * y];
+  var midX = canvas_width / 2 - scale * x, midY = canvas_height / 2 - scale * y;
 
-  //console.log("Got new scale: " + scale + ", translate: " + JSON.stringify(translate));
+  // set up zooming
+  zoomer = d3Zoom()
+    .scaleExtent([0.1, 2.5])
+    .on("zoom", zoom);
 
-  // set up zooming, including initial values to show the entire graph
-  d3Select(".drawarea")
-    .attr("transform","translate(" + translate + ")scale(" + scale + ")")
-  ;
+  d3Select(wrapperElement[0]).call(zoomer);
 
-  zoomer = d3Zoom().scaleExtent([0.1, 2.5]).on("zoom", zoom);
-  zoomer.translate(translate);
-  zoomer.scale(scale);
-
-  d3Select("svg").call(zoomer);
+  // set up the initial location of the graph, so it's centered on the screen
+  d3Select(wrapperElement[0]).transition().call(
+      zoomer.transform,
+      d3ZoomIdentity.translate(midX,midY).scale(scale)
+   );
 
   // Each node needs a unique id. If id field doesn't exist, use incrementing value
   var node = svg.selectAll("g.node")
@@ -378,7 +335,7 @@ function makeD3TreeFromSimpleTree(root) {
     .attr("ry", lineHeight)
     .attr("x", function(d) {return(-1/2*getWidth(d))}) // make the rect centered on our x/y coords
     .attr("y", function(d) {return getHeight(d)*-1/2})
-    .attr("class", function(d) { return d.level; })
+    .attr("class", function(d) { return d.data.level; })
   // drop-shadow filter
     .style("filter", "url(#drop-shadow)");
 
@@ -386,14 +343,14 @@ function makeD3TreeFromSimpleTree(root) {
   nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight}) // m
     .attr("class", "wb-explain-node-text")
-    .text(function(d) { return d.name })
+    .text(function(d) { return d.data.name })
   ;
 
   // handle up to 4 lines of details
   for (var i=0;i<4;i++) nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight*(i+2)})
     .attr("class", "wb-explain-node-text-details")
-    .text(function(d) { return d.details[i] })
+    .text(function(d) { return d.data.details[i] })
   ;
 
   // Transition nodes to their new position.
@@ -402,7 +359,7 @@ function makeD3TreeFromSimpleTree(root) {
 
   //Transition exiting nodes to the parent's new position.
   var nodeExit = node.exit().transition(trans)
-      .attr("transform", function(d) { return "translate(" + root.y + "," + root.x + ")"; })
+      .attr("transform", function(d) { return "translate(" + d3Root.y + "," + d3Root.x + ")"; })
       .remove();
 
   nodeExit.select("rect")
@@ -423,8 +380,9 @@ function makeD3TreeFromSimpleTree(root) {
     })
     .attr("marker-start", "url(#arrowhead)")
     .attr("d", function(d) {
-      var o = {x: root.x0, y: root.y0};
-      return diagonal({source: o, target: o});
+      var o = {x: d3Root.x0, y: d3Root.y0};
+      var p = diagonal({source: o, target: o});
+      return p;
     })
   // Transition links to their new position.
     .transition(trans)
@@ -433,7 +391,7 @@ function makeD3TreeFromSimpleTree(root) {
   // Transition exiting nodes to the parent's new position.
   link.exit().transition(trans)
     .attr("d", function(d) {
-      var o = {x: root.x, y: root.y};
+      var o = {x: d3Root.x, y: d3Root.y};
       return diagonal({root: o, target: o});
     })
     .remove();
@@ -555,14 +513,11 @@ function makeTooltip(d) {
   //})
   ;
 
-  // get the approximate linecount by looking at HTML elements
-  //var lines = d.tooltip ? (d.tooltip.match(/<h5>|<li>/gi) || []).length : 0;
-
-  if (d.tooltip && d.tooltip.length > 0) {
+  if (d.data.tooltip && d.data.tooltip.length > 0) {
     tooltip_div.transition().duration(300).style("display", "block");
     var header_div = tooltip_div.append("div");
     header_div.html('<a class="ui-dialog-titlebar-close modal-close" onclick="console.log(\"click\")"> X </a>');
-    tooltip_div.html(d.tooltip)
+    tooltip_div.html(d.data.tooltip)
       .style("left", (d3Event.x + 40 - query_plan_offset.left) + "px")
       .style("top", (d3Event.y - query_plan_offset.top/2) + "px");
   }
@@ -582,8 +537,8 @@ function removeAllTooltips() {
 
 function getHeight(node) {
   var numLines = 2;
-  if (node.details)
-    numLines += node.details.length;
+  if (node && node.data && node.data.details)
+    numLines += node.data.details.length;
   return(lineHeight*numLines);
 }
 
@@ -593,12 +548,12 @@ function getHeight(node) {
 
 function getWidth(node) {
   var maxWidth = 20; // leave at least this much space
-  if (node.name && node.name.length > maxWidth)
-    maxWidth = node.name.length;
-  if (node.details)
-    for (var i=0; i < node.details.length; i++)
-      if (node.details[i] && node.details[i].length > maxWidth)
-        maxWidth = node.details[i].length;
+  if (node.data && node.data.name && node.data.name.length > maxWidth)
+    maxWidth = node.data.name.length;
+  if (node.data && node.data.details)
+    for (var i=0; i < node.data.details.length; i++)
+      if (node.data.details[i] && node.data.details[i].length > maxWidth)
+        maxWidth = node.data.details[i].length;
 
   return(maxWidth * 5); //allow 5 units for each character
 }
@@ -627,7 +582,6 @@ function makeSimpleTreeFromPlanNodes(plan,next,parent,nodeCache) {
     name: plan.GetName(),
     details: plan.GetDetails(),
     parent: parent,
-    children: [],
     level: "node", // default background color
     time: plan.time,
     time_percent: plan.time_percent,
@@ -658,11 +612,15 @@ function makeSimpleTreeFromPlanNodes(plan,next,parent,nodeCache) {
   // if the plan has a 'predecessor', it is either a single plan node that should be
   // our child, or an array marking multiple children
 
-  if (plan.predecessor)
-    if (!_.isArray(plan.predecessor))
+  if (plan.predecessor) {
+    result.children = [];
+    if (!_.isArray(plan.predecessor)) {
       result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor,next,result.name,nodeCache));
-  else for (var i=0; i< plan.predecessor.length; i++)
-    result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor[i],null,result.name,nodeCache));
+    }
+    else for (var i=0; i< plan.predecessor.length; i++) {
+      result.children.push(makeSimpleTreeFromPlanNodes(plan.predecessor[i],null,result.name,nodeCache));
+    }
+  }
 
   return(result);
 }
