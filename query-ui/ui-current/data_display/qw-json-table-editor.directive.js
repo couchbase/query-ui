@@ -501,20 +501,20 @@ export default "qwJsonTableEditor";
         if (docWayTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
           'uib-tooltip-html="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB.\'"' +
-          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
         else if (docTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
           'uib-tooltip-html="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
-          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
         else if (tdata[row].rawJSONError)
           result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
                        'uib-tooltip-html="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
                        tdata[row].rawJsonError + '\'"' +
-                       'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+                       'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
         else if (tdata[row].rawJSON)
           result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
                        'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
-                       'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
+                       'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
         result += '</a></span>';
 
         // if we are showing top keys, add the ops per second
@@ -600,7 +600,7 @@ export default "qwJsonTableEditor";
         if (tdata[row].meta || tdata[row].xattrs)
           result += 'class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
           'tooltip-placement="auto bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
-          'tooltip-trigger="\'none\'" data-ng-click="showTT'+row+' = !showTT'+row+ '"';
+          'tooltip-trigger="none" data-ng-click="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
         var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " base64 not available";
@@ -974,7 +974,7 @@ export default "qwJsonTableEditor";
       else if (object && object.length > 1024*512)
         result += '<div class="text-center"><span class="icon fa-exclamation-triangle" ' +
         'uib-tooltip-html="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
-        'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">' +
+        'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">' +
         '</span></div>';
       else
         result += '<textarea ' + model + inputStyle + no_edit + '></textarea>';
