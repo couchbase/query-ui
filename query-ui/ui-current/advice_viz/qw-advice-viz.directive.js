@@ -113,7 +113,7 @@
           // we have some kind of advice, let's display it
           else {
             scope.error = null;
-            scope.advice = advice;
+            scope.advice = _.isArray(advice) ? advice : [advice];
           }
 
           // set our element to use this HTML
