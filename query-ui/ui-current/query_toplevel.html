@@ -1,10 +1,10 @@
 <div ng-controller="qwQueryController as qc">
 
   <mn-element-cargo depot="subnav">
-    <nav ng-if="qc.validated.valid() && qc.isEnterprise()" class="sub-nav">
+    <nav ng-if="qc.validated.valid()" class="sub-nav">
       <a ui-sref="app.admin.query.workbench" ui-sref-active="selected">
         Query Workbench</a>
-      <a ui-sref="app.admin.query.monitoring" ng-if="qc.isEnterprise() && qc.validated.monitoringAllowed()"
+      <a ui-sref="app.admin.query.monitoring" ng-if="qc.validated.monitoringAllowed()"
        ng-class="{selected: ('app.admin.query.monitoring' | includedByState)}">
         Query Monitor</a>
         <!--

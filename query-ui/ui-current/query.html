@@ -88,16 +88,20 @@
             Explain
             <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
           </button>
-          <button ng-if="qc.isEnterprise"
+          <button ng-if="qc.isEnterprise()"
              ng-disabled="qc.lastResult().busy"
              ng-click="qc.runAdviseOnLatest()"
              class="outline tight">
              Advise
             <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
           </button>
+ 
         </span>
 <!-- query execution summary stats -------------------------------------------->
         <div class="wb-result-summary">
+          <span class="wb-result-summary" ng-if="!qc.isEnterprise()">
+            <a href="https://index-advisor.couchbase.com/indexadvisor" target="_blank">External Query Advisor</a>&nbsp;&nbsp;&nbsp;&nbsp;
+          </span>
           <span
              class="nowrap wb-result-status padding-right-half"
              ng-class="{success: qc.status_success() || qc.lastResult().status == 'explain success', error: qc.status_fail()}">
@@ -166,7 +170,7 @@
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}"
            class="resp-hide-med">Plan Text</a>
-        <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise"
+        <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise()"
            ng-class="{selected: qc.isSelected(6)}">Advice
              <span ng-if="qc.hasRecommendedIndex(qc.lastResult())">*</span>
          </a>
