@@ -12,6 +12,7 @@ import qwFixLongNumberService from "/_p/ui/query/qw_fix_long_number_service.js";
 
 import qwDocEditorController from "/_p/ui/query/qw_doc_editor_controller.js";
 import qwJsonTableEditor from "/_p/ui/query/ui-current/data_display/qw-json-table-editor.directive.js";
+import qwDocEditorService from "/_p/ui/query/qw_doc_editor_service.js";
 
 export default "qwQueryDocEditor";
 
@@ -27,6 +28,7 @@ angular.module('qwQueryDocEditor', [
   validateQueryService,
   qwFixLongNumberService,
   qwJsonTableEditor,
+  qwDocEditorService
 ])
   .config(configure)
   .controller('qwDocEditorController', qwDocEditorController);
