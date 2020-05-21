@@ -53,8 +53,8 @@
           // create the recommended indexes
           scope.create_option = function(type,index) {
             var queries = [];
-            if (advice[index].recommended_indexes && _.isArray(advice[index].recommended_indexes[type])) {
-              advice[index].recommended_indexes[type].forEach(function(reco) {
+            if (scope.advice[index].recommended_indexes && _.isArray(scope.advice[index].recommended_indexes[type])) {
+              scope.advice[index].recommended_indexes[type].forEach(function(reco) {
                 queries.push(reco.index_statement);
               });
 
