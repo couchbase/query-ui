@@ -67,7 +67,7 @@ export default "qwJsonTableEditor";
             // make the table header with the top-level fields
 
             if (meta.truncated)
-              warning = angular.element('<div class="error text-small" style="margin-bottom:-20px">Some documents too large for tabular editing, tabular view truncated.</div>');
+              warning = angular.element('<div class="error text-small">Some documents too large for tabular editing, tabular view truncated.</div>');
             header = angular.element(createHTMLheader(meta,scope.controller));
             wrapper = '<div class="data-table-wrapper show-scrollbar"></div>';
 
