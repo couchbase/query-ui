@@ -4,7 +4,8 @@ import ace from '/ui/libs/ace/ace-wrapper.js';
 
 export default queryController;
 
-function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService, $scope, $interval, $interpolate, qwConstantsService, mnPoolDefault, mnServersService, qwJsonCsvService, jQuery) {
+function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService,
+    $scope, $interval, $interpolate, qwConstantsService, mnPoolDefault, mnServersService, qwJsonCsvService, jQuery) {
   var $ = jQuery;
 
   var qc = this;

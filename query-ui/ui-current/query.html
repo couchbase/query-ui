@@ -88,7 +88,7 @@
             Explain
             <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
           </button>
-          <button ng-if="qc.isEnterprise"
+          <button ng-if="qc.isEnterprise()"
              ng-disabled="qc.lastResult().busy"
              ng-click="qc.runAdviseOnLatest()"
              class="outline tight">
@@ -166,7 +166,7 @@
         <a ng-click="qc.selectTab(5)"
            ng-class="{selected: qc.isSelected(5)}"
            class="resp-hide-med">Plan Text</a>
-        <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise"
+        <a ng-click="qc.selectTab(6)" ng-if="qc.isEnterprise()"
            ng-class="{selected: qc.isSelected(6)}">Advice
              <span ng-if="qc.hasRecommendedIndex(qc.lastResult())">*</span>
          </a>
