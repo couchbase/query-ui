@@ -237,15 +237,26 @@ export default "qwJsonDataTable";
 //      console.log("  val1: " + JSON.stringify(val1) + " type: " + (typeof val1));
 //      console.log("  val2: " + JSON.stringify(val2) + " type: " + (typeof val2));
 
-	  // if one is undefined and the other is not, undefined always goes last
-      if (typeof val1 === 'undefined' && typeof val2 !== 'undefined')
-        return 1 * direction;
+	  // if one is undefined/null and the other is not, undefined always goes first
+	  // (by N1QL sort rules). Undefined goes before null, though.
+      var val1_undef = (typeof val1 === 'undefined');
+      var val2_undef = (typeof val2 === 'undefined');
+      var val1_empty = val1_undef || val1 == null;
+      var val2_empty = val2_undef || val2 == null;
 
-      if (typeof val1 !== 'undefined' && typeof val2 === 'undefined')
+      if (val1_empty && !val2_empty)
         return -1 * direction;
 
-      if (typeof val1 === 'undefined' && typeof val2 === 'undefined')
-        return 0;
+      if (!val1_empty && val2_empty)
+        return 1 * direction;
+
+      if (val1_empty && val2_empty) {
+        if (val1_undef && !val2_undef)
+          return  -1 * direction;
+        else if (!val1_undef && val2_undef)
+          return  1 * direction;
+        else return 0;
+      }
 
 	  // do they have the same type? then we can compare
 	  if (typeof val1 === typeof val2) {
