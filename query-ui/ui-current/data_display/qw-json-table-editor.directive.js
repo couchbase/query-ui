@@ -114,16 +114,7 @@ export default "qwJsonTableEditor";
 
               // put a sort listener on the data columns
               var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
-              // allow sorting by id
-              header[0].childNodes[startSortColumn - 1].addEventListener("click",function() {
-                sortTable(this,scope,$compile,$timeout,true);
-              },false);
-
-              for (var i=startSortColumn; i < header[0].childNodes.length; i++) {
-                header[0].childNodes[i].addEventListener("click",function() {
-                  sortTable(this,scope,$compile,$timeout);
-                },false);
-              }
+              scope.sortTable = getSortingFunction(startSortColumn,scope,$compile,$timeout);
              });
             //htmlElement.append(header);
           }
@@ -132,6 +123,14 @@ export default "qwJsonTableEditor";
         }
       }
     };
+  }
+
+  // factory to make sorting wrapper
+  function getSortingFunction(startSortColumn,scope,compile,timeout) {
+    return function($event,index) {
+      var sortByID = (index < startSortColumn);
+      sortTable($event.currentTarget,scope,compile,timeout,sortByID);
+    }
   }
 
   // globals used for sorting, etc.
@@ -155,7 +154,7 @@ export default "qwJsonTableEditor";
     //console.log("sortBy: " + spanElem.innerText + ", meta: " + meta);
     // if it's a new field, sort forward by that field
     if (spanElem !== prevSortElem) {
-      if (prevSortElem)
+      if (prevSortElem && prevSortElem.firstElementChild && prevSortElem.firstElementChild.classList)
         prevSortElem.firstElementChild.classList.remove("icon", "fa-caret-down", "fa-caret-up");
 
       prevSortElem = spanElem;
@@ -393,8 +392,8 @@ export default "qwJsonTableEditor";
     // We have widths for each column, so we can create the header row
     //
     var columnHeaders = '<div class="data-table-header-row">';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">&nbsp;</span>';
-    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*2 + 'px">id<span class="caret-subspan"></span></span>';
+    columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">&nbsp;</span>'; // tools
+    columnHeaders += '<span class="data-table-header-cell" ng-click="sortTable($event,1)" style="width:' + columnWidthPx*2 + 'px">id<span class="caret-subspan"></span></span>'; // docId
 
     // we may need a column for top key ops/ser
     if (meta.hasOps) {
@@ -409,8 +408,9 @@ export default "qwJsonTableEditor";
     }
 
     // header for each column
+    var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
-      columnHeaders += '<span ng-if="dec.options.show_tables" class="data-table-header-cell" style="width: ' +
+      columnHeaders += '<span ng-if="dec.options.show_tables" class="data-table-header-cell" ng-click="sortTable($event,' + (index+startSortColumn) + ')" style="width: ' +
       meta.columnWidths[key]*columnWidthPx + 'px;"'
 
       // for column names too big to fit, add a tooltip

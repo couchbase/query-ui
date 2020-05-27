@@ -23,7 +23,7 @@
 
    <div class="column">
      <div class="row row-min"><label>Bucket</label>
-        <a type="button" ng-click="dec.getTopKeys()" class="text-smaller">show top keys</a>
+        <a type="button" ng-click="dec.getTopKeys()" class="text-smaller"><span ng-if="!dec.options.showTopKeys">show top keys</span><span ng-if="dec.options.showTopKeys">hide top keys</span></a>
       </div>
       <ui-select
         on-select="dec.bucketChanged($item)"
@@ -198,12 +198,12 @@
     <div class="text-right nowrap pagination padding-right-min">
       <a
          ng-click="dec.prevBatch()"
-         ng-class="{'disabled-link' : dec.options.offset <= 0 || dec.options.doc_id}">
+         ng-class="{'disabled-link' : dec.options.offset <= 0 || dec.options.doc_id || dec.options.showTopKeys}">
         &lt; prev batch</a>
       <span class="text-smaller grayblack-3">&nbsp; |</span>
       <a
          ng-click="dec.nextBatch()"
-         ng-class="{'disabled-link' : dec.options.doc_id || dec.options.current_result.length == 0 || dec.options.current_query.startsWith('top keys')}">
+         ng-class="{'disabled-link' : dec.options.doc_id || dec.options.current_result.length == 0 || dec.options.current_query.startsWith('top keys') || dec.options.showTopKeys}">
         next batch &gt;</a>
     </div>
   </div>

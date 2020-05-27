@@ -560,6 +560,10 @@ function docEditorController($rootScope, $http, $uibModal, $uibModalStack, $time
   }
 
   function retrieveDocs_inner() {
+    // if we're already showing top keys, go back to regular docs
+    if (dec.options.showTopKeys)
+      dec.options.showTopKeys = false;
+
     qwQueryService.saveStateToStorage();
 
     // special case - when first loading the page, the QueryService may not have gotten all
@@ -933,6 +937,14 @@ function docEditorController($rootScope, $http, $uibModal, $uibModalStack, $time
     if (dec.options.queryBusy) // don't have 2 retrieves going at once
       return;
 
+    // if we're already showing top keys, go back to regular docs
+    if (dec.options.showTopKeys) {
+      dec.options.showTopKeys = false;
+      retrieveDocs();
+      return;
+    }
+
+    dec.options.showTopKeys = true;
     dec.options.queryBusy = true;
     dec.options.current_query = "top keys for bucket: " + dec.options.selected_bucket;
     dec.options.current_result = [];
