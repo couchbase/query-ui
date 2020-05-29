@@ -1,132 +1,162 @@
-<div ng-controller="qwImportController as ic" class="doc-editor">
-
-  <!-- row of controls for the query ----------------------------------------- -->
+<div ng-controller="qwImportController as ic">
   <form name="searchForm">
-    <div class="resp-med">
-
-      <input type="file" id="loadQuery" name="files"
-        style="display: none" accept=".txt,.json,.csv,.tsv">
-
-      <div class="column">
-        <button ng-click="ic.selectFile()" class="fix-width-3" ng-disabled="ic.options.importing">
-          Select File to Import <span ng-if="ic.options.queryBusy"
-            class="icon-button">
-        </button>
-        {{ic.status}}
-      </div>
-
-      <br>
-
-      <div class="row row-min">
-        <label>File Contents:</label>
-      </div>
-      <div class="wb-results-json wb-import-data-panel" ui-ace="ic.aceFileOptions" ng-model="ic.options.fileData"></div>
-
-      <br>
-
-      <div class="row row-min">
-        <span class="wb-history-controls"> 
-           <label>Found {{ic.options.docData.length}} records parsing as: &nbsp;</label> 
-           <ui-select on-select="ic.parseAs($item)" ng-model="ic.options.selectedFormat" 
-           theme="selectize" class="cbui-select" ng-disabled="ic.options.importing">
-             <ui-select-match class="ui-select-match">
-               {{$select.selected}}
-             </ui-select-match>
-             <ui-select-choices repeat="item in ic.formats">
-               <span class="select-item ellipsis" ng-bind-html="item"></span>
-             </ui-select-choices> </ui-select>
-         </span>
-      </div>
-
-      <br>
-
-      <div class="row row-min">
-        <label>Parsed Data:</label>
-          <div class="row text-small resp-margin-sml">JSON 
-          <label for="show_table" class="toggle-control">
-          <input type="checkbox" id="show_table" ng-model="ic.options.showTable" ng-change="ic.showTableChanged()">
-          <span class="toggle-control-body"></span>
-          </label>Table
+    <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
+      <div class="width-4 padding-right-half margin-right-25 margin-top-half">
+        <p class="text-small">
+          Select a .txt, .json, .csv, or .tsv file to quickly import data into your cluster.
+        </p>
+        <div class="row flex-left margin-bottom-2">
+          <span>
+            <input
+               type="file"
+               id="loadQuery"
+               name="files"
+               style="display: none"
+               accept=".txt,.json,.csv,.tsv">
+            <button
+               ng-click="ic.selectFile()"
+               class="fix-width-3 margin-right-1 outline"
+               ng-disabled="ic.options.importing">
+              Select File to Import...
+              <span ng-if="ic.options.queryBusy" class="icon-button"></span>
+            </button>
+          </span>
+          <div class="text-smaller">
+            {{ic.status}}
+            <span
+              ng-if="ic.status == 'loading data file'"
+              class='loading'>
+            </span>
           </div>
-      </div>
- 
-
-      <div ng-if="ic.options.docData && ic.options.docData.length && ic.options.showTable"
-        class="wb-results-table wb-import-data-panel" qw-json-data-table="ic.options.docData"></div>
-      <div ng-if="ic.options.docData && ic.options.docData.length && !ic.options.showTable"
-        class="wb-results-json wb-import-data-panel" ui-ace="ic.aceFileOptions"
-        ng-model="ic.options.docJson"></div>
-      <div class="wb-results-json wb-import-data-panel" ui-ace="qc.aceOutputOptions"
-        ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
-        ng-model="qc.lastResult().result"></div>
-      <div class="text-small wb-import-empty-panel" ng-if="!ic.options.docData || !ic.options.docData.length">No data</div>
-
-      <br>
-
-      <div class="row row-min">
-        <span class="wb-history-controls">
-          <label>Select Destination Bucket: &nbsp;</label> 
-          <ui-select ng-model="ic.options.selectedBucket" theme="selectize"
-            class="cbui-select" ng-disabled="ic.options.importing">
-            <ui-select-match class="ui-select-match">
-               {{$select.selected}} 
-            </ui-select-match> 
-            <ui-select-choices class="ui-select-choices" repeat="bucket in ic.buckets | filter: $select.search">
-              <span class="select-item ellipsis" ng-bind-html="bucket | highlight: $select.search"></span> 
-            </ui-select-choices> 
-          </ui-select>
-        </span>
-      </div>
-
-      <br>
-
-        <label>Import with Document ID:</label>
-
-      <div>
-        <input type="radio" id="guid" name="docId" ng-model="ic.options.useKey" ng-value="false">
-        <label for="guid">GUID</label>
         </div>
-      <div>
-        <span class="wb-history-controls"> 
-        <input type="radio" id="field" name="docId" ng-model="ic.options.useKey" ng-value="true">
-        <label for="field" ng-disabled="!(ic.options.fields.length > 0)">Value of Field: </label> 
-        <ui-select ng-disabled="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
-            ng-model="ic.options.selectedDocIDField" theme="selectize" class="cbui-select"> 
-           <ui-select-match class="ui-select-match">
-             {{$select.selected}} 
-           </ui-select-match> 
-           <ui-select-choices ng-enabled="ic.options.useKey" class="ui-select-choices" repeat="field in ic.options.fields">
-             <span ng-enabled="ic.options.useKey" class="select-item ellipsis" ng-bind-html="field"></span>
-           </ui-select-choices> 
-        </ui-select>
-        <span ng-if="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
-          class="fa-warning icon orange-3 cursor-pointer" uib-tooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found."></span>
- 
-        </span>
+        <div class="formrow">
+          <div class="row">
+            <label>Parse File As</label>
+            <span
+              class="text-normal text-smaller green-1"
+              ng-class="ic.options.docData.length > 0 ? 'green-1' : 'red-1'">
+             found {{ic.options.docData.length}} records
+            </span>
+          </div>
+          <ui-select
+             on-select="ic.parseAs($item)"
+             ng-model="ic.options.selectedFormat"
+             theme="selectize"
+             class="cbui-select"
+             ng-disabled="ic.options.importing">
+            <ui-select-match class="ui-select-match">
+              {{$select.selected}}
+            </ui-select-match>
+            <ui-select-choices repeat="item in ic.formats">
+              <span class="select-item ellipsis" ng-bind-html="item"></span>
+            </ui-select-choices> </ui-select>
+        </div>
+
+        <div class="formrow">
+          <label>Destination Bucket</label>
+          <ui-select
+             ng-model="ic.options.selectedBucket"
+             theme="selectize"
+             class="cbui-select"
+             ng-disabled="ic.options.importing">
+            <ui-select-match class="ui-select-match">
+               {{$select.selected}}
+            </ui-select-match>
+            <ui-select-choices
+               class="ui-select-choices"
+               repeat="bucket in ic.buckets | filter: $select.search">
+              <span
+                 class="select-item ellipsis"
+                 ng-bind-html="bucket | highlight: $select.search"></span>
+            </ui-select-choices>
+          </ui-select>
+        </div>
+
+        <div class="formrow">
+          <label>Import With Document ID</label>
+          <div>
+            <input type="radio" id="guid" name="docId" ng-model="ic.options.useKey" ng-value="false">
+            <label for="guid">GUID</label>
+          </div>
+          <div>
+            <span class="wb-history-controls">
+            <input type="radio" id="field" name="docId" ng-model="ic.options.useKey" ng-value="true">
+            <label for="field" ng-disabled="!(ic.options.fields.length > 0)">Value of Field: </label>
+            <ui-select ng-disabled="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
+                ng-model="ic.options.selectedDocIDField" theme="selectize" class="cbui-select">
+               <ui-select-match class="ui-select-match">
+                 {{$select.selected}}
+               </ui-select-match>
+               <ui-select-choices ng-enabled="ic.options.useKey" class="ui-select-choices" repeat="field in ic.options.fields">
+                 <span ng-enabled="ic.options.useKey" class="select-item ellipsis" ng-bind-html="field"></span>
+               </ui-select-choices>
+            </ui-select>
+            <span ng-if="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
+              class="fa-warning icon orange-3 cursor-pointer" uib-tooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found."></span>
+            </span>
+          </div>
+        </div>
+
       </div>
-      <br>
 
-
-      <div class="row row-min">
-      <span class="wb-history-controls">
+      <div class="width-8 padding-half">
+        <p class="text-small">
+          For datasets greater than 100MB, use the command-line tool <span class="monospaced bold">cbimport</span>.
+        </p>
+        <textarea class="monospaced">{{ic.getCbimport()}}</textarea>
+        <p class="text-smaller margin-bottom-2">
+          choose a file & a destination bucket to complete this command
+        </p>
+        <label>File Contents</label>
+        <div
+           class="wb-results-json import-raw-panel"
+           ui-ace="ic.aceFileOptions"
+           ng-model="ic.options.fileData"></div>
+        <div class="importdata-parsedwrapper">
+          <div class="row">
+            <label>Parsed Data</label>
+            <div class="row text-small resp-margin-sml">JSON
+            <label for="show_table" class="toggle-control">
+            <input
+               type="checkbox"
+               id="show_table"
+               ng-model="ic.options.showTable"
+               ng-change="ic.showTableChanged()">
+            <span class="toggle-control-body"></span>
+            </label>Table
+            </div>
+          </div>
+          <div
+             ng-if="ic.options.docData && ic.options.docData.length && ic.options.showTable"
+             class="wb-results-table import-parsed-panel text-smaller"
+             qw-json-data-table="ic.options.docData"></div>
+          <div
+             ng-if="ic.options.docData && ic.options.docData.length && !ic.options.showTable"
+             class="wb-results-json import-parsed-panel"
+             ui-ace="ic.aceFileOptions"
+             ng-model="ic.options.docJson"></div>
+          <div
+             class="wb-results-json import-parsed-panel text-smaller"
+             ui-ace="qc.aceOutputOptions"
+             ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
+             ng-model="qc.lastResult().result"></div>
+          <div
+             class="import-empty-panel text-smaller"
+             ng-if="!ic.options.docData || !ic.options.docData.length">
+            no data
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer-import">
+      <div class="text-center">
         <button ng-click="ic.doImport()" ng-disabled="!ic.options.docData.length || !ic.options.selectedBucket" class="fix-width-3">
            <span ng-if="!ic.options.importing">Import Data</span>
            <span ng-if="ic.options.importing">Cancel Import</span>
-          <span class="icon-button"></button>
-        {{ic.options.last_import_status}}
-        </span>
+        </button>
+        <br>
+        <div class="width-12">{{ic.options.last_import_status}}</div>
       </div>
-      
-      <br>
-      
-      <div class="">
-       <div class="row row-min">
-        Note: importing data through the browser is inherently slower than using cbimport from the command-line. 
-        The cbimport command for the above data would be:
-       </div>
-       <div class="row row-min monospaced">
-        {{ic.getCbimport()}}
-       </div>
-      </div>
-    </div>
+    </footer>
+  </form>
 </div>

@@ -1,9 +1,8 @@
 /**
- * A controller for managing a document editor based on queries
+ * A controller for browser-based data import
  */
 
 (function() {
-
 
   angular.module('qwQuery').controller('qwImportController', importController);
 
@@ -78,13 +77,13 @@
       var fileName = this.files[0].name;
 
       if (fileSize/1024/1024 > 100) {
-        ic.status = " File: " + this.files[0].name + " is too large > 100 MB.";
+        ic.status = this.files[0].name + " is too large (> 100 MB)";
         return;
       }
 
       ic.options.fileName = this.files[0].name;
       ic.options.fileSize = Math.round(fileSize*1000/1024/1024)/1000;
-      ic.status = "Loading data file...";
+      ic.status = "loading data file";
 
       // post a dialog for large files, since loading can take a while
 
@@ -92,7 +91,7 @@
         qis.closeAllDialogs();
 
         var dialogScope = $rootScope.$new(true);
-        dialogScope.title = "Loading data file...";
+        dialogScope.title = "Loading Data File...";
         dialogScope.detail = "Loading file " + fileName + ", size: " + ic.options.fileSize +
                               "MB, which may take a while.";
         $uibModal.open({
@@ -119,7 +118,7 @@
           parseAs(ic.formats[0]);
 
         else
-          qis.showErrorDialog("Import Warning","Data doesn't look like JSON, CSV, or TSV. Select a format below.", true);
+          qis.showErrorDialog("Import Warning","Data doesn't look like JSON, CSV, or TSV. Try a different parsing format.", true);
       });
 
       // handle any errors reading the file
@@ -182,7 +181,7 @@
 
       // now get the list of fields common to all documents, as possible doc IDs
       if (ic.options.docData.length) {
-        ic.status = "Loaded " + ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+        ic.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
         if (!ic.options.showTable)
           ic.options.docJson = JSON.stringify(ic.options.docData,null,2);
 
@@ -232,7 +231,6 @@
 
       ic.outputEditor = _editor;
     };
-
 
     //
     // get the text of the equivalent cbimport command
@@ -291,6 +289,5 @@
 
     return ic;
   }
-
 
 })();
