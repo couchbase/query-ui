@@ -3,7 +3,7 @@
     <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
       <div class="width-4 padding-right-half margin-right-25 margin-top-half">
         <p class="text-small">
-          Select a .txt, .json, .csv, or .tsv file to quickly import data into your cluster.
+          Select tab/comma delimited or JSON file to import into your cluster.
         </p>
         <div class="row flex-left margin-bottom-2">
           <span>
@@ -76,81 +76,84 @@
           <label>Import With Document ID</label>
           <div>
             <input type="radio" id="guid" name="docId" ng-model="ic.options.useKey" ng-value="false">
-            <label for="guid">GUID</label>
+            <label for="guid">UUID</label>
           </div>
           <div>
             <span class="wb-history-controls">
             <input type="radio" id="field" name="docId" ng-model="ic.options.useKey" ng-value="true">
             <label for="field" ng-disabled="!(ic.options.fields.length > 0)">Value of Field: </label>
-            <ui-select ng-disabled="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
-                ng-model="ic.options.selectedDocIDField" theme="selectize" class="cbui-select">
-               <ui-select-match class="ui-select-match">
-                 {{$select.selected}}
-               </ui-select-match>
-               <ui-select-choices ng-enabled="ic.options.useKey" class="ui-select-choices" repeat="field in ic.options.fields">
-                 <span ng-enabled="ic.options.useKey" class="select-item ellipsis" ng-bind-html="field"></span>
-               </ui-select-choices>
+            <ui-select
+               ng-disabled="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
+               ng-model="ic.options.selectedDocIDField"
+               theme="selectize"
+               class="cbui-select">
+              <ui-select-match class="ui-select-match">
+                {{$select.selected}}
+              </ui-select-match>
+              <ui-select-choices ng-enabled="ic.options.useKey" class="ui-select-choices" repeat="field in ic.options.fields">
+                <span ng-enabled="ic.options.useKey" class="select-item ellipsis" ng-bind-html="field"></span>
+              </ui-select-choices>
             </ui-select>
-            <span ng-if="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
-              class="fa-warning icon orange-3 cursor-pointer" uib-tooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found."></span>
+            <span
+               ng-if="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0"
+               tooltip-trigger="'mouseenter'"
+               tooltip-append-to-body="true"
+               class="fa-warning icon orange-3 cursor-pointer"
+               uib-tooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found.">
+             </span>
             </span>
           </div>
         </div>
-
       </div>
 
       <div class="width-8 padding-half">
-        <p class="text-small">
-          For datasets greater than 100MB, use the command-line tool <span class="monospaced bold">cbimport</span>.
-        </p>
-        <textarea class="monospaced">{{ic.getCbimport()}}</textarea>
-        <p class="text-smaller margin-bottom-2">
-          choose a file & a destination bucket to complete this command
-        </p>
-        <label>File Contents</label>
-        <div
-           class="wb-results-json import-raw-panel"
-           ui-ace="ic.aceFileOptions"
-           ng-model="ic.options.fileData"></div>
-        <div class="importdata-parsedwrapper">
-          <div class="row">
-            <label>Parsed Data</label>
-            <div class="row text-small resp-margin-sml">JSON
-            <label for="show_table" class="toggle-control">
-            <input
-               type="checkbox"
-               id="show_table"
-               ng-model="ic.options.showTable"
-               ng-change="ic.showTableChanged()">
-            <span class="toggle-control-body"></span>
-            </label>Table
-            </div>
-          </div>
+        <div class="import-clinote">
+          <p class="text-small">
+            For faster performance, or datasets greater than 100MB, use the
+            command-line tool <span class="monospaced bold">cbimport</span>.
+          </p>
+          <textarea class="monospaced">{{ic.getCbimport()}}</textarea>
+          <p class="text-smaller margin-bottom-2">
+            command generated from your file, destination, and ID selections on the left
+          </p>
+        </div>
+
+        <div class="row row-min margin-bottom-half margin-top-neg-half resp-hide-sml">
+          <label>File Contents</label>
+          <span class="pills">
+          <a ng-click="ic.selectTab(1)"
+             ng-class="{selected: ic.isSelected(1)}">Raw File</a>
+          <a ng-click="ic.selectTab(2)"
+             ng-class="{selected: ic.isSelected(2)}">Parsed Table</a>
+          <a ng-click="ic.selectTab(3)"
+             ng-class="{selected: ic.isSelected(3)}">Parsed JSON</a>
+          </span>
+        </div>
+
+        <div class="importdata-parsedwrapper resp-hide-sml">
           <div
-             ng-if="ic.options.docData && ic.options.docData.length && ic.options.showTable"
-             class="wb-results-table import-parsed-panel text-smaller"
+             ng-if="ic.isSelected(1)"
+             class="wb-results-json"
+             ui-ace="ic.aceFileOptions"
+             ng-model="ic.options.fileData"></div>
+          <div
+             ng-if="ic.isSelected(2)"
+             class="wb-results-table import-table-panel"
              qw-json-data-table="ic.options.docData"></div>
           <div
-             ng-if="ic.options.docData && ic.options.docData.length && !ic.options.showTable"
-             class="wb-results-json import-parsed-panel"
+             ng-if="ic.isSelected(3)"
+             class="wb-results-json"
              ui-ace="ic.aceFileOptions"
              ng-model="ic.options.docJson"></div>
-          <div
-             class="wb-results-json import-parsed-panel text-smaller"
-             ui-ace="qc.aceOutputOptions"
-             ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
-             ng-model="qc.lastResult().result"></div>
-          <div
-             class="import-empty-panel text-smaller"
-             ng-if="!ic.options.docData || !ic.options.docData.length">
-            no data
-          </div>
         </div>
       </div>
     </div>
     <footer class="footer-import">
       <div class="text-center">
-        <button ng-click="ic.doImport()" ng-disabled="!ic.options.docData.length || !ic.options.selectedBucket" class="fix-width-3">
+        <button
+           ng-click="ic.doImport()"
+           ng-disabled="!ic.options.docData.length || !ic.options.selectedBucket"
+           class="fix-width-3">
            <span ng-if="!ic.options.importing">Import Data</span>
            <span ng-if="ic.options.importing">Cancel Import</span>
         </button>

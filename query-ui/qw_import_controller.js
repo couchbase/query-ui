@@ -48,6 +48,18 @@
         $blockScrolling: Infinity
     };
 
+    // data pills
+    ic.selected = 1;
+    ic.isSelected = function(tab) {return ic.selected == tab};
+    ic.selectTab = function(tab) {
+      if (tab != ic.selected) {
+        ic.selected = tab;
+        // if they switched to show JSON and we don't have JSON yet, create it
+        if (ic.selected == 3 && ic.options.docJson.length == 0)
+          ic.options.docJson = JSON.stringify(ic.options.docData,null,2);
+      }
+    };
+
     // regex to figure out what format the data appears to be
     var looksLikeTSV = /^[^\t\n]+[\t]/;
     var looksLikeCSV = /^[^,\n]+[,]/;
@@ -105,6 +117,7 @@
         qis.closeAllDialogs();
         ic.options.fileData = reader.result;
         ic.options.fields = [];
+        ic.selectTab(2);
         if (ic.options.fileData.match(looksLikeJSONList))
           parseAs(ic.formats[2]);
 
@@ -117,8 +130,11 @@
         else if (ic.options.fileData.match(looksLikeCSV))
           parseAs(ic.formats[0]);
 
-        else
+        else {
           qis.showErrorDialog("Import Warning","Data doesn't look like JSON, CSV, or TSV. Try a different parsing format.", true);
+          ic.selectTab(1);
+          ic.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+        }
       });
 
       // handle any errors reading the file
