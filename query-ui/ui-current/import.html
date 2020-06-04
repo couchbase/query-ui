@@ -1,9 +1,9 @@
 <div ng-controller="qwImportController as ic">
   <form name="searchForm">
     <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
-      <div class="width-4 padding-right-half margin-right-25 margin-top-half">
+      <div class="width-4 import-col1">
         <p class="text-small">
-          Select tab/comma delimited or JSON file to import into your cluster.
+          Select a tab/comma delimited or JSON file to import.
         </p>
         <div class="row flex-left margin-bottom-2">
           <span>
@@ -15,7 +15,7 @@
                accept=".txt,.json,.csv,.tsv">
             <button
                ng-click="ic.selectFile()"
-               class="fix-width-3 margin-right-1 outline"
+               class="outline margin-right-1"
                ng-disabled="ic.options.importing">
               Select File to Import...
               <span ng-if="ic.options.queryBusy" class="icon-button"></span>
@@ -25,7 +25,7 @@
             {{ic.status}}
             <span
               ng-if="ic.status == 'loading data file'"
-              class='loading'>
+              class="loading">
             </span>
           </div>
         </div>
@@ -33,9 +33,9 @@
           <div class="row">
             <label>Parse File As</label>
             <span
-              class="text-normal text-smaller green-1"
-              ng-class="ic.options.docData.length > 0 ? 'green-1' : 'red-1'">
-             found {{ic.options.docData.length}} records
+               class="text-normal text-smaller green-1"
+               ng-class="ic.options.docData.length > 0 ? 'green-1' : 'red-1'">
+              found {{ic.options.docData.length}} records
             </span>
           </div>
           <ui-select
@@ -79,7 +79,6 @@
             <label for="guid">UUID</label>
           </div>
           <div>
-            <span class="wb-history-controls">
             <input type="radio" id="field" name="docId" ng-model="ic.options.useKey" ng-value="true">
             <label for="field" ng-disabled="!(ic.options.fields.length > 0)">Value of Field: </label>
             <ui-select
@@ -101,19 +100,18 @@
                class="fa-warning icon orange-3 cursor-pointer"
                uib-tooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found.">
              </span>
-            </span>
           </div>
         </div>
       </div>
 
-      <div class="width-8 padding-half">
+      <div class="width-8">
         <div class="import-clinote">
           <p class="text-small">
             For faster performance, or datasets greater than 100MB, use the
             command-line tool <span class="monospaced bold">cbimport</span>.
           </p>
           <textarea class="monospaced">{{ic.getCbimport()}}</textarea>
-          <p class="text-smaller margin-bottom-2">
+          <p class="text-fine margin-bottom-2">
             command generated from your file, destination, and ID selections on the left
           </p>
         </div>

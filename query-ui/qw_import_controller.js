@@ -148,6 +148,7 @@
       reader.readAsText(file);
     }
 
+
     //
     // try to turn the data file into a list of JSON documents we can upload to a bucket
     //
@@ -208,6 +209,12 @@
 
         ic.options.fields = fields;
         ic.options.selectedDocIDField = fields[0];
+      }
+      // no records seen?
+      else {
+        qis.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON)", true);
+        ic.selectTab(1);
+        ic.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
       }
     }
 
