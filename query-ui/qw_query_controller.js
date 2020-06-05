@@ -1,6 +1,7 @@
 import saveAs from "/ui/web_modules/file-saver.js";
 import _ from "/ui/web_modules/lodash.js";
 import ace from '/ui/libs/ace/ace-wrapper.js';
+import n1ql from '/_p/ui/query/n1ql_parser/n1ql.js';
 
 export default queryController;
 
@@ -846,14 +847,16 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
       if (_.isArray(parseTrees)) for (var i=0; i< parseTrees.length; i++) {
         var tree = parseTrees[i];
+        var has_where = tree && tree.ops && tree.ops.opt_where;
+        var has_use_keys = tree && tree.ops && tree.ops.opt_use_keys;
         // individual tree should be object with 'type' at the top level. Look for 'type' = 'Update' or 'Delete'
-        if (tree && tree.type == 'Update' && tree.where == null && tree.ops.where == null)
+        if (tree && tree.type == 'Update' && !has_where && !has_use_keys)
           warningPromise = showConfirmationDialog("Warning","Query contains UPDATE with no WHERE clause. Such a query would update all documents. Proceed anyway?");
-        else if (tree && tree.type == 'Delete' && tree.ops && tree.ops.opt_where == null)
+        else if (tree && tree.type == 'Delete' && !has_where && !has_use_keys)
           warningPromise = showConfirmationDialog("Warning","Query contains DELETE with no WHERE clause. Such a query would delete all documents. Proceed anyway?");
       }
     }
-    catch (except) {/*console.log("Error parsing queries: " + except);*/}
+    catch (except) {console.log("Error parsing queries: " + except);}
 
     // if there is a warning, make sure they want to proceed
     if (warningPromise)
