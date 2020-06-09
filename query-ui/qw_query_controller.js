@@ -847,8 +847,8 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
       if (_.isArray(parseTrees)) for (var i=0; i< parseTrees.length; i++) {
         var tree = parseTrees[i];
-        var has_where = tree && tree.ops && tree.ops.opt_where;
-        var has_use_keys = tree && tree.ops && tree.ops.opt_use_keys;
+        var has_where = tree && tree.ops && (tree.ops.where || tree.ops.opt_where);
+        var has_use_keys = tree && tree.ops && (tree.ops.use_keys || tree.ops.opt_use_keys);
         // individual tree should be object with 'type' at the top level. Look for 'type' = 'Update' or 'Delete'
         if (tree && tree.type == 'Update' && !has_where && !has_use_keys)
           warningPromise = showConfirmationDialog("Warning","Query contains UPDATE with no WHERE clause. Such a query would update all documents. Proceed anyway?");
