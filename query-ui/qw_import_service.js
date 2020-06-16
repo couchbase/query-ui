@@ -140,14 +140,26 @@
                     setTimeout(getNextSaveN1QL(docNum+1),1);
                   }
                   // otherwise done with import
-                  else
+                  else {
                     qis.options.importing = false;
+                    showErrorDialog("Import Complete", qis.options.last_import_status, true, true);
+                    resetOptions();
+                  }
                 }
               },
               function error(result) {
-                  console.log("N1QL Error!" + JSON.stringify(result));
-                  qis.options.last_import_status = "Error importing docs: " + firstDoc + "-" + docNum + ": " + JSON.stringify(result);
+                if (result && result.data) {
+                  //console.log("N1QL Error!" + JSON.stringify(result.data.errors));
+                  console.log("Error with query: " + query);
+                  if (result.data.errors && result.data.errors.length == 1)
+                    qis.options.last_import_status = "Error importing docs in range: " + firstDoc + "-" + docNum + ": " + JSON.stringify(result.data.errors[0].msg);
+                  else
+                    qis.options.last_import_status = "Error importing docs in range: " + firstDoc + "-" + docNum + ": " + JSON.stringify(result.data.errors);
+                  showErrorDialog("Import Failed", qis.options.last_import_status, true);
                   qis.options.importing = false;
+                }
+                else
+                  showErrorDialog("Import Failed", "Import failed with unknown status from server.", true);
               });
           return;
         }
@@ -161,6 +173,22 @@
       return function() {saveDocsViaN1QL(startingDocNum);};
     }
 
+
+    //
+    // reset options when done
+    //
+
+    function resetOptions() {
+      qis.options.fields = [];
+      qis.options.selectedDocIDField = "";
+      qis.options.useKey = false;
+      qis.options.fileData = "";
+      qis.options.docData = "";
+      qis.options.docJson = "";
+      qis.options.fileName = "";
+      qis.options.fileSize = 0;
+      qis.options.status = "";
+    }
 
     //
     // get a list of buckets from the server via the REST API
@@ -218,11 +246,12 @@
     // Show an error dialog
     //
 
-    function showErrorDialog(title, detail, hide_cancel) {
+    function showErrorDialog(title, detail, hide_cancel, is_info) {
       closeAllDialogs();
 
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = title;
+      dialogScope.show_info = is_info;
       if (!Array.isArray(detail))
         dialogScope.error_detail = detail;
       else
