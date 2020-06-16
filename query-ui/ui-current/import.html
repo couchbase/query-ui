@@ -3,7 +3,16 @@
     <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
       <div class="width-4 import-col1">
         <p class="text-small">
-          Select a tab/comma delimited or JSON file to import.
+          Select a tab/comma delimited or JSON list/lines file to import. See tooltip for format info.
+          <span
+             class="fa-stack icon-info"
+             uib-tooltip-html="'This import UI supports the following formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul>'"
+             tooltip-placement="auto top"
+             tooltip-append-to-body="true"
+             tooltip-trigger="'mouseenter'">
+             <span class="icon fa-circle-thin fa-stack-2x"></span>
+             <span class="icon fa-info fa-stack-1x"></span>
+          </span>
         </p>
         <div class="row flex-left margin-bottom-2">
           <span>
@@ -22,9 +31,9 @@
             </button>
           </span>
           <div class="text-smaller">
-            {{ic.status}}
+            {{ic.options.status}}
             <span
-              ng-if="ic.status == 'loading data file'"
+              ng-if="ic.options.status == 'loading data file'"
               class="loading">
             </span>
           </div>
@@ -73,7 +82,17 @@
         </div>
 
         <div class="formrow">
-          <label>Import With Document ID</label>
+          <label>Import With Document ID
+            <span
+             class="fa-stack icon-info"
+             uib-tooltip-html="'Every document stored in Couchbase requires a unique Document ID. For the ID, you can select an automatically generated UUID, or a field from the data. If you choose a field, it much have a distinct value for every document. Any duplicate ID values will cause later documents to overwrite earlier ones with the same ID value.'"
+             tooltip-placement="auto top"
+             tooltip-append-to-body="true"
+             tooltip-trigger="'mouseenter'">
+             <span class="icon fa-circle-thin fa-stack-2x"></span>
+             <span class="icon fa-info fa-stack-1x"></span>
+           </span>
+          </label>
           <div>
             <input type="radio" id="guid" name="docId" ng-model="ic.options.useKey" ng-value="false">
             <label for="guid">UUID</label>
@@ -150,7 +169,7 @@
       <div class="text-center">
         <button
            ng-click="ic.doImport()"
-           ng-disabled="!ic.options.docData.length || !ic.options.selectedBucket"
+           ng-disabled="!ic.options.docData.length || !ic.options.selectedBucket || !ic.validQueryService()"
            class="fix-width-3">
            <span ng-if="!ic.options.importing">Import Data</span>
            <span ng-if="ic.options.importing">Cancel Import</span>

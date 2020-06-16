@@ -22,7 +22,7 @@
     ic.doImport = qis.doImport;
 
     // local state that doesn't need to persist
-    ic.status = "";
+    ic.options.status = "";
 
     // local functions and variables
     ic.aceOutputLoaded = aceOutputLoaded;
@@ -32,6 +32,7 @@
 
     ic.formats = ["CSV","TSV","JSON List","JSON Lines"];
     ic.options.selectedFormat = ic.formats[0];
+    ic.validQueryService = validateQueryService.valid;
 
     ic.selectFile = function() {
       $("#loadQuery")[0].value = null;
@@ -89,13 +90,13 @@
       var fileName = this.files[0].name;
 
       if (fileSize/1024/1024 > 100) {
-        ic.status = this.files[0].name + " is too large (> 100 MB)";
+        ic.options.status = this.files[0].name + " is too large (> 100 MB)";
         return;
       }
 
       ic.options.fileName = this.files[0].name;
       ic.options.fileSize = Math.round(fileSize*1000/1024/1024)/1000;
-      ic.status = "loading data file";
+      ic.options.status = "loading data file";
 
       // post a dialog for large files, since loading can take a while
 
@@ -131,9 +132,9 @@
           parseAs(ic.formats[0]);
 
         else {
-          qis.showErrorDialog("Import Warning","Data doesn't look like JSON, CSV, or TSV. Try a different parsing format.", true);
+          qis.showErrorDialog("Import Warning","Data doesn't look like JSON list/lines, CSV, or TSV. Try a different parsing format.", true);
           ic.selectTab(1);
-          ic.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+          ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
         }
       });
 
@@ -156,23 +157,23 @@
     function parseAs(format) {
       // nothing to do if no data loaded
       if (!ic.options.fileData || !ic.options.fileData.length) {
-        ic.status = "";
+        ic.options.status = "";
         return;
       }
 
       ic.options.docData = "";
       ic.options.docJson = "";
       ic.options.selectedFormat = format;
-      ic.status = "Parsing data file...";
+      ic.options.status = "Parsing data file...";
       ic.options.useKey = false;
 
       switch (format) {
       case ic.formats[0]:
-        ic.options.docData = d3.csvParse(ic.options.fileData);
+        ic.options.docData = d3.csvParse(ic.options.fileData,d3.autoType);
       break;
 
       case ic.formats[1]:
-        ic.options.docData = d3.tsvParse(ic.options.fileData);
+        ic.options.docData = d3.tsvParse(ic.options.fileData,d3.autoType);
         break;
 
       case ic.formats[2]: // JSON List
@@ -198,13 +199,13 @@
 
       // now get the list of fields common to all documents, as possible doc IDs
       if (ic.options.docData.length) {
-        ic.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+        ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
         if (!ic.options.showTable)
           ic.options.docJson = JSON.stringify(ic.options.docData,null,2);
 
         var fields = getDocFields(ic.options.docData[0]);
         ic.options.docData.forEach(function (doc) {
-          fields = _.intersection(getDocFields(doc));
+          fields = _.intersection(getDocFields(doc),fields);
         });
 
         ic.options.fields = fields;
@@ -212,9 +213,9 @@
       }
       // no records seen?
       else {
-        qis.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON)", true);
+        qis.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON List/Lines)", true);
         ic.selectTab(1);
-        ic.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+        ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
       }
     }
 
@@ -230,7 +231,7 @@
       var fields = [];
       Object.keys(doc).forEach(function (fieldName) {
         var val = doc[fieldName];
-        if (!_.isArray(val) && !_.isObject(val))
+        if (!_.isArray(val) && !_.isObject(val) && !_.isUndefined(val))
           fields.push(fieldName);
       });
 
@@ -263,12 +264,16 @@
       var command = 'cbimport ';
 
       // file format
-      switch (ic.selectedFormat) {
+      switch (ic.options.selectedFormat) {
       case ic.formats[0]: command += 'csv '; break;
       case ic.formats[1]: command += "csv --field-separator '\\t' "; break;
       case ic.formats[2]: command += 'json --format list '; break;  // JSON List
       case ic.formats[3]: command += 'json --format lines '; break; // JSON Lines
       }
+
+      // cluster
+      var fullURL = document.URL;
+      command += '-c ' + fullURL.substring(0,fullURL.indexOf('/ui')) + ' ';
 
       // credentials, which we can't fill in
       command += '-u <login> -p <password> ';
@@ -303,7 +308,9 @@
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
         var promise = qwImportService.getBuckets();
-      });
+        if (!validateQueryService.valid())
+          qis.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
+        });
     }
 
     //
