@@ -1,31 +1,93 @@
 import angular from "/ui/web_modules/angular.js";
-import uiBootstrap from "/ui/web_modules/angular-ui-bootstrap.js";
-import mnPendingQueryKeeper from "/ui/app/components/mn_pending_query_keeper.js";
-import validateQueryService from "/_p/ui/query/validate_query_service.js";
-import qwConstantsService from "/_p/ui/query/qw_constants_service.js";
-import qwQueryPlanService from "/_p/ui/query/qw_query_plan_service.js";
-import mnPoolDefault from "/ui/app/components/mn_pool_default.js";
-import mnPools from "/ui/app/components/mn_pools.js";
-import qwFixLongNumberService from "/_p/ui/query/qw_fix_long_number_service.js";
+import {NgbModal} from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
 
-import _ from "/ui/web_modules/lodash.js";
+import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
+import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
+import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
+import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
 
-export default 'qwQueryService';
+import { MnPendingQueryKeeper, MnPermissions, MnPools } from '/ui/app/ajs.upgraded.providers.js';
+import { MnAdminService }        from '/ui/app/mn.admin.service.js';
+
+import _                         from "/ui/web_modules/lodash.js";
+
+import { Injectable }            from "/ui/web_modules/@angular/core.js";
+import { downgradeInjectable }   from '/ui/web_modules/@angular/upgrade/static.js';
+
+import { $http }                 from '/_p/ui/query/angular-services/qw.http.js';
+
+export { QwQueryService };
+
+class QwQueryService {
+  static get annotations() { return [
+    new Injectable()
+  ]}
+
+  static get parameters() { return [
+    MnAdminService,
+    MnPendingQueryKeeper,
+    MnPermissions,
+    MnPools,
+    NgbModal,
+    QwConstantsService,
+    QwFixLongNumberService,
+    QwQueryPlanService,
+    QwValidateQueryService,
+    $http,
+  ]}
+
+  constructor(
+      mnAdminService,
+      mnPendingQueryKeeper,
+      mnPermissions,
+      mnPools,
+      ngbModal,
+      qwConstantsService,
+      qwFixLongNumberService,
+      qwQueryPlanService,
+      validateQueryService,
+      $http) {
+    Object.assign(this, getQwQueryService(
+        mnAdminService,
+        mnPendingQueryKeeper,
+        mnPermissions,
+        mnPools,
+        ngbModal,
+        qwConstantsService,
+        qwFixLongNumberService,
+        qwQueryPlanService,
+        validateQueryService,
+        $http));
+  }
+}
 
 angular
-  .module('qwQueryService', [
-    uiBootstrap,
-    mnPendingQueryKeeper,
-    qwConstantsService,
-    qwQueryPlanService,
-    mnPoolDefault,
-    mnPools,
-    validateQueryService,
-    qwFixLongNumberService
-  ])
-  .factory('qwQueryService', getQwQueryService);
+  .module('app', [])
+  .factory('qwQueryService', downgradeInjectable(QwQueryService));
 
-function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, qwConstantsService, qwQueryPlanService, mnPoolDefault, mnPools, qwFixLongNumberService) {
+//angular
+//  .module('qwQueryService', [
+//    mnPendingQueryKeeper,
+//    qwConstantsService,
+//    qwQueryPlanService,
+//    mnPoolDefault,
+//    mnPools,
+//    validateQueryService,
+//    qwFixLongNumberService
+//  ])
+//  .factory('qwQueryService', getQwQueryService);
+
+function getQwQueryService(
+    mnAdmin,
+    mnPendingQueryKeeper,
+    mnPermissions,
+    mnPools,
+    ngbModal,
+    qwConstantsService,
+    qwFixLongNumberService,
+    qwQueryPlanService,
+    validateQueryService,
+    $http,$rootScope) {
 
     var qwQueryService = {};
 
@@ -1041,11 +1103,11 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         return(dummy);
       }
 
-      return($http(request));
+      return($http.do(request));
     }
 
     function logWorkbenchError(errorText) {
-      $http({
+      $http.do({
           url: "/logClientError",
           method: "POST",
           data: errorText,
@@ -1107,8 +1169,8 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
 
       var queryRequest;
       var userAgent = 'Couchbase Query Workbench';
-      if (mnPoolDefault.export.thisNode && mnPoolDefault.export.thisNode.version)
-        userAgent += ' (' + mnPoolDefault.export.thisNode.version + ')';
+      if (mnAdmin.stream.prettyVersion)
+        userAgent += ' (' + mnAdmin.stream.prettyVersion + ')';
 
       var queryRequest = {
         url: qwConstantsService.queryURL,
@@ -1446,7 +1508,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           finishQuery(newResult);
           return(Promise.reject("building query failed"));
         }
-        explain_promise = $http(explain_request)
+        explain_promise = $http.do(explain_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //
@@ -1583,7 +1645,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           // make sure to only finish if the explain query is also done
           return(Promise.reject("building explain query failed"));
         }
-        var query_promise = $http(request)
+        var query_promise = $http.do(request)
         // SUCCESS!
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
@@ -1803,7 +1865,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       // return a promise wrapping the one or two promises
       // when the queries are done, call finishQuery
 
-      return($q.all(promises).then(
+      return(Promise.all(promises).then(
           function() {finishQuery(newResult);},
           function() {finishQuery(newResult);}
           ));
@@ -1879,7 +1941,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           console.log("Couldn't build Advise query. ");
           return(Promise.resolve("building advise query failed"));
         }
-        var advise_promise = $http(advise_request)
+        var advise_promise = $http.do(advise_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //
@@ -2082,9 +2144,9 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     // whenever the system changes, we need to update the list of valid buckets
     //
 
-    //$rootScope.$on("indexStatusURIChanged",updateBuckets/*function() {console.log("indexStatusURIChanged")}*/);
-    $rootScope.$on("bucketUriChanged",updateBuckets);
-    $rootScope.$on("checkBucketCounts",updateBucketCounts);
+    // TODO: find replacement for $on in Angular2
+    //$rootScope.$on("bucketUriChanged",updateBuckets);
+    //$rootScope.$on("checkBucketCounts",updateBucketCounts);
 
     function updateBuckets(event,data) {
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
@@ -2268,9 +2330,9 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
 
       getSchemaForBucket(bucketList[currentIndex]) // get the schema, pause, then get the next one
       .then(function successCallback(response) {
-        $timeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
+        setTimeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
       }, function errorCallback(response) {
-        $timeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
+        setTimeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
       });
     }
 
@@ -2454,7 +2516,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     // when we are initialized, get the list of buckets
     //
 
-    $timeout(function(){
+    setTimeout(function(){
       updateBuckets();
     },500);
 

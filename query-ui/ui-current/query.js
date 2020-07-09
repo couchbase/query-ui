@@ -26,6 +26,7 @@ import qwLongPress from "/_p/ui/query/long_press/qw-long-press.directive.js";
 import qwJsonTree from "./data_display/qw-json-tree.directive.js";
 import qwJsonDatatable from "./data_display/qw-json-datatable.directive.js";
 import qwJsonTableEditor from "./data_display/qw-json-table-editor.directive.js";
+import qwAce from "./data_display/qw-ace.component.js";
 import qwExplainVizD3 from "./query_plan_viz/qw-explain-viz-d3.directive.js";
 import qwAdviceViz from "./advice_viz/qw-advice-viz.directive.js";
 import qwValidJson from "./json-validator/qw-json-validator.directive.js";
@@ -64,7 +65,8 @@ angular
     qwJsonTableEditor,
     qwExplainVizD3,
     qwAdviceViz,
-    qwValidJson
+    qwValidJson,
+    qwAce
   ])
   .controller('qwQueryController', queryController)
   .controller('qwQueryMonitorController', qwQueryMonitorController)

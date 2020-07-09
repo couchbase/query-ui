@@ -1,0 +1,64 @@
+<mn-element-cargo depot="actions">
+  <div class="header-controls resp-xsml">
+    <a (click)="clickAddScope.next()">
+      ADD DOCUMENT
+    </a>
+  </div>
+</mn-element-cargo>
+
+<div>Hello world!</div>
+
+<!-- 
+<div>
+Let's try an angular 2 directive, the datatable.
+    <div class="wb-results-table" style="height:500px" [qwJsonDataTable2]="item_array"></div>
+</div>
+
+<div>
+Let's try ExpainViz.
+    <div style="height:500px" [qwExplainViz]=explainResult></div>
+</div>
+
+DEC is: {{dec}}
+
+<div>
+Let's try a wrapped angularJS directive, the tableEditor.
+    <div class="wb-results-table" style="height:500px">
+        <qw-json-table-editor [data]="edit_array" [controller]="dec"></qw-json-table-editor>
+    </div>
+</div>
+
+<div>
+Let's try an angular 2 directive, the tableEditor.
+    <div class="wb-results-table2" style="height:500px">
+        <qw-json-table-editor2 [data]="edit_array" [controller]="dec"></qw-json-table-editor2>
+    </div>
+</div>
+
+<div>
+Let's try an angular 2 directive, the tree.
+    <div class="wb-results-table" style="height:500px" [qwJsonTree2]="item_array"></div>
+</div>
+ 
+<div>
+Is Codemirror usable here?
+      <div class="wb-results-json" style="height:500px;">
+      <ngx-codemirror [(ngModel)]="editText" [options]="{lineNumbers: true}"></ngx-codemirror>
+      </div>
+
+
+</div>
+ -->
+ 
+ <div></div>
+
+<div>
+Is ACE usable here?
+      <div class="wb-results-json" style="height:500px;">
+      <ngx-ace [(ngModel)]="editText" (ready)="onEditorReady($event)"></ngx-ace>
+      </div>
+
+
+</div>
+
+<div><a (click)="openDialog()">Open the dialog!</a></div>

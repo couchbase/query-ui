@@ -4,7 +4,16 @@
  */
 /* global _, angular */
 
-import angular from "/ui/web_modules/angular.js";
+import { ViewEncapsulation,
+         ChangeDetectionStrategy,
+         Component,
+         ElementRef,
+         NgModule,
+         Renderer2 } from '/ui/web_modules/@angular/core.js';
+import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
+
+import { CommonModule } from '/ui/web_modules/@angular/common.js';
+
 import _ from "/ui/web_modules/lodash.js";
 
 import {select as d3Select, event as d3Event} from "/ui/web_modules/d3-selection.js";
@@ -17,129 +26,83 @@ import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy
 import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "/ui/web_modules/d3-zoom.js";
 import {hierarchy as d3Hierarchy} from "/ui/web_modules/d3-hierarchy.js";
 
+import mnJquery from "/ui/app/components/mn_jquery.js";
 
-export default "qwExplainVizD3";
+import qwQueryService from '/_p/ui/query/qw_query_service.js';
 
-angular.module('qwExplainVizD3',[]).directive('qwExplainVizD3', ['$compile', '$timeout', 'qwQueryService', getD3Explain]);
 
-var queryService = null;
+export { QwExplainViz };
 
-function getD3Explain($compile,$timeout,qwQueryService) {
-  queryService = qwQueryService;
-  return {
-    restrict: 'A',
-    scope: { data: '=qwExplainVizD3' },
-    template: '<div></div>',
-    link: function (scope, element) {
+class QwExplainViz extends MnLifeCycleHooksToStream {
+  static get annotations() { return [
+    new Component({
+      selector: "[qwExplainViz]",
+      templateUrl: "../_p/ui/query/angular-directives/qw.explain.viz.template.html",
+      styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+      encapsulation: ViewEncapsulation.None,
+      imports: [ CommonModule ],
+      inputs: [
+        "qwExplainViz"
+        ],
+        changeDetection: ChangeDetectionStrategy.OnPush
+    })
+    ]}
 
-      scope.$watch('data', function (data) {
-        // start with an empty div, if we have data convert it to HTML
-        var content = "<div>{}</div>";
-        if (data) {
-          //console.log("Got data: " + JSON.stringify(data));
-          content = "";
+  static get parameters() { return [ElementRef, Renderer2] }
 
-          if (_.isString(data))
-            content = '<p class="text-small margin-left-half">' + data + '</p>';
-          else if (_.isArray(data))
-            content = '<p class="text-small margin-left-half">Graphical plans are not supported for multiple query sequences. Try the plan text view.</p>';
-          else if (data["No data to display"] || data.errors)
-            content = '<p class="text-small margin-left-half">' + JSON.stringify(data) + '</p>';
+  constructor(element, renderer) {
+    super();
+    this.element = element;
+    this.renderer = renderer;
+  }
 
-          // summarize plan in panel at the top
-          if (data.analysis) {
-            content += "<div class='row wb-explain-summary'>";
-            if(data.mode === "analytics") {
-              content += constructDatasetsColumn(data.analysis.datasets);
-            }
-            content += "<div class='column'>";
-            content += "<b>Indexes</b><br>";
+  ngOnInit() {
+    //console.log("Directive ngOnInit, input: " + this.qwExplainViz);
+    this.data = this.qwExplainViz;
+    this.dataIsString = _.isString(this.data);
+    this.dataIsArray = _.isArray(this.data);
+    if (_.isPlainObject(this.data.analysis.indexes))
+      this.data.analysis.indexes = Object.keys(this.data.analysis.indexes);
+    if (_.isPlainObject(this.data.analysis.buckets))
+      this.data.analysis.buckets = Object.keys(this.data.analysis.buckets);
+    if (_.isPlainObject(this.data.analysis.fields))
+      this.data.analysis.fields = Object.keys(this.data.analysis.fields);
+    this.topDown = topDown;
+    this.leftRight = leftRight;
+    this.bottomTop = bottomTop;
+    this.rightLeft = rightLeft;
 
-            for (var f in data.analysis.indexes)
-              if (f.indexOf("#primary") >= 0)
-                content += "<em class='cbui-plan-expensive'>" + f + "</em>&nbsp;&nbsp; ";
-            else
-              content += "<em>" + f + "</em>&nbsp;&nbsp; ";
-            content += "</div>";
+    this.orientIs = function(val) {return queryService.query_plan_options.orientation == val;};
 
-            if(data.mode !== "analytics") {
-              content += "<div class='column'>";
-              content += "<b>Buckets</b><br>";
-              for (var b in data.analysis.buckets)
-                content += "<em>" + b + "</em>&nbsp;&nbsp; ";
-              content += "</div>";
-            }
+    this.zoomIn = zoomIn;
+    this.zoomOut = zoomOut;
+  }
 
-            content += "<div class='column'>";
-            content += "<b>Fields</b><br>";
-            for (var f in data.analysis.fields)
-              content += "<em>" + f + "</em>&nbsp;&nbsp; ";
-            content += "</div>";
-
-            // TBD: the selected orientation button should receive the "selected-orient" class, but it's not working
-            content += "<div class='column row flex-grow-half flex-right'>";
-            content += '<span ng-click="leftRight()" class="icon fa-caret-square-o-left wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(1)}" title="change plan direction"></span>';
-            content += '<span ng-click="rightLeft()" class="icon fa-caret-square-o-right wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(3)}" title="change plan direction"></span>';
-            content += '<span ng-click="bottomTop()" class="icon fa-caret-square-o-down wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(4)}" title="change plan direction"></span>';
-            content += '<span ng-click="topDown()" class="icon fa-caret-square-o-up wb-explain-plan-orient" ng-class="{\'wb-explain-plan-selected-orient\' : orientIs(2)}" title="change plan direction"></span>';
-            content += "</div>";
-
-            content += "<div class='column row flex-right'>";
-            content += '<span ng-click="zoomIn()" class="icon fa-search-minus wb-explain-plan-zoom" title="zoom out - or use scroll wheel"></span>';
-            content += '<span ng-click="zoomOut()" class="icon fa-search-plus wb-explain-plan-zoom" title="zoom in - or use scroll wheel"></span>';
-            content += "</div>";
-
-            content += "</div>";
-
-            scope.topDown = topDown;
-            scope.leftRight = leftRight;
-            scope.bottomTop = bottomTop;
-            scope.rightLeft = rightLeft;
-
-            scope.orientIs = function(val) {return queryService.query_plan_options.orientation == val;};
-
-            scope.zoomIn = zoomIn;
-            scope.zoomOut = zoomOut;
-          }
-        }
-
-        // set our element to use this HTML
-        element.empty();
-
-        if (content.length > 0) {
-          var header = angular.element(content);
-          $compile(header)(scope, function(compiledHeader) {element.append(compiledHeader)});
-
-          // now add the d3 content
-
-          if (data && data.plan_nodes) {
-            // put the SVG inside a wrapper to allow scrolling
-            wrapperElement = angular.element('<div class="wb-explain-d3-wrapper"></div>');
-            element.append(wrapperElement);
-            simpleTree = makeSimpleTreeFromPlanNodes(data.plan_nodes,null,"null");
-
-            // if we're creating the wrapper for the first time, allow a delay for it to get a size
-            if ($('.wb-explain-d3-wrapper').height() && $('.wb-explain-d3-wrapper').height() > 50)
-              makeTree();
-            else
-              $timeout(makeTree,100);
-          }
-        }
-      });
-    }
-  };
+  ngAfterViewInit() {
+    //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
+    outerElement = this.element.nativeElement.querySelector('.wb-results-explain');
+    wrapperElement = this.element.nativeElement.querySelector('.wb-explain-d3-wrapper');
+    simpleTree = makeSimpleTreeFromPlanNodes(this.data.plan_nodes,null,"null");
+    makeTree(this.element.nativeElement);
+  }
 }
 
 //
 // global so we can rebuild the tree when necessary
 //
 
+var queryService = {
+    query_plan_options: {
+      orientation: orientLR
+    }
+};
+var outerElement;
 var wrapperElement;
 var simpleTree; // underlying data
 
-function makeTree() {
+function makeTree(element) {
 
-  makeD3TreeFromSimpleTree(simpleTree);
+  makeD3TreeFromSimpleTree(simpleTree,element);
 }
 
 //
@@ -191,14 +154,14 @@ var minNodeWidth = 225;     // horizontal spacing for horizontal trees
 
 var canvas_width, canvas_height;
 
-function makeD3TreeFromSimpleTree(root) {
+function makeD3TreeFromSimpleTree(root, element) {
   var duration = 500,
       i = 0;
   var vert = (queryService.query_plan_options.orientation == orientTB ||
               queryService.query_plan_options.orientation == orientBT);
 
-  canvas_width = $('.wb-explain-d3-wrapper').width();
-  canvas_height =  $('.wb-explain-d3-wrapper').height() - 40;
+  canvas_width = wrapperElement.clientWidth;
+  canvas_height =  wrapperElement.clientHeight - 40;
 
   svg = d3Select('.wb-explain-d3-wrapper').append('svg:svg')
     .attr("width", "100%")
@@ -501,7 +464,7 @@ function makeTooltip(d) {
   removeAllTooltips();
 
   // the tooltip is relative to the query plan div, so we need to know its offset.
-  var query_plan_offset = $(".wb-results-explain").offset();
+  var query_plan_offset = outerElement.offset();
 
   // create the new tooltip
   var tooltip_div = d3Select(".wb-results-explain")
@@ -579,13 +542,16 @@ function makeSimpleTreeFromPlanNodes(plan,next,parent,nodeCache) {
       ? plan.operator['#operator'] : "unknown op";
 
   var result = {
-    name: plan.GetName(),
-    details: plan.GetDetails(),
+//      name: plan.GetName(),
+      name: GetName(plan),
+//      details: plan.GetDetails(),
+      details: GetDetails(plan),
     parent: parent,
     level: "node", // default background color
     time: plan.time,
     time_percent: plan.time_percent,
-    tooltip: plan.GetTooltip()
+//    tooltip: plan.GetTooltip()
+    tooltip: GetTooltip(plan)
   };
 
   // how expensive are we? Color background by cost, if we know
@@ -633,4 +599,231 @@ function constructDatasetsColumn(datasets) {
   }
   html += "</div>";
   return html;
+}
+
+function GetName(plan) {
+  // make sure we actually have a name
+  if (!plan.operator || !plan.operator['#operator'])
+    return(null);
+
+  switch (plan.operator['#operator']) {
+  case "InitialProject": // we really want to all InitialProject just plain "Project"
+    return("Project");
+
+  case "InitialGroup":
+    return("Group");
+
+    // default: return the operator's name
+  default:
+    return(plan.operator['#operator']);
+  }
+}
+
+function GetTooltip(plan) {
+  var op = plan.operator;
+
+  if (!op || !op['#operator'])
+    return("");
+
+  // get details about the op, to see if we have info for a tool tip
+  var childFields = getNonChildFieldList(op);
+  if (childFields.length == 0) // no fields, no tool tip
+    return("");
+
+  // we have some results, build the tooltip
+  var result = "";
+  result += '<div class="row"><h5>' + op['#operator'] +
+    '</h5></div><ul class="wb-explain-tooltip-list">';
+
+  result += childFields;
+  result += '</ul>';
+
+  return(result);
+}
+
+//
+// get an array of node attributes that should be shown to the user
+//
+
+function GetDetails(plan) {
+  var result = [];
+  var op = plan.operator;
+
+  if (!op || !op['#operator'])
+    return(result);
+
+  // depending on the operation, extract different fields
+  switch (op['#operator']) {
+
+  case "IndexScan": // for index scans, show the keyspace
+    pushTruncated(result,"by: " + op.keyspace + "." + op.index);
+    break;
+
+  case "IndexScan2":
+  case "IndexScan3":
+    pushTruncated(result,op.keyspace + "." + op.index);
+    if (op.as)
+      pushTruncated(result,"as: " + op.as);
+    break;
+
+  case "PrimaryScan": // for primary scan, show the index name
+    pushTruncated(result,op.keyspace);
+    break;
+
+  case "InitialProject":
+    pushTruncated(result,op.result_terms.length + " terms");
+    break;
+
+  case "Fetch":
+    pushTruncated(result,op.keyspace + (op.as ? " as "+ op.as : ""));
+    break;
+
+  case "Alias":
+    pushTruncated(result,op.as);
+    break;
+
+  case "NestedLoopJoin":
+  case "NestedLoopNest":
+  case "HashJoin":
+  case "HashNest":
+    pushTruncated(result,"on: " + op.on_clause);
+    break;
+
+  case "Limit":
+  case "Offset":
+    pushTruncated(result,op.expr);
+    break;
+
+  case "Join":
+    pushTruncated(result,op.keyspace + (op.as ? " as "+op.as : "") + ' on ' + op.on_keys);
+    break;
+
+  case "Order":
+    if (op.sort_terms) for (var i = 0; i < op.sort_terms.length; i++)
+      pushTruncated(result,op.sort_terms[i].expr);
+    break;
+
+  case "InitialGroup":
+  case "IntermediateGroup":
+  case "FinalGroup":
+    if (op.aggregates && op.aggregates.length > 0) {
+      var aggr = "Aggrs: ";
+      for (var i=0; i < op.aggregates.length; i++)
+        aggr += op.aggregates[i];
+      pushTruncated(result,aggr);
+    }
+
+    if (op.group_keys && op.group_keys.length > 0) {
+      var keys = "By: ";
+      for (var i=0; i < op.group_keys.length; i++)
+        keys += op.group_keys[i];
+      pushTruncated(result,keys);
+    }
+    break;
+
+  case "Filter":
+    if (op.condition)
+      pushTruncated(result,op.condition);
+    break;
+  }
+
+  // if there's a limit on the operator, add it here
+  if (op.limit && op.limit.length)
+    pushTruncated(result,op.limit);
+
+  // if we get operator timings, put them at the end of the details
+  if (op['#time_normal']) {
+
+    pushTruncated(result,op['#time_normal'] +
+                  ((plan.time_percent && plan.time_percent > 0) ?
+                   ' (' + plan.time_percent + '%)' : ''));
+  }
+
+  // if we have items in/out, add those as well
+  if (op['#stats']) {
+    var inStr = '';
+    var outStr = '';
+
+    // itemsIn is a number
+    if (op['#stats']['#itemsIn'] || op['#stats']['#itemsIn'] === 0)
+      inStr = op['#stats']['#itemsIn'].toString();
+    if (op['#stats']['#itemsOut'] || op['#stats']['#itemsOut'] === 0)
+      outStr = op['#stats']['#itemsOut'].toString();
+
+    // if we have both inStr and outStr, put a slash between them
+    var inOutStr = ((inStr.length > 0) ? inStr + ' in' : '') +
+        ((inStr.length > 0 && outStr.length > 0) ? ' / ' : '') +
+        ((outStr.length > 0) ? outStr + ' out' : '');
+
+    if (inOutStr.length > 0)
+      pushTruncated(result,inOutStr);
+  }
+
+  // handle Analytics operators
+  if (op['variables'])
+    pushTruncated(result,'vars: ' + op['variables']);
+  if (op['expressions'])
+    pushTruncated(result,'expr:' + op['expressions']);
+
+  // all done, return the result
+  return(result);
+}
+
+var MAX_LENGTH = 35;
+
+function pushTruncated(array,item) {
+  array.push(truncate(MAX_LENGTH,item));
+}
+
+//
+// truncate strings longer that a given length
+//
+
+function truncate(length, item) {
+  if (!_.isString(item))
+    return(item);
+
+  if (item.length > length)
+    return(item.slice(0,length) + "...");
+  else
+    return(item);
+}
+
+// turn the fields of an operator into list elements,
+// but ignore child operators
+
+var childFieldNames = /#operator|\~child*|delete|update|scans|first|second|inputs/;
+
+function getNonChildFieldList(op) {
+  var result = "";
+
+  for (var field in op) if (!field.match(childFieldNames)) {
+    var val = op[field];
+    // add the field name as a list item
+    result += '<li>' + field;
+
+    // for a primitive value, just add that as well
+    if (_.isString(val) || _.isNumber(val) || _.isBoolean(val))
+      result += " - " + val;
+
+    // if it's an array, create a sublist with a line for each item
+    else if (_.isArray(val)) {
+      result += '<ul>';
+      for (var i=0; i<val.length; i++)
+        if (_.isString(val[i]))
+          result += '<li>' + val[i] + '</li>';
+      else
+        result += getNonChildFieldList(val[i]);
+      result += '</ul>';
+    }
+
+    // if it's an object, have a sublist for it
+    else if (_.isPlainObject(val)) {
+      result += '<ul>';
+      result += getNonChildFieldList(val);
+      result += '</ul>';
+    }
+    result += '</li>';
+  }
+  return result;
 }

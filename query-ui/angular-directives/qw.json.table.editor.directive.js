@@ -12,124 +12,240 @@
  *  meta_id. If the user makes changes and clicks the "update" button, the
  *  meta_id is used to update the appropriate document in Couchbase.
  *
+ *  Example usage:
+ *      <div class="wb-results-table" style="height:500px" [qwJsonTree2]="item_array"></div>
+ *
  */
 /* global _, angular */
 
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-import mnPermissions from "/ui/app/components/mn_permissions.js";
+var my_decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+  };
 
-export default "qwJsonTableEditorModule";
 
-  angular.module('qwJsonTableEditorModule', [
-      mnPermissions
-    ])
-  .component('qwJsonTableEditor', {
-    bindings: {
-      data: "=data",
-      controller: "=controller"
-    },
-    template: "<div></div>",
-    controller: tableEditorController
-  });
+import {
+  ViewContainerRef,
+  ViewChild,
+  Compiler,
+  ChangeDetectionStrategy,
+  Component,
+  NgModule,
+  ViewEncapsulation
+  } from '/ui/web_modules/@angular/core.js';
 
-//  ['$compile','$timeout','mnPermissions',getTableEditor]);
+  import { FormsModule }        from '/ui/web_modules/@angular/forms.js';
+  import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
+  import { CommonModule } from '/ui/web_modules/@angular/common.js';
+  import _ from "/ui/web_modules/lodash.js";
 
-  function tableEditorController($scope,$compile,$timeout,$element,mnPermissions) {
-    $scope.rbac = mnPermissions.export;
-    $scope.getTooltip = getTooltip;
-    this.$onInit = buildEditorFromJson;
+  export { QwJsonTableEditor2 };
 
-    //scope.$watch('data', buildEditorFromJson);
+  class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
+    static get annotations() { return [
+      new Component({
+        selector: "qw-json-table-editor2",
+        template: '<p #container></p>',
+        styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+        encapsulation: ViewEncapsulation.None,
+        //changeDetection: ChangeDetectionStrategy.OnPush,
+        inputs: [
+          "data",
+          "controller"
+          ],
+      })
+      ]}
 
-    function buildEditorFromJson() {
-      // start by putting up a message
-      $element.append(angular.element('<div class="text-medium">Rendering results...</div>'));
-      var data = this.data;
-      var dec = this.controller;
+    static get parameters() { return [
+      Compiler,
+      ViewContainerRef
+      ] }
 
-      $timeout(function() {createEditorFromJson(data,dec)},10); // let the above message render, then build
+    constructor(compiler,vcr) {
+      super();
+      this.compiler = compiler;
+      this.viewContainerRef = vcr;
     }
-    function createEditorFromJson(json,dec) {
 
-      // start with an empty div, if we have data convert it to HTML
-      var wrapper = '<div class="data-table-wrapper">{}</div>';
-      var table;
-      var warning;
-      htmlElement = $element;
-      if (!json)
-        json = tdata;
-
-      var content = "<div>{}</div>";
-
-      // do we have data to work with?
-      if (json && _.isArray(json)) {
-        tdata = json;
-        $scope.results = json;
-        $scope.dec = dec;
-        meta = getMetaData(json);
-
-        // make the table header with the top-level fields
-
-        if (meta.truncated)
-          warning = angular.element('<div class="error text-small">Some documents too large for tabular editing, tabular view truncated.</div>');
-        header = angular.element(createHTMLheader(meta,dec));
-        wrapper = '<div class="data-table-wrapper show-scrollbar"></div>';
-
-        var tableHTML = makeHTMLTopLevel();
-        table = angular.element(tableHTML);
+    addComponent(template) {
+      class TemplateComponent {
+          constructor() {
+          }
+          myMethod() {
+              console.log("In myMethod");
+          }
       }
-
-      //
-      // otherwise show error message
-      //
-
-      else {
-        wrapper = '<div class="data-table-wrapper">' + json + '</div>';
-        header = null;
-        table = null;
+      // js equivalent of @ViewChild('target', {static: false, read: ViewContainerRef})
+      my_decorate([
+          ViewChild('target', { static: false, read: ViewContainerRef })
+      ], TemplateComponent.prototype, "target", void 0);
+      class TemplateModule {
       }
+      my_decorate([
+          ViewChild('target', { static: false, read: ViewContainerRef })
+      ], TemplateModule.prototype, "target", void 0);
+      const componentType = Component({ template: template + '<div #target></div>' })(TemplateComponent);
+      const componentModuleType = NgModule({ declarations: [componentType],imports: [FormsModule,CommonModule] })(TemplateModule);
+      const mod = this.compiler.compileModuleAndAllComponentsSync(componentModuleType);
+      const factory = mod.componentFactories.find((comp) => comp.componentType === componentType);
+      var component = this.container.createComponent(factory);
+      component.instance.results = this.data;
+      component.instance.dec = this.controller;
+    }
 
-      // even if the json was empty, we have a wrapper element
-      wrapperElement = angular.element(wrapper);
-      if (table) {
-        //wrapperElement.append(table);
-        $compile(table)($scope, function(compiledTable) {wrapperElement.append(compiledTable)}); // need to compile to link generated HTML with angular
-      }
 
-      // clear out our element. If we have a header add it, then add the wrapper
-      htmlElement.empty();
-      if (warning)
-        htmlElement.append(warning);
-      if (header) {
-        $compile(header)($scope, function(header) {
+    ngOnInit() {
+      //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
+      this.tableHTML = createHTMLFromJson(this.data);
+      //console.log("Got HTML: " + this.tableHTML);
+      this.addComponent(this.tableHTML);
+    }
 
-          htmlElement.append(header);
-          // sync scrolling between the header and the main table
-          // listen on scrolling in the data window
-          wrapperElement[0].addEventListener("scroll",function() {
-            if (header) {
-              header[0].scrollLeft = wrapperElement[0].scrollLeft;
-            }
-          });
-          // also listen on horizontal scrolling in the header, to keep the data in sync
-          if (header) header[0].addEventListener("scroll",function() {
-            wrapperElement[0].scrollLeft = header[0].scrollLeft
-          });
-
-          // put a sort listener on the data columns
-          var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
-          $scope.sortTable = getSortingFunction(startSortColumn,$scope,$compile,$timeout);
-        });
-        //htmlElement.append(header);
-      }
-
-      htmlElement.append(wrapperElement);
+    ngAfterViewInit() {
     }
   }
 
-// factory to make sorting wrapper
-function getSortingFunction(startSortColumn,scope,compile,timeout) {
+  // js equivalent of TypeScript @ViewChild('container', { read: ViewContainerRef })
+  my_decorate([ViewChild('container', { read: ViewContainerRef })],
+      QwJsonTableEditor2.prototype, "container", void 0);
+
+
+
+  //////////////////////////////////////////////////////////////////////////////////////
+
+//  function createTableEditor(json, element, renderer) {
+//    // start by putting up a message
+//    element.innerHTML = '<div class="text-medium">Rendering results...</div>';
+//
+//    setTimeout(function() {createEditorFromJson(json,element,renderer)},10); // let the above message render, then build
+//  }
+
+
+  //////////////////////////////////////////////////////////////////////////////////////
+
+  function createHTMLFromJson(json) {
+
+    var wrapperStart = '<div class="data-table-wrapper show-scrollbar">';
+    var wrapperEnd = '</div>';
+    var warning;
+    var resultHTML = '';
+
+    // do we have data to work with?
+    if (json && _.isArray(json)) {
+      tdata = json;
+      meta = getMetaData(json);
+
+      // make the table header with the top-level fields
+      if (meta.truncated)
+        resultHTML += angular.element('<div class="error text-small">Some documents too large for tabular editing, tabular view truncated.</div>')[0];
+      var headerHTML = createHTMLheader(meta);
+
+      var tableHTML = makeHTMLTopLevel();
+
+      resultHTML = wrapperStart + headerHTML + tableHTML + wrapperEnd;
+    }
+
+    // if json not array, it must be error message string
+    else {
+      resultHTML = wrapperStart + json + wrapperEnd;
+    }
+
+    return(resultHTML);
+  }
+
+
+//  function createEditorFromJson(json,element,renderer) {
+//
+//    // start with an empty div, if we have data convert it to HTML
+//    var wrapper = '<div class="data-table-wrapper">{}</div>';
+//    var table;
+//    var warning;
+//    htmlElement = element;
+//    if (!json)
+//      json = tdata;
+//
+//    var content = "<div>{}</div>";
+//
+//    // do we have data to work with?
+//    if (json && _.isArray(json)) {
+//      tdata = json;
+//      //scope.results = json;
+//      //scope.dec = scope.controller;
+//      meta = getMetaData(json);
+//
+//      // make the table header with the top-level fields
+//
+//      if (meta.truncated)
+//        warning = angular.element('<div class="error text-small">Some documents too large for tabular editing, tabular view truncated.</div>')[0];
+//      header = angular.element(createHTMLheader(meta))[0];
+//      wrapper = '<div class="data-table-wrapper show-scrollbar"></div>';
+//
+//      var tableHTML = makeHTMLTopLevel();
+//      //console.log("Table HTML: " + tableHTML);
+//      if (tableHTML)
+//        table = angular.element(tableHTML);
+//    }
+//
+//    //
+//    // otherwise show error message
+//    //
+//
+//    else {
+//      wrapper = '<div class="data-table-wrapper">' + json + '</div>';
+//      header = null;
+//      table = null;
+//    }
+//
+//    // even if the json was empty, we have a wrapper element
+//    wrapperElement = angular.element(wrapper)[0];
+//    if (table) {
+//      for (var i=0; i< table.length; i++)
+//        renderer.appendChild(wrapperElement,table[i]);
+//      //wrapperElement.append(table);
+//      //$compile(table)(scope, function(compiledTable) {wrapperElement.append(compiledTable)}); // need to compile to link generated HTML with angular
+//    }
+//
+//    // clear out our element. If we have a header add it, then add the wrapper
+//    //htmlElement.empty();
+//    element.innerHTML = '';
+//    if (warning)
+//      renderer.appendChild(element,warning);
+//    //htmlElement.append(warning);
+//    if (header) {
+////    $compile(header)(scope, function(header) {
+//
+////    htmlElement.append(header);
+////    // sync scrolling between the header and the main table
+////    // listen on scrolling in the data window
+//      wrapperElement.addEventListener("scroll",function() {
+//        if (header) {
+//          header.scrollLeft = wrapperElement.scrollLeft;
+//        }
+//      });
+//
+//      // also listen on horizontal scrolling in the header, to keep the data in sync
+//      if (header) header.addEventListener("scroll",function() {
+//        wrapperElement.scrollLeft = header.scrollLeft
+//      });
+//
+////    // put a sort listener on the data columns
+////    var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
+////    scope.sortTable = getSortingFunction(startSortColumn,scope,$compile,$timeout);
+////    });
+////    //htmlElement.append(header);
+//
+//      renderer.appendChild(element,header);
+//    }
+//
+//    renderer.appendChild(element,wrapperElement);
+//    //htmlElement.append(wrapperElement);
+//
+//  }
+//
+//factory to make sorting wrapper
+  function getSortingFunction(startSortColumn,scope,compile,timeout) {
     return function($event,index) {
       var sortByID = (index < startSortColumn);
       sortTable($event.currentTarget,scope,compile,timeout,sortByID);
@@ -153,7 +269,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
   var prevSortElem;   // previous header element, for changing sort style
   var sortForward = true;
 
-  function sortTable(spanElem,scope,$compile,$timeout,sortById) {
+  function sortTable(spanElem,scope,sortById) {
     //console.log("sortBy: " + spanElem.innerText + ", meta: " + meta);
     // if it's a new field, sort forward by that field
     if (spanElem !== prevSortElem) {
@@ -192,10 +308,10 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
     var tableHTML = makeHTMLTopLevel();
     var table = angular.element(tableHTML);
     if (table) {
-      $compile(table)(scope,function(compiledTab) {
-        wrapperElement.append(compiledTab);
-        scope.$applyAsync(function() {});
-      }); // must compile to link generated HTML and angular
+//    $compile(table)(scope,function(compiledTab) {
+//    wrapperElement.append(compiledTab);
+//    scope.$applyAsync(function() {});
+//    }); // must compile to link generated HTML and angular
     }
   }
 
@@ -303,10 +419,19 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
 
   var lt = /</gi;
   var gt = />/gi;
+  var openBrace = /\{/gi;
+  var closeBrace = /\{/gi;
+  var quote = /"/gi;
+
   var mySanitize = function(str) {
     if (!str) return ('');
     else if (_.isString(str))
-      return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+      return(str.replace(lt,'&lt;')
+          .replace(gt,'&gt;')
+          .replace(openBrace,'&#123;')
+          .replace(closeBrace,'&#125;')
+          .replace(quote,'&#34;')
+          );
     else
       return(str);
   };
@@ -396,24 +521,24 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
     //
     var columnHeaders = '<div class="data-table-header-row">';
     columnHeaders += '<span class="data-table-header-cell" style="width:' + columnWidthPx*1.25 + 'px">&nbsp;</span>'; // tools
-    columnHeaders += '<span class="data-table-header-cell" ng-click="sortTable($event,1)" style="width:' + columnWidthPx*2 + 'px">id<span class="caret-subspan"></span></span>'; // docId
+    columnHeaders += '<span class="data-table-header-cell" (click)="sortTable($event,1)" style="width:' + columnWidthPx*2 + 'px">id<span class="caret-subspan"></span></span>'; // docId
 
     // we may need a column for top key ops/ser
     if (meta.hasOps) {
       columnHeaders += '<span class="data-table-header-cell" style="width: ' +
-        0.5*columnWidthPx + 'px;">ops/sec</span>';
+      0.5*columnWidthPx + 'px;">ops/sec</span>';
     }
 
     // we may need an unnamed column for things that don't have field names
     if (meta.hasNonObject) {
       columnHeaders += '<span class="data-table-header-cell" style="width: ' +
-        meta.unnamedWidth*columnWidthPx + 'px;">&nbsp;</span>';
+      meta.unnamedWidth*columnWidthPx + 'px;">&nbsp;</span>';
     }
 
     // header for each column
     var startSortColumn = meta.hasNonObject ? 3 : 2; // don't allow sorting on first few columns
     Object.keys(meta.topLevelKeys).sort().forEach(function(key,index) {
-      columnHeaders += '<span ng-if="dec.options.show_tables" class="data-table-header-cell" ng-click="sortTable($event,' + (index+startSortColumn) + ')" style="width: ' +
+      columnHeaders += '<span *ngIf="dec.options.show_tables" class="data-table-header-cell" (click)="sortTable($event,' + (index+startSortColumn) + ')" style="width: ' +
       meta.columnWidths[key]*columnWidthPx + 'px;"'
 
       // for column names too big to fit, add a tooltip
@@ -444,7 +569,6 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
     if (!_.isArray(tdata) || tdata.length == 0)
       return('<p class="error">No Results</p>');
 
-
     var topLevelKeys = meta.topLevelKeys;
     var columnWidths = meta.columnWidths;
 
@@ -459,35 +583,35 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
         var docWayTooBig = tdata[row].docSize > 10*1024*1024;
         var docError = tdata[row].error;
         var formName = 'row' + row + 'Form';
-        var pristineName = formName + '.$pristine';
-        var setPristineName = formName + '.$setPristine';
-        var invalidName = formName + '.$invalid';
-        result += '<form name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25)*columnWidthPx + 'px" ' +
+        var pristineName = formName + '.pristine';
+        var setPristineName = formName + '.markAsPristine';
+        var invalidName = formName + '.invalid';
+        result += '<form #' + formName + '="ngForm" name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25)*columnWidthPx + 'px" ' +
         ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
         '<fieldset class="doc-editor-fieldset" ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
         '<div class="doc-editor-row" ' +
-        'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
+        '*ngIf="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + ' || ' + docError + '" ' +
-        'ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)" ' +
+        '(click)="dec.editDoc(' + row +')" ' +
         'title="Edit document as JSON"><span class="icon fa-pencil"></span></a>' +
 
         '<a class="btn square-button" ' +
         'ng-disabled="' + invalidName + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
-        'ng-click="dec.copyDoc(' + row +',' + formName +')" ' +
+        '(click)="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ' +
         'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert' + ' || ' + docError + '" ' +
-        'ng-click="dec.deleteDoc(' + row +')" ' +
+        '(click)="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + pristineName + ' || '+ invalidName + ' || ' + docError + '" ' +
-        'ng-click="dec.updateDoc(' + row +',' + formName + ')" ' +
+        '[attr.disabled]="' + pristineName + ' || '+ invalidName + ' || ' + docError + '" ' +
+        '(click)="dec.updateDoc(' + row +',' + formName + ')" ' +
         'title="Save changes to document"><span class="icon fa-save"></span></a>' +
 
         '</span>';
@@ -496,7 +620,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*2 + 'px">';
 
         if (!docWayTooBig)
-          result += '<a ng-click="dec.editDoc(' + row +',!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert)">';
+          result += '<a (click)="dec.editDoc(' + row +')">';
         else
           result += '<a>';
 
@@ -510,14 +634,14 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
           'uib-tooltip-html="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
           'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
         else if (tdata[row].rawJSONError)
-          result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
-                       'uib-tooltip-html="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
-                       tdata[row].rawJsonError + '\'"' +
-                       'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
+          result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
+          'uib-tooltip-html="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
+          tdata[row].rawJsonError + '\'"' +
+          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
         else if (tdata[row].rawJSON)
-          result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
-                       'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
-                       'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
+          result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
+          'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
+          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
         result += '</a></span>';
 
         // if we are showing top keys, add the ops per second
@@ -531,7 +655,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
 
         // if we have unnamed items like arrays or primitives, they go in the next column
         if (meta.hasNonObject) {
-          result += '<span ng-if="dec.options.show_tables" class="doc-editor-cell" style="width:' +
+          result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width:' +
           meta.unnamedWidth*columnWidthPx + 'px">';
 
           // if this row is a subarray or primitive, put it here
@@ -553,7 +677,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
             var disabled = !!tdata[row].rawJSON || docTooBig || docError;
             var childHTML = (item || item === 0 || item === "" || item === false) ?
                 makeHTMLtable(item,'[' + row + '].data[\''+ key.replace(/'/g,"\\'") + '\']', childSize, disabled) : '&nbsp;';
-                result += '<span ng-if="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
+                result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
                 columnWidths[key]*columnWidthPx  + 'px;">' + childHTML + '</span>';
           });
 
@@ -562,7 +686,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
           var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
           if (json.length > max_length)
             json = json.substring(0,max_length) + '...';
-          result += '<span ng-if="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
+          result += '<span *ngIf="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5*columnWidthPx  + 'px;">'
           + mySanitize(json) + '</span>';
         }
 
@@ -574,7 +698,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
 
         // for some reason I couldn't get the form from $scope, so the following acts as a sentinel that I can search for
         // to see if anything changed in any form of the editor
-        result +=  '<span id="somethingChangedInTheEditor" ng-if="!' + pristineName + '"></span>';
+        result +=  '<span id="somethingChangedInTheEditor" *ngIf="!' + pristineName + '"></span>';
 
         result += '</div></fieldset></form>'; // end of the row for the top level object
       }
@@ -582,7 +706,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
       // what to show for BINARY documents? They're not editable
       else if (tdata[row].meta && tdata[row].meta.type === "base64") {
         result += '<form name="' + formName + '">' + '<div class="doc-editor-row" ' +
-          'ng-if="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
+        '*ngIf="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
         // span where the buttons would go, all disabled except include delete
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
@@ -590,7 +714,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
 
         '<a class="btn square-button" ng-disabled="true"><span class="icon fa-copy"></span></a>' +
 
-        '<a class="btn square-button" ng-click="dec.deleteDoc(' + row +')" ' +
+        '<a class="btn square-button" (click)="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
         '<a class="btn square-button" ng-disabled="true"><span class="icon fa-save"></span></a>' +
@@ -599,11 +723,11 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
 
         // and the id and metadata
         result += '<span class="doc-editor-cell" style="width: ' + 2*columnWidthPx  +
-          'px;"><span '
+        'px;"><span '
         if (tdata[row].meta || tdata[row].xattrs)
           result += 'class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
           'tooltip-placement="auto bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
-          'tooltip-trigger="none" data-ng-click="showTT'+row+' = !showTT'+row+ '"';
+          'tooltip-trigger="none" (click)="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
         var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " base64 not available";
@@ -835,7 +959,7 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
         // limit these arrays to 100 items
         if (index > max_array_len) {
           result += '<div class="doc-editor-row">Array length ' + object.length +
-            ' truncated to ' + max_array_len + ' rows, use JSON editing to see entire array</div>';
+          ' truncated to ' + max_array_len + ' rows, use JSON editing to see entire array</div>';
           return false;
         }
 
@@ -906,14 +1030,14 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
       // if we have unnamed items, leave a blank-headered column for them
       if (unnamedWidth) {
         columnHeaders += '<span class="data-table-header-cell" style="width: ' +
-          unnamedWidth*columnWidthPx + 'px;">&nbsp;</span>';
+        unnamedWidth*columnWidthPx + 'px;">&nbsp;</span>';
         arrayWidth += unnamedWidth * columnWidthPx;
       }
 
       // now column headers for fields we saw in the array
       _.forIn(keys, function(value,key) {
         columnHeaders += '<span class="data-table-header-cell" style="width: ' +
-          columnWidths[key]*columnWidthPx + 'px;">' + mySanitize(key) +'</span>';
+        columnWidths[key]*columnWidthPx + 'px;">' + mySanitize(key) +'</span>';
         arrayWidth +=  columnWidths[key]*columnWidthPx;
       });
 
@@ -963,10 +1087,11 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
     //it's also possible we were passed a primitive value, in which case just put it in a div
 
     else {
-      var model = ' ng-model="results' + prefix + '" ';
+      var model = ' [(ngModel)]="results' + prefix + '" name="' + mySanitize(prefix) + '" ';
       var inputStyle = ' style="width: ' + (columnWidthPx-10) + 'px; margin-left: 0px"';
       var no_edit = disabled ? ' ng-disabled="true" ' : '';
 
+      //result += '{{results' + prefix + '}}';
       if (_.isNumber(object))
         result += '<input type="number" step="any" ' + model + inputStyle + no_edit + '>';
       else if (_.isBoolean(object))
@@ -980,9 +1105,8 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
         'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">' +
         '</span></div>';
       else
-        result += '<textarea ' + model + inputStyle + no_edit + '></textarea>';
+        result += '<input type="text" ' + model + inputStyle + no_edit + '/>';
     }
 
     return(result);
   };
-
