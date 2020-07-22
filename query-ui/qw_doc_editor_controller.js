@@ -910,6 +910,7 @@
     function showErrorDialog(title, detail, hide_cancel) {
       $uibModalStack.dismissAll(); // close any outstanding dialogs
 
+      console.log("Doc Editor Error: " + title + " " + JSON.stringify(detail));
       var dialogScope = $rootScope.$new(true);
       dialogScope.error_title = title;
       if (!Array.isArray(detail))
