@@ -662,8 +662,6 @@
       dialogScope.file_options = [
         {kind: "txt", label:  "Query - load the contents of a text file into the query editor."},    // 0
         {kind: "json", label: "Query History - load a file into the end of the current query history."}, // 1
-        {kind: "csv", label: "CSV File - import a data file in comma-separated format into a bucket."}, // 2
-        {kind: "tsv", label: "TSV File - import a data file in tab-separated format into a bucket."}, // 3
         ];
       dialogScope.selected = {item: "0"};
 
