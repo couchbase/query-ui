@@ -36,7 +36,7 @@ function getAdviceViz(qwQueryService) {
         scope.get_covered_indexes = function(element) {
           var covered = [];
           if (element.recommended_indexes && _.isArray(element.recommended_indexes.covering_indexes))
-            element.recommended_indexes.covering_indexes.forEach(function (item) {covered.push(item.statement);});
+            element.recommended_indexes.covering_indexes.forEach(function (item) {covered.push(item.index_statement);});
           return(covered);
         };
 
@@ -47,9 +47,9 @@ function getAdviceViz(qwQueryService) {
           if (element.recommended_indexes && _.isArray(element.recommended_indexes.indexes))
             element.recommended_indexes.indexes.forEach(function (item) {
               if (!covered.some(function (c_stmt) {
-                return(c_stmt == item.statement);
+                return(c_stmt == item.index_statement);
               }))
-                indexes.push(item.statement);
+                indexes.push(item.index_statement);
             });
           return(indexes);
         };
@@ -59,7 +59,7 @@ function getAdviceViz(qwQueryService) {
           var queries = [];
           if (scope.advice[index].recommended_indexes && _.isArray(scope.advice[index].recommended_indexes[type])) {
             scope.advice[index].recommended_indexes[type].forEach(function(reco) {
-              queries.push(reco.statement);
+              queries.push(reco.index_statement);
             });
 
             var executeInSequence = function(index,queries) {
