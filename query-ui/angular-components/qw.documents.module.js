@@ -5,6 +5,8 @@ import { FormsModule }        from '/ui/web_modules/@angular/forms.js';
 import { CommonModule }        from '/ui/web_modules/@angular/common.js';
 import { ReactiveFormsModule } from '/ui/web_modules/@angular/forms.js';
 
+import { NgbModule }             from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
+
 import { QwDocumentsComponent } from './qw.documents.component.js';
 
 import { QwDirectivesModule } from "../angular-directives/qw.directives.module.js";
@@ -58,6 +60,7 @@ class QwDocumentsModule {
         FormsModule,
         CommonModule,
         ReactiveFormsModule,
+        NgbModule, // for tooltips
         ],
       providers: [
         QwConstantsService,

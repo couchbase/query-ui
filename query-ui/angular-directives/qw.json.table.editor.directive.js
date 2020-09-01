@@ -30,11 +30,12 @@ import {
   ViewContainerRef,
   ViewChild,
   Compiler,
-  ChangeDetectionStrategy,
   Component,
   NgModule,
   ViewEncapsulation
   } from '/ui/web_modules/@angular/core.js';
+
+  import { MnPermissions } from '/ui/app/ajs.upgraded.providers.js';
 
   import { FormsModule }        from '/ui/web_modules/@angular/forms.js';
   import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
@@ -50,7 +51,6 @@ import {
         template: '<p #container></p>',
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
-        //changeDetection: ChangeDetectionStrategy.OnPush,
         inputs: [
           "data",
           "controller"
@@ -60,13 +60,15 @@ import {
 
     static get parameters() { return [
       Compiler,
-      ViewContainerRef
+      ViewContainerRef,
+      MnPermissions,
       ] }
 
-    constructor(compiler,vcr) {
+    constructor(compiler,vcr,mnPermissions) {
       super();
       this.compiler = compiler;
       this.viewContainerRef = vcr;
+      this.mnPermissions = mnPermissions.export;
     }
 
     addComponent(template) {
@@ -93,6 +95,7 @@ import {
       var component = this.container.createComponent(factory);
       component.instance.results = this.data;
       component.instance.dec = this.controller;
+      component.instance.rbac = this.mnPermissions;
     }
 
 
@@ -587,25 +590,25 @@ import {
         var setPristineName = formName + '.markAsPristine';
         var invalidName = formName + '.invalid';
         result += '<form #' + formName + '="ngForm" name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25)*columnWidthPx + 'px" ' +
-        ' ng-submit="dec.updateDoc(' + row +',' + formName + ')">' +
-        '<fieldset class="doc-editor-fieldset" ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
+        ' (submit)="dec.updateDoc(' + row +',' + formName + ')">' +
+        '<fieldset class="doc-editor-fieldset" [disabled]="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
         '<div class="doc-editor-row" ' +
         '*ngIf="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
-
+        
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docError + '" ' +
+        '[attr.disabled]="' + invalidName + ' || ' + docError + ' ? 1 : null" ' +
         '(click)="dec.editDoc(' + row +')" ' +
         'title="Edit document as JSON"><span class="icon fa-pencil"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="' + invalidName + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert" ' +
+        '[attr.disabled]="' + invalidName + ' || ' + docError + ' || !rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert ? 1 : null" ' +
         '(click)="dec.copyDoc(' + row +',' + formName +')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ' +
-        'ng-disabled="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert' + ' || ' + docError + '" ' +
+        '[attr.disabled]="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert' + ' || ' + docError + '" ' +
         '(click)="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
@@ -625,24 +628,26 @@ import {
           result += '<a>';
 
         result += mySanitize(tdata[row].id);
+
         if (docWayTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
-          'uib-tooltip-html="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB.\'"' +
-          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
+          'ngbTooltip="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB.\'"' +
+          'placement="right"><span class="icon fa-circle-thin fa-stack-2x"></span></span>';
         else if (docTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
-          'uib-tooltip-html="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
-          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
+          'ngbTooltip="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
+          'placement="right"></span>';
         else if (tdata[row].rawJSONError)
           result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
-          'uib-tooltip-html="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
+          'ngbTooltip="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
           tdata[row].rawJsonError + '\'"' +
-          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">';
+          'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
         else if (tdata[row].rawJSON)
           result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
-          'uib-tooltip-html="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
-          'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
-        result += '</a></span>';
+          'ngbTooltip="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
+          'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
+        result += '</a>';
+        result += '</span>';
 
         // if we are showing top keys, add the ops per second
         if (meta.hasOps) {
@@ -710,14 +715,14 @@ import {
 
         // span where the buttons would go, all disabled except include delete
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
-        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-edit"></span></a>' +
+        '<a class="btn square-button" [disabled]="true"><span class="icon fa-edit"></span></a>' +
 
-        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-copy"></span></a>' +
+        '<a class="btn square-button" [disabled]="true"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" (click)="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
-        '<a class="btn square-button" ng-disabled="true"><span class="icon fa-save"></span></a>' +
+        '<a class="btn square-button" [disabled]="true"><span class="icon fa-save"></span></a>' +
 
         '</span>';
 
@@ -725,8 +730,8 @@ import {
         result += '<span class="doc-editor-cell" style="width: ' + 2*columnWidthPx  +
         'px;"><span '
         if (tdata[row].meta || tdata[row].xattrs)
-          result += 'class="cursor-pointer blue-1" uib-tooltip-html="{{getTooltip(' + row + ')}}" ' +
-          'tooltip-placement="auto bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
+          result += 'class="cursor-pointer blue-1" ngbTooltip="{{getTooltip(' + row + ')}}" ' +
+          'placement="auto bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
           'tooltip-trigger="none" (click)="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
@@ -1089,20 +1094,20 @@ import {
     else {
       var model = ' [(ngModel)]="results' + prefix + '" name="' + mySanitize(prefix) + '" ';
       var inputStyle = ' style="width: ' + (columnWidthPx-10) + 'px; margin-left: 0px"';
-      var no_edit = disabled ? ' ng-disabled="true" ' : '';
+      var no_edit = disabled ? ' [disabled]="true" ' : '';
 
       //result += '{{results' + prefix + '}}';
       if (_.isNumber(object))
         result += '<input type="number" step="any" ' + model + inputStyle + no_edit + '>';
       else if (_.isBoolean(object))
-        result += '<select ' + model + inputStyle + no_edit +
-        ' ng-options="opt.v as opt.n for opt in [{n: \'false\', v: false}, {n:\'true\', v: true}]"></select>';
+        result += '<select ' + model + inputStyle + no_edit + 
+            '><option *ngFor="let c of [{n: \'false\', v: false}, {n:\'true\', v: true}]" [ngValue]="c.v">{{c.n}}</option></select>';
 
       // can't edit incredibly long strings without the browser barfing
       else if (object && object.length > 1024*512)
         result += '<div class="text-center"><span class="icon fa-exclamation-triangle" ' +
-        'uib-tooltip-html="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
-        'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">' +
+        'ngbTooltip="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
+        'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">' +
         '</span></div>';
       else
         result += '<input type="text" ' + model + inputStyle + no_edit + '/>';

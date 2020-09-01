@@ -264,3 +264,8 @@ td.ajtd-type-array {
   /*margin: -.125rem;*/
 
 }
+
+.tooltip .tooltip-inner {
+    display: inline;
+    max-width: 220px;
+}

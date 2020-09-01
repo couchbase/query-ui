@@ -3,12 +3,14 @@ import {Component, ChangeDetectionStrategy, ViewEncapsulation} from '/ui/web_mod
 
 import {FormControl, FormGroup} from '/ui/web_modules/@angular/forms.js';
 
-import { MnPendingQueryKeeper, MnPermissions, MnPools } from '/ui/app/ajs.upgraded.providers.js';
+import { MnPermissions } from '/ui/app/ajs.upgraded.providers.js';
 
 import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
 import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
 import { QwDocEditorService }     from "/_p/ui/query/angular-services/qw.upgraded.providers.js";
+
+import js_beautify from "/ui/web_modules/js-beautify.js";
 
 import { $http } from '/_p/ui/query/angular-services/qw.http.js';
 

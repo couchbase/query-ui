@@ -1,5 +1,5 @@
 import { NgModule, COMPILER_OPTIONS, CompilerFactory, Compiler } from '/ui/web_modules/@angular/core.js';
-import { NgbModalModule, NgbModalConfig }      from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
+import { NgbModule, NgbModalModule, NgbModalConfig }             from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
 import { JitCompilerFactory }  from '/ui/web_modules/@angular/platform-browser-dynamic.js';
 import { FormsModule }         from '/ui/web_modules/@angular/forms.js';
 import { CommonModule }        from '/ui/web_modules/@angular/common.js';
@@ -45,6 +45,7 @@ class QwDirectivesModule {
         FormsModule,
         CommonModule,
         NgbModalModule, // needed to show dialogs
+        NgbModule, // for tooltips
         NgxAceModule.forRoot(),
       ],
       exports: [

@@ -179,8 +179,8 @@
         <a ng-click="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span class="icon fa-angle-right"></span></a>
       </div>
 
-      <div class="wb-results-json" ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)">
-      <ui-ace2 options="qc.aceOutputOptions" ng-model="qc.lastResult().result"></ui-ace2></div>
+      <div class="wb-results-json" ng-if="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
+      ui-ace="qc.aceOutputOptions" ng-model="qc.lastResult().result"></div>
 
       <div class="wb-results-table"
         ng-if="qc.isSelected(2) && qc.lastResult().data"
