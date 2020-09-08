@@ -33,30 +33,25 @@ function getQwFixLongNumberService() {
   //
 
   // match ints with 16 or 17 digits - long enough to cause problems
-  var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]{16,})[,\s}]|([:\s]\-?[0-9\.]{17,})[,\s}]/ig;
-
+  var matchNonQuotedLongInts = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[:\s\[,](\-?[0-9]{16,})[,\s\]}]|[:\s\[,](\-?[0-9\.]{17,})[,\s\]}]/ig;
   // we also can't handle floats bigger than Number.MAX_VALUE: 1.798e+308, these help us detect them
-  var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|([:\s]\-?[0-9]+(?:\.[0-9]+)?[eE]\+[0-9]{3,})[,\s}]/ig;
-  // take float apart into the characteristic and exponent
-  var deconstructFloat = /[:\s]\-?([0-9]+)(?:\.[0-9]+)?[eE]\+([0-9]{3,})/ig;
+  var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[:\s\[,](\-?[0-9]+(?:\.[0-9]+)?[eE]\+?[0-9]{3,})[,\s\]}]/ig;
 
   // see if there is at least one overly large float in the JSON string
+  // we search for something that looks like a floating point number, and then 
+  // parse it using "Number()". If the number is too big, it parses to Infinity.
   function hasLongFloat(rawBytes) {
+    matchNonQuotedBigFloats.lastIndex = 0;
     var hasLongFloats = false;
 
     // look for overly large floats
     var matchArray = matchNonQuotedBigFloats.exec(rawBytes);
     while (matchArray != null) {
-      if (matchArray[1]) { // found a potentially big float, check out length of exponent and characteristic
-        var subMatch = deconstructFloat.exec(matchArray[1]);
-        if (subMatch[1] && subMatch[2]) {
-          if ((subMatch[1].length + subMatch[2].length >= 5) || // number big enough based on digits
-              (subMatch[1].length + Number(subMatch[2]) >= 309)) { //
-            hasLongFloats = true;
-            break;
-          }
-        }
+      if (matchArray[1] && !Number.isFinite(Number(matchArray[1]))) {
+          hasLongFloats = true;
+          break;
       }
+
       matchArray = matchNonQuotedBigFloats.exec(rawBytes);
     }
     return hasLongFloats;
@@ -64,6 +59,7 @@ function getQwFixLongNumberService() {
 
   // see if there is at least one overly large int in the JSON string
   function hasLongInt(rawBytes) {
+    matchNonQuotedLongInts.lastIndex = 0;
     var hasLongInts = false;
 
     // look for overly large ints

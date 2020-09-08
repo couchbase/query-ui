@@ -337,38 +337,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // bring up a dialog to get the new key
       showNewDocEditor('newDocID',
           '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
-
-//      var dialogScope = $rootScope.$new(true);
-//
-//      // default names for save and save_query
-//      dialogScope.file = {name: ''};
-//      dialogScope.header_message = "Add Document";
-//      dialogScope.body_message = "New Document ID ";
-//
-//      var promise = $uibModal.open({
-//        templateUrl: '../_p/ui/query/ui-current/file_dialog/qw_input_dialog.html',
-//        scope: dialogScope
-//      }).result;
-//
-//      promise.then(function success(resp) {
-//
-//        var res = qwDialogService.showDocEditor(dialogScope.file.name,
-//                                '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}',
-//                                '',
-//                                true);
-//
-//        res.then(function success(resp) {
-//          var newJson = resp.json;
-//          var newId = resp.id;
-//          //console.log("saving new doc: " + newJson);
-//          saveDoc(-1,newJson,res.scope.doc_id).then(function success(res) {
-//            $timeout(refreshUnlessUnsaved,100);
-//          }, function error(resp) {
-//            console.log("Error saving doc");;
-//          });
-//        });
-
-//      });
     }
 
     //
@@ -380,9 +348,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       qwDialogService.showDocEditorDialog(false,'Create New Document',id,json,'',true)
       .then(function ok(result) {
         var newJson = result.json;
-        // reformat the doc for compactness, but only if no long numbers present
-        if (!qwFixLongNumberService.hasLongInt(newJson) && !qwFixLongNumberService.hasLongFloat(newJson))
-          newJson = JSON.stringify(JSON.parse(newJson));
+        // reformat the doc for compactness
+        newJson = js_beautify(newJson, {"indent_size": 0,"eol": "","remove_space_before_token": true,"indent_char": ""});
         saveDoc(-1,newJson,result.id,true)
           .then(setTimeout(refreshUnlessUnsaved,100),
                 function saveFailed(resp) {
@@ -517,8 +484,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       qwDialogService.showDocEditorDialog(readonly,'Edit Document',doc_id,doc_string,meta_str)
       .then(function ok(result) {
         // reformat the doc for compactness, but only if no long numbers present
-        if (!qwFixLongNumberService.hasLongInt(result.json) && !qwFixLongNumberService.hasLongFloat(result.json))
-          result.json = JSON.stringify(JSON.parse(result.json));
+        result.json = js_beautify(result.json, {"indent_size": 0,"eol": "","remove_space_before_token": true,"indent_char": ""});
         saveDoc(row,result.json).then(refreshUnlessUnsaved(result.json.length));
       },function cancel(res) {/*nothing to do, but need to catch*/});
 
@@ -527,34 +493,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       //res.promise.then(getSaveDocClosure(res.scope,row));
     }
 
-    //
-    // bring up the JSON editing dialog for edit or create new documents
-    //
-
-//    function showDocEditor(id,json,meta,readonly) {
-//      hideTooltips(); // hide any existing tooltipys
-//      var result = qwDocEditorService.showDocEditor(id,json,meta,readonly);
-//
-//      result.promise.then(allowTooltips,allowTooltips); // allow tooltips to show again
-//
-//      return(result);
-//    }
-
     function hideTooltips() {dec.hideAllTooltips = true;}
     function allowTooltips() {dec.hideAllTooltips = false;}
-
-    // need to remember the dialogScope and row in the promise resolution
-
-//    function getSaveDocClosure(dialogScope,row) {
-//      return function(res) {
-//        console.log("Doc editor success, doc " + row + ": " + res);
-//        var newJson = dialogScope.mainEditor.getSession().getValue();
-//        // reformat the doc for compactness, but only if no long numbers present
-//        if (!qwFixLongNumberService.hasLongInt(newJson) && !qwFixLongNumberService.hasLongFloat(newJson))
-//          newJson = JSON.stringify(JSON.parse(newJson));
-//        saveDoc(row,newJson).then(refreshUnlessUnsaved(newJson.length));
-//      }
-//    }
 
     //
     // functions to save the document back to the server
