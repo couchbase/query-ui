@@ -272,7 +272,8 @@
 
         res.promise.then(function success(resp) {
           var newJson = res.scope.editor.getSession().getValue();
-          //console.log("saving new doc: " + newJson);
+          // reformat the doc for compactness
+          newJson = js_beautify(newJson, {"indent_size": 0,"eol": "","remove_space_before_token": true,"indent_char": ""});
           saveDoc(-1,newJson,res.scope.doc_id).then(function success(res) {
             $timeout(refreshUnlessUnsaved,100);
           }, function error(resp) {
@@ -537,9 +538,8 @@
     function getSaveDocClosure(dialogScope,row) {
       return function(res) {
         var newJson = dialogScope.editor.getSession().getValue();
-        // reformat the doc for compactness, but only if no long numbers present
-        if (!qwFixLongNumberService.hasLongInt(newJson) && !qwFixLongNumberService.hasLongFloat(newJson))
-          newJson = JSON.stringify(JSON.parse(newJson));
+        // reformat the doc for compactness
+        newJson = js_beautify(newJson, {"indent_size": 0,"eol": "","remove_space_before_token": true,"indent_char": ""});
         saveDoc(row,newJson).then(refreshUnlessUnsaved(newJson.length));
       }
     }

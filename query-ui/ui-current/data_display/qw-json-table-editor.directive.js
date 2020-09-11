@@ -501,7 +501,7 @@
           'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         else if (tdata[row].rawJSONError)
           result += ' <span class="icon fa-exclamation-triangle" ng-if="dec.options.show_tables"' +
-                       'uib-tooltip-html="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
+                       'uib-tooltip-html="\'Error: document has numbers too long to edit. Tabular editing not permitted. ' +
                        tdata[row].rawJsonError + '\'"' +
                        'tooltip-placement="auto right" tooltip-append-to-body="true" tooltip-trigger="\'mouseenter\'">';
         else if (tdata[row].rawJSON)
