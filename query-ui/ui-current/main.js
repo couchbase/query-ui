@@ -27,8 +27,8 @@ angular
     // Angular8 version of the DocEditor
     mnPluggableUiRegistryProvider.registerConfig({
       name: 'Documents',
-      state: 'app.admin.doc_editor',
-      includedByState: 'app.admin.doc_editor',
+      state: 'app.admin.docs.editor',
+      includedByState: 'app.admin.docs',
       plugIn: 'workbenchTab',
       ngShow: "rbac.cluster.bucket['.'].data.docs.read  && rbac.cluster.bucket['.'].data.xattr.read",
       index: 0
@@ -78,8 +78,8 @@ class QueryUI {
 //            }
 //          },
           {
-            name: "app.admin.doc_editor.**",
-            url: "/documents",
+            name: "app.admin.docs.**",
+            url: "/docs",
             loadChildren: () => {
               return import('/_p/ui/query/angular-components/qw.documents.module.js').then(m => {
                 return m.QwDocumentsModule;

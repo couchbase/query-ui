@@ -265,7 +265,12 @@ td.ajtd-type-array {
 
 }
 
-.tooltip .tooltip-inner {
-    display: inline;
-    max-width: 220px;
+.tooltip-inner {
+  white-space: normal;
+}
+
+.hidden-fieldset {
+  padding: 0px;
+  border: 0px;
+  border-radius: 0px;
 }

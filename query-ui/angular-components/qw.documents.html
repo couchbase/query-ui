@@ -11,6 +11,8 @@
     </div>
   </mn-element-cargo>
 
+<qw-docs-subnav></qw-docs-subnav>
+
 <!-- row of controls for the query ----------------------------------------- -->
   <form name="searchForm">
   <div [formGroup]="searchForm" class="controls resp-med">
@@ -52,7 +54,7 @@
            ngbTooltip="How many documents to retrieve at once (max 200)."
            placement="auto"
            tooltip-append-to-body="true"
-           tooltip-trigger="mouseenter">
+           triggers="click:blur">
           <span class="icon fa-circle-thin fa-stack-2x"></span>
           <span class="icon fa-info fa-stack-1x"></span>
         </span>

@@ -5,6 +5,8 @@ import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constan
 import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
 import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
+import { QwDialogService }        from '/_p/ui/query/angular-directives/qw.dialog.service.js';
+
 
 import { MnPendingQueryKeeper, MnPermissions, MnPools } from '/ui/app/ajs.upgraded.providers.js';
 import { MnAdminService }        from '/ui/app/mn.admin.service.js';
@@ -30,6 +32,7 @@ class QwQueryService {
     MnPools,
     NgbModal,
     QwConstantsService,
+    QwDialogService,
     QwFixLongNumberService,
     QwQueryPlanService,
     QwValidateQueryService,
@@ -43,6 +46,7 @@ class QwQueryService {
       mnPools,
       ngbModal,
       qwConstantsService,
+      qwDialogService,  
       qwFixLongNumberService,
       qwQueryPlanService,
       validateQueryService,
@@ -54,6 +58,7 @@ class QwQueryService {
         mnPools,
         ngbModal,
         qwConstantsService,
+        qwDialogService,
         qwFixLongNumberService,
         qwQueryPlanService,
         validateQueryService,
@@ -84,10 +89,11 @@ function getQwQueryService(
     mnPools,
     ngbModal,
     qwConstantsService,
+    qwDialogService,
     qwFixLongNumberService,
     qwQueryPlanService,
     validateQueryService,
-    $http,$rootScope) {
+    $http) {
 
     var qwQueryService = {};
 
@@ -2483,15 +2489,7 @@ function getQwQueryService(
     //
 
     function showErrorDialog(message,details_array) {
-      var dialogScope = $rootScope.$new(true);
-      dialogScope.error_title = "Error";
-      dialogScope.error_detail = message;
-      dialogScope.error_detail_array = details_array;
-
-      $uibModal.open({
-        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-        scope: dialogScope
-      });
+      qwDialogService.showErrorDialog("Error",message,details_array,true);
     }
 
     function showWarningDialog(message,details_array) {

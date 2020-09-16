@@ -38,7 +38,7 @@ class QwJsonDataTable extends MnLifeCycleHooksToStream {
       inputs: [
         "qwJsonDataTable2"
       ],
-      changeDetection: ChangeDetectionStrategy.OnPush
+//      changeDetection: ChangeDetectionStrategy.OnPush
     })
   ]}
 
@@ -68,6 +68,7 @@ function createTable(json, element, renderer) {
       json = JSON.parse(json);
     } catch (e) {
       console.log("Error parsing json passed to table viewer.");
+      json = {};
     }
   }
 

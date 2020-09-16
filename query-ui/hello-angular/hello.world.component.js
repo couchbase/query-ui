@@ -54,7 +54,7 @@ class HelloWorldComponent extends MnLifeCycleHooksToStream {
     this.dec = {
         options: {
           selected_bucket: 'bucket_foo',
-          current_result: this.data,
+          current_result: this.item_array,
           show_tables: true,
         },
         updateDoc: function() {console.log("inside updateDoc");},
