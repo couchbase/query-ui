@@ -270,18 +270,20 @@ function getQwQueryService(
     //
 
     qwQueryService.doc_editor_options = {
-        selected_bucket: null,
-        query_busy: false,
-        show_tables: false,
-        show_id: true, // show ID vs range of IDs
-        limit: 10,
-        offset: 0,
-        where_clause: '',
-        doc_id: '',
-        doc_id_start: '',
-        doc_id_end: '',
-        current_query: '',
-        current_result: []
+      selected_bucket: null,
+      selected_scope: null,
+      selected_collection: null,
+      query_busy: false,
+      show_tables: false,
+      show_id: true, // show ID vs range of IDs
+      limit: 10,
+      offset: 0,
+      where_clause: '',
+      doc_id: '',
+      doc_id_start: '',
+      doc_id_end: '',
+      current_query: '',
+      current_result: []
     };
 
     qwQueryService.query_plan_options = {
@@ -633,6 +635,8 @@ function getQwQueryService(
 
       savedState.doc_editor_options = {
           selected_bucket: qwQueryService.doc_editor_options.selected_bucket,
+          selected_scope: qwQueryService.doc_editor_options.selected_scope,
+          selected_collection: qwQueryService.doc_editor_options.selected_collection,
           show_tables: qwQueryService.doc_editor_options.show_tables,
           show_id: qwQueryService.doc_editor_options.show_id,
           query_busy: false,

@@ -45,23 +45,28 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
   ngOnInit() {
      this.formOptions = {
-        selected_bucket: this.dec.options.selected_bucket,
-        limit: this.dec.options.limit,
-        offset: this.dec.options.offset,
-        doc_id: this.dec.options.doc_id,
-        doc_id_start: this.dec.options.doc_id_start,
-        doc_id_end: this.dec.options.doc_id_end,
-        where_clause: this.dec.options.where_clause,
+       selected_bucket: this.dec.options.selected_bucket,
+       selected_scope: this.dec.options.selected_scope,
+       selected_collection: this.dec.options.selected_collection,
+       limit: this.dec.options.limit,
+       offset: this.dec.options.offset,
+       doc_id: this.dec.options.doc_id,
+       doc_id_start: this.dec.options.doc_id_start,
+       doc_id_end: this.dec.options.doc_id_end,
+       where_clause: this.dec.options.where_clause,
     };
     this.searchForm.setValue(this.formOptions);
 
-    this.searchForm.get('selected_bucket').valueChanges.subscribe(data => this.dec.options.selected_bucket = data);
-    this.searchForm.get('limit').valueChanges.subscribe(data => this.dec.options.limit = data);
-    this.searchForm.get('offset').valueChanges.subscribe(data => this.dec.options.offset = data);
-    this.searchForm.get('doc_id').valueChanges.subscribe(data => this.dec.options.doc_id = data);
-    this.searchForm.get('doc_id_start').valueChanges.subscribe(data => this.dec.options.doc_id_start = data);
-    this.searchForm.get('doc_id_end').valueChanges.subscribe(data => this.dec.options.doc_id_end = data);
-    this.searchForm.get('where_clause').valueChanges.subscribe(data => this.dec.options.where_clause = data);
+    var This = this;
+    this.searchForm.get('selected_bucket').valueChanges.subscribe(data => This.dec.options.selected_bucket = data);
+    this.searchForm.get('selected_scope').valueChanges.subscribe(data => This.dec.options.selected_scope = data);
+    this.searchForm.get('selected_collection').valueChanges.subscribe(data => This.dec.options.selected_collection = data);
+    this.searchForm.get('limit').valueChanges.subscribe(data => This.dec.options.limit = data);
+    this.searchForm.get('offset').valueChanges.subscribe(data => This.dec.options.offset = data);
+    this.searchForm.get('doc_id').valueChanges.subscribe(data => This.dec.options.doc_id = data);
+    this.searchForm.get('doc_id_start').valueChanges.subscribe(data => This.dec.options.doc_id_start = data);
+    this.searchForm.get('doc_id_end').valueChanges.subscribe(data => This.dec.options.doc_id_end = data);
+    this.searchForm.get('where_clause').valueChanges.subscribe(data => This.dec.options.where_clause = data);
   }
 
   ngAfterInit() {
@@ -81,16 +86,20 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     var dec = {};
     this.dec = dec;
+    dec.rbac = mnPermissions.export;
+    dec.searchForm = this.searchForm;
 
     // form for selecting documents
     this.searchForm = new FormGroup({
       selected_bucket: new FormControl(),
+      selected_scope: new FormControl(),
+      selected_collection: new FormControl(),
       limit: new FormControl(),
       offset: new FormControl(),
       doc_id: new FormControl(),
       doc_id_start: new FormControl(),
       doc_id_end: new FormControl(),
-      where_clause: new FormControl(),
+      where_clause: new FormControl()
     });
 
     dec.searchForm = this.searchForm;
@@ -113,6 +122,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.currentDocs = [];
     dec.buckets = [];
     dec.buckets_ephemeral = {};
+    dec.collections = {};
+    dec.scopes = {}; // indexed by bucket name
     dec.show_id = show_id;
     dec.hideAllTooltips = true;
     dec.resultSize = function()
@@ -125,6 +136,19 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.how_to_query = how_to_query;
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
+
+    dec.getScopes = function() {
+      if (dec.scopes && dec.options.selected_bucket)
+        return (dec.scopes[dec.options.selected_bucket]);
+      else
+        return [];
+    };
+    dec.getCollections = function() {
+      if (dec.scopes && dec.options.selected_bucket && dec.options.selected_scope && dec.collections[dec.options.selected_bucket])
+        return dec.collections[dec.options.selected_bucket][dec.options.selected_scope];
+      else
+        return [];
+    };
 
     //
     //
@@ -145,6 +169,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.updatingRow = -1;
 
     dec.bucketChanged = bucketChanged;
+    dec.scopeChanged = scopeChanged;
+    dec.collectionChanged = collectionChanged;
 
     var N1QL = "N1QL";
     var KV = "KV";
@@ -449,7 +475,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     function deleteDoc_rest(row) {
       var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-          "/docs/" + myEncodeURIComponent(dec.options.current_result[row].id);
+        "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+        "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+        "/docs/" + myEncodeURIComponent(dec.options.current_result[row].id);
 
       return $http.delete(Url, {method: "DELETE",url: Url});
     }
@@ -548,7 +576,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     function saveDoc_rest(row,newJson,newKey) {
       var Url = "/pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-          "/docs/" + (newKey ? myEncodeURIComponent(newKey) : myEncodeURIComponent(dec.options.current_result[row].id));
+        "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+        "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+        "/docs/" + (newKey ? myEncodeURIComponent(newKey) : myEncodeURIComponent(dec.options.current_result[row].id));
 
       if (newJson.length > largeDoc) {
         showErrorDialog("Warning: large documents.",
@@ -607,6 +637,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       else
         ifOk();
     }
+
     //
     // build a query from the current options, and get the results
     //
@@ -658,7 +689,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       case N1QL: retrieveDocs_n1ql(); break;
       case KV: retrieveDocs_rest(); break;
       case false: // error status
-        dec.options.current_query = dec.options.selected_bucket; break;
+        showErrorDialog("Document Error",dec.options.current_result,true);
+        dec.options.current_query = dec.options.selected_bucket;
+        break;
       }
     }
 
@@ -671,12 +704,13 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // create a query based on either limit/skip or where clause
 
-      // can't do anything without a bucket
-      if (!dec.options.selected_bucket || dec.options.selected_bucket.length == 0)
+      // can't do anything without a bucket, scope, and collection
+      if (!dec.options.selected_bucket || !dec.options.selected_scope || !dec.options.selected_collection)
         return;
 
       // start making a query that only returns doc IDs
-      var query = 'select meta().id from `' + dec.options.selected_bucket + '` data ';
+      var query = 'select meta().id from `' + dec.options.selected_bucket + '`.`' +
+        dec.options.selected_scope + '`.`' +  dec.options.selected_collection + '` data ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
@@ -781,7 +815,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       for (var i=0; i< idArray.length; i++) {
         var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-            "/docs/" + myEncodeURIComponent(idArray[i]);
+          "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+          "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+          "/docs/" + myEncodeURIComponent(idArray[i]);
         //console.log("  url: " + rest_url);
 
         promiseArray.push($http.do({
@@ -888,7 +924,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.queryBusy) // don't have 2 retrieves going at once
         return;
 
-      dec.options.current_query = dec.options.selected_bucket;
+      dec.options.current_query = dec.options.selected_bucket + "." + dec.options.selected_scope + "." +
+        dec.options.selected_collection;
 
       if (dec.options.doc_id && dec.options.show_id)
         dec.options.current_query += ', document id: ' + dec.options.doc_id;
@@ -927,7 +964,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // otherwise use skip, offset, and optionally start & end keys
       var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-          "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
+        "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+        "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+        "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
 
       if (!dec.options.show_id && dec.options.doc_id_start)
         rest_url += "&startkey=%22" + myEncodeURIComponent(dec.options.doc_id_start) + '%22';
@@ -999,7 +1038,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.options.current_query = "top keys for bucket: " + dec.options.selected_bucket;
       dec.options.current_result = [];
 
-      var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) + "/stats";
+      var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
+      // "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+      // "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+      "/stats";
       var promise = $http.do({
         url: Url,
         method: "GET"
@@ -1046,6 +1088,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
 
     function getBuckets_rest() {
+      dec.buckets = [];
+      dec.buckets_ephemeral = {};
+      dec.collections = {};
+      dec.buckets = [];
 
       // get the buckets from the REST API
       var promise = $http.do({
@@ -1072,11 +1118,13 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           if (!default_seen)
             if (dec.buckets.length > 0)
               dec.options.selected_bucket = dec.buckets[0];
-          else
-            dec.options.selected_bucket = "";
+            else
+              dec.options.selected_bucket = "";
         }
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
 
+        if (dec.options.selected_bucket)
+          return(getScopesAndCollectionsForBucket(dec.options.selected_bucket));
       },function error(resp) {
         var data = resp.data, status = resp.status;
 
@@ -1090,17 +1138,62 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
+    // for any bucket we need to get the scopes and collections
+    //
+
+    function getScopesAndCollectionsForBucket(bucket) {
+      // get the buckets from the REST API
+      var promise = $http.do({
+        url: "../pools/default/buckets/" + encodeURI(bucket) + "/collections",
+        method: "GET"
+      }).then(function success(resp) {
+        if (resp && resp.status == 200 && resp.data && _.isArray(resp.data.scopes)) {
+          // get the scopes, and for each the collection names
+          dec.scopes[bucket] = [];
+          dec.collections[bucket] = {}; // map indexed on scope name
+          var default_scope_seen = false, default_collection_seen = false;
+
+          resp.data.scopes.forEach(function(scope) {
+            dec.scopes[bucket].push(scope.name);
+            if (scope.name == dec.options.selected_scope)
+              default_scope_seen = true;
+            dec.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
+            if (dec.collections[bucket][scope.name].some(collection_name => collection_name == dec.options.selected_collection))
+              default_collection_seen = true;
+          });
+        }
+        // if we don't have a scope, or didn't see it in the list, use the first one from the list
+        if ((!dec.options.selected_scope || !default_scope_seen) && dec.scopes[bucket][0])
+          dec.options.selected_scope = dec.scopes[bucket][0];
+
+        // same for collections, if we don't have one or didn't see it, use the first from the list
+        if (dec.options.selected_scope && dec.collections[bucket][dec.options.selected_scope][0] && !default_collection_seen)
+          dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
+
+      },function error(resp) {
+        if (resp && resp.data && resp.data.errors) {
+          dec.options.current_result = JSON.stringify(resp.data.errors);
+          showErrorDialog("Error getting list of collections.", dec.options.current_result,true);
+        }
+      });
+
+      return(promise);
+
+    }
+
+    //
     // bucket names comes in when we navigate here
     //
 
     function handleBucketParam() {
 
-      // if we get a bucket as a parameter, that overrides current defaults
-      if (false && _.isString($stateParams.bucket) && $stateParams.bucket.length > 0 && $stateParams.bucket != dec.options.selected_bucket) {
-        dec.options.selected_bucket = $stateParams.bucket;
-        dec.options.where_clause = ''; // reset the where clause
-        dec.options.offset = 0; // start off from the beginning
-      }
+      // // if we get a bucket as a parameter, that overrides current defaults
+      // if (false && _.isString($stateParams.bucket) && $stateParams.bucket.length > 0 &&
+      //   $stateParams.bucket != dec.options.selected_bucket) {
+      //   dec.options.selected_bucket = $stateParams.bucket;
+      //   dec.options.where_clause = ''; // reset the where clause
+      //   dec.options.offset = 0; // start off from the beginning
+      // }
 
       // if we got a param, or a saved user-selected value, select it and get the docs
       if (dec.options.selected_bucket && dec.options.selected_bucket.length > 0) {
@@ -1116,14 +1209,24 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // bucket changed via menu
     //
 
-    function bucketChanged(item) {
-      if (!item) return;
+    function bucketChanged(event) {
+      if (!event.target.value) return;
 
-      dec.options.where_clause = ''; // reset the where clause
-      dec.options.offset = 0; // start off from the beginning
-      dec.options.bucket = item;
+      dec.searchForm.get('where_clause').setValue('');
+      dec.searchForm.get('offset').setValue(0);
+      dec.options.selected_bucket = event.target.value;
+      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner);
+    }
+
+    function scopeChanged(event) {
+//      console.log("Scope changed to: " + event.target.value);
+      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner);
+    }
+
+    function collectionChanged(event) {
+//      console.log("Collection changed to: " + event.target.value);
       retrieveDocs_inner();
-    };
+    }
 
     //
     // if the user updates something, we like to refresh the results, unless

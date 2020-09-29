@@ -5,7 +5,7 @@
      *ngIf="dec.options.selected_bucket">
     <div class="header-controls">
       <a (click)="dec.createBlankDoc()"
-       ng-show="dec.rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">
+       [hidden]="!dec.rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">
         ADD <span class="resp-hide-xsml">DOCUMENT</span>
       </a>
     </div>
@@ -23,27 +23,24 @@
       </div>
       
       <div>
-        <select formControlName="selected_bucket">
+        <select formControlName="selected_bucket" (change)="dec.bucketChanged($event)">
             <option *ngFor="let name of dec.buckets" [selected]="name==dec.options.selected_bucket">
               {{name}}
             </option>
         </select>
+
+        <select formControlName="selected_scope" (change)="dec.scopeChanged($event)">
+          <option *ngFor="let name of dec.getScopes()" [selected]="name==dec.options.selected_scope">
+            {{name}}
+          </option>
+        </select>
+
+        <select formControlName="selected_collection" (change)="dec.collectionChanged($event)">
+          <option *ngFor="let name of dec.getCollections()" [selected]="name==dec.options.selected_collection">
+            {{name}}
+          </option>
+        </select>
       </div>
-      
-      <!--  ui-select
-        on-select="dec.bucketChanged($item)"
-        ng-model="dec.options.selected_bucket"
-        theme="selectize"
-        class="cbui-select">
-      <ui-select-match class="ui-select-match">
-        {{$select.selected}}
-      </ui-select-match>
-      <ui-select-choices
-         class="ui-select-choices"
-         repeat="bucket in dec.buckets | filter: $select.search">
-        <span class="select-item ellipsis" ng-bind-html="bucket | highlight: $select.search"></span>
-      </ui-select-choices>
-     </ui-select -->
     </div>
 
     <div class="column">
@@ -61,12 +58,11 @@
       </div>
       <input
          type="number"
-         name="limit"
          min="1"
          max="200"
          required
-         ng-disabled="dec.options.doc_id.length"
-         ng-submit="dec.retrieveDocs()"
+         [attr.disabled]="((dec.options.show_id && dec.options.doc_id) || (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end))) || null"
+         (submit)="dec.retrieveDocs()"
          formControlName="limit"
          [ngClass]="{'ng-invalid-number': searchForm.get('limit').invalid}"
          >
@@ -87,8 +83,7 @@
          name="offset"
          min="0"
          required
-         ng-disabled="dec.options.doc_id.length"
-         ng-submit="dec.retrieveDocs()"
+         [attr.disabled]="((dec.options.show_id && dec.options.doc_id) || (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end))) || null"
          formControlName="offset"
          [ngClass]="{'ng-invalid-number': searchForm.get('offset').invalid}"
          >
@@ -97,9 +92,7 @@
     <div class="column flex-grow-1">
       <div class="row row-min">
         <span>
-          <label
-             class="inline"
-             ng-disabled="(dec.options.where_clause.length > 0)">
+          <label class="inline">
             Document ID
           </label>
           <span
@@ -121,24 +114,21 @@
          type="text"
          formControlName="doc_id"
          *ngIf="dec.options.show_id"
-         ng-submit="dec.retrieveDocs()"
-         ng-disabled="(dec.options.where_clause.length > 0)"
+         [attr.disabled]="dec.options.where_clause || null"
          placeholder="optional..."
          class="width-12">
       <input
          type="text"
          *ngIf="!dec.options.show_id"
+         [attr.disabled]="dec.options.where_clause || null"
          formControlName="doc_id_start"
-         ng-submit="dec.retrieveDocs()"
-         ng-disabled="(dec.options.where_clause.length > 0)"
          placeholder="starting..."
          class="width-6">
       <input
          type="text"
          *ngIf="!dec.options.show_id"
+         [attr.disabled]="dec.options.where_clause || null"
          formControlName="doc_id_end"
-         ng-submit="dec.retrieveDocs()"
-         ng-disabled="(dec.options.where_clause.length > 0)"
          placeholder="ending..."
          class="width-6">
     </div>
@@ -146,7 +136,7 @@
     <div class="column flex-grow-2">
       <label
          class="inline"
-         ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id.length > 0) || ((dec.options.doc_id_start.length || dec.options.doc_id_end.length))">
+         ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id || dec.options.doc_id_start || dec.options.doc_id_end)">
         N1QL WHERE
       </label>
       <span
@@ -162,8 +152,7 @@
       <input
          type="text"
          formControlName="where_clause"
-         ng-submit="dec.retrieveDocs()"
-         ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id.length > 0) || ((dec.options.doc_id_start.length || dec.options.doc_id_end.length))"
+         [attr.disabled]="(!dec.can_use_n1ql() || (dec.options.show_id && dec.options.doc_id) || (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end))) || null"
          class="width-12"
          placeholder="{{dec.has_indexes() ? 'optional...' : 'no indexes available...'}}">
     </div>
@@ -171,7 +160,8 @@
     <div style="display:none;" class="resp-show-sml margin-top-half width-12"></div>
     <div class="column">
       <button
-         ng-disabled="searchForm.invalid || !dec.options.selected_bucket"
+         type="submit" value="submit"
+         [disabled]="searchForm.invalid || !dec.options.selected_bucket"
          (click)="dec.retrieveDocs()"
          class="fix-width-3">
           Retrieve Docs
@@ -195,8 +185,7 @@
       <label for="show_tables" class="toggle-control">
         <input
            type="checkbox" id="show_tables"
-           [(ngModel)]="dec.options.show_tables"
-           ng-enabled="true">
+           [(ngModel)]="dec.options.show_tables">
         <span class="toggle-control-body"></span>
       </label>
       enable field editing
