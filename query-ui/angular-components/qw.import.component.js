@@ -52,6 +52,11 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     ic.buckets = qis.buckets;
     ic.options = qis.options;
     ic.doImport = qis.doImport;
+    ic.getScopes = qis.getScopes;
+    ic.getCollections = qis.getCollections;
+
+    ic.bucketChanged = qis.bucketChanged;
+    ic.scopeChanged = qis.scopeChanged;
 
     // local functions and variables
     ic.aceOutputLoaded = aceOutputLoaded;
@@ -324,8 +329,8 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         command += "-d 'file://" + ic.options.fileName + "' ";
 
       // bucket name
-      if (ic.options.selectedBucket && ic.options.selectedBucket.length)
-        command += "-b '" + ic.options.selectedBucket + "' ";
+      if (ic.options.selected_bucket && ic.options.selected_bucket.length)
+        command += "-b '" + ic.options.selected_bucket + "' ";
 
       // key
       if (!ic.options.useKey)

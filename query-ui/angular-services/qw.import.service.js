@@ -44,24 +44,34 @@ class QwImportService {
 
     qis.rbac = mnPermissions.export;
     qis.buckets = [];
+    qis.collections = {};
+    qis.scopes = {}; // indexed by bucket name
 
     qis.options = {
-        selectedBucket: "",
-        fields: [],
-        selectedDocIDField: "",
-        useKey: false,
-        showTable: true,
-        importing: false,
-        selectedFormat: "",
-        fileData: "",
-        docData: "",
-        docJson: "",
-        fileName: "",
-        fileSize: 0,
-        last_import_status: ""
+      selected_bucket: "",
+      selected_scope: "",
+      selected_collection: "",
+      fields: [],
+      selectedDocIDField: "",
+      useKey: false,
+      showTable: true,
+      importing: false,
+      selectedFormat: "",
+      fileData: "",
+      docData: "",
+      docJson: "",
+      fileName: "",
+      fileSize: 0,
+      last_import_status: ""
     };
 
     qis.getBuckets = getBuckets;
+    qis.getScopes = getScopes;
+    qis.getCollections = getCollections;
+
+    qis.bucketChanged = bucketChanged;
+    qis.scopeChanged = scopeChanged;
+
     qis.closeAllDialogs = function () {console.log("Close all dialogs.");};
     qis.doImport = doImport;
 
@@ -82,7 +92,7 @@ class QwImportService {
       qis.options.cancel_import = false;
 
       // must have selected bucket and at least one document to import
-      if (!qis.options.selectedBucket || qis.options.selectedBucket.length == 0) {
+      if (!qis.options.selected_bucket || qis.options.selected_bucket.length == 0) {
         qwDialogService.showErrorDialog("Import Error", 'No bucket selected to import into.',null,true);
         qis.options.importing = false;
         return;
@@ -114,7 +124,8 @@ class QwImportService {
 
     function saveDocsViaN1QL(docNum) {
       var firstDoc = docNum;
-      var base_query = "UPSERT INTO `" + qis.options.selectedBucket + "` (KEY, VALUE) VALUES ";
+      var base_query = "UPSERT INTO `" + qis.options.selected_bucket + '`.`' +
+        qis.options.selected_scope + '`.`' + qis.options.selected_collection + "` (KEY, VALUE) VALUES ";
       var query = base_query;
 
       while (docNum < qis.options.docData.length) {
@@ -178,6 +189,8 @@ class QwImportService {
                 }
               },
               function error(result) {
+                qis.options.importing = false;
+
                 if (result && result.data) {
                   //console.log("N1QL Error!" + JSON.stringify(result.data.errors));
                   console.log("Error with query: " + query);
@@ -186,8 +199,9 @@ class QwImportService {
                   else
                     qis.options.last_import_status = "Error importing docs in range: " + firstDoc + "-" + docNum + ": " + JSON.stringify(result.data.errors);
                   qwDialogService.showErrorDialog("Import Failed", qis.options.last_import_status, null, true);
-                  qis.options.importing = false;
                 }
+                else if (result && result.message)
+                  qwDialogService.showErrorDialog("Import Failed, status: " + result.status, result.message, null, true);
                 else
                   qwDialogService.showErrorDialog("Import Failed", "Import failed with unknown status from server.", null, true);
               });
@@ -237,8 +251,11 @@ class QwImportService {
             if (qis.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
               qis.buckets.push(resp.data[i].name);
           }
-          if (qis.buckets.length > 0 && !qis.options.selectedBucket)
-            qis.options.selectedBucket = qis.buckets[0];
+          if (qis.buckets.length > 0 && !qis.options.selected_bucket)
+            qis.options.selected_bucket = qis.buckets[0];
+
+          if (qis.options.selected_bucket)
+            getScopesAndCollectionsForBucket(qis.options.selected_bucket);
        }
       },function error(resp) {
         var data = resp.data, status = resp.status;
@@ -253,7 +270,94 @@ class QwImportService {
       return(promise);
     }
 
-   /**
+    //
+    // for any bucket we need to get the scopes and collections
+    //
+
+    function getScopesAndCollectionsForBucket(bucket) {
+      // get the buckets from the REST API
+      var promise = $http.do({
+        url: "../pools/default/buckets/" + encodeURI(bucket) + "/collections",
+        method: "GET"
+      }).then(function success(resp) {
+        if (resp && resp.status == 200 && resp.data && _.isArray(resp.data.scopes)) {
+          // get the scopes, and for each the collection names
+          qis.scopes[bucket] = [];
+          qis.collections[bucket] = {}; // map indexed on scope name
+
+          resp.data.scopes.forEach(function(scope) {
+            qis.scopes[bucket].push(scope.name);
+            qis.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
+          });
+        }
+
+        qis.scopes[bucket] = qis.scopes[bucket].sort();
+
+        // if we don't have a scope, or didn't see it in the list, use the first one from the list
+        if (qis.scopes[bucket][0] &&
+          (!qis.options.selected_scope || qis.scopes[bucket].indexOf(qis.options.selected_scope) < 0))
+          qis.options.selected_scope = qis.scopes[bucket][0];
+
+        // same for collections, if we don't have one or it's not in the list, use the first from the list
+        if (qis.options.selected_scope && // we have a scope
+          qis.collections[bucket][qis.options.selected_scope][0] && // we have at least 1 collection in the list
+          (!qis.options.selected_collection || // no current collection, or collection not in list
+            qis.collections[bucket][qis.options.selected_scope].indexOf(qis.options.selected_collection) < 0))
+          qis.options.selected_collection = qis.collections[bucket][qis.options.selected_scope][0];
+
+      },function error(resp) {
+        if (resp && resp.data && resp.data.errors) {
+          qis.options.current_result = JSON.stringify(resp.data.errors);
+          showErrorDialog("Error getting list of collections.", qis.options.current_result,true);
+        }
+      });
+
+      return(promise);
+
+    }
+
+    function getScopes() {
+      if (qis.scopes && qis.options.selected_bucket)
+        return (qis.scopes[qis.options.selected_bucket]);
+      else
+        return [];
+    };
+
+    function getCollections() {
+      if (qis.scopes && qis.options.selected_bucket && qis.options.selected_scope && qis.collections[qis.options.selected_bucket])
+        return qis.collections[qis.options.selected_bucket][qis.options.selected_scope];
+      else
+        return [];
+    };
+
+    //
+    // when the bucket changes, refresh the scopes and collections for that bucket
+    // (unless there is no specified bucket, and reset everything
+    //
+
+    function bucketChanged(event) {
+      qis.options.selected_bucket = event.target.value;
+      if (!event.target.value) {
+        qis.options.selected_scope = null;
+        qis.options.selected_collection = null;
+        qis.collections = {};
+        qis.scopes = {};
+      }
+      else
+        getScopesAndCollectionsForBucket(qis.options.selected_bucket);
+    }
+
+    // when the scope changes, the model for the collections menu can change without
+    // triggering a change in the underlying collection value. Make sure the value of
+    // the selected_collection is on the list of current collections, otherwise set
+    // the selected_collection to the first on the list
+    function scopeChanged(event) {
+      var collections = getCollections();
+      if (collections.length > 0 && collections.indexOf(qis.options.selected_collection) < 0)
+        qis.options.selected_collection = collections[0];
+    }
+
+    /**
      * Fast UUID generator, RFC4122 version 4 compliant.
      * @author Jeff Ward (jcward.com).
      * @license MIT license

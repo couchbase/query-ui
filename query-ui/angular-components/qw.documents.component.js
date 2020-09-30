@@ -208,6 +208,16 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         return(false);
       }
 
+      if (!dec.options.selected_scope) {
+        dec.options.current_result = "No scope selected.";
+        return(false);
+      }
+
+      if (!dec.options.selected_collection) {
+        dec.options.current_result = "No bucket selected.";
+        return(false);
+      }
+
       // do we have any buckets?
       if (dec.buckets.length == 0) {
         dec.options.current_query = dec.options.selected_bucket;
@@ -1151,23 +1161,23 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           // get the scopes, and for each the collection names
           dec.scopes[bucket] = [];
           dec.collections[bucket] = {}; // map indexed on scope name
-          var default_scope_seen = false, default_collection_seen = false;
 
           resp.data.scopes.forEach(function(scope) {
             dec.scopes[bucket].push(scope.name);
-            if (scope.name == dec.options.selected_scope)
-              default_scope_seen = true;
             dec.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
-            if (dec.collections[bucket][scope.name].some(collection_name => collection_name == dec.options.selected_collection))
-              default_collection_seen = true;
           });
         }
-        // if we don't have a scope, or didn't see it in the list, use the first one from the list
-        if ((!dec.options.selected_scope || !default_scope_seen) && dec.scopes[bucket][0])
+
+        // if we don't have a current selected_scope, or didn't see it in the list, use the first one from the list
+        if (dec.scopes[bucket][0] &&
+          (!dec.options.selected_scope || dec.scopes[bucket].indexOf(dec.options.selected_scope) < 0))
           dec.options.selected_scope = dec.scopes[bucket][0];
 
-        // same for collections, if we don't have one or didn't see it, use the first from the list
-        if (dec.options.selected_scope && dec.collections[bucket][dec.options.selected_scope][0] && !default_collection_seen)
+        // same for collections, if we don't have one or it's not in the list, use the first from the list
+        if (dec.options.selected_scope && // we have a scope
+          dec.collections[bucket][dec.options.selected_scope][0] && // we have at least 1 collection in the list
+          (!dec.options.selected_collection || // no current collection, or collection not in list
+            dec.collections[bucket][dec.options.selected_scope].indexOf(dec.options.selected_collection) < 0))
           dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
 
       },function error(resp) {

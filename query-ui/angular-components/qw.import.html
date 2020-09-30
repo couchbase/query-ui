@@ -64,21 +64,39 @@
         </div>
 
         <div class="formrow">
-          <label>Destination Bucket</label>
+          <label>Destination</label>
           <select
-             [(ngModel)]="ic.options.selectedBucket"
+             [(ngModel)]="ic.options.selected_bucket"
              [ngModelOptions]="{standalone: true}"
               theme="selectize"
               name="bucket"
              class="cbui-select"
+             (change)="ic.bucketChanged($event)"
              [disabled]="ic.options.importing">
             <option
                class="ui-select-choices"
                *ngFor="let bucket of ic.buckets"
-               [selected]="bucket==ic.options.selectedBucket">
+               [selected]="bucket==ic.options.selected_bucket">
               <span class="select-item ellipsis">{{bucket}}</span>
             </option>
           </select>
+
+          <select (change)="ic.scopeChanged($event)" [ngModelOptions]="{standalone: true}" theme="selectize"
+                  name="scope" class="cbui-select" [(ngModel)]="ic.options.selected_scope"
+                  [disabled]="ic.options.importing">
+            <option *ngFor="let name of ic.getScopes()">
+              {{name}}
+            </option>
+          </select>
+
+          <select [ngModelOptions]="{standalone: true}" theme="selectize"
+                  name="collection" class="cbui-select" [(ngModel)]="ic.options.selected_collection"
+                  [disabled]="ic.options.importing">
+            <option *ngFor="let name of ic.getCollections()">
+              {{name}}
+            </option>
+          </select>
+
         </div>
 
         <div class="formrow">
@@ -179,7 +197,7 @@
       <div class="text-center">
         <button
            (click)="ic.doImport()"
-           [disabled]="!ic.options.docData.length || !ic.options.selectedBucket || !ic.validQueryService()"
+           [disabled]="!ic.options.docData.length || !ic.options.selected_bucket || !ic.validQueryService()"
            class="fix-width-3">
            <span *ngIf="!ic.options.importing">Import Data</span>
            <span *ngIf="ic.options.importing">Cancel Import</span>
