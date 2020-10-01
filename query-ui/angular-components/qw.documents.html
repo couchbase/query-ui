@@ -179,7 +179,7 @@
      class="row resp-sml margin-bottom-half">
     <div class="text-small resp-margin-sml">
       <strong><span *ngIf="dec.resultSize()">{{dec.resultSize()}}</span>
-       Results for</strong> <em>{{dec.options.current_query}}</em>
+       Results for&nbsp;</strong> <em>{{dec.options.current_query}}</em>
     </div>
     <div class="row text-small resp-margin-sml">
       <label for="show_tables" class="toggle-control">
@@ -205,7 +205,7 @@
 
 <!-- results (documents or status messages) ***************************** -->
   <div *ngIf="dec.options.queryBusy">Retrieving results...</div>
-  <div>
+  <div *ngIf="dec.show_results">
     <div class="row" *ngIf="dec.options.selected_bucket && dec.options.current_query.length > 0">
       <div class="doc-editor-results show-scrollbar">
         <qw-json-table-editor2

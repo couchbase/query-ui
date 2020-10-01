@@ -1,38 +1,39 @@
 import {MnLifeCycleHooksToStream} from '/ui/app/mn.core.js';
-import {Component, ChangeDetectionStrategy, ViewEncapsulation} from '/ui/web_modules/@angular/core.js';
+import {Component, ChangeDetectorRef, ViewEncapsulation} from '/ui/web_modules/@angular/core.js';
 
 import {FormControl, FormGroup} from '/ui/web_modules/@angular/forms.js';
 
-import { MnPermissions } from '/ui/app/ajs.upgraded.providers.js';
+import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 
-import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
-import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import { QwDocEditorService }     from "/_p/ui/query/angular-services/qw.upgraded.providers.js";
+import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
+import {QwQueryService} from "/_p/ui/query/angular-services/qw.query.service.js";
+import {QwValidateQueryService} from "/_p/ui/query/angular-services/qw.validate.query.service.js";
+import {QwDocEditorService} from "/_p/ui/query/angular-services/qw.upgraded.providers.js";
 
 import js_beautify from "/ui/web_modules/js-beautify.js";
 
-import { $http } from '/_p/ui/query/angular-services/qw.http.js';
-
+import {$http} from '/_p/ui/query/angular-services/qw.http.js';
 
 import _ from "/ui/web_modules/lodash.js";
-import { QwDialogService } from '../angular-directives/qw.dialog.service.js';
+import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
 
 export {QwDocumentsComponent};
 
 class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
-    new Component({
-      templateUrl: "/_p/ui/query/angular-components/qw.documents.html",
-      styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
-      encapsulation: ViewEncapsulation.None,
+      new Component({
+        templateUrl: "/_p/ui/query/angular-components/qw.documents.html",
+        styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+        encapsulation: ViewEncapsulation.None,
 //      changeDetection: ChangeDetectionStrategy.OnPush
-    })
-  ]}
+      })
+    ]
+  }
 
   static get parameters() {
     return [
+      ChangeDetectorRef,
       MnPermissions,
       QwDocEditorService,
       QwDialogService,
@@ -40,20 +41,20 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       QwQueryService,
       QwValidateQueryService,
       $http
-      ];
+    ];
   }
 
   ngOnInit() {
-     this.formOptions = {
-       selected_bucket: this.dec.options.selected_bucket,
-       selected_scope: this.dec.options.selected_scope,
-       selected_collection: this.dec.options.selected_collection,
-       limit: this.dec.options.limit,
-       offset: this.dec.options.offset,
-       doc_id: this.dec.options.doc_id,
-       doc_id_start: this.dec.options.doc_id_start,
-       doc_id_end: this.dec.options.doc_id_end,
-       where_clause: this.dec.options.where_clause,
+    this.formOptions = {
+      selected_bucket: this.dec.options.selected_bucket,
+      selected_scope: this.dec.options.selected_scope,
+      selected_collection: this.dec.options.selected_collection,
+      limit: this.dec.options.limit,
+      offset: this.dec.options.offset,
+      doc_id: this.dec.options.doc_id,
+      doc_id_start: this.dec.options.doc_id_start,
+      doc_id_end: this.dec.options.doc_id_end,
+      where_clause: this.dec.options.where_clause,
     };
     this.searchForm.setValue(this.formOptions);
 
@@ -73,15 +74,15 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     console.log("Docs afterInit");
   }
 
-
   constructor(
-      mnPermissions,
-      qwDocEditorService,
-      qwDialogService,
-      qwFixLongNumberService,
-      qwQueryService,
-      validateQueryService,
-      $http) {
+    changeDetectorRef,
+    mnPermissions,
+    qwDocEditorService,
+    qwDialogService,
+    qwFixLongNumberService,
+    qwQueryService,
+    validateQueryService,
+    $http) {
     super();
 
     var dec = {};
@@ -119,6 +120,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.options.doc_id_start = null;
     dec.options.doc_id_end = null;
     dec.options.current_result = [];
+    dec.show_results = true;
     dec.currentDocs = [];
     dec.buckets = [];
     dec.buckets_ephemeral = {};
@@ -127,8 +129,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.indexes = {};
     dec.show_id = show_id;
     dec.hideAllTooltips = true;
-    dec.resultSize = function()
-    {
+    dec.resultSize = function () {
       if (_.isArray(dec.options.current_result))
         return dec.options.current_result.length;
       else return null;
@@ -138,13 +139,13 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
 
-    dec.getScopes = function() {
+    dec.getScopes = function () {
       if (dec.scopes && dec.options.selected_bucket)
         return (dec.scopes[dec.options.selected_bucket]);
       else
         return [];
     };
-    dec.getCollections = function() {
+    dec.getCollections = function () {
       if (dec.scopes && dec.options.selected_bucket && dec.options.selected_scope && dec.collections[dec.options.selected_bucket])
         return dec.collections[dec.options.selected_bucket][dec.options.selected_scope];
       else
@@ -176,7 +177,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     var N1QL = "N1QL";
     var KV = "KV";
 
-    var largeDoc = 1024*1024;
+    var largeDoc = 1024 * 1024;
 
     //
     // call the activate method for initialization
@@ -206,24 +207,24 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // make sure that there is a current bucket selected
       if (!dec.options.selected_bucket) {
         dec.options.current_result = "No bucket selected.";
-        return(false);
+        return (false);
       }
 
       if (!dec.options.selected_scope) {
         dec.options.current_result = "No scope selected.";
-        return(false);
+        return (false);
       }
 
       if (!dec.options.selected_collection) {
         dec.options.current_result = "No bucket selected.";
-        return(false);
+        return (false);
       }
 
       // do we have any buckets?
       if (dec.buckets.length == 0) {
         dec.options.current_query = dec.options.selected_bucket;
         dec.options.current_result = "No buckets found.";
-        return(false);
+        return (false);
       }
 
       // always use KV for single doc lookups by ID
@@ -234,14 +235,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // - use N1QL if primary index, otherwise KV (though fail if ephemeral)
       if ((!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end)) || dec.options.where_clause.length == 0) {
         if (has_prim())
-          return(N1QL);
+          return (N1QL);
         else if (dec.buckets_ephemeral[dec.options.selected_bucket]) { // ephemeral, no primary key
           dec.options.current_result =
             "Ephemeral buckets can only be queried by document ID, or via a primary or secondary GSI index.";
-          return(false);
-        }
-        else
-          return(KV);
+          refreshResults();
+          return (false);
+        } else
+          return (KV);
       }
 
       // limit/offset with WHERE clause
@@ -250,14 +251,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.where_clause.length > 0) {
         if (!has_prim() && !has_sec()) {
           dec.options.current_result = "WHERE clause not supported unless bucket has primary or secondary index.";
-          return(false);
+          return (false);
         }
-        return(N1QL)
+        return (N1QL)
       }
 
       // shouldn't get here
       dec.options.current_result = "Internal error running document query.";
-      return(false);
+      return (false);
     }
 
     //
@@ -266,7 +267,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     function can_use_n1ql() {
-      return(has_prim() || has_sec());
+      return (has_prim() || has_sec());
     }
 
     //
@@ -274,7 +275,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     function prevBatch() {
-      checkUnsavedChanges(function() {
+      checkUnsavedChanges(function () {
         dec.options.offset -= dec.options.limit;
         if (dec.options.offset < 0)
           dec.options.offset = 0;
@@ -285,11 +286,21 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     function nextBatch() {
       // don't fetch data if unsaved changes
-      checkUnsavedChanges(function() {
+      checkUnsavedChanges(function () {
         dec.options.offset += dec.options.limit;
         dec.searchForm.get('offset').setValue(dec.options.offset);
         retrieveDocs_inner();
       });
+    }
+
+    //
+    // angular change detection doesn't seem to work properly in cases where
+    // the current results are set to a string. We can force the results pane
+    // to update by triggering *ngIf off and on.
+    //
+    function refreshResults() {
+      dec.show_results = false;
+      setTimeout(() => dec.show_results = true, 100);
     }
 
     //
@@ -319,7 +330,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.updatingRow = row;
 
       var newJson = JSON.stringify(dec.options.current_result[row].data);
-      var promise = saveDoc(row,newJson);
+      var promise = saveDoc(row, newJson);
 
       // if it succeeded, mark the row as clean
       promise.then(function success() { // errors are handled by saveDoc()
@@ -335,7 +346,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     function createBlankDoc() {
       // bring up a dialog to get the new key
       showNewDocEditor('newDocID',
-          '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
+        '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
     }
 
     //
@@ -343,23 +354,30 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // save it, though if the ID is already taken, give them another change at the ID
     //
 
-    function showNewDocEditor(id,json) {
-      qwDialogService.showDocEditorDialog(false,'Create New Document',id,json,'',true)
-      .then(function ok(result) {
-        var newJson = result.json;
-        // reformat the doc for compactness
-        newJson = js_beautify(newJson, {"indent_size": 0,"eol": "","remove_space_before_token": true,"indent_char": ""});
-        saveDoc(-1,newJson,result.id,true)
-          .then(setTimeout(refreshUnlessUnsaved,100),
+    function showNewDocEditor(id, json) {
+      qwDialogService.showDocEditorDialog(false, 'Create New Document', id, json, '', true)
+        .then(function ok(result) {
+            var newJson = result.json;
+            // reformat the doc for compactness
+            newJson = js_beautify(newJson, {
+              "indent_size": 0,
+              "eol": "",
+              "remove_space_before_token": true,
+              "indent_char": ""
+            });
+            saveDoc(-1, newJson, result.id, true)
+              .then(setTimeout(refreshUnlessUnsaved, 100),
                 function saveFailed(resp) {
-                  handleSaveFailure(result.id,resp.data) // key already used,try again?
-                  .then(function () {
-                    showNewDocEditor(result.id,result.json);
-                  });
+                  handleSaveFailure(result.id, resp.data) // key already used,try again?
+                    .then(function () {
+                      showNewDocEditor(result.id, result.json);
+                    });
+                });
+          },
+          function cancel() {
           });
-      },
-      function cancel() {});
     }
+
     //
     // function to save a document with a different key
     //
@@ -370,7 +388,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // bring up a dialog to get the new key
 
-      var promise = qwDialogService.showInputDialog("Save As","New Document Key ", dec.options.current_result[row].id + '_copy');
+      var promise = qwDialogService.showInputDialog("Save As", "New Document Key ", dec.options.current_result[row].id + '_copy');
 
       hideTooltips();
       promise.then(function success(newDocKey) {
@@ -378,27 +396,27 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
         var promise;
         if (dec.options.current_result[row].rawJSON)
-          promise = saveDoc(row,dec.options.current_result[row].rawJSON,newDocKey);
+          promise = saveDoc(row, dec.options.current_result[row].rawJSON, newDocKey);
         else
-          promise = saveDoc(row,JSON.stringify(dec.options.current_result[row].data),newDocKey);
+          promise = saveDoc(row, JSON.stringify(dec.options.current_result[row].data), newDocKey);
 
         // did the query succeed?
         promise.then(function success(resp) {
-          //console.log("successfully copied form: " + form);
-          dec.updatingRow = -1;
-          if (!resp.data.errors) {
-            form.form.markAsPristine();
-            setTimeout(refreshUnlessUnsaved,100);
-          }
-        },
+            //console.log("successfully copied form: " + form);
+            dec.updatingRow = -1;
+            if (!resp.data.errors) {
+              form.form.markAsPristine();
+              setTimeout(refreshUnlessUnsaved, 100);
+            }
+          },
 
-        // ...or fail?
-        function error(resp) {
-          var data = resp.data, status = resp.status;
+          // ...or fail?
+          function error(resp) {
+            var data = resp.data, status = resp.status;
 
-          //showErrorDialog("Error Copying Document", JSON.stringify(data),true);
-          dec.updatingRow = -1;
-        });
+            //showErrorDialog("Error Copying Document", JSON.stringify(data),true);
+            dec.updatingRow = -1;
+          });
 
       });
     }
@@ -418,32 +436,33 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       hideTooltips();
       var promise = showErrorDialog("Delete Document",
-                                    "Warning, this will delete the document: " + dec.options.current_result[row].id);
-      promise.then(allowTooltips,allowTooltips); // allow tooltips to show again
+        "Warning, this will delete the document: " + dec.options.current_result[row].id);
+      promise.then(allowTooltips, allowTooltips); // allow tooltips to show again
 
       promise.then(function ok(res) {
-        dec.updatingRow = row;
+          dec.updatingRow = row;
 
-        var promise = deleteDoc_rest(row);
+          var promise = deleteDoc_rest(row);
 
-        // did the query succeed?
-        promise.then(function(resp) {
-          //console.log("successfully deleted row: " + row);
-          dec.updatingRow = -1;
-          dec.options.current_result[row].deleted = true;
+          // did the query succeed?
+          promise.then(function (resp) {
+              //console.log("successfully deleted row: " + row);
+              dec.updatingRow = -1;
+              dec.options.current_result[row].deleted = true;
+            },
+
+            // ...or fail?
+            function error(resp) {
+              var data = resp.data, status = resp.status;
+
+              showErrorDialog("Error Deleting Document", JSON.stringify(data), true)
+                .then(function () {
+                  dec.updatingRow = -1;
+                });
+            });
         },
-
-        // ...or fail?
-        function error(resp) {
-          var data = resp.data, status = resp.status;
-
-          showErrorDialog("Error Deleting Document",JSON.stringify(data),true)
-          .then(function() {
-            dec.updatingRow = -1;
-          });
+        function cancel(res) {/*need to handle when user clicks cancel*/
         });
-      },
-      function cancel(res) {/*need to handle when user clicks cancel*/});
     }
 
     function deleteDoc_rest(row) {
@@ -452,14 +471,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
         "/docs/" + myEncodeURIComponent(dec.options.current_result[row].id);
 
-      return $http.delete(Url, {method: "DELETE",url: Url});
+      return $http.delete(Url, {method: "DELETE", url: Url});
     }
 
     //
     // function to edit the JSON of a document
     //
 
-    function editDoc(row,readonly) {
+    function editDoc(row, readonly) {
       if (dec.updatingRow >= 0)
         return;
 
@@ -467,7 +486,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // if we have raw JSON with long numbers, let the user edit that
       if (dec.options.current_result[row].rawJSON)
-        doc_string = js_beautify(dec.options.current_result[row].rawJSON,{"indent_size": 2});
+        doc_string = js_beautify(dec.options.current_result[row].rawJSON, {"indent_size": 2});
 
       // handle empty documents
       else if (!dec.options.current_result[row].data)
@@ -475,79 +494,92 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // otherwise create a string from the underlying data
       else
-        doc_string = JSON.stringify(dec.options.current_result[row].data,null,2);
+        doc_string = JSON.stringify(dec.options.current_result[row].data, null, 2);
 
       var doc_id = dec.options.current_result[row].id;
-      var meta_obj = {meta: dec.options.current_result[row].meta,
-                      xattrs: dec.options.current_result[row].xattrs};
-      var meta_str = JSON.stringify(meta_obj,null,2);
+      var meta_obj = {
+        meta: dec.options.current_result[row].meta,
+        xattrs: dec.options.current_result[row].xattrs
+      };
+      var meta_str = JSON.stringify(meta_obj, null, 2);
 
-      qwDialogService.showDocEditorDialog(readonly,'Edit Document',doc_id,doc_string,meta_str)
-      .then(function ok(result) {
-        // reformat the doc for compactness, but only if no long numbers present
-        result.json = js_beautify(result.json, {"indent_size": 0,"eol": "","remove_space_before_token": true,"indent_char": ""});
-        saveDoc(row,result.json).then(refreshUnlessUnsaved(result.json.length));
-      },function cancel(res) {/*nothing to do, but need to catch*/});
+      qwDialogService.showDocEditorDialog(readonly, 'Edit Document', doc_id, doc_string, meta_str)
+        .then(function ok(result) {
+          // reformat the doc for compactness, but only if no long numbers present
+          result.json = js_beautify(result.json, {
+            "indent_size": 0,
+            "eol": "",
+            "remove_space_before_token": true,
+            "indent_char": ""
+          });
+          saveDoc(row, result.json).then(refreshUnlessUnsaved(result.json.length));
+        }, function cancel(res) {/*nothing to do, but need to catch*/
+        });
 
 
       //var res = showDocEditor(dec.options.current_result[row].id, doc_string,meta_str,readonly);
       //res.promise.then(getSaveDocClosure(res.scope,row));
     }
 
-    function hideTooltips() {dec.hideAllTooltips = true;}
-    function allowTooltips() {dec.hideAllTooltips = false;}
+    function hideTooltips() {
+      dec.hideAllTooltips = true;
+    }
+
+    function allowTooltips() {
+      dec.hideAllTooltips = false;
+    }
 
     //
     // functions to save the document back to the server
     //
 
-    function saveDoc(row,newJson,newKey,ignore_errors) {
+    function saveDoc(row, newJson, newKey, ignore_errors) {
       dec.updatingRow = row;
 
-      var promise = saveDoc_rest(row,newJson,newKey);
+      var promise = saveDoc_rest(row, newJson, newKey);
 
       promise
-      // did the query succeed?
-        .then(function(resp) {
-          var data = resp.data, status = resp.status;
-          if (data.errors && !ignore_errors) { // even 'success' can have error status
-            handleSaveFailure(newKey,data.errors);
+        // did the query succeed?
+        .then(function (resp) {
+            var data = resp.data, status = resp.status;
+            if (data.errors && !ignore_errors) { // even 'success' can have error status
+              handleSaveFailure(newKey, data.errors);
+              dec.updatingRow = -1;
+            }
+
             dec.updatingRow = -1;
-          }
+          },
 
-          dec.updatingRow = -1;
-        },
+          // ...or fail?
+          function error(resp) {
+            if (ignore_errors)
+              return;
 
-        // ...or fail?
-        function error(resp) {
-          if (ignore_errors)
-            return;
+            var errors = resp;
+            if (resp.errors)
+              errors = resp.errors;
+            else if (resp.data)
+              errors = resp.data;
 
-          var errors = resp;
-          if (resp.errors)
-            errors = resp.errors;
-          else if (resp.data)
-            errors = resp.data;
+            handleSaveFailure(newKey, errors);
+            dec.updatingRow = -1;
+          });
 
-          handleSaveFailure(newKey,errors);
-          dec.updatingRow = -1;
-        });
-
-      return(promise);
+      return (promise);
     }
 
     //
     // show dialog with error message about save failure
     //
 
-    function handleSaveFailure(newKey,errors) {
+    function handleSaveFailure(newKey, errors) {
       var title = newKey ? "Error Inserting New Document" : "Error Updating Document";
 
       return showErrorDialog(title, 'Errors from server: ' + JSON.stringify(errors), true);
     }
 
 
-    function saveDoc_rest(row,newJson,newKey) {
+    function saveDoc_rest(row, newJson, newKey) {
       var Url = "/pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
         "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
         "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
@@ -555,8 +587,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       if (newJson.length > largeDoc) {
         showErrorDialog("Warning: large documents.",
-                        'You are saving a very large document, ' + Math.round(10*newJson.length/(1024*1024))/10 +
-                        'MB, it may take some time for the change to be visible in the database.', true);
+          'You are saving a very large document, ' + Math.round(10 * newJson.length / (1024 * 1024)) / 10 +
+          'MB, it may take some time for the change to be visible in the database.', true);
       }
 
       // with newKey, we need to check if the document exists first by that key
@@ -566,18 +598,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           method: "GET",
           url: Url
         }).then(function success(resp) {
-          return(Promise.reject({data: "Can't save document, key '" + newKey + "' already exists."}));
-        },
-        function fail(resp) {
-          return $http.do({
-            method: "POST",
-            url: Url,
-            data: {
-              flags: 0x02000006,
-              value: newJson
-            }
+            return (Promise.reject({data: "Can't save document, key '" + newKey + "' already exists."}));
+          },
+          function fail(resp) {
+            return $http.do({
+              method: "POST",
+              url: Url,
+              data: {
+                flags: 0x02000006,
+                value: newJson
+              }
+            });
           });
-        });
       }
 
       // otherwise just save the doc using the REST api
@@ -595,7 +627,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // warn the user about unsaved changes, if any
     //
 
-    function checkUnsavedChanges(ifOk,ifCancel) {
+    function checkUnsavedChanges(ifOk, ifCancel) {
       // warn the user if they try to get more data when unsaved changes
       if (document.getElementById('somethingChangedInTheEditor')) {
 
@@ -604,7 +636,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         // they clicked yes, so go ahead
         promise.then(function success() {
           ifOk();
-        },function cancel() {if (ifCancel) ifCancel();});
+        }, function cancel() {
+          if (ifCancel) ifCancel();
+        });
       }
       // if there are no unsaved changes, just go ahead
       else
@@ -633,38 +667,46 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // asking the user to click "retrieve"
 
       if (validateQueryService.valid() &&
-          (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]) &&
-          !qwQueryService.buckets.length) { // no bucket info yet
+        (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]) &&
+        !qwQueryService.buckets.length) { // no bucket info yet
         dec.options.current_query = dec.options.selected_bucket;
-        dec.options.current_result =  "Connection to query service not quite ready. Click 'Retrieve Docs' to see data.";
+        dec.options.current_result = "Connection to query service not quite ready. Click 'Retrieve Docs' to see data.";
+        refreshResults();
         return;
       }
 
       // validate fields
       if (!_.isNumber(dec.options.limit) || dec.options.limit < 1 || dec.options.limit > 200) {
         dec.options.current_result = "Invalid value for 'limit': Limit must be a number between 1 and 200";
+        refreshResults();
         return;
       }
 
       if (!_.isNumber(dec.options.offset) || dec.options.offset < 0) {
         dec.options.current_result = "Invalid value for 'offset': Offset must be a number >= 0";
+        refreshResults();
         return;
       }
 
       if (!_.isString(dec.options.selected_bucket) || dec.options.selected_bucket == "") {
         dec.options.current_result = "No selected bucket.";
+        refreshResults();
         return;
       }
 
       // use n1ql service if we can
       //console.log("Querying via: " + how_to_query());
       switch (how_to_query()) {
-      case N1QL: retrieveDocs_n1ql(); break;
-      case KV: retrieveDocs_rest(); break;
-      case false: // error status
-        showErrorDialog("Document Error",dec.options.current_result,true);
-        dec.options.current_query = dec.options.selected_bucket;
-        break;
+        case N1QL:
+          retrieveDocs_n1ql();
+          break;
+        case KV:
+          retrieveDocs_rest();
+          break;
+        case false: // error status
+          showErrorDialog("Document Error", dec.options.current_result, true);
+          dec.options.current_query = dec.options.selected_bucket;
+          break;
       }
     }
 
@@ -683,7 +725,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // start making a query that only returns doc IDs
       var query = 'select meta().id from `' + dec.options.selected_bucket + '`.`' +
-        dec.options.selected_scope + '`.`' +  dec.options.selected_collection + '` data ';
+        dec.options.selected_scope + '`.`' + dec.options.selected_collection + '` data ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
@@ -706,71 +748,74 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.options.current_result = [];
 
       dec.options.queryBusy = true;
-      qwQueryService.executeQueryUtil(query,true)
+      qwQueryService.executeQueryUtil(query, true)
 
-      // did the query succeed?
+        // did the query succeed?
         .then(function success(resp) {
-          var data = resp.data, status = resp.status;
+            var data = resp.data, status = resp.status;
 
-          //console.log("Editor Q Success Data: " + JSON.stringify(data.results));
-          //console.log("Editor Q Success Status: " + JSON.stringify(status));
+            //console.log("Editor Q Success Data: " + JSON.stringify(data.results));
+            //console.log("Editor Q Success Status: " + JSON.stringify(status));
 
-          dec.options.current_result = [];
-          var idArray = [];
+            dec.options.current_result = [];
+            var idArray = [];
 
-          for (var i=0; i < data.results.length; i++)
-            idArray.push(data.results[i].id);
+            for (var i = 0; i < data.results.length; i++)
+              idArray.push(data.results[i].id);
 
-          // we get a list of document IDs, create an array and retrieve detailed docs for each
-          if (data && data.status && data.status == 'success') {
-            getDocsForIdArray(idArray).then(function() {dec.options.queryBusy = false;});
-          }
-
-          else if (data.errors) {
-            var errorText = [];
-            errorText.push("Query: " + query);
-            for (var i=0; i< data.errors.length; i++) {
-              errorText.push("Code: " + data.errors[i].code);
-              errorText.push('Message: "' + data.errors[i].msg + '"');
-            }
-
-            //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
-
-            dec.options.queryBusy = false;
-          }
-
-          // shouldn't get here
-          else {
-            dec.options.queryBusy = false;
-            console.log("N1ql Query Fail/Success, data: " + JSON.stringify(data));
-          }
-        },
-
-              // ...or fail?
-              function error(resp) {
-                var data = resp.data, status = resp.status;
-                //console.log("Editor Q Error Data: " + JSON.stringify(data));
-                //console.log("Editor Q Error Status: " + JSON.stringify(status));
-
-                if (data && data.errors) {
-                  var errorText = [];
-                  errorText.push("Query: " + query);
-                  for (var i=0; i< data.errors.length; i++) {
-                    errorText.push("Code: " + data.errors[i].code);
-                    errorText.push('Message: "' + data.errors[i].msg + '"');
-                  }
-
-                  data.errors.unshift({"Query": query});
-                  var errorHTML = '';
-                  errorText.forEach(function (message) {errorHTML += message + '<br>'});
-                  dec.options.current_result = errorHTML;
-
-                  //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
-
-                  //console.log("Got error: " + dec.options.current_result);
-                }
+            // we get a list of document IDs, create an array and retrieve detailed docs for each
+            if (data && data.status && data.status == 'success') {
+              getDocsForIdArray(idArray).then(function () {
                 dec.options.queryBusy = false;
               });
+            } else if (data.errors) {
+              var errorText = [];
+              errorText.push("Query: " + query);
+              for (var i = 0; i < data.errors.length; i++) {
+                errorText.push("Code: " + data.errors[i].code);
+                errorText.push('Message: "' + data.errors[i].msg + '"');
+              }
+
+              //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
+
+              dec.options.queryBusy = false;
+            }
+
+            // shouldn't get here
+            else {
+              dec.options.queryBusy = false;
+              console.log("N1ql Query Fail/Success, data: " + JSON.stringify(data));
+            }
+          },
+
+          // ...or fail?
+          function error(resp) {
+            var data = resp.data, status = resp.status;
+            //console.log("Editor Q Error Data: " + JSON.stringify(data));
+            //console.log("Editor Q Error Status: " + JSON.stringify(status));
+
+            if (data && data.errors) {
+              var errorText = [];
+              errorText.push("Query: " + query);
+              for (var i = 0; i < data.errors.length; i++) {
+                errorText.push("Code: " + data.errors[i].code);
+                errorText.push('Message: "' + data.errors[i].msg + '"');
+              }
+
+              data.errors.unshift({"Query": query});
+              var errorHTML = '';
+              errorText.forEach(function (message) {
+                errorHTML += message + '<br>'
+              });
+              dec.options.current_result = errorHTML;
+              refreshResults();
+
+              //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
+
+              //console.log("Got error: " + dec.options.current_result);
+            }
+            dec.options.queryBusy = false;
+          });
 
     }
 
@@ -786,7 +831,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       //console.log("Getting docs for: " + JSON.stringify(idArray));
       dec.options.current_result.length = idArray.length;
 
-      for (var i=0; i< idArray.length; i++) {
+      for (var i = 0; i < idArray.length; i++) {
         var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
           "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
           "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
@@ -796,8 +841,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         promiseArray.push($http.do({
           url: rest_url,
           method: "GET"
-        }).then(getDocReturnHandler(i,sizeWarning,idArray),
-                getDocReturnErrorHandler(i,idArray)));
+        }).then(getDocReturnHandler(i, sizeWarning, idArray),
+          getDocReturnErrorHandler(i, idArray)));
       }
 
       var all_promise = Promise.all(promiseArray);
@@ -810,7 +855,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // results array
     //
 
-    function getDocReturnHandler(position,sizeWarning,idArray) {
+    function getDocReturnHandler(position, sizeWarning, idArray) {
       return function success(resp) {
         if (resp && resp.status == 200 && resp.data) try {
 
@@ -829,8 +874,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           if (docInfo && docInfo.json && docInfo.meta) {
             docInfo.meta.type = "json";
             dec.options.current_result[position] =
-              {id: docId, docSize: docInfo.json.length, data: doc.data, meta: docInfo.meta,
-               xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null, rawJSONError: doc.rawJSONError};
+              {
+                id: docId, docSize: docInfo.json.length, data: doc.data, meta: docInfo.meta,
+                xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null, rawJSONError: doc.rawJSONError
+              };
           }
 
           // maybe a single binary doc?
@@ -838,21 +885,31 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             docInfo.meta.type = "base64";
             dec.options.current_result[position] =
               {id: docInfo.meta.id, base64: atob(docInfo.base64), meta: docInfo.meta, xattrs: docInfo.xattrs};
-          }
-
-          else
+          } else
             console.log("Unknown document: " + JSON.stringify(docInfo));
         } catch (e) {
-          dec.options.current_result[position] = {id: idArray[position], data: "ERROR retrieving document.", meta: {type:"json"}, xattrs: {}, error: true};
+          dec.options.current_result[position] = {
+            id: idArray[position],
+            data: "ERROR retrieving document.",
+            meta: {type: "json"},
+            xattrs: {},
+            error: true
+          };
         }
       }
     }
 
-    function getDocReturnErrorHandler(position,idArray) {
+    function getDocReturnErrorHandler(position, idArray) {
       return function error(resp) {
         var data = resp.data, status = resp.status;
         //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(resp));
-        dec.options.current_result[position] = {id: idArray[position], data: {}, meta: {type:"json"}, xattrs: {}, error: true};
+        dec.options.current_result[position] = {
+          id: idArray[position],
+          data: {},
+          meta: {type: "json"},
+          xattrs: {},
+          error: true
+        };
 
         if (status == 404)
           dec.options.current_result[position].data = "ERROR: Document not found.";
@@ -860,8 +917,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         else if (data && data.errors) {
           dec.options.current_result[position].data = "ERROR: " + JSON.stringify(data.errors);
           //showErrorDialog("Error with document: " + id,  JSON.stringify(data.errors), true);
-        }
-        else if (resp.statusText) {
+        } else if (resp.statusText) {
           dec.options.current_result[position].data = "ERROR: " + JSON.stringify(resp.statusText);
           //showErrorDialog("Error with document: " + id,  JSON.stringify(resp.statusText), true);
         }
@@ -878,10 +934,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     function showErrorDialog(title, detail, hide_cancel) {
       if (!Array.isArray(detail))
-        return qwDialogService.showErrorDialog(title,detail,null,hide_cancel);
+        return qwDialogService.showErrorDialog(title, detail, null, hide_cancel);
 
       else
-        return qwDialogService.showErrorDialog(title,null,detail,hide_cancel);
+        return qwDialogService.showErrorDialog(title, null, detail, hide_cancel);
     }
 
     function closeErrorDialog() {
@@ -918,6 +974,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (!dec.options.doc_id && dec.buckets_ephemeral[dec.options.selected_bucket]) {
         dec.options.current_result =
           "Ephemeral buckets can only be queried by document ID, or via a primary or secondary GSI index.";
+        refreshResults();
         return;
       }
 
@@ -927,11 +984,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // we just get a single ID if they specified a doc_id
       if (dec.options.show_id && dec.options.doc_id && dec.options.doc_id.length) {
-        getDocsForIdArray([dec.options.doc_id]).then(function()
-                                                     {
-                                                       //console.log("results: " + JSON.stringify(dec.options.current_result));
-                                                       dec.options.queryBusy = false;
-                                                     });
+        getDocsForIdArray([dec.options.doc_id]).then(function () {
+          //console.log("results: " + JSON.stringify(dec.options.current_result));
+          dec.options.queryBusy = false;
+        });
         return;
       }
 
@@ -961,18 +1017,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           // we asked for a set up of document ids
           if (data && data.rows) {
             var idArray = [];
-            for (var i=0; i< data.rows.length; i++) {
+            for (var i = 0; i < data.rows.length; i++) {
               idArray.push(data.rows[i].id);
             }
 
-            getDocsForIdArray(idArray).then(function() {
+            getDocsForIdArray(idArray).then(function () {
               //console.log("results: " + JSON.stringify(dec.options.current_result));
               dec.options.queryBusy = false;
             });
           }
           //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
         }
-      },function error(resp) {
+      }, function error(resp) {
         var data = resp.data, status = resp.status;
         //console.log("Got REST error status: " + status/* + ", data: " + JSON.stringify(data)*/);
 
@@ -980,10 +1036,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           if (data.errors)
             dec.options.current_result = JSON.stringify(data.errors);
           else
-            dec.options.current_result = JSON.stringify(data,null,2);
+            dec.options.current_result = JSON.stringify(data, null, 2);
           showErrorDialog("Error getting documents.",
-                          "Couldn't retrieve: " + dec.options.selected_bucket + " offset: " + dec.options.offset +
-                          " limit " + dec.options.limit + ', Error:' + dec.options.current_result,true);
+            "Couldn't retrieve: " + dec.options.selected_bucket + " offset: " + dec.options.offset +
+            " limit " + dec.options.limit + ', Error:' + dec.options.current_result, true);
+          refreshResults();
         }
 
         dec.options.queryBusy = false;
@@ -1012,9 +1069,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.options.current_result = [];
 
       var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-      // "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
-      // "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
-      "/stats";
+        // "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+        // "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+        "/stats";
       var promise = $http.do({
         url: Url,
         method: "GET"
@@ -1024,31 +1081,30 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           var top_keys = [];
           var ops = {};
 
-          for (var i=0; i<resp.data.hot_keys.length; i++) {
+          for (var i = 0; i < resp.data.hot_keys.length; i++) {
             top_keys.push(resp.data.hot_keys[i].name);
             ops[resp.data.hot_keys[i].name] = resp.data.hot_keys[i].ops;
           }
 
-          getDocsForIdArray(top_keys).then(function() {
-            for (var i=0; i < dec.options.current_result.length; i++)
+          getDocsForIdArray(top_keys).then(function () {
+            for (var i = 0; i < dec.options.current_result.length; i++)
               dec.options.current_result[i].ops = ops[dec.options.current_result[i].id];
             //console.log("results: " + JSON.stringify(dec.options.current_result));
             dec.options.queryBusy = false;
           });
-        }
-        else {
+        } else {
           dec.options.current_result = "No top keys found.";
         }
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
 
-      },function error(resp) {
+      }, function error(resp) {
         var data = resp.data, status = resp.status;
 
         dec.options.current_result = "Error getting top keys: " + resp.status;
         dec.options.queryBusy = false;
       });
 
-      return(promise);
+      return (promise);
     }
 
     //
@@ -1076,7 +1132,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           dec.buckets.length = 0;
           dec.buckets_ephemeral = {};
           var default_seen = false;
-          for (var i=0; i < resp.data.length; i++) if (resp.data[i]) {
+          for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
             if (mnPermissions.export.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
               dec.buckets.push(resp.data[i].name);
 
@@ -1097,17 +1153,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
 
         if (dec.options.selected_bucket)
-          return(getScopesAndCollectionsForBucket(dec.options.selected_bucket));
-      },function error(resp) {
+          return (getScopesAndCollectionsForBucket(dec.options.selected_bucket));
+      }, function error(resp) {
         var data = resp.data, status = resp.status;
 
         if (data && data.errors) {
           dec.options.current_result = JSON.stringify(data.errors);
-          showErrorDialog("Error getting list of buckets.", dec.options.current_result,true);
+          showErrorDialog("Error getting list of buckets.", dec.options.current_result, true);
+          refreshResults();
         }
       });
 
-      return(promise);
+      return (promise);
     }
 
     //
@@ -1135,7 +1192,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     function has_indexes() {
-      return(has_prim() || has_sec());
+      return (has_prim() || has_sec());
     }
 
     //
@@ -1149,7 +1206,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (validateQueryService.valid()) {
         var query = 'select bucket_id, is_primary, keyspace_id, scope_id, state from system:indexes where (keyspace_id = "' +
           bucket + '" and bucket_id is missing) or bucket_id = "' + bucket + '";';
-        qwQueryService.executeQueryUtil(query,false)
+        qwQueryService.executeQueryUtil(query, false)
           .then(function success(resp) {
             dec.indexes[bucket] = {};
             if (resp && resp.data && _.isArray(resp.data.results))
@@ -1169,7 +1226,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               });
             //console.log("Got indexes for: " + bucket + " as: \n"+JSON.stringify(dec.indexes[bucket],null,2));
           }, function error(resp) {
-            console.log("Error getting indexes for " + bucket + ", " + JSON.stringify(resp,null,2));
+            console.log("Error getting indexes for " + bucket + ", " + JSON.stringify(resp, null, 2));
           });
       }
 
@@ -1183,7 +1240,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           dec.scopes[bucket] = [];
           dec.collections[bucket] = {}; // map indexed on scope name
 
-          resp.data.scopes.forEach(function(scope) {
+          resp.data.scopes.forEach(function (scope) {
             dec.scopes[bucket].push(scope.name);
             dec.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
           });
@@ -1201,14 +1258,15 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             dec.collections[bucket][dec.options.selected_scope].indexOf(dec.options.selected_collection) < 0))
           dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
 
-      },function error(resp) {
+      }, function error(resp) {
         if (resp && resp.data && resp.data.errors) {
           dec.options.current_result = JSON.stringify(resp.data.errors);
-          showErrorDialog("Error getting list of collections.", dec.options.current_result,true);
+          showErrorDialog("Error getting list of collections.", dec.options.current_result, true);
+          refreshResults();
         }
       });
 
-      return(promise);
+      return (promise);
 
     }
 
@@ -1277,7 +1335,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // otherwise let the user know that updates are not yet visible
       else {
         showErrorDialog("Info",
-                        "Because you have unsaved document edits, some changes won't be shown until you retrieve docs.",true);
+          "Because you have unsaved document edits, some changes won't be shown until you retrieve docs.", true);
       }
     }
 
@@ -1287,9 +1345,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     function myEncodeURIComponent(name) {
       if (name) switch (name) {
-        case ".": return("%2E");
-        case "..": return("%2E%2E");
-        default: return(encodeURIComponent(name));
+        case ".":
+          return ("%2E");
+        case "..":
+          return ("%2E%2E");
+        default:
+          return (encodeURIComponent(name));
       }
     }
 
@@ -1303,7 +1364,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       qwQueryService.updateBuckets();
 
       // regardless, we need to use the REST API to find out which buckets are ephemeral, since they behave differently
-      validateQueryService.getBucketsAndNodes(function() {
+      validateQueryService.getBucketsAndNodes(function () {
         //console.log("Query service callback, getting ready to handle bucket param: " + $stateParams.bucket);
 
         var promise = getBuckets();
