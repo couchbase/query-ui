@@ -124,6 +124,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.buckets_ephemeral = {};
     dec.collections = {};
     dec.scopes = {}; // indexed by bucket name
+    dec.indexes = {};
     dec.show_id = show_id;
     dec.hideAllTooltips = true;
     dec.resultSize = function()
@@ -229,20 +230,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.show_id && dec.options.doc_id)
         return KV;
 
-      // other query types depend on indexes, see if the current bucket is indexed
-      var has_prim = false, has_sec = false;
-
-      if (validateQueryService.valid()) for (var i=0; i< qwQueryService.buckets.length; i++)
-        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
-          has_prim = qwQueryService.buckets[i].has_prim;
-          has_sec = qwQueryService.buckets[i].has_sec;
-          break;
-        }
-
       // key range lookup or limit/offset with no WHERE clause
       // - use N1QL if primary index, otherwise KV (though fail if ephemeral)
       if ((!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end)) || dec.options.where_clause.length == 0) {
-        if (has_prim)
+        if (has_prim())
           return(N1QL);
         else if (dec.buckets_ephemeral[dec.options.selected_bucket]) { // ephemeral, no primary key
           dec.options.current_result =
@@ -257,7 +248,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // must have primary or secondary index, otherwise error message
 
       if (dec.options.where_clause.length > 0) {
-        if (!has_prim && !has_sec) {
+        if (!has_prim() && !has_sec()) {
           dec.options.current_result = "WHERE clause not supported unless bucket has primary or secondary index.";
           return(false);
         }
@@ -270,40 +261,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
-    // does the selected bucket have any indexes?
-    //
-
-    function has_indexes() {
-      // other query types depend on indexes, see if the current bucket is indexed
-      var has_prim = false, has_sec = false;
-
-      if (validateQueryService.valid()) for (var i=0; i< qwQueryService.buckets.length; i++)
-        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
-          has_prim = qwQueryService.buckets[i].has_prim;
-          has_sec = qwQueryService.buckets[i].has_sec;
-          break;
-        }
-
-      return(has_prim || has_sec);
-    }
-
-    //
     // is it possible to use_n1ql?
     // need a query service, and some index for the current bucket
     //
 
     function can_use_n1ql() {
-      if (!validateQueryService.valid())
-        return false;
-
-      for (var i=0; i< qwQueryService.buckets.length; i++)
-        if (qwQueryService.buckets[i].id == dec.options.selected_bucket) {
-          if (qwQueryService.buckets[i].has_prim) return true;
-          if (qwQueryService.buckets[i].has_sec) return true;
-          break;
-        }
-
-      return(false);
+      return(has_prim() || has_sec());
     }
 
     //
@@ -1148,11 +1111,69 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
+    // does a collection have primary or secondary indexes?
+    //
+
+    function has_prim() {
+      if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection &&
+        dec.indexes[dec.options.selected_bucket] &&
+        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope] &&
+        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection])
+        return dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection].primary;
+      else
+        return false;
+    }
+
+    function has_sec() {
+      if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection &&
+        dec.indexes[dec.options.selected_bucket] &&
+        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope] &&
+        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection])
+        return dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection].secondary;
+      else
+        return false;
+    }
+
+    function has_indexes() {
+      return(has_prim() || has_sec());
+    }
+
+    //
     // for any bucket we need to get the scopes and collections
     //
 
     function getScopesAndCollectionsForBucket(bucket) {
-      // get the buckets from the REST API
+      // get the indexes associated with any collection in the bucket, but we must have a query service
+      dec.indexes[bucket] = {};
+
+      if (validateQueryService.valid()) {
+        var query = 'select bucket_id, is_primary, keyspace_id, scope_id, state from system:indexes where (keyspace_id = "' +
+          bucket + '" and bucket_id is missing) or bucket_id = "' + bucket + '";';
+        qwQueryService.executeQueryUtil(query,false)
+          .then(function success(resp) {
+            dec.indexes[bucket] = {};
+            if (resp && resp.data && _.isArray(resp.data.results))
+              resp.data.results.forEach(function (index) {
+                // old indexes don't have a scope or collection
+                if (!index.scope_id) {
+                  index.scope_id = '_default';
+                  index.keyspace_id = '_default';
+                }
+                dec.indexes[bucket][index.scope_id] = dec.indexes[bucket][index.scope_id] || {};
+                dec.indexes[bucket][index.scope_id][index.keyspace_id] =
+                  dec.indexes[bucket][index.scope_id][index.keyspace_id] || {};
+                if (index.is_primary)
+                  dec.indexes[bucket][index.scope_id][index.keyspace_id].primary = true;
+                else
+                  dec.indexes[bucket][index.scope_id][index.keyspace_id].secondary = true;
+              });
+            //console.log("Got indexes for: " + bucket + " as: \n"+JSON.stringify(dec.indexes[bucket],null,2));
+          }, function error(resp) {
+            console.log("Error getting indexes for " + bucket + ", " + JSON.stringify(resp,null,2));
+          });
+      }
+
+      // get the scopes and collections from the REST API
       var promise = $http.do({
         url: "../pools/default/buckets/" + encodeURI(bucket) + "/collections",
         method: "GET"
