@@ -7,11 +7,15 @@
   <div class="alert alert-warning" *ngIf="error_message">{{error_message}}</div>
   <div class="panel-content" [ngStyle]="{ height: error_message ? 'calc(100% - 120px)' : 'calc(100% - 100px)'}">
     <div class="row margin-bottom-half">
-      <h4 class="row ellipsis margin-right-half">
-        <span *ngIf="new_doc">ID: <input type="text" [(ngModel)]="doc_id" [ngModelOptions]="{standalone: true}" class="width-12"></span>
-        <span *ngIf="!new_doc">{{doc_id}}</span>
-        &nbsp;&nbsp; 
-        <span class="icon fa-search" (click)="searchDoc()"></span>
+      <h4 class="row margin-right-half width-12">
+        <span *ngIf="new_doc" class="row flex-left">
+          <label class="margin-right-half">ID</label>
+          <input type="text" [(ngModel)]="doc_id" [ngModelOptions]="{standalone: true}">
+        </span>
+        <span *ngIf="!new_doc">
+          {{doc_id}}
+        </span>
+        <span class="icon fa-search find-icon" (click)="searchDoc()"></span>
       </h4>
       <span class="pills" [hidden]="!doc_meta">
         <a (click)="setShowData(true)"
