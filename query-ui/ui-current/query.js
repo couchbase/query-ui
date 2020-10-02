@@ -34,6 +34,7 @@ import qwValidJson from "./json-validator/qw-json-validator.directive.js";
 import {
   getRecursionHelper,
   getBucketDisplay,
+  getBucketCollectionsDisplay,
   getSchemaDisplay
 } from "/_p/ui/query/ui-current/schema_display/qw_query_schema_display.directive.js";
 
@@ -72,6 +73,7 @@ angular
   .controller('qwQueryMonitorController', qwQueryMonitorController)
   .factory('MyRecursionHelper', getRecursionHelper)
   .directive('bucketDisplay', getBucketDisplay)
+  .directive('bucketCollectionsDisplay', getBucketCollectionsDisplay)
   .directive('schemaDisplay', getSchemaDisplay)
   .config(function($stateProvider, $transitionsProvider) {
 

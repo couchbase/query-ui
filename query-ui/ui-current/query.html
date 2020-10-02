@@ -216,37 +216,14 @@
         </div>
       </div>
 
-      <section ng-if="qc.has_prim_buckets()">
-        <h5 title="Buckets with a primary index support all queries. Not recommended for production!">
-          Queryable Buckets
-        </h5>
-        <span
-           ng-repeat="bucket in qc.buckets"
-           ng-show="bucket.has_prim">
-          <div bucket-display="bucket"></div>
+      <section>
+        <span ng-repeat="bucket in qc.buckets">
+          <!-- div bucket-display="bucket"></div-->
+          <div bucket-collections-display="bucket"></div>
         </span>
       </section>
 
-      <section ng-if="qc.has_sec_buckets()">
-        <h5 title="Buckets with only secondary indexes require a 'WHERE' clause using indexed fields.">
-          Queryable On Indexed Fields
-        </h5>
-          <span
-             ng-repeat="bucket in qc.buckets"
-             ng-show="!bucket.has_prim && bucket.has_sec">
-            <div bucket-display="bucket"></div>
-          </span>
-      </section>
-
-      <section ng-if="qc.has_unindexed_buckets()">
-        <h5 title="Buckets with no index can only be queried by document id.">Queryable By Doc ID Only</h5>
-          <span
-             ng-repeat="bucket in qc.buckets"
-             ng-show="!bucket.has_prim && !bucket.has_sec">
-            <div bucket-display="bucket"></div>
-          </span>
-      </section>
-<!-- bucket insights refresh button ---------------------------------------- -->
+      <!-- bucket insights refresh button ---------------------------------------- -->
       <div class="row flex-right fix-position-br wb-refresh-btn" ng-if="!qc.fullscreen">
         <button
            title="Refresh bucket insights"

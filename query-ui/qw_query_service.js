@@ -2128,7 +2128,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 
-      var queryText = qwConstantsService.keyspaceQuery;
+      var queryText = "select keyspaces.* from system:keyspaces;"//qwConstantsService.keyspaceQuery;
 
       let res1 = executeQueryUtil(queryText, false)
       .then(function success(resp) {
@@ -2138,7 +2138,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         var bucket_counts = {};
         for (var i=0; i < qwQueryService.buckets.length; i++) {
 
-          bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
+          //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
         }
 
         // initialize the data structure for holding all the buckets
@@ -2147,22 +2147,58 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         qwQueryService.bucket_names.length = 0;
         qwQueryService.autoCompleteTokens = {};
 
-        if (data && data.results) for (var i=0; i< data.results.length; i++) {
-          var bucket = data.results[i];
-          bucket.expanded = false;
-          bucket.schema = [];
-          bucket.indexes = [];
-          bucket.validated = !validateQueryService.validBuckets ||
-            _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1 ||
-            _.indexOf(validateQueryService.validBuckets(),".") != -1;
-          bucket.count = bucket_counts[bucket.id];
-          //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
-          if (bucket.validated) {
-            qwQueryService.buckets.push(bucket); // only include buckets we have access to
-            qwQueryService.bucket_names.push(bucket.id);
+        if (data && data.results) {
+          // first pass over the data - get the buckets, who have a name but no scope
+          for (var i=0; i< data.results.length; i++) if (data.results[i].id && !data.results[i].scope) {
+            var bucket = {
+              name: data.results[i].name,
+              id: data.results[i].id,
+              expanded: false,
+              schema: [],
+              indexes: [],
+              scopes: {},
+              collections: []
+            };
+            bucket.validated = !validateQueryService.validBuckets ||
+              _.indexOf(validateQueryService.validBuckets(), bucket.id) != -1 ||
+              _.indexOf(validateQueryService.validBuckets(), ".") != -1;
+            bucket.count = bucket_counts[bucket.id];
+            if (bucket.validated) {
+              qwQueryService.buckets.push(bucket); // only include buckets we have access to
+              qwQueryService.bucket_names.push(bucket.id);
+            }
+            addToken(bucket.id, "bucket");
+            addToken('`' + bucket.id + '`', "bucket");
           }
-          addToken(bucket.id,"bucket");
-          addToken('`' + bucket.id + '`',"bucket");
+
+          // sort list of buckets
+          qwQueryService.buckets.sort((b1,b2) => (b1.name < b2.name) ? -1 : ((b1.name == b2.name) ? 0 : 1));
+
+          // second pass - get all the scopes and collections
+          for (var i=0; i< data.results.length; i++) {
+            var record = data.results[i];
+            var bucket_id = record.bucket || record.id;
+            var scope_id = record.scope || '_default';
+            var coll_id = !record.bucket ? '_default' : record.id;
+            var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucket_id);
+            if (bucket) {
+              bucket.scopes[scope_id] = true;
+              bucket.collections.push({
+                name: coll_id,
+                id: coll_id,
+                expanded: false,
+                bucket: bucket_id,
+                scope: scope_id,
+                schema: [],
+                indexes: []
+              })
+            }
+          }
+
+          qwQueryService.buckets.forEach(bucket =>
+            bucket.scopeArray = Object.keys(bucket.scopes).map(function(scope_name) {return {id: scope_name, expanded: false}}));
+
+          //console.log("Got buckets: " + JSON.stringify(qwQueryService.buckets,null,2));
         }
 
         refreshAutoCompleteArray();
@@ -2171,8 +2207,8 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         // Should we go get information for each bucket?
         //
 
-        if (qwConstantsService.showSchemas && qwQueryService.options.auto_infer)
-          getInfoForBucketBackground(qwQueryService.buckets,0);
+        //if (qwConstantsService.showSchemas && qwQueryService.options.auto_infer)
+        //  getInfoForBucketBackground(qwQueryService.buckets,0);
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes
@@ -2279,70 +2315,78 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     // Get a schema for a given, named bucket.
     //
 
-    function getSchemaForBucket(bucket) {
+    function getSchemaForBucket(bucket,scope,collection) {
 
-      //console.log("Getting schema for : " + bucket.id);
+      var dest = bucket; // where do we put the schema and/or errors
+      var name = '`' + bucket.id + '`';
+      if (scope) {
+        name += '.`' + scope.id + '`.`' + collection.id + '`';
+        dest = collection;
+      }
+
+      console.log("Getting schema for : " + name);
 
       //return $http(inferQueryRequest)
-      return executeQueryUtil('infer \`' + bucket.id + '\`  with {"infer_timeout":5, "max_schema_MB":1};', false)
+      return executeQueryUtil('infer ' + name + '  with {"infer_timeout":5, "max_schema_MB":1};', false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
         //console.log("Schema status: " + response.status);
         //console.log("Schema data: " + JSON.stringify(response.data));
 
-        if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
-          bucket.schema_error = response.data.warnings[0].msg;
 
-        bucket.schema.length = 0;
+        if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
+          dest.schema_error = response.data.warnings[0].msg;
+
+        dest.schema.length = 0;
 
         if (!response || !response.data)
-          bucket.schema_error = "Empty or invalid server response: ";
+          dest.schema_error = "Empty or invalid server response: ";
         else if (response.data.errors) {
-          bucket.schema_error = "Infer error: ";
+          dest.schema_error = "Infer error: ";
           if (_.isString(response.data.errors))
-            bucket.schema_error += response.data.errors;
+            dest.schema_error += response.data.errors;
           else if (_.isArray(response.data.errors)) {
             response.data.errors.forEach(function(val) {
-              if (val.msg) bucket.schema_error += val.msg + ' ';
-              else bucket.schema_error += JSON.stringify(val) + ' ';
+              if (val.msg) dest.schema_error += val.msg + ' ';
+              else dest.schema_error += JSON.stringify(val) + ' ';
             });
           }
           else
-            bucket.schema_error += JSON.stringify(response.data.errors);
+            dest.schema_error += JSON.stringify(response.data.errors);
         }
         else if (response.data.status == "stopped") {
-          bucket.schema_error = "Infer error, query stopped on server.";
+          dest.schema_error = "Infer error, query stopped on server.";
         }
         else if (response.data.status != "success") {
-          bucket.schema_error = "Infer error: " + response.data.status;
+          dest.schema_error = "Infer error: " + response.data.status;
         }
         else if (_.isString(response.data.results))
-          bucket.schema_error = response.data.results;
+          dest.schema_error = response.data.results;
         else {
           //console.log("Got schema: " + JSON.stringify(response.data.results));
-          bucket.schema = response.data.results[0];
+          dest.schema = response.data.results[0];
 
           var totalDocCount = 0;
-          for (var i=0; i<bucket.schema.length; i++)
-            totalDocCount += bucket.schema[i]['#docs'];
+          for (var i=0; i<dest.schema.length; i++)
+            totalDocCount += dest.schema[i]['#docs'];
 
-          getFieldNamesFromSchema(bucket.schema,"");
-          getFieldNamesFromSchema(bucket.schema,bucket.name);
-          truncateSchema(bucket.schema);
+          getFieldNamesFromSchema(dest.schema,"");
+          getFieldNamesFromSchema(dest.schema,dest.name);
+          truncateSchema(dest.schema);
           refreshAutoCompleteArray();
 
-          //console.log("for bucket: " + bucket.id + " got " + bucket.schema.length + " flavars, doc count: " + totalDocCount);
-          bucket.totalDocCount = totalDocCount;
+          //console.log("for bucket: " + dest.id + " got " + dest.schema.length + " flavars, doc count: " + totalDocCount);
+          dest.totalDocCount = totalDocCount;
 
-          for (var i=0; i<bucket.schema.length; i++)
-            bucket.schema[i]['%docs'] = (bucket.schema[i]['#docs']/totalDocCount*100);
+          for (var i=0; i<dest.schema.length; i++)
+            dest.schema[i]['%docs'] = (dest.schema[i]['#docs']/totalDocCount*100);
 
           // we have an array of columns that are indexed. Let's mark the individual
           // fields, now that we have a schema.
-          bucket.indexed_fields = {};
+          dest.indexed_fields = {};
 
           // each element of the sec_ind array is an array of field names, turn into a map
-          _.forEach(bucket.sec_ind,function(elem) {
+          _.forEach(dest.sec_ind,function(elem) {
             _.forEach(elem,function(field) {
               // for now we can't handle objects inside arrays, so we'll just flag the
               // array field as having an index. Also, we need to remove any parens.
@@ -2353,23 +2397,23 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
               field = field.replace(/\(/g,'').replace(/\)/g,'');
 
               //console.log("Index on: " + field);
-              bucket.indexed_fields[field] = true;
+              dest.indexed_fields[field] = true;
             })});
 
-          for (var flavor=0; flavor<bucket.schema.length; flavor++) { // iterate over flavors
-            markIndexedFields(bucket.indexed_fields, bucket.schema[flavor], "");
-            bucket.schema[flavor].hasFields =
-              (bucket.schema[flavor].properties && Object.keys(bucket.schema[flavor].properties).length > 0) ||
-              bucket.schema[flavor].type;
+          for (var flavor=0; flavor<dest.schema.length; flavor++) { // iterate over flavors
+            markIndexedFields(dest.indexed_fields, dest.schema[flavor], "");
+            dest.schema[flavor].hasFields =
+              (dest.schema[flavor].properties && Object.keys(dest.schema[flavor].properties).length > 0) ||
+              dest.schema[flavor].type;
           }
 
-          //if (bucket.schema.length)
-          //  bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
+          //if (dest.schema.length)
+          //  dest.schema.unshift({Summary: "Summary: " + dest.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
           //    hasFields: true});
         }
 
       }, function errorCallback(response) {
-        var error = "Error getting schema for bucket: " + bucket.id;
+        var error = "Error getting schema for bucket: " + dest.id;
         if (response)
           if (response.data && response.data.errors) {
             error += ", " + JSON.stringify(response.data.errors,null,'  ');
@@ -2382,7 +2426,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           else
             error += JSON.stringify(response);
 
-        bucket.schema_error = error;
+        dest.schema_error = error;
       });
 
     };
