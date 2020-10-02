@@ -1,6 +1,6 @@
- <div class="doc-editor">
- 
- <mn-element-cargo
+<div class="doc-editor">
+
+  <mn-element-cargo
      depot="actions"
      *ngIf="dec.options.selected_bucket">
     <div class="header-controls">
@@ -17,11 +17,8 @@
   <form name="searchForm">
   <div [formGroup]="searchForm" class="controls resp-med">
 
-   <div class="column">
-     <div class="row row-min"><label>Bucket</label>
-        <a type="button" (click)="dec.getTopKeys()" class="text-smaller"><span *ngIf="!dec.options.showTopKeys">show top keys</span><span *ngIf="dec.options.showTopKeys">hide top keys</span></a>
-      </div>
-      
+    <div class="column">
+      <label>Location <small>bucket.scope.collection</small></label>
       <div>
         <select formControlName="selected_bucket" (change)="dec.bucketChanged($event)">
             <option *ngFor="let name of dec.buckets" [selected]="name==dec.options.selected_bucket">

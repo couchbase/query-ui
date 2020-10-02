@@ -40,7 +40,7 @@ let documentsStates = [
       name: 'app.admin.docs.editor',
       data: {
 //    permissions: "cluster.bucket['.'].collections.read", // restricted by permissions?
-        title: "Documents > Editor",  // appears in breadcrumbs in title bar
+        title: "Documents",  // appears in breadcrumbs in title bar
         compat: "atLeast70"    // Cheshire Cat
       },
       params: { // can parameters be sent via the URL?
@@ -60,7 +60,7 @@ let documentsStates = [
       name: 'app.admin.docs.import',
       data: {
 //    permissions: "cluster.bucket['.'].collections.read", // restricted by permissions?
-        title: "Documents > Import",  // appears in breadcrumbs in title bar
+        title: "Documents",  // appears in breadcrumbs in title bar
         compat: "atLeast70"    // Cheshire Cat
       },
       views: {
@@ -69,7 +69,7 @@ let documentsStates = [
         }
       }
     },
-    
+
 ];
 
 export { QwDocumentsModule };

@@ -1,19 +1,19 @@
   <qw-docs-subnav></qw-docs-subnav>
-  
+
   <!-- form name="searchForm" -->
     <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
       <div class="width-4 import-col1">
-        <p class="text-small">
-          Select a tab/comma delimited or JSON list/lines file to import. See tooltip for format info.
-        <ng-template #fileFormatTipContent>This import UI supports the following formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul></ng-template>
-        <span
-           class="fa-stack icon-info"
-           [ngbTooltip]="fileFormatTipContent"
-           placement="auto"
-           tooltip-append-to-body="true">
-          <span class="icon fa-circle-thin fa-stack-2x"></span>
-          <span class="icon fa-info fa-stack-1x"></span>
-        </span>
+        <p class="text-small inline">
+          Select a tab/comma delimited or JSON list/lines file to import.
+          <a
+             [ngbTooltip]="fileFormatTipContent"
+             placement="auto"
+             tooltip-append-to-body="true">
+            See file format details
+          </a>
+          <ng-template #fileFormatTipContent>
+            This import UI supports the following formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul>
+          </ng-template>
         </p>
         <div class="row flex-left margin-bottom-2">
           <span>
@@ -25,7 +25,7 @@
                accept=".txt,.json,.csv,.tsv">
             <button
                (click)="ic.selectFile()"
-               class="outline margin-right-1"
+               class="margin-right-1"
                [disabled]="ic.options.importing">
               Select File to Import...
               <span *ngIf="ic.options.queryBusy" class="icon-button"></span>
@@ -44,7 +44,7 @@
             <label>Parse File As</label>
             <span
                class="text-normal text-smaller green-1"
-               [ngClass]="options.docData.length > 0 ? 'green-1' : 'red-1'">
+               *ngIf="options.docData.length > 0">
               found {{ic.options.docData.length}} records
             </span>
           </div>
@@ -52,25 +52,23 @@
              on-select="ic.parseAs($item)"
              [(ngModel)]="ic.options.selectedFormat"
              [ngModelOptions]="{standalone: true}"
-             theme="selectize"
              class="cbui-select"
              name="format"
              [disabled]="ic.options.importing"
              >
             <option *ngFor="let item of ic.formats" [selected]="item==ic.options.selectedFormat">
               <span class="select-item ellipsis" ng-bind-html="item">{{item}}</span>
-            </option> 
+            </option>
           </select>
         </div>
 
         <div class="formrow">
-          <label>Destination</label>
+          <label>Destination <small>bucket.scope.collection</small></label>
           <select
              [(ngModel)]="ic.options.selected_bucket"
              [ngModelOptions]="{standalone: true}"
-              theme="selectize"
               name="bucket"
-             class="cbui-select"
+             class="cbui-select width-4"
              (change)="ic.bucketChanged($event)"
              [disabled]="ic.options.importing">
             <option
@@ -81,29 +79,34 @@
             </option>
           </select>
 
-          <select (change)="ic.scopeChanged($event)" [ngModelOptions]="{standalone: true}" theme="selectize"
-                  name="scope" class="cbui-select" [(ngModel)]="ic.options.selected_scope"
+          <select (change)="ic.scopeChanged($event)" [ngModelOptions]="{standalone: true}"
+                  name="scope" class="cbui-select width-4" [(ngModel)]="ic.options.selected_scope"
                   [disabled]="ic.options.importing">
             <option *ngFor="let name of ic.getScopes()">
               {{name}}
             </option>
           </select>
 
-          <select [ngModelOptions]="{standalone: true}" theme="selectize"
-                  name="collection" class="cbui-select" [(ngModel)]="ic.options.selected_collection"
+          <select [ngModelOptions]="{standalone: true}"
+                  name="collection" class="cbui-select width-4" [(ngModel)]="ic.options.selected_collection"
                   [disabled]="ic.options.importing">
             <option *ngFor="let name of ic.getCollections()">
               {{name}}
             </option>
           </select>
-
         </div>
 
         <div class="formrow">
-          <label>Import With Document ID 
-   len {{!(ic.options.fields.length > 0) }} importing: {{ic.options.importing}}
-   disabled {{!(ic.options.fields.length > 0) || ic.options.importing}}
-          <ng-template #docIdTipContent><body class="text-small">Every document stored in Couchbase requires a unique Document ID. For the ID, you can select an automatically generated UUID, or a field from the data. If you choose a field, it much have a distinct value for every document. Any duplicate ID values will cause later documents to overwrite earlier ones with the same ID value.</body></ng-template>
+          <label class="inline">Import With Document ID</label>
+          <ng-template #docIdTipContent>
+            <body class="text-small">
+              Every document stored in Couchbase requires a unique Document ID.
+              For the ID, you can select an automatically generated UUID, or a
+              field from the data. If you choose a field, it much have a distinct
+              value for every document. Any duplicate ID values will cause later
+              documents to overwrite earlier ones with the same ID value.
+            </body>
+          </ng-template>
           <span
             class="fa-stack icon-info"
             [ngbTooltip]="docIdTipContent"
@@ -113,17 +116,16 @@
             <span class="icon fa-circle-thin fa-stack-2x"></span>
             <span class="icon fa-info fa-stack-1x"></span>
            </span>
-          </label>
-          <form [formGroup]="configForm">
+          <form [formGroup]="configForm" class="forms">
           <div>
             <input type="radio" id="guid" formControlName="useKey" [value]="false">
             <label for="guid">UUID</label>
           </div>
           <div><fieldset class="hidden-fieldset" [disabled]="!(ic.options.fields.length > 0) || ic.options.importing">
             <input type="radio" id="field" formControlName="useKey" [value]="true">
-            <label for="field" 
+            <label for="field"
                    [attr.disabled]="(!(ic.options.fields.length > 0) || ic.options.importing) ? true : null">
-              Value of Field: 
+              Value of Field:
             </label>
             <select
                [disabled]="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
@@ -143,7 +145,7 @@
                class="fa-warning icon orange-3 cursor-pointer"
                ngbTooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found.">
              </span>
-            </fieldset>             
+            </fieldset>
           </div>
         </form>
         </div>
