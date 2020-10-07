@@ -144,49 +144,52 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
     //templateUrl: 'template/bucket-display.tmpl',
     template:
       '<h5 class="row">' +
-      ' <div class="disclosure lower medium" ng-class="{disclosed: bucket.expanded}" ng-click="bucket.expanded = !bucket.expanded">{{bucket.id}}' +
-      '  <small ng-if="bucket.collections"> {{bucket.collections.length}} collection<span ng-hide="bucket.collections.length == 1">s</span></small></h5>' +
-      '  <div ng-if="bucket.expanded" class="text-smaller margin-bottom-half">' +
+      ' <div class="disclosure lower medium" ng-class="{disclosed: bucket.expanded}" ng-click="changeBucketExpanded(bucket)">{{bucket.id}}</div>' +
+      ' <small ng-if="bucket.collections"> {{bucket.collections.length}} collection<span ng-hide="bucket.collections.length == 1">s</span></small>' +
+      '</h5>' +
+      '<div ng-if="bucket.expanded" class="text-smaller margin-bottom-half">' +
       //   for each scope in the bucket...
-      '    <div ng-repeat="scope in bucket.scopeArray" class="margin-left-1-5">' +
-      '        <h6 ng-click="scope.expanded = !scope.expanded" class="margin-bottom-quarter higher tight" ' +
-      '              ng-class="{disclosure: bucket.scopeArray.length > 1, disclosed: bucket.scopeArray.length > 1 && scope.expanded}">' +
-      '              {{scope.id}} <span class="label lt-blue sup">scope</span>' +
-      '        </h6>' +
-      '      <div ng-if="scope.expanded || bucket.scopeArray.length == 1">' +
-      '         <div ng-repeat="collection in getCollectionsForScope(bucket,scope)" class="margin-left-1 margin-bottom-half">' +
-      '             <h6 ng-click="changeCollectionExpanded(bucket,scope,collection)" ' +
-      '             class="disclosure higher tight" ng-class="{disclosed: collection.expanded}">{{collection.id}}</h6>' +
+      '  <div ng-repeat="scope in bucket.scopeArray" class="margin-left-1-5">' +
+      '    <h6 ng-click="scope.expanded = !scope.expanded" class="margin-bottom-quarter higher tight" ' +
+      '        ng-class="{disclosure: bucket.scopeArray.length > 1, disclosed: bucket.scopeArray.length > 1 && scope.expanded}">' +
+      '       {{scope.id}} <span class="label lt-blue sup">scope</span>' +
+      '    </h6>' +
+      '    <div ng-if="scope.expanded || bucket.scopeArray.length == 1">' +
+      '      <div ng-repeat="collection in getCollectionsForScope(bucket,scope)" class="margin-left-1"' +
+      '           ng-class="margin-bottom-half: collection.expanded">' +
+      '        <h6 ng-click="changeCollectionExpanded(bucket,scope,collection)" ' +
+      '            class="disclosure higher tight row" ng-class="{disclosed: collection.expanded}">{{collection.id}}' +
+      '        <small ng-if="collection.count">{{collection.count}} docs</small></h6>' +
       // if the collection is expanded, show its schema
-      '             <div ng-if="collection.expanded" class="margin-bottom-half margin-left-1">' +
-                      //   error?
-      '               <span class="warning" ng-if="collection.schema_error" title="{{collection.schema_error}}">{{collection.schema_error}}</span>' +
-                      //   for each flavor in the schema...
-      '               <span ng-repeat="flavor in collection.schema">' +
-      '                 <div ng-click="flavor.Show = !flavor.Show" class="disclosure tight row" ng-class="{disclosed: flavor.Show}" ' +
-      '                      ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
-      '                 <span>{{flavor.Flavor || "schema " + ($index+1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span>' +
-      '                 <span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
-      '                 <div ng-show="flavor.Show && flavor.hasFields !== true"><ul><li>No fields found.</li></ul></div>' +
+      '        <div ng-if="collection.expanded" class="margin-bottom-half margin-left-1">' +
+                // error?
+      '        <span class="warning" ng-if="collection.schema_error" title="{{collection.schema_error}}">{{collection.schema_error}}</span>' +
+               //   for each flavor in the schema...
+      '        <span ng-repeat="flavor in collection.schema">' +
+      '          <div ng-click="flavor.Show = !flavor.Show" class="disclosure tight row" ng-class="{disclosed: flavor.Show}" ' +
+      '               ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
+      '            <span>{{flavor.Flavor || "schema " + ($index+1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span>' +
+      '            <span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
+      '          <div ng-show="flavor.Show && flavor.hasFields !== true"><ul><li>No fields found.</div>' +
 
-      '                 <schema-display ng-if="!flavor.Summary && flavor.Show" schema="flavor" path=""></schema-display>' +
-      '               </span>' +
+      '          <schema-display ng-if="!flavor.Summary && flavor.Show" schema="flavor" path=""></schema-display>' +
+      '        </span>' +
 
-      '               <span ng-show="collection.indexes.length > 0">' +
-      '                 <div ng-click="indexes.Show = !indexes.Show" class="disclosure tight row" ng-class="{disclosed: indexes.Show}">' +
-      '                   <span class="index-header">Indexes</span></div>' +
-      '                 <span class="indent-1-5" ng-show="indexes.Show" ng-repeat="index in collection.indexes">' +
-      '                   <span ng-class="{warning: index.state != \'online\'}" ng-attr-title="{{index.state != \'online\' ? \'Index not built yet\' : \'\'}}">' +
-      '                      {{index.name}} <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
-      '                      <span ng-if="index.condition"> where {{index.condition}}</span>' +
-      '                   </span><br>' +
-      '                 </span>' +
-      '               </span>' +
-      '             </div>' +
-      '         </div>' +
+      '        <span ng-show="collection.indexes.length > 0">' +
+      '          <div ng-click="indexes.Show = !indexes.Show" class="disclosure tight row" ng-class="{disclosed: indexes.Show}">' +
+      '            <span class="index-header">Indexes</span></div>' +
+      '          <span class="indent-1-5" ng-show="indexes.Show" ng-repeat="index in collection.indexes">' +
+      '            <span ng-class="{warning: index.state != \'online\'}" ng-attr-title="{{index.state != \'online\' ? \'Index not built yet\' : \'\'}}">' +
+      '               {{index.name}} <span ng-if="index.index_key.length > 0">on {{index.index_key}}</span>'+
+      '               <span ng-if="index.condition"> where {{index.condition}}</span>' +
+      '            </span><br>' +
+      '          </span>' +
+      '        </span>' +
+      '       </div>' +
       '      </div>' +
       '    </div>' +
-      '  </div>'
+      '  </div>' +
+      '</div>'
     ,
     link: function (scope) {
       scope.$watch('bucket', function (schema) {
@@ -196,6 +199,11 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
         scope.getCollectionsForScope = function(bucket,scope) {
           var collList = bucket.collections.filter(collection => collection.scope == scope.id);
           return collList;
+        };
+        scope.changeBucketExpanded = function(bucket) {
+          bucket.expanded = !bucket.expanded;
+          if (bucket.expanded)
+            qwQueryService.updateBucketCounts();
         };
         scope.changeCollectionExpanded= function(bucket,scope,collection) {
           collection.expanded = !collection.expanded;

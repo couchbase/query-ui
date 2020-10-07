@@ -2090,29 +2090,40 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
-    // get the number of docs in each bucket for which we have access
-    function updateBucketCounts() {
+    // get the number of docs in each visible collection on the screen
+    function updateBucketCounts()
+    {
       // build a query to get the doc count for each bucket that we know about
       var queryString = "select raw {";
-      var bucketCount = 0;
-      qwQueryService.buckets.forEach(function (bucket) {
-        if (!bucket.schema_error) {
-          if (bucketCount > 0) // second and subsequent buckets need a comma
-            queryString += ',';
+      var collectionCount = 0;
 
-          bucketCount++;
-          queryString += '"' + bucket.id + '" : (select raw count(*) from `' + bucket.id + '`)[0]';
-        }
+      qwQueryService.buckets.forEach(function (bucket) {
+        if (bucket.expanded) bucket.collections.forEach(function (collection) {
+          var scope =  bucket.scopeArray.find(scope => scope.id == collection.scope);
+
+          if (!collection.schema_error && ((bucket.scopeArray.length == 1) || scope && scope.expanded)) {
+            if (collectionCount > 0) // second and subsequent buckets need a comma
+              queryString += ',';
+
+            collectionCount++;
+            var collection_path = '`' + collection.bucket + '`.`' + collection.scope + '`.`' + collection.id + '`';
+            queryString += '"' + collection_path + '" : (select raw count(*) from ' + collection_path + ')[0]';
+          }
+        })
       });
       queryString +=  '}';
 
       // run the query, extract the document counts
+      if (collectionCount)
       executeQueryUtil(queryString, false)
       .then(function success(resp) {
         if (resp && resp.data && resp.data.results && resp.data.results.length)
           qwQueryService.buckets.forEach(function (bucket) {
-            if (_.isNumber(resp.data.results[0][bucket.id]))
-              bucket.count = resp.data.results[0][bucket.id];
+            if (bucket.expanded) bucket.collections.forEach(function (collection) {
+              var collection_path = '`' + collection.bucket + '`.`' + collection.scope + '`.`' + collection.id + '`';
+              if (_.isNumber(resp.data.results[0][collection_path]))
+                collection.count = resp.data.results[0][collection_path];
+            });
           });
       },
       function error(resp) {
@@ -2174,7 +2185,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           // sort list of buckets
           qwQueryService.buckets.sort((b1,b2) => (b1.name < b2.name) ? -1 : ((b1.name == b2.name) ? 0 : 1));
 
-          // second pass - get all the scopes and collections
+          // second pass over the query result - get all the scopes and collections
           for (var i=0; i< data.results.length; i++) {
             var record = data.results[i];
             var bucket_id = record.bucket || record.id;
@@ -2195,6 +2206,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
             }
           }
 
+          // keep an array of scope names and expansion statuses
           qwQueryService.buckets.forEach(bucket =>
             bucket.scopeArray = Object.keys(bucket.scopes).map(function(scope_name) {return {id: scope_name, expanded: false}}));
 
