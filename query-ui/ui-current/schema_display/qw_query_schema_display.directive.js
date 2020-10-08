@@ -149,13 +149,13 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
       '</h5>' +
       '<div ng-if="bucket.expanded" class="text-smaller margin-bottom-half">' +
       //   for each scope in the bucket...
-      '  <div ng-repeat="scope in bucket.scopeArray" class="margin-left-1-5">' +
+      '  <div ng-repeat="scope in bucket.scopeArray" class="insights-scope">' +
       '    <h6 ng-click="scope.expanded = !scope.expanded" class="margin-bottom-quarter higher tight" ' +
       '        ng-class="{disclosure: bucket.scopeArray.length > 1, disclosed: bucket.scopeArray.length > 1 && scope.expanded}">' +
       '       {{scope.id}} <span class="label lt-blue sup">scope</span>' +
       '    </h6>' +
       '    <div ng-if="scope.expanded || bucket.scopeArray.length == 1">' +
-      '      <div ng-repeat="collection in getCollectionsForScope(bucket,scope)" class="margin-left-1"' +
+      '      <div ng-repeat="collection in getCollectionsForScope(bucket,scope)" class="insights-collection"' +
       '           ng-class="margin-bottom-half: collection.expanded">' +
       '        <h6 ng-click="changeCollectionExpanded(bucket,scope,collection)" ' +
       '            class="disclosure higher tight row" ng-class="{disclosed: collection.expanded}">{{collection.id}}' +
