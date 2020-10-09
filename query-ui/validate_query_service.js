@@ -4,15 +4,17 @@ import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
 import mnPermissions from "/ui/app/components/mn_permissions.js";
 import mnPools from "/ui/app/components/mn_pools.js";
+import mnPoolDefault from "/ui/app/components/mn_pool_default.js";
 
 export default 'validateQueryService';
 
 angular
   .module('validateQueryService', [
     mnPermissions,
+    mnPoolDefault,
     mnPools
   ])
-  .factory('validateQueryService', function ($http, mnPermissions, mnPools) {
+  .factory('validateQueryService', function ($http, mnPermissions, mnPoolDefault, mnPools) {
     mnPools.get().then(function() {_isEnterprise = mnPools.export.isEnterprise;});
     var _checked = false;              // have we checked validity yet?
     var _valid = false;                // do we have a valid query node?
@@ -24,18 +26,33 @@ angular
     var _bucketList = [];
     var _bucketStatsList = [];
     var _callbackList = [];
+    var _validNodes = [];
     var _isEnterprise = false;
     var service = {
       inProgress: function()       {return !_checked || _bucketsInProgress;},
       isEnterprise: function()     {return(_isEnterprise);},
       valid: function()            {return _valid;},
       validBuckets: function()     {return _bucketList;},
+      validNodes: function()       {return _validNodes;},
       otherStatus: function()      {return _otherStatus;},
       otherError: function()       {return _otherError;},
       monitoringAllowed: function() {return _monitoringAllowed;},
       clusterStatsAllowed: function() {return _clusterStatsAllowed;},
       updateValidBuckets: getBuckets,
+      updateNodes: getNodes,
       getBucketsAndNodes: getBuckets
+    }
+
+    //
+    // we need at least one cluster node running n1ql
+    //
+
+    function getNodes() {
+      var pool = mnPoolDefault.latestValue();
+      if (pool.value && pool.value.nodes)
+        _validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
+      else
+        _validNodes = [];
     }
 
     //
@@ -47,6 +64,9 @@ angular
     function getBuckets(callback) {
       //console.trace();
       //console.log("Getting nodes and buckets, progress: " + _bucketsInProgress);
+      // get the validNodes from mnPoolDefault
+
+      getNodes();
 
       // even if we're busy, accept new callbacks
       if (callback)

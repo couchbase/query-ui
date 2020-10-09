@@ -37,6 +37,17 @@
 <!-- Editor "header row" ----------------------------------------------------->
       <div class="wb-query-editor-header"  ng-click="qc.handleClick('editor')">
         <h4>Query Editor</h4>
+
+        <span><small>Use:</small>
+        <select ng-model="qc.qqs.options.query_context_bucket">
+          <option ng-repeat="bucket in qc.getContextBuckets()"><small>{{bucket}}</small></option>
+        </select>
+
+        <select ng-model="qc.qqs.options.query_context_scope">
+          <option ng-repeat="name in qc.getContextScopes()"><small>{{name}}</small></option>
+        </select>
+        </span>
+
         <span class="wb-history-controls">
           <span
              title="View previous queries & results" ng-click="qc.prev()"
@@ -55,9 +66,9 @@
              qw-long-press="qc.historyMenu"
              class="icon angle-icon right"
              ng-disabled="!qc.hasNext()">
-
           </span>
         </span>
+
         <div class="wb-fullscreen resp-hide-sml" ng-click="qc.toggleFullscreen()">
           <span ng-if="!qc.fullscreen" class="icon fa-expand" title="expand"></span>
           <span ng-if="qc.fullscreen" class="icon fa-compress" title="contract"></span>

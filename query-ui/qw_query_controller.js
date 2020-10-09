@@ -25,6 +25,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   qc.buckets = qwQueryService.buckets;                // buckets on cluster
   qc.gettingBuckets = qwQueryService.gettingBuckets;  // busy retrieving?
   qc.updateBuckets = qwQueryService.updateBuckets;    // function to update
+  qc.updateNodes = validateQueryService.updateNodes;    // function to update
   qc.lastResult = qwQueryService.getCurrentResult; // holds the current query and result
   //qc.limit = qwQueryService.limit;            // automatic result limiter
   //qc.executingQuery = qwQueryService.executingQuery;
@@ -44,6 +45,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
   qc.getCurrentIndex = qwQueryService.getCurrentIndex;
   qc.clearHistory= qwQueryService.clearHistory;
+  qc.options = options;
 
   qc.historyMenu = edit_history;
 
@@ -84,8 +86,6 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
   qc.query = query;
   qc.unified_save = unified_save;
-  qc.options = options;
-
   qc.do_import = do_import;
 
   qc.isDeveloperPreview = function() {return qwQueryService.pools.isDeveloperPreview;};
@@ -94,6 +94,10 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
   qc.setUserInterest = function(interest) {if (interest != qwQueryService.workbenchUserInterest) {qwQueryService.workbenchUserInterest = interest;updateEditorSizes();}}
   qc.getUserInterest = function()         {return(qwQueryService.workbenchUserInterest);}
+
+  // for USE menu, get the scopes for the currently selected bucket
+  qc.getContextBuckets = getContextBuckets;
+  qc.getContextScopes = getContextScopes;
 
   //
   // options for the two Ace editors, the input and the output
@@ -139,7 +143,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   //
 
   qc.validated = validateQueryService;
-  qc.validNodes = [];
+  qc.validNodes = validateQueryService.validNodes;
 
   //
   // error message when result is too large to display
@@ -1337,43 +1341,10 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     return promise;
   }
 
-  //
-  // when the cluster nodes change, test to see if it's a significant change. if so,
-  // update the list of nodes.
-  //
-
-  var prev_active_nodes = null;
-
-  function nodeListsEqual(one, other) {
-    if (!_.isArray(one) || !_.isArray(other))
-      return(false);
-
-    if (one.length != other.length)
-      return(false);
-
-    for (var i=0; i<one.length; i++) {
-      if (!(_.isEqual(one[i].clusterMembership,other[i].clusterMembership) &&
-            _.isEqual(one[i].hostname,other[i].hostname) &&
-            _.isEqual(one[i].services,other[i].services) &&
-            _.isEqual(one[i].status,other[i].status)))
-        return false;
-    }
-    return(true);
-  }
-
 
   //
-  // get the latest valid nodes for query
+  // convert the current query result to Tab-Separated format
   //
-
-  function updateValidNodes() {
-    var pool = mnPoolDefault.latestValue();
-    if (pool.value && pool.value.nodes)
-      qc.validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
-    else
-      qc.validNodes = [];
-  }
-
 
   function copyResultAsCSV() {
     var csv = qwJsonCsvService.convertDocArrayToTSV(qc.lastResult().data);
@@ -1395,6 +1366,28 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   }
 
   //
+  // what buckets and scopes exist for the currently selected context bucket
+  //
+
+  function getContextBuckets() {
+    return [""].concat(qc.buckets.map(bucket => bucket.name));
+  }
+
+  function getContextScopes() {
+    var scopes = [];
+
+    if (qc.qqs.options.query_context_bucket) {
+      var bucket = qc.buckets.find(b => b.name == qc.qqs.options.query_context_bucket);
+      if (bucket) {
+        bucket.scopeArray.forEach(scope => scopes.push(scope.id));
+        if ((!qc.qqs.options.query_context_scope || scopes.indexOf(qc.qqs.options.query_context_scope) < 0) && scopes.length > 0)
+          qc.qqs.options.query_context_scope = scopes[0];
+      }
+    }
+    return scopes;
+  }
+
+  //
   // let's start off with a list of the buckets
   //
 
@@ -1403,15 +1396,10 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     // make sure we stay on top of the latest query nodes
     //
 
-    updateValidNodes();
+    qc.updateBuckets();
 
     $rootScope.$on("nodesChanged", function () {
-      mnServersService.getNodes().then(function(nodes) {
-        if (prev_active_nodes && !nodeListsEqual(prev_active_nodes,nodes.active)) {
-          updateValidNodes();
-        }
-        prev_active_nodes = nodes.active;
-      });
+      qc.updateNodes();
     });
 
     // if we receive a query parameter, and it's not the same as the current query,

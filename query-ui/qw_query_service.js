@@ -110,7 +110,9 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     qwQueryService.loadStateFromStorage = loadStateFromStorage;
     qwQueryService.getQueryHistory = getQueryHistory;
 
-    // update store the metadata about buckets
+    qwQueryService.updateExpandedState = updateExpandedState; // keep track of expanded buckets/scopes/collections
+
+  // update store the metadata about buckets
 
     qwQueryService.buckets = [];
     qwQueryService.bucket_names = [];
@@ -179,6 +181,9 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         scan_consistency: "not_bounded",
         positional_parameters: [],
         named_parameters: [],
+        query_context_bucket: "",
+        query_context_scope: "",
+        expanded: {},
         query_timeout: 600
     };
 
@@ -193,6 +198,9 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           scan_consistency: qwQueryService.options.scan_consistency,
           positional_parameters: qwQueryService.options.positional_parameters.slice(0),
           named_parameters: qwQueryService.options.named_parameters.slice(0),
+          query_context_bucket: qwQueryService.options.query_context_bucket,
+          query_context_scope: qwQueryService.options.query_context_scope,
+          expanded: qwQueryService.options.expanded,
           query_timeout: qwQueryService.options.query_timeout
         };
     };
@@ -513,6 +521,12 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           qwQueryService.selectTab(savedState.outputTab);
         if (savedState.options)
           qwQueryService.options = savedState.options;
+        if (!qwQueryService.options.query_context_bucket)
+          qwQueryService.options.query_context_bucket = "";
+        if (!qwQueryService.options.query_context_scope)
+          qwQueryService.options.query_context_scope = "";
+        if (!qwQueryService.options.expanded)
+          qwQueryService.options.expanded = {};
         if (savedState.doc_editor_options) {
           if (!savedState.doc_editor_options.hasOwnProperty('show_tables'))
             savedState.doc_editor_options.show_tables = false;
@@ -1087,6 +1101,10 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
             queryData[queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
 
         //console.log("Running query: " + JSON.stringify(queryData));
+        if (queryOptions.query_context_bucket)
+          queryData.query_context = 'default:' + queryOptions.query_context_bucket +
+            (queryOptions.query_context_scope ? ('.' + queryOptions.query_context_scope) + '' : '');
+        console.log("Got query context: " + queryData.query_context);
       }
 
       // if the user might want to cancel it, give it an ID
@@ -2090,7 +2108,9 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
+    //
     // get the number of docs in each visible collection on the screen
+    //
     function updateBucketCounts()
     {
       // build a query to get the doc count for each bucket that we know about
@@ -2131,6 +2151,10 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       });
     }
 
+    //
+    // whenever we refresh the list of buckets, refresh the scope and collection info
+    //
+
     function updateBucketsCallback() {
       // make sure we have a query node
       if (!validateQueryService.valid())
@@ -2145,12 +2169,12 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       .then(function success(resp) {
         var data = resp.data, status = resp.status;
 
-        // remember the counts of each bucket so the screen doesn't blink when recomputing counts
-        var bucket_counts = {};
-        for (var i=0; i < qwQueryService.buckets.length; i++) {
-
-          //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
-        }
+         // remember the counts of each bucket so the screen doesn't blink when recomputing counts
+         var bucket_counts = {};
+        // for (var i=0; i < qwQueryService.buckets.length; i++) {
+        //
+        //   //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
+        // }
 
         // initialize the data structure for holding all the buckets
         qwQueryService.buckets.length = 0;
@@ -2164,7 +2188,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
             var bucket = {
               name: data.results[i].name,
               id: data.results[i].id,
-              expanded: false,
+              expanded: isExpanded(data.results[i].id),
               schema: [],
               indexes: [],
               scopes: {},
@@ -2194,33 +2218,51 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
             var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucket_id);
             if (bucket) {
               bucket.scopes[scope_id] = true;
-              bucket.collections.push({
+              var coll_expanded = isExpanded(bucket_id,scope_id,coll_id);
+              var collection = {
                 name: coll_id,
                 id: coll_id,
-                expanded: false,
+                expanded: coll_expanded,
                 bucket: bucket_id,
                 scope: scope_id,
                 schema: [],
                 indexes: []
-              })
+              };
+              bucket.collections.push(collection);
             }
           }
 
           // keep an array of scope names and expansion statuses
-          qwQueryService.buckets.forEach(bucket =>
-            bucket.scopeArray = Object.keys(bucket.scopes).map(function(scope_name) {return {id: scope_name, expanded: false}}));
+          var collectionsToInfer = [];
+          qwQueryService.buckets.forEach(bucket => {
+            bucket.scopeArray = Object.keys(bucket.scopes)
+              .map(function(scope_name) {
+                return {id: scope_name, expanded: isExpanded(bucket.name,scope_name)};
+              });
+            bucket.collections.sort((c1,c2) => c1.name.localeCompare(c2.name));
+
+            // also figure out which collections will need to be inferred
+            if (qwConstantsService.showSchemas)
+              bucket.collections.forEach(collection => {
+                if (collection.expanded)
+                  collectionsToInfer.push({
+                    bucket:bucket,
+                    scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
+                    collection:collection});
+              });
+          });
+
+          //
+          // Should we go infer schemas for the expanded collections?
+          //
+
+          if (collectionsToInfer.length)
+            getCollectionsSchemasBackground(collectionsToInfer,0);
 
           //console.log("Got buckets: " + JSON.stringify(qwQueryService.buckets,null,2));
         }
 
         refreshAutoCompleteArray();
-
-        //
-        // Should we go get information for each bucket?
-        //
-
-        //if (qwConstantsService.showSchemas && qwQueryService.options.auto_infer)
-        //  getInfoForBucketBackground(qwQueryService.buckets,0);
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes
@@ -2299,29 +2341,61 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         logWorkbenchError(error);
       });
 
+    }
 
+    //
+    // record the current state of expanded buckets, scopes, and collections
+    //
+
+    function updateExpandedState() {
+      var exp = {};
+      qwQueryService.buckets.forEach(function(bucket) {
+        if (bucket.expanded)
+          exp[bucket.name] = true;
+        bucket.scopeArray.forEach(function(scope) {
+          if (scope.expanded)
+            exp[bucket.name + '.' + scope.id] = true;
+        });
+        bucket.collections.forEach(function(collection) {
+          if (collection.expanded)
+            exp[bucket.name + '.' + collection.scope + '.' + collection.id] = true;
+        });
+      });
+
+      //console.log("Got expanded state: " + JSON.stringify(exp,null,2));
+      qwQueryService.options.expanded = exp;
+      saveStateToStorage();
+    }
+
+    function isExpanded(bucket,scope,collection) {
+      var key = bucket;
+      if (scope) key += '.' + scope;
+      if (collection) key +=  '.' + collection;
+
+      return qwQueryService.options.expanded[key];
     }
 
     //
     // this method uses promises and recursion to get the schemas for a list of
-    // buckets in sequential order, waiting for each one before moving on to the next.
+    // collections in sequential order, waiting and pausing before moving on to the next.
     //
 
-    function getInfoForBucketBackground(bucketList,currentIndex,countsOnly) {
+    function getCollectionsSchemasBackground(collectionList,currentIndex,countsOnly) {
       // if we've run out of buckets, nothing more to do except get the bucket counts
-      if (currentIndex < 0 || currentIndex >= bucketList.length) {
+      if (currentIndex < 0 || currentIndex >= collectionList.length) {
         updateBucketCounts();
         return;
       }
 
-      getSchemaForBucket(bucketList[currentIndex]) // get the schema, pause, then get the next one
+      getSchemaForBucket(collectionList[currentIndex].bucket,
+        collectionList[currentIndex].scope,
+        collectionList[currentIndex].collection) // get the schema, pause, then get the next one
       .then(function successCallback(response) {
-        $timeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
+        $timeout(function() {getCollectionsSchemasBackground(collectionList,currentIndex+1);},500);
       }, function errorCallback(response) {
-        $timeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
+        $timeout(function() {getCollectionsSchemasBackground(collectionsList,currentIndex+1);},500);
       });
     }
-
 
     //
     // Get a schema for a given, named bucket.
@@ -2336,7 +2410,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         dest = collection;
       }
 
-      console.log("Getting schema for : " + name);
+      //console.log("Getting schema for : " + name);
 
       //return $http(inferQueryRequest)
       return executeQueryUtil('infer ' + name + '  with {"infer_timeout":5, "max_schema_MB":1};', false)
