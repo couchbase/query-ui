@@ -36,7 +36,7 @@ let documentsStates = [
       abstract: true,
     },
     {
-      url: '/editor',
+      url: '/editor?bucket&scope&collection',
       name: 'app.admin.docs.editor',
       data: {
 //    permissions: "cluster.bucket['.'].collections.read", // restricted by permissions?
@@ -45,6 +45,14 @@ let documentsStates = [
       },
       params: { // can parameters be sent via the URL?
         bucket: {
+          type: 'string',
+          dynamic: true
+        },
+        scope: {
+          type: 'string',
+          dynamic: true
+        },
+        collection: {
           type: 'string',
           dynamic: true
         }

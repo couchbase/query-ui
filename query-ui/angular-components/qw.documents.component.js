@@ -1,20 +1,23 @@
 import {MnLifeCycleHooksToStream} from '/ui/app/mn.core.js';
-import {Component, ChangeDetectorRef, ViewEncapsulation} from '/ui/web_modules/@angular/core.js';
 
-import {FormControl, FormGroup} from '/ui/web_modules/@angular/forms.js';
+import {Component, ChangeDetectorRef, ViewEncapsulation} from '/ui/web_modules/@angular/core.js';
+import {FormControl, FormGroup}                          from '/ui/web_modules/@angular/forms.js';
+import {UIRouter}                                        from '/ui/web_modules/@uirouter/angular.js';
+import js_beautify                                       from "/ui/web_modules/js-beautify.js";
+import _                                                 from "/ui/web_modules/lodash.js";
 
 import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 
+import {pluck, filter, switchMap, distinctUntilChanged, withLatestFrom,
+  shareReplay, takeUntil, tap, map} from '/ui/web_modules/rxjs/operators.js';
+
+
 import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import {QwQueryService} from "/_p/ui/query/angular-services/qw.query.service.js";
+import {QwQueryService}         from "/_p/ui/query/angular-services/qw.query.service.js";
 import {QwValidateQueryService} from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import {QwDocEditorService} from "/_p/ui/query/angular-services/qw.upgraded.providers.js";
+import {QwDocEditorService}     from "/_p/ui/query/angular-services/qw.upgraded.providers.js";
+import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
 
-import js_beautify from "/ui/web_modules/js-beautify.js";
-
-import {$http} from '/_p/ui/query/angular-services/qw.http.js';
-
-import _ from "/ui/web_modules/lodash.js";
 import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
 
 export {QwDocumentsComponent};
@@ -40,11 +43,22 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       QwFixLongNumberService,
       QwQueryService,
       QwValidateQueryService,
+      UIRouter,
       $http
     ];
   }
 
   ngOnInit() {
+    var params = this.uiRouter.globals.params;
+    if (params.bucket) {
+      this.dec.options.offset = 0;
+      this.dec.options.selected_bucket = params.bucket;
+      if (params.scope)
+        this.dec.options.selected_scope = params.scope;
+      if (params.collection)
+        this.dec.options.selected_collection = params.collection;
+    }
+
     this.formOptions = {
       selected_bucket: this.dec.options.selected_bucket,
       selected_scope: this.dec.options.selected_scope,
@@ -56,6 +70,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       doc_id_end: this.dec.options.doc_id_end,
       where_clause: this.dec.options.where_clause,
     };
+    console.log("set limit to: " + this.dec.options.limit);
+    var limit = this.searchForm.get('limit');
+    console.log("limit is: " + this.searchForm.get('limit').value);
     this.searchForm.setValue(this.formOptions);
 
     var This = this;
@@ -82,6 +99,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     qwFixLongNumberService,
     qwQueryService,
     validateQueryService,
+    uiRouter,
     $http) {
     super();
 
@@ -89,6 +107,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     this.dec = dec;
     dec.rbac = mnPermissions.export;
     dec.searchForm = this.searchForm;
+
+    this.uiRouter = uiRouter;
 
     // form for selecting documents
     this.searchForm = new FormGroup({
