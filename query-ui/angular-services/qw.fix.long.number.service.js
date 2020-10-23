@@ -1,8 +1,4 @@
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-
 import { Injectable } from "/ui/web_modules/@angular/core.js";
-import { downgradeInjectable } from '/ui/web_modules/@angular/upgrade/static.js';
 
 export { QwFixLongNumberService };
 
@@ -19,10 +15,6 @@ class QwFixLongNumberService {
     Object.assign(this, getQwFixLongNumberService());
   }
 }
-
-angular
-  .module('app', [])
-  .factory('qwFixLongNumberService', downgradeInjectable(QwFixLongNumberService));
 
 //
 // the qwConstantsService contains a number of constants used by the query workbench, such as

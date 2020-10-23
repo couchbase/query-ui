@@ -1,16 +1,12 @@
 // we can only work if we have a query node. This service checks for
 // a query node a reports back whether it is present.
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
 
 import { Injectable } from "/ui/web_modules/@angular/core.js";
-import { downgradeInjectable } from '/ui/web_modules/@angular/upgrade/static.js';
-
-import { MnPermissions, MnPools } from '/ui/app/ajs.upgraded.providers.js';
+import { MnPermissions, MnPools, MnPoolDefault } from '/ui/app/ajs.upgraded.providers.js';
+import { $http } from '/_p/ui/query/angular-services/qw.http.js';
 
 export { QwValidateQueryService };
 
-import { $http } from '/_p/ui/query/angular-services/qw.http.js';
 
 class QwValidateQueryService {
   static get annotations() { return [
@@ -20,26 +16,17 @@ class QwValidateQueryService {
   static get parameters() { return [
     MnPools,
     MnPermissions,
+    MnPoolDefault,
     $http
   ]}
 
-  constructor(mnPools, mnPermissions,$http) {
-    Object.assign(this, getValidateQueryService(mnPools,mnPermissions,$http));
+  constructor(mnPools, mnPermissions,mnPoolDefault,$http) {
+    Object.assign(this, getValidateQueryService(mnPools,mnPermissions,mnPoolDefault,$http));
   }
 }
 
-angular
-.module('app', [])
-.factory('qwValidateQueryService', downgradeInjectable(QwValidateQueryService));
 
-//angular
-//  .module('validateQueryService', [
-//    mnPermissions,
-//    mnPools
-//  ])
-//  .factory('validateQueryService', function ($http, mnPermissions, mnPools) {
-
-function getValidateQueryService(mnPools,mnPermissions,$http) {
+function getValidateQueryService(mnPools,mnPermissions,mnPoolDefault,$http) {
     mnPools.get().then(function() {_isEnterprise = mnPools.export.isEnterprise;});
     var _checked = false;              // have we checked validity yet?
     var _valid = false;                // do we have a valid query node?
@@ -50,6 +37,7 @@ function getValidateQueryService(mnPools,mnPermissions,$http) {
     var _otherError;
     var _bucketList = [];
     var _bucketStatsList = [];
+    var _validNodes = [];
     var _callbackList = [];
     var _isEnterprise = false;
     var service = {
@@ -57,12 +45,26 @@ function getValidateQueryService(mnPools,mnPermissions,$http) {
       isEnterprise: function()     {return(_isEnterprise);},
       valid: function()            {return _valid;},
       validBuckets: function()     {return _bucketList;},
+      validNodes: function()       {return _validNodes;},
       otherStatus: function()      {return _otherStatus;},
       otherError: function()       {return _otherError;},
       monitoringAllowed: function() {return _monitoringAllowed;},
       clusterStatsAllowed: function() {return _clusterStatsAllowed;},
       updateValidBuckets: getBuckets,
+      updateNodes: getNodes,
       getBucketsAndNodes: getBuckets
+    }
+
+    //
+    // we need at least one cluster node running n1ql
+    //
+
+    function getNodes() {
+      var pool = mnPoolDefault.latestValue();
+      if (pool.value && pool.value.nodes)
+        _validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
+      else
+        _validNodes = [];
     }
 
     //

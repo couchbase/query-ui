@@ -26,10 +26,6 @@ import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy
 import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "/ui/web_modules/d3-zoom.js";
 import {hierarchy as d3Hierarchy} from "/ui/web_modules/d3-hierarchy.js";
 
-import mnJquery from "/ui/app/components/mn_jquery.js";
-
-import qwQueryService from '/_p/ui/query/qw_query_service.js';
-
 
 export { QwExplainViz };
 

@@ -5,24 +5,18 @@ import ace from '/ui/libs/ace/ace-wrapper.js';
 import { NgModule } from '/ui/web_modules/@angular/core.js';
 import { UIRouterUpgradeModule } from '/ui/web_modules/@uirouter/angular-hybrid.js';
 
-import qwJsonTableEditorModule from "/_p/ui/query/ui-current/data_display/qw-json-table-editor.directive.js";
-
-angular.module(app).requires.push(qwJsonTableEditorModule);
+import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
+import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
+import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
+import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
+import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
+import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
+import { $http }                  from '/_p/ui/query/angular-services/qw.http.js';
 
 angular
   .module(app)
   .config(function (mnPluggableUiRegistryProvider, mnPermissionsProvider) {
     ace.config.set('basePath','/ui/libs/ace');
-
-    // AngularJS version of the DocEditor
-//    mnPluggableUiRegistryProvider.registerConfig({
-//      name: 'Documents',
-//      state: 'app.admin.doc_editor',
-//      includedByState: 'app.admin.doc_editor',
-//      plugIn: 'workbenchTab',
-//      ngShow: "rbac.cluster.bucket['.'].data.docs.read  && rbac.cluster.bucket['.'].data.xattr.read",
-//      index: 0
-//    });
 
     // Angular8 version of the DocEditor
     mnPluggableUiRegistryProvider.registerConfig({
@@ -68,15 +62,6 @@ class QueryUI {
       imports: [
         UIRouterUpgradeModule.forRoot({
           states: [
-//            {
-//            name: "app.admin.doc_editor.**",
-//            url: "/doc_editor",
-//            lazyLoad: ($transition$) => {
-//              return import('/_p/ui/query/qw_query_doc_editor.js').then(m => {
-//                $transition$.injector().get('$ocLazyLoad').load({name: 'qwQueryDocEditor'});
-//              });
-//            }
-//          },
           {
             name: "app.admin.docs.**",
             url: "/docs",
@@ -93,17 +78,34 @@ class QueryUI {
                 $transition$.injector().get('$ocLazyLoad').load({name: 'qwQuery'});
               });
             }
-          }, {
-            name: "app.admin.hello_world.**",
-            url: "/hello_world",
-            loadChildren: () => {
-              return import('/_p/ui/query/hello-angular/hello.world.module.js').then(m => {
-                return m.HelloWorldModule;
-              });
-            }
-          }
+          },
+          //   {
+          //   name: "app.admin.hello_world.**",
+          //   url: "/hello_world",
+          //   loadChildren: () => {
+          //     return import('/_p/ui/query/hello-angular/hello.world.module.js').then(m => {
+          //       return m.HelloWorldModule;
+          //     });
+          //   }
+          // }
           ]
         })
+      ],
+      // because the Query Workbench is still AngularJS, yet relies on
+      // downgradeInjectable versions of the following Angular services,
+      // we need to list them as providers here to ensure that they are loaded.
+      // otherwise we get "missing provider" errors when reloading the UI in
+      // the query workbench. This should go away once the workbench is
+      // migrated to Angular
+      providers: [
+        QwConstantsService,
+        QwDialogService,
+        QwFixLongNumberService,
+        QwQueryService,
+        QwQueryPlanService,
+        QwValidateQueryService,
+        $http,
+
       ]
     })
   ]}

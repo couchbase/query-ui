@@ -15,7 +15,6 @@ import {pluck, filter, switchMap, distinctUntilChanged, withLatestFrom,
 import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import {QwQueryService}         from "/_p/ui/query/angular-services/qw.query.service.js";
 import {QwValidateQueryService} from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import {QwDocEditorService}     from "/_p/ui/query/angular-services/qw.upgraded.providers.js";
 import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
 
 import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
@@ -38,7 +37,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     return [
       ChangeDetectorRef,
       MnPermissions,
-      QwDocEditorService,
       QwDialogService,
       QwFixLongNumberService,
       QwQueryService,
@@ -94,7 +92,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   constructor(
     changeDetectorRef,
     mnPermissions,
-    qwDocEditorService,
     qwDialogService,
     qwFixLongNumberService,
     qwQueryService,
@@ -931,8 +928,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           error: true
         };
 
-        if (status == 404)
+        if (status == 404) {
           dec.options.current_result[position].data = "ERROR: Document not found.";
+          showErrorDialog("Error with document: " + id,  JSON.stringify(data.status), true);
+        }
 
         else if (data && data.errors) {
           dec.options.current_result[position].data = "ERROR: " + JSON.stringify(data.errors);

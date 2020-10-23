@@ -42,7 +42,7 @@ class QwDocEditorDialog extends MnLifeCycleHooksToStream {
     var This = this;
     this.config.loadModule("ace/ext/cb-searchbox",
         function(e) {
-          if (This.showData && This.mainEditor) e.Search(This.mainEditor);
+          if (This.showData && This.mainEditor) e.Search(This.mainEditor,true,true);
           else if (!This.showData && This.metaEditor) e.Search(This.metaEditor);
         });
 

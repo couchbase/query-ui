@@ -1,9 +1,5 @@
-import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
 import n1ql from "/_p/ui/query/n1ql_parser/n1ql.js";
-
-import { Injectable } from "/ui/web_modules/@angular/core.js";
-import { downgradeInjectable } from '/ui/web_modules/@angular/upgrade/static.js';
 
 export { QwQueryPlanService };
 
@@ -20,18 +16,6 @@ class QwQueryPlanService {
     Object.assign(this, getQwQueryPlanService());
   }
 }
-
-angular
-  .module('app', [])
-  .factory('qwQueryPlanService', downgradeInjectable(QwQueryPlanService));
-
-
-//export default 'qwQueryPlanService';
-//
-//angular
-//  .module('qwQueryPlanService', [])
-//  .factory('qwQueryPlanService', getQwQueryPlanService);
-
 
 //
 // the qwQueryPlanService contains utility functions for processing N1QL query

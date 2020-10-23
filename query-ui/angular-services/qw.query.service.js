@@ -1,89 +1,45 @@
-import angular from "/ui/web_modules/angular.js";
-import {NgbModal} from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
+import {NgbModal}               from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
+import _                        from '/ui/web_modules/lodash.js';
 
-import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
-import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
-import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import { QwDialogService }        from '/_p/ui/query/angular-directives/qw.dialog.service.js';
+import {QwConstantsService}     from "/_p/ui/query/angular-services/qw.constants.service.js";
+import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
+import {QwValidateQueryService} from '/_p/ui/query/angular-services/qw.validate.query.service.js';
+import {QwQueryPlanService}     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
+import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
 
+import {QwDialogService}        from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 
-import { MnPendingQueryKeeper, MnPermissions, MnPools } from '/ui/app/ajs.upgraded.providers.js';
-import { MnAdminService }        from '/ui/app/mn.admin.service.js';
+import {MnPendingQueryKeeper, MnPools, MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import {MnAdminService}         from "/ui/app/mn.admin.service.js";
 
-import _                         from "/ui/web_modules/lodash.js";
-
-import { Injectable }            from "/ui/web_modules/@angular/core.js";
-import { downgradeInjectable }   from '/ui/web_modules/@angular/upgrade/static.js';
-
-import { $http }                 from '/_p/ui/query/angular-services/qw.http.js';
-
-export { QwQueryService };
+export {QwQueryService};
 
 class QwQueryService {
-  static get annotations() { return [
-    new Injectable()
-  ]}
+  static get annotations() {
+    return [
+      new Injectable()
+    ]
+  }
 
-  static get parameters() { return [
-    MnAdminService,
-    MnPendingQueryKeeper,
-    MnPermissions,
-    MnPools,
-    NgbModal,
-    QwConstantsService,
-    QwDialogService,
-    QwFixLongNumberService,
-    QwQueryPlanService,
-    QwValidateQueryService,
-    $http,
-  ]}
+  static get parameters() {
+    return [
+      $http,
+      MnAdminService,
+      MnPendingQueryKeeper,
+      MnPermissions,
+      MnPools,
+      NgbModal,
+      QwConstantsService,
+      QwDialogService,
+      QwFixLongNumberService,
+      QwQueryPlanService,
+      QwValidateQueryService,
+    ]
+  }
 
   constructor(
-      mnAdminService,
-      mnPendingQueryKeeper,
-      mnPermissions,
-      mnPools,
-      ngbModal,
-      qwConstantsService,
-      qwDialogService,  
-      qwFixLongNumberService,
-      qwQueryPlanService,
-      validateQueryService,
-      $http) {
-    Object.assign(this, getQwQueryService(
-        mnAdminService,
-        mnPendingQueryKeeper,
-        mnPermissions,
-        mnPools,
-        ngbModal,
-        qwConstantsService,
-        qwDialogService,
-        qwFixLongNumberService,
-        qwQueryPlanService,
-        validateQueryService,
-        $http));
-  }
-}
-
-angular
-  .module('app', [])
-  .factory('qwQueryService', downgradeInjectable(QwQueryService));
-
-//angular
-//  .module('qwQueryService', [
-//    mnPendingQueryKeeper,
-//    qwConstantsService,
-//    qwQueryPlanService,
-//    mnPoolDefault,
-//    mnPools,
-//    validateQueryService,
-//    qwFixLongNumberService
-//  ])
-//  .factory('qwQueryService', getQwQueryService);
-
-function getQwQueryService(
-    mnAdmin,
+    $http,
+    mnAdminService,
     mnPendingQueryKeeper,
     mnPermissions,
     mnPools,
@@ -92,46 +48,88 @@ function getQwQueryService(
     qwDialogService,
     qwFixLongNumberService,
     qwQueryPlanService,
-    validateQueryService,
-    $http) {
+    validateQueryService) {
+    Object.assign(this, getQwQueryService(
+      mnAdminService,
+      mnPendingQueryKeeper,
+      mnPermissions,
+      mnPools,
+      ngbModal,
+      qwConstantsService,
+      qwDialogService,
+      qwFixLongNumberService,
+      qwQueryPlanService,
+      validateQueryService,
+      $http));
+  }
+}
+
+function getQwQueryService(
+  mnAdmin,
+  mnPendingQueryKeeper,
+  mnPermissions,
+  mnPools,
+  ngbModal,
+  qwConstantsService,
+  qwDialogService,
+  qwFixLongNumberService,
+  qwQueryPlanService,
+  validateQueryService,
+  $http) {
 
     var qwQueryService = {};
+    qwQueryService.validateQueryService = validateQueryService;
 
     //
     // remember which tab is selected for output style: JSON, table, or tree
     //
 
     qwQueryService.outputTab = 1;     // remember selected output tab
-    qwQueryService.selectTab = function(newTab) {
+    qwQueryService.selectTab = function (newTab) {
       // some tabs are not available in some modes
       switch (newTab) {
-      case 6: // advice is only available in EE
-        if (!mnPools.export.isEnterprise)
-          newTab = 1;
-        break;
+        case 6: // advice is only available in EE
+          if (!mnPools.export.isEnterprise)
+            newTab = 1;
+          break;
       }
 
       qwQueryService.outputTab = newTab;
-     };
-    qwQueryService.isSelected = function(checkTab) {return qwQueryService.outputTab === checkTab;};
-
+    };
+    qwQueryService.isSelected = function (checkTab) {
+      return qwQueryService.outputTab === checkTab;
+    };
 
     var monitoringOptions = {
-        selectedTab: 1,
-        autoUpdate: true,
-        active_sort_by: 'elapsedTime',
-        active_sort_reverse: true,
-        completed_sort_by: 'elapsedTime',
-        completed_sort_reverse: true,
-        prepared_sort_by: 'elapsedTime',
-        prepared_sort_reverse: true
+      selectedTab: 1,
+      autoUpdate: true,
+      active_sort_by: 'elapsedTime',
+      active_sort_reverse: true,
+      completed_sort_by: 'elapsedTime',
+      completed_sort_reverse: true,
+      prepared_sort_by: 'elapsedTime',
+      prepared_sort_reverse: true
     };
-    qwQueryService.selectMonitoringTab = function(newTab) {monitoringOptions.selectedTab = newTab; saveStateToStorage();};
-    qwQueryService.getMonitoringSelectedTab = function() {return monitoringOptions.selectedTab;};
-    qwQueryService.isMonitoringSelected = function(checkTab) {return monitoringOptions.selectedTab === checkTab;};
-    qwQueryService.getMonitoringAutoUpdate = function() {return monitoringOptions.autoUpdate;};
-    qwQueryService.setMonitoringAutoUpdate = function(newValue) {monitoringOptions.autoUpdate = newValue; saveStateToStorage();};
-    qwQueryService.getMonitoringOptions = function() {return monitoringOptions};
+    qwQueryService.selectMonitoringTab = function (newTab) {
+      monitoringOptions.selectedTab = newTab;
+      saveStateToStorage();
+    };
+    qwQueryService.getMonitoringSelectedTab = function () {
+      return monitoringOptions.selectedTab;
+    };
+    qwQueryService.isMonitoringSelected = function (checkTab) {
+      return monitoringOptions.selectedTab === checkTab;
+    };
+    qwQueryService.getMonitoringAutoUpdate = function () {
+      return monitoringOptions.autoUpdate;
+    };
+    qwQueryService.setMonitoringAutoUpdate = function (newValue) {
+      monitoringOptions.autoUpdate = newValue;
+      saveStateToStorage();
+    };
+    qwQueryService.getMonitoringOptions = function () {
+      return monitoringOptions;
+    };
 
     // access to our most recent query result, and functions to traverse the history
     // of different results
@@ -151,8 +149,12 @@ function getQwQueryService(
 
     qwQueryService.canCreateBlankQuery = canCreateBlankQuery;
 
-    qwQueryService.getPastQueries = function() {return(pastQueries);}
-    qwQueryService.getQueryHistoryLength = function() {return(pastQueries.length);}
+    qwQueryService.getPastQueries = function () {
+      return (pastQueries);
+    }
+    qwQueryService.getQueryHistoryLength = function () {
+      return (pastQueries.length);
+    }
 
     qwQueryService.emptyResult = emptyResult;
 
@@ -178,6 +180,8 @@ function getQwQueryService(
     qwQueryService.loadStateFromStorage = loadStateFromStorage;
     qwQueryService.getQueryHistory = getQueryHistory;
 
+    qwQueryService.updateExpandedState = updateExpandedState; // keep track of expanded buckets/scopes/collections
+
     // update store the metadata about buckets
 
     qwQueryService.buckets = [];
@@ -197,11 +201,6 @@ function getQwQueryService(
 
     mnPools.get().then(function (pools) {qwQueryService.pools = pools;});
 
-//    mnAuthService.whoami().then(function (resp) {
-//      if (resp) qwQueryService.user = resp;
-//    });
-
-
     //
     // keep track of active queries, complete requests, and prepared statements
     //
@@ -215,13 +214,13 @@ function getQwQueryService(
     var prepareds_updated = "never"; // last update time
 
     qwQueryService.monitoring = {
-        active_requests: active_requests,
-        completed_requests: completed_requests,
-        prepareds: prepareds,
+      active_requests: active_requests,
+      completed_requests: completed_requests,
+      prepareds: prepareds,
 
-        active_updated: active_updated,
-        completed_updated: completed_updated,
-        prepareds_updated: prepareds_updated,
+      active_updated: active_updated,
+      completed_updated: completed_updated,
+      prepareds_updated: prepareds_updated,
     };
 
     qwQueryService.updateQueryMonitoring = updateQueryMonitoring;
@@ -231,38 +230,49 @@ function getQwQueryService(
     qwQueryService.status_success = status_success;
     qwQueryService.status_fail = status_fail;
 
-    function status_success() {return(getCurrentResult().status_success());}
-    function status_fail()    {return(getCurrentResult().status_fail());}
+    function status_success() {
+      return (getCurrentResult().status_success());
+    }
+
+    function status_fail() {
+      return (getCurrentResult().status_fail());
+    }
 
     //
     // here are some options we use while querying
     //
 
     qwQueryService.options = {
-        timings: true,
-        auto_infer: true,
-        auto_format: false,
-        dont_save_queries: false,
-        max_parallelism: "",
-        scan_consistency: "not_bounded",
-        positional_parameters: [],
-        named_parameters: [],
-        query_timeout: 600
+      timings: true,
+      auto_infer: true,
+      auto_format: false,
+      dont_save_queries: false,
+      max_parallelism: "",
+      scan_consistency: "not_bounded",
+      positional_parameters: [],
+      named_parameters: [],
+      query_context_bucket: "",
+      query_context_scope: "",
+      expanded: {},
+      query_timeout: 600
     };
 
     // clone options so we can have a scratch copy for the dialog box
-    qwQueryService.clone_options = function() {
-        return {
-          timings: qwQueryService.options.timings,
-          auto_infer: qwQueryService.options.auto_infer,
-          auto_format: qwQueryService.options.auto_format,
-          dont_save_queries: qwQueryService.options.dont_save_queries,
-          max_parallelism: qwQueryService.options.max_parallelism,
-          scan_consistency: qwQueryService.options.scan_consistency,
-          positional_parameters: qwQueryService.options.positional_parameters.slice(0),
-          named_parameters: qwQueryService.options.named_parameters.slice(0),
-          query_timeout: qwQueryService.options.query_timeout
-        };
+    qwQueryService.clone_options = function () {
+      return {
+        timings: qwQueryService.options.timings,
+        auto_infer: qwQueryService.options.auto_infer,
+        auto_format: qwQueryService.options.auto_format,
+        dont_save_queries: qwQueryService.options.dont_save_queries,
+        max_parallelism: qwQueryService.options.max_parallelism,
+        scan_consistency: qwQueryService.options.scan_consistency,
+        positional_parameters: qwQueryService.options.positional_parameters.slice(0),
+        named_parameters: qwQueryService.options.named_parameters.slice(0),
+        query_context_bucket: qwQueryService.options.query_context_bucket,
+        query_context_scope: qwQueryService.options.query_context_scope,
+        expanded: qwQueryService.options.expanded,
+        query_timeout: qwQueryService.options.query_timeout
+      };
     };
 
     //
@@ -287,7 +297,7 @@ function getQwQueryService(
     };
 
     qwQueryService.query_plan_options = {
-        orientation: 1
+      orientation: 1
     };
 
     //
@@ -295,8 +305,8 @@ function getQwQueryService(
     // and defines the object for holding the query history
     //
 
-    function QueryResult(status,elapsedTime,executionTime,resultCount,resultSize,result,
-        data,query,requestID,explainResult,mutationCount,warnings,sortCount,lastRun,advice) {
+    function QueryResult(status, elapsedTime, executionTime, resultCount, resultSize, result,
+                         data, query, requestID, explainResult, mutationCount, warnings, sortCount, lastRun, advice) {
       this.status = status;
       this.resultCount = resultCount;
       this.mutationCount = mutationCount;
@@ -307,7 +317,7 @@ function getQwQueryService(
       this.requestID = requestID;
       this.explainResult = explainResult;
       if (explainResult)
-        this.explainResultText = JSON.stringify(explainResult,null,'  ');
+        this.explainResultText = JSON.stringify(explainResult, null, '  ');
       else
         this.explainResultText = "";
 
@@ -326,33 +336,31 @@ function getQwQueryService(
     // elapsed and execution time come back with ridiculous amounts of
     // precision, and some letters at the end indicating units.
 
-    function truncateTime(timeStr)
-    {
+    function truncateTime(timeStr) {
       var timeEx = /([0-9.]+)([a-z]+)/i; // number + time unit string
 
       if (timeStr && timeEx.test(timeStr)) {
         var parts = timeEx.exec(timeStr);
         var num = Number(parts[1]).toFixed(2); // truncate number part
         if (!isNaN(num))
-          return(num + parts[2]);
+          return (num + parts[2]);
       }
 
-      return(timeStr); // couldn't match, just return orig value
+      return (timeStr); // couldn't match, just return orig value
     }
 
 
-    QueryResult.prototype.clone = function()
-    {
-      return new QueryResult(this.status,this.elapsedTime,this.executionTime,this.resultCount,
-          this.resultSize,this.result,this.data,this.query,this.requestID,this.explainResult,
-          this.mutationCount,this.warnings,this.sortCount,this.lastRun,this.advice);
+    QueryResult.prototype.clone = function () {
+      return new QueryResult(this.status, this.elapsedTime, this.executionTime, this.resultCount,
+        this.resultSize, this.result, this.data, this.query, this.requestID, this.explainResult,
+        this.mutationCount, this.warnings, this.sortCount, this.lastRun, this.advice);
     };
 
-    QueryResult.prototype.status_success = function() {
-      return(this.status == 'success' || this.status == 'explain success');
+    QueryResult.prototype.status_success = function () {
+      return (this.status == 'success' || this.status == 'explain success');
     };
-    QueryResult.prototype.status_fail = function()
-    {return(this.status == '400' ||
+    QueryResult.prototype.status_fail = function () {
+      return (this.status == '400' ||
         this.status == 'errors' ||
         this.status == '500' ||
         this.status == '404' ||
@@ -366,29 +374,28 @@ function getQwQueryService(
 
     var un_run_status = "Not yet run";
     var un_run_query_data = {"No data to display": "Hit execute to run query."};
-    var un_run_query_text =  JSON.stringify(un_run_query_data);
+    var un_run_query_text = JSON.stringify(un_run_query_data);
 
-    QueryResult.prototype.clone_for_storage = function() {
-      var res = new QueryResult(this.status,'','',this.resultCount,
-          '',
-          un_run_query_text,
-          un_run_query_data,
-          this.query,
-          '',
-          un_run_query_data,
-          this.mutationCount,this.warnings,this.sortCount,this.lastRun);
+    QueryResult.prototype.clone_for_storage = function () {
+      var res = new QueryResult(this.status, '', '', this.resultCount,
+        '',
+        un_run_query_text,
+        un_run_query_data,
+        this.query,
+        '',
+        un_run_query_data,
+        this.mutationCount, this.warnings, this.sortCount, this.lastRun);
 
       res.explainResultText = un_run_query_text;
 
       return res;
     }
 
-    QueryResult.prototype.hasData = function() {
-      return(this.result !== un_run_query_text);
+    QueryResult.prototype.hasData = function () {
+      return (this.result !== un_run_query_text);
     }
 
-    QueryResult.prototype.copyIn = function(other)
-    {
+    QueryResult.prototype.copyIn = function (other) {
       this.status = other.status;
       this.elapsedTime = truncateTime(other.elapsedTime);
       this.executionTime = truncateTime(other.executionTime);
@@ -415,12 +422,12 @@ function getQwQueryService(
     // how recently was the query run (if at all)?
     //
 
-    QueryResult.prototype.getLastRun = function() {
+    QueryResult.prototype.getLastRun = function () {
       // need a lastRun time to see how long ago it was
       if (!this.lastRun || !_.isDate(this.lastRun))
-        return(null);
+        return (null);
 
-      var howRecent = (new Date().getTime() - this.lastRun.getTime())/1000;
+      var howRecent = (new Date().getTime() - this.lastRun.getTime()) / 1000;
 
       // if the query is still running, output how long
       if (this.busy) {
@@ -428,7 +435,7 @@ function getQwQueryService(
         if (howRecent < 60)
           recentStr += "less than a minute.";
         else if (howRecent > 60)
-          recentStr += Math.round(howRecent/60) + ' minutes';
+          recentStr += Math.round(howRecent / 60) + ' minutes';
         return recentStr;
       }
 
@@ -437,13 +444,13 @@ function getQwQueryService(
       if (howRecent < 60)
         recentStr += ' just now';
       else if (howRecent < 3600)
-        recentStr += Math.round(howRecent/60) + ' min ago';
+        recentStr += Math.round(howRecent / 60) + ' min ago';
       else if (howRecent < 86400)
-        recentStr += Math.round(howRecent/3600) + ' hrs ago';
+        recentStr += Math.round(howRecent / 3600) + ' hrs ago';
       else
         recentStr += this.lastRun.toDateString(); //+ ' at ' + this.lastRun.getHours() + ':' + this.lastRun.getMinutes();
 
-      return(recentStr);
+      return (recentStr);
     }
 
     QueryResult.prototype.getLastDetails = function () {
@@ -454,14 +461,14 @@ function getQwQueryService(
       else if (this.resultCount)
         status += ', ' + this.resultCount + ' documents';
 
-      return(status);
+      return (status);
     }
 
     //
     // structures for remembering queries and results
     //
 
-    var dummyResult = new QueryResult('','','','','','',{},'');
+    var dummyResult = new QueryResult('', '', '', '', '', '', {}, '');
     //var lastResult = dummyResult.clone();
     var savedResultTemplate = dummyResult.clone();
     savedResultTemplate.status = "";
@@ -498,23 +505,23 @@ function getQwQueryService(
     }
 
     function emptyResult() {
-        return(!pastQueries[currentQueryIndex] ||
-            pastQueries[currentQueryIndex].result === savedResultTemplate.result);
+      return (!pastQueries[currentQueryIndex] ||
+        pastQueries[currentQueryIndex].result === savedResultTemplate.result);
     }
 
-   //
+    //
     // where are we w.r.t. the query history?
     //
 
     function getCurrentIndex() {
-      return (currentQueryIndex+1) + "/" + (pastQueries.length == 0 ? 1 : pastQueries.length);
+      return (currentQueryIndex + 1) + "/" + (pastQueries.length == 0 ? 1 : pastQueries.length);
     }
 
     function getCurrentIndexNumber() {
       return (currentQueryIndex);
     }
 
-    function setCurrentIndex(index=0) {
+    function setCurrentIndex(index = 0) {
       if (index < 0 || index >= pastQueries.length || index == currentQueryIndex)
         return;
 
@@ -542,7 +549,7 @@ function getQwQueryService(
 
     var hasLocalStorage = supportsHtml5Storage();
     var localStorageKey = 'CouchbaseQueryWorkbenchState_' + window.location.host
-    + qwConstantsService.localStorageSuffix;
+      + qwConstantsService.localStorageSuffix;
 
     function loadStateFromStorage() {
       // make sure we have local storage
@@ -561,7 +568,7 @@ function getQwQueryService(
 
         if (savedState.pastQueries) {
           pastQueries = [];
-          _.forEach(savedState.pastQueries,function(queryRes,index) {
+          _.forEach(savedState.pastQueries, function (queryRes, index) {
             var newQuery = new QueryResult();
             newQuery.copyIn(queryRes);
             pastQueries.push(newQuery);
@@ -583,6 +590,12 @@ function getQwQueryService(
           qwQueryService.selectTab(savedState.outputTab);
         if (savedState.options)
           qwQueryService.options = savedState.options;
+        if (!qwQueryService.options.query_context_bucket)
+          qwQueryService.options.query_context_bucket = "";
+        if (!qwQueryService.options.query_context_scope)
+          qwQueryService.options.query_context_scope = "";
+        if (!qwQueryService.options.expanded)
+          qwQueryService.options.expanded = {};
         if (savedState.doc_editor_options) {
           if (!savedState.doc_editor_options.hasOwnProperty('show_tables'))
             savedState.doc_editor_options.show_tables = false;
@@ -617,7 +630,9 @@ function getQwQueryService(
         if (qwQueryService.options.dont_save_queries !== true && qwQueryService.options.dont_save_queries !== false)
           qwQueryService.options.dont_save_queries = false;
 
-      } catch (err) {console.log("Error loading state: " + err);}
+      } catch (err) {
+        console.log("Error loading state: " + err);
+      }
     }
 
 
@@ -634,33 +649,33 @@ function getQwQueryService(
       savedState.options = qwQueryService.options;
 
       savedState.doc_editor_options = {
-          selected_bucket: qwQueryService.doc_editor_options.selected_bucket,
-          selected_scope: qwQueryService.doc_editor_options.selected_scope,
-          selected_collection: qwQueryService.doc_editor_options.selected_collection,
-          show_tables: qwQueryService.doc_editor_options.show_tables,
-          show_id: qwQueryService.doc_editor_options.show_id,
-          query_busy: false,
-          limit: qwQueryService.doc_editor_options.limit,
-          offset: qwQueryService.doc_editor_options.offset,
-          where_clause: qwQueryService.doc_editor_options.where_clause,
-          current_query: '',
-          current_result: [] // don't want to save the results - they could be big
+        selected_bucket: qwQueryService.doc_editor_options.selected_bucket,
+        selected_scope: qwQueryService.doc_editor_options.selected_scope,
+        selected_collection: qwQueryService.doc_editor_options.selected_collection,
+        show_tables: qwQueryService.doc_editor_options.show_tables,
+        show_id: qwQueryService.doc_editor_options.show_id,
+        query_busy: false,
+        limit: qwQueryService.doc_editor_options.limit,
+        offset: qwQueryService.doc_editor_options.offset,
+        where_clause: qwQueryService.doc_editor_options.where_clause,
+        current_query: '',
+        current_result: [] // don't want to save the results - they could be big
       };
 
       savedState.query_plan_options = {
-          orientation: qwQueryService.query_plan_options.orientation
+        orientation: qwQueryService.query_plan_options.orientation
       };
 
       savedState.monitoringOptions = monitoringOptions;
 
-      if (!qwQueryService.options.dont_save_queries) _.forEach(pastQueries,function(queryRes,index) {
+      if (!qwQueryService.options.dont_save_queries) _.forEach(pastQueries, function (queryRes, index) {
         if (full)
           savedState.pastQueries.push(queryRes.clone());
         else
           savedState.pastQueries.push(queryRes.clone_for_storage());
       });
 
-      return(JSON.stringify(savedState));
+      return (JSON.stringify(savedState));
     }
 
 
@@ -709,7 +724,7 @@ function getQwQueryService(
       for (var key in qwQueryService.autoCompleteTokens) {
         //console.log("Got autoCompleteToken key: " + key);
         qwQueryService.autoCompleteArray.push(
-            {caption:key,snippet:key,meta:qwQueryService.autoCompleteTokens[key]});
+          {caption: key, snippet: key, meta: qwQueryService.autoCompleteTokens[key]});
       }
     };
 
@@ -718,37 +733,35 @@ function getQwQueryService(
     // go over a schema and recursively put all the field names in our name map
     //
 
-    function getFieldNamesFromSchema(schema,prefix) {
+    function getFieldNamesFromSchema(schema, prefix) {
       //console.log("Got schema: " + JSON.stringify(schema, null, 4));
 
       if (!prefix)
         prefix = '';
 
-      for (var i=0; i< schema.length; i++)
-        _.forEach(schema[i]['properties'], function(field, field_name) {
+      for (var i = 0; i < schema.length; i++)
+        _.forEach(schema[i]['properties'], function (field, field_name) {
           //console.log("Adding field prefix: " + prefix + ', field: ' +  field_name);
           //console.log("  field[properties]: " + field['properties']);
           //console.log("  field[items]: " + field['items']);
           //if (field['items'])
           // console.log("    field[items].subtype: " + field['items'].subtype);
 
-          addToken(prefix + field_name,"field");
+          addToken(prefix + field_name, "field");
           //if (prefix.length == 0 && !field_name.startsWith('`'))
           //  addToken('`' + field_name + '`',"field");
 
           // if the field has sub-properties, make a recursive call
           if (field['properties']) {
-            getFieldNamesFromSchema([field],prefix + field_name + ".");
+            getFieldNamesFromSchema([field], prefix + field_name + ".");
           }
 
           // if the field has 'items', it is an array, make recursive call with array type
           if (field['items'] && field['items'].subtype) {
-            getFieldNamesFromSchema([field['items'].subtype],prefix + field_name + "[0].");
-          }
-
-          else if (_.isArray(field['items'])) for (var i=0;i<field['items'].length;i++)
+            getFieldNamesFromSchema([field['items'].subtype], prefix + field_name + "[0].");
+          } else if (_.isArray(field['items'])) for (var i = 0; i < field['items'].length; i++)
             if (field['items'][i].subtype) {
-              getFieldNamesFromSchema([field['items'][i].subtype],prefix + field_name + "[0].");
+              getFieldNamesFromSchema([field['items'][i].subtype], prefix + field_name + "[0].");
             }
         });
     }
@@ -759,11 +772,11 @@ function getQwQueryService(
 
     function truncateSchema(schema) {
 
-      for (var i=0; i< schema.length; i++) {
+      for (var i = 0; i < schema.length; i++) {
         var fieldCount = 0;
         var flavor = schema[i];
 
-        _.forEach(schema[i]['properties'], function(field, field_name) {
+        _.forEach(schema[i]['properties'], function (field, field_name) {
           if (++fieldCount > 250) {
             flavor.truncated = true;
             delete flavor['properties'][field_name];
@@ -778,9 +791,7 @@ function getQwQueryService(
           // if the field has 'items', it is an array, make recursive call with array type
           if (field['items'] && field['items'].subtype) {
             truncateSchema([field['items'].subtype]);
-          }
-
-          else if (_.isArray(field['items'])) for (var i=0;i<field['items'].length;i++)
+          } else if (_.isArray(field['items'])) for (var i = 0; i < field['items'].length; i++)
             if (field['items'][i].subtype) {
               truncateSchema([field['items'][i].subtype]);
             }
@@ -795,22 +806,22 @@ function getQwQueryService(
     // in a given schema
     //
 
-    function isFieldNameInSchema(schema,fieldName) {
+    function isFieldNameInSchema(schema, fieldName) {
       // all schemas have the name "*"
       if (fieldName == "*")
         return true;
       // the field name might be a plain string, it might be suffixed with "[]", and it might
       // have a subfield expression starting with a "."
       var firstDot = fieldName.indexOf(".");
-      var fieldPrefix = fieldName.substring(0,(firstDot >= 0 ? firstDot : fieldName.length));
-      var fieldSuffix = (firstDot >= 0 ? fieldName.substring(firstDot+1) : "");
+      var fieldPrefix = fieldName.substring(0, (firstDot >= 0 ? firstDot : fieldName.length));
+      var fieldSuffix = (firstDot >= 0 ? fieldName.substring(firstDot + 1) : "");
       var arrayIndex = fieldPrefix.indexOf("[");
       if (arrayIndex >= 0)
-        fieldPrefix = fieldPrefix.substring(0,fieldPrefix.indexOf("["));
+        fieldPrefix = fieldPrefix.substring(0, fieldPrefix.indexOf("["));
 
       //console.log("fieldPrefix: *" + fieldPrefix + "* suffix: *" + fieldSuffix + "*");
 
-      for (var i=0; i< schema.length; i++) // for each flavor
+      for (var i = 0; i < schema.length; i++) // for each flavor
         for (var field_name in schema[i]['properties']) {
           if (field_name == fieldPrefix) { // found a possible match
             //console.log("  got match");
@@ -824,18 +835,16 @@ function getQwQueryService(
             // if we had an array expr, check each subtype's subfields against the array schema
             if (arrayIndex > -1 && _.isArray(field['items'])) {
               for (var arrType = 0; arrType < field['items'].length; arrType++)
-                if (isFieldNameInSchema([field['items'][arrType].subtype],fieldSuffix))
+                if (isFieldNameInSchema([field['items'][arrType].subtype], fieldSuffix))
                   return true;
-            }
-
-            else if (arrayIndex > -1 && field.items.subtype) {
-              if (isFieldNameInSchema([field.items.subtype],fieldSuffix))
+            } else if (arrayIndex > -1 && field.items.subtype) {
+              if (isFieldNameInSchema([field.items.subtype], fieldSuffix))
                 return true;
             }
 
             // if we have a non-array, check the subschema
             else if (arrayIndex == -1 && field['properties'] &&
-                isFieldNameInSchema([field],fieldSuffix))
+              isFieldNameInSchema([field], fieldSuffix))
               return true;
           }
         }
@@ -859,21 +868,23 @@ function getQwQueryService(
 
     function canCreateBlankQuery() {
       return (currentQueryIndex >= 0 &&
-          currentQueryIndex == pastQueries.length - 1 &&
-          getCurrentResult().query.trim() === pastQueries[pastQueries.length-1].query.trim() &&
-          getCurrentResult().status != newQueryTemplate.status);
+        currentQueryIndex == pastQueries.length - 1 &&
+        getCurrentResult().query.trim() === pastQueries[pastQueries.length - 1].query.trim() &&
+        getCurrentResult().status != newQueryTemplate.status);
     }
-    function hasPrevResult() {return currentQueryIndex > 0;}
+
+    function hasPrevResult() {
+      return currentQueryIndex > 0;
+    }
 
     // we can go forward if we're back in the history, or if we are at the end and
     // want to create a blank history element
     function hasNextResult() {
-      return (currentQueryIndex < pastQueries.length-1) ||
-      canCreateBlankQuery();
+      return (currentQueryIndex < pastQueries.length - 1) ||
+        canCreateBlankQuery();
     }
 
-    function prevResult()
-    {
+    function prevResult() {
       if (currentQueryIndex > 0) // can't go earlier than the 1st
       {
         // if the current query was edited but not run, restore query to match results
@@ -886,9 +897,8 @@ function getQwQueryService(
       }
     }
 
-    function nextResult()
-    {
-      if (currentQueryIndex < pastQueries.length -1) // can we go forward?
+    function nextResult() {
+      if (currentQueryIndex < pastQueries.length - 1) // can we go forward?
       {
         // if the current query was edited but not run, restore query to match results
         if (getCurrentResult().savedQuery && getCurrentResult().savedQuery != getCurrentResult().query)
@@ -908,8 +918,8 @@ function getQwQueryService(
     function addNewQueryAtEndOfHistory(query) {
       // if the end of the history is a blank query, add it there.
 
-      if (pastQueries.length > 0 && pastQueries[pastQueries.length -1].query.length == 0) {
-        pastQueries[pastQueries.length -1].query = query;
+      if (pastQueries.length > 0 && pastQueries[pastQueries.length - 1].query.length == 0) {
+        pastQueries[pastQueries.length - 1].query = query;
       }
 
       // otherwise, add a new query at the end of history
@@ -917,7 +927,7 @@ function getQwQueryService(
       else {
         var newResult = newQueryTemplate.clone();
         if (query)
-          newResult.query  = query;
+          newResult.query = query;
         else
           newResult.query = "";
         pastQueries.push(newResult);
@@ -932,8 +942,8 @@ function getQwQueryService(
 
       // if the end of the history is a blank query, add it there.
 
-      if (pastQueries.length > 0 && pastQueries[pastQueries.length -1].query.length == 0) {
-        pastQueries[pastQueries.length -1].query = newResult;
+      if (pastQueries.length > 0 && pastQueries[pastQueries.length - 1].query.length == 0) {
+        pastQueries[pastQueries.length - 1].query = newResult;
       }
 
       // otherwise, add a new query at the end of history
@@ -977,12 +987,12 @@ function getQwQueryService(
       // did they specify an index to delete?
       var delIndex = (index || index === 0) ? index : currentQueryIndex;
 
-      pastQueries.splice(delIndex,1);
+      pastQueries.splice(delIndex, 1);
       if (currentQueryIndex >= pastQueries.length)
         currentQueryIndex = pastQueries.length - 1;
 
       //if (currentQueryIndex >= 0)
-        //lastResult.copyIn(pastQueries[currentQueryIndex]);
+      //lastResult.copyIn(pastQueries[currentQueryIndex]);
       // did they delete everything?
 //      else {
 //        //lastResult.copyIn(dummyResult);
@@ -1005,18 +1015,21 @@ function getQwQueryService(
      * @license MIT license
      * @link http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
      **/
-    var UUID = (function() {
+    var UUID = (function () {
       var self = {};
-      var lut = []; for (var i=0; i<256; i++) { lut[i] = (i<16?'0':'')+(i).toString(16); }
-      self.generate = function() {
-        var d0 = Math.random()*0xffffffff|0;
-        var d1 = Math.random()*0xffffffff|0;
-        var d2 = Math.random()*0xffffffff|0;
-        var d3 = Math.random()*0xffffffff|0;
-        return lut[d0&0xff]+lut[d0>>8&0xff]+lut[d0>>16&0xff]+lut[d0>>24&0xff]+'-'+
-        lut[d1&0xff]+lut[d1>>8&0xff]+'-'+lut[d1>>16&0x0f|0x40]+lut[d1>>24&0xff]+'-'+
-        lut[d2&0x3f|0x80]+lut[d2>>8&0xff]+'-'+lut[d2>>16&0xff]+lut[d2>>24&0xff]+
-        lut[d3&0xff]+lut[d3>>8&0xff]+lut[d3>>16&0xff]+lut[d3>>24&0xff];
+      var lut = [];
+      for (var i = 0; i < 256; i++) {
+        lut[i] = (i < 16 ? '0' : '') + (i).toString(16);
+      }
+      self.generate = function () {
+        var d0 = Math.random() * 0xffffffff | 0;
+        var d1 = Math.random() * 0xffffffff | 0;
+        var d2 = Math.random() * 0xffffffff | 0;
+        var d3 = Math.random() * 0xffffffff | 0;
+        return lut[d0 & 0xff] + lut[d0 >> 8 & 0xff] + lut[d0 >> 16 & 0xff] + lut[d0 >> 24 & 0xff] + '-' +
+          lut[d1 & 0xff] + lut[d1 >> 8 & 0xff] + '-' + lut[d1 >> 16 & 0x0f | 0x40] + lut[d1 >> 24 & 0xff] + '-' +
+          lut[d2 & 0x3f | 0x80] + lut[d2 >> 8 & 0xff] + '-' + lut[d2 >> 16 & 0xff] + lut[d2 >> 24 & 0xff] +
+          lut[d3 & 0xff] + lut[d3 >> 8 & 0xff] + lut[d3 >> 16 & 0xff] + lut[d3 >> 24 & 0xff];
       }
       return self;
     })();
@@ -1030,7 +1043,7 @@ function getQwQueryService(
       // is currently running, and cancel that.
       if (queryResult.batch_results) {
         let i;
-        for (i=0; i<queryResult.batch_results.length; i++) if (queryResult.batch_results[i].busy) {
+        for (i = 0; i < queryResult.batch_results.length; i++) if (queryResult.batch_results[i].busy) {
           queryResult = queryResult.batch_results[i]; // cancel this child
           break;
         }
@@ -1048,17 +1061,17 @@ function getQwQueryService(
         var query = 'delete from system:active_requests where clientContextID = "' +
           queryResult.client_context_id + '";';
 
-        executeQueryUtil(query,false)
+        executeQueryUtil(query, false)
 
-        .then(function success() {
+          .then(function success() {
 //        console.log("Success cancelling query.");
-        },
+            },
 
-        // sanity check - if there was an error put a message in the console.
-        function error(resp) {
-          logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
+            // sanity check - if there was an error put a message in the console.
+            function error(resp) {
+              logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
 //          console.log("Error cancelling query.");
-        });
+            });
 
       }
     }
@@ -1072,18 +1085,18 @@ function getQwQueryService(
       var query = 'delete from system:active_requests where requestId = "' +
         requestId + '";';
 
-      executeQueryUtil(query,false)
+      executeQueryUtil(query, false)
 
         .then(function success() {
 //        console.log("Success cancelling query.");
-        },
+          },
 
-      // sanity check - if there was an error put a message in the console.
-      function error(resp) {
-          logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
+          // sanity check - if there was an error put a message in the console.
+          function error(resp) {
+            logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
 //        var data = resp.data, status = resp.status;
 //        console.log("Error cancelling query: " + query);
-      });
+          });
     }
 
     //
@@ -1098,7 +1111,7 @@ function getQwQueryService(
 
     function executeQueryUtil(queryText, is_user_query) {
       //console.log("Running query: " + queryText);
-      var request = buildQueryRequest(queryText,is_user_query);
+      var request = buildQueryRequest(queryText, is_user_query);
 
       // if the request can't be built because the query is too big, return a dummy
       // promise that resolves immediately. This needs to follow the angular $http
@@ -1109,19 +1122,32 @@ function getQwQueryService(
         //dummy.success = function(fn) {/*nop*/ return(dummy);};
         //dummy.error = function(fn) {dummy.then(fn); return(dummy);};
         dummy.origThen = dummy.then;
-        dummy.then = function(fn1,fn2) {dummy.origThen(fn1,fn2); return(dummy);};
-        return(dummy);
+        dummy.then = function (fn1, fn2) {
+          dummy.origThen(fn1, fn2);
+          return (dummy);
+        };
+        return (dummy);
       }
 
-      return($http.do(request));
+      if ($http.do)
+        return($http.do(request));
+      else
+        return ($http(request));
     }
 
     function logWorkbenchError(errorText) {
-      $http.do({
+      if ($http.do)
+        $http.do({
           url: "/logClientError",
           method: "POST",
           data: errorText,
-      });
+        });
+      else
+        $http({
+          url: "/logClientError",
+          method: "POST",
+          data: errorText,
+        });
     }
 
     function buildQueryRequest(queryText, is_user_query, queryOptions) {
@@ -1133,8 +1159,8 @@ function getQwQueryService(
       //
 
       if (!_.isNumber(qwQueryService.options.query_timeout) ||
-          qwQueryService.options.query_timeout == 0)
-          qwQueryService.options.query_timeout = 600;
+        qwQueryService.options.query_timeout == 0)
+        qwQueryService.options.query_timeout = 600;
 
       var queryData = {statement: queryText, pretty: false, timeout: (qwQueryService.options.query_timeout + 's')};
 
@@ -1155,10 +1181,14 @@ function getQwQueryService(
           queryData.args = queryOptions.positional_parameters;
 
         if (queryOptions.named_parameters)
-          for (var i=0; i < queryOptions.named_parameters.length; i++)
+          for (var i = 0; i < queryOptions.named_parameters.length; i++)
             queryData[queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
 
         //console.log("Running query: " + JSON.stringify(queryData));
+        if (queryOptions.query_context_bucket)
+          queryData.query_context = 'default:' + queryOptions.query_context_bucket +
+            (queryOptions.query_context_scope ? ('.' + queryOptions.query_context_scope) + '' : '');
+        //console.log("Got query context: " + queryData.query_context);
       }
 
       // if the user might want to cancel it, give it an ID
@@ -1180,14 +1210,16 @@ function getQwQueryService(
       var queryRequest;
       var userAgent = 'Couchbase Query Workbench';
       if (mnAdmin.stream.prettyVersion)
-        userAgent += ' (' + mnAdmin.stream.prettyVersion + ')';
+        userAgent += ' (' + qwQueryService.version + ')';
 
       var queryRequest = {
         url: qwConstantsService.queryURL,
         method: "POST",
-        headers: {'Content-Type':'application/json','ns-server-proxy-timeout':
-                  (qwQueryService.options.query_timeout+1)*1000,
-                  'ignore-401':'true','CB-User-Agent': userAgent},
+        headers: {
+          'Content-Type': 'application/json', 'ns-server-proxy-timeout':
+            (qwQueryService.options.query_timeout + 1) * 1000,
+          'ignore-401': 'true', 'CB-User-Agent': userAgent
+        },
         data: queryData,
         mnHttp: {
           isNotForm: true,
@@ -1208,13 +1240,13 @@ function getQwQueryService(
       //
 
       if (qwConstantsService.maxRequestSize &&
-          JSON.stringify(queryRequest).length >= qwConstantsService.maxRequestSize) {
+        JSON.stringify(queryRequest).length >= qwConstantsService.maxRequestSize) {
         showErrorDialog("Query too large for GUI, try using CLI or REST API directly.")
-        return(null);
+        return (null);
       }
 
       //console.log("Built query: " + JSON.stringify(queryRequest));
-      return(queryRequest);
+      return (queryRequest);
     }
 
     //
@@ -1227,12 +1259,14 @@ function getQwQueryService(
 
       for (var f in fields) {
         var firstDot = f.indexOf(".");
-        var bucketName = f.substring(0,firstDot);
+        var bucketName = f.substring(0, firstDot);
         var fieldName = f.substring(firstDot + 1);
         //console.log("Checking field: " + f + ", bucket: " + bucketName);
-        var bucket = _.find(qwQueryService.buckets,function (b) {return(b.id == bucketName);});
+        var bucket = _.find(qwQueryService.buckets, function (b) {
+          return (b.id == bucketName);
+        });
         if (bucket) {
-          if (bucket && bucket.schema.length > 0 && !isFieldNameInSchema(bucket.schema,fieldName)) {
+          if (bucket && bucket.schema.length > 0 && !isFieldNameInSchema(bucket.schema, fieldName)) {
             problem_fields.push({field: fieldName, bucket: bucket.id});
             //console.log("Field: " + fieldName + " is not o.k.");
             //console.log("  Got bucket schema: " + JSON.stringify(bucket.schema,null,2));
@@ -1240,7 +1274,7 @@ function getQwQueryService(
         }
       }
 
-      return(problem_fields);
+      return (problem_fields);
     }
 
     //
@@ -1314,17 +1348,21 @@ function getQwQueryService(
 
       // otherwise only a single query, run it
       else
-        queryExecutionPromise = executeSingleQuery(queryText,explainOnly,newResult)
-        .then(
-          function success() {
-            if (!newResult.status_success()) // if errors, go to tab 1
+        queryExecutionPromise = executeSingleQuery(queryText, explainOnly, newResult)
+          .then(
+            function success() {
+              if (!newResult.status_success()) // if errors, go to tab 1
+                qwQueryService.selectTab(1);
+            },
+            function error() {
               qwQueryService.selectTab(1);
-          },
-          function error() {qwQueryService.selectTab(1);}) // error, go to tab 1
+            }) // error, go to tab 1
           // when done, save the current state
-          .finally(function() {saveStateToStorage(); /*finishQuery(newResult);*/});
+          .finally(function () {
+            saveStateToStorage(); /*finishQuery(newResult);*/
+          });
 
-      return(queryExecutionPromise);
+      return (queryExecutionPromise);
     }
 
     //
@@ -1335,30 +1373,30 @@ function getQwQueryService(
 
       // if we successfully executed the final query, set the parent status to the status of the last query
       if (curIndex >= queryArray.length) {
-        finishParentQuery(parentResult,parentResult.batch_results.length - 1, false);
-        return(Promise.resolve); // success!
+        finishParentQuery(parentResult, parentResult.batch_results.length - 1, false);
+        return (Promise.resolve); // success!
       }
 
       // launch a query
-      parentResult.status = "Executing " + (curIndex+1) + "/" + queryArray.length;
+      parentResult.status = "Executing " + (curIndex + 1) + "/" + queryArray.length;
 
-      return executeSingleQuery(queryArray[curIndex],explainOnly,parentResult.batch_results[curIndex]).then(
-          function success() {
-            addBatchResultsToParent(parentResult, curIndex);
+      return executeSingleQuery(queryArray[curIndex], explainOnly, parentResult.batch_results[curIndex]).then(
+        function success() {
+          addBatchResultsToParent(parentResult, curIndex);
 
-            // only run the next query if this query was a success
-            if (parentResult.batch_results[curIndex].status_success()) {
-              runBatchQuery(parentResult, queryArray, curIndex+1, explainOnly);
-            }
-            // with failure, end the query
-            else
-              finishParentQuery(parentResult, curIndex, true);
-          },
-          // if we get failure, the parent status is the status of the last query to run
-          function fail() {
-            addBatchResultsToParent(parentResult, curIndex);
-            finishParentQuery(parentResult, curIndex, true);
+          // only run the next query if this query was a success
+          if (parentResult.batch_results[curIndex].status_success()) {
+            runBatchQuery(parentResult, queryArray, curIndex + 1, explainOnly);
           }
+          // with failure, end the query
+          else
+            finishParentQuery(parentResult, curIndex, true);
+        },
+        // if we get failure, the parent status is the status of the last query to run
+        function fail() {
+          addBatchResultsToParent(parentResult, curIndex);
+          finishParentQuery(parentResult, curIndex, true);
+        }
       );
     }
 
@@ -1374,7 +1412,7 @@ function getQwQueryService(
         parentResult.result = '';
         parentResult.explainResultText = '';
       }
-      // otherwise we need to create a new parent result array so that the
+        // otherwise we need to create a new parent result array so that the
       // directives doing $watch notice the change
       else {
         var newData = parentResult.data.slice();
@@ -1386,12 +1424,14 @@ function getQwQueryService(
           _sequence_num: childIndex + 1,
           _sequence_query: parentResult.batch_results[childIndex].query,
           _sequence_query_status: parentResult.batch_results[childIndex].status,
-          _sequence_result: parentResult.batch_results[childIndex].data}
+          _sequence_result: parentResult.batch_results[childIndex].data
+        }
       );
       parentResult.explainResult.push({
         _sequence_num: childIndex + 1,
         _sequence_query: parentResult.batch_results[childIndex].query,
-        _sequence_result: parentResult.batch_results[childIndex].explainResult});
+        _sequence_result: parentResult.batch_results[childIndex].explainResult
+      });
 
       parentResult.result = JSON.stringify(parentResult.data, null, '  ');
       parentResult.explainResultText = JSON.stringify(parentResult.explainResult, null, '  ');
@@ -1426,18 +1466,18 @@ function getQwQueryService(
 
       if (m[1]) result += m[1];
       if (m[2]) {
-        var seconds = Math.round(parseFloat(m[2])*10)/10;
+        var seconds = Math.round(parseFloat(m[2]) * 10) / 10;
         result += seconds + 's';
       }
       if (m[3]) {
-        var ms = Math.round(parseFloat(m[3])*10)/10;
+        var ms = Math.round(parseFloat(m[3]) * 10) / 10;
         result += ms + 'ms';
       }
       if (m[4]) {
-        var us = Math.round(parseFloat(m[4])*10)/10;
+        var us = Math.round(parseFloat(m[4]) * 10) / 10;
         result += us + 'µs';
       }
-      return(result)
+      return (result)
     }
 
     //
@@ -1451,7 +1491,7 @@ function getQwQueryService(
     //   marking the query as no longer busy when that happens
     //
 
-    function executeSingleQuery(queryText,explainOnly,newResult) {
+    function executeSingleQuery(queryText, explainOnly, newResult) {
       var pre_post_ms = new Date().getTime(); // when did we start?
       var promises = []; // we may run explain only, or explain + actual  query
       //console.log("Running query: " + queryText);
@@ -1470,34 +1510,34 @@ function getQwQueryService(
 
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
-      var queryIsAdvise  = /^\s*advise/gmi.test(queryText);
+      var queryIsAdvise = /^\s*advise/gmi.test(queryText);
       var explain_promise;
 
       // the result tabs can show data, explain results, or show advice. Make sure the tab setting is
       // appropriate for the query type
       switch (qwQueryService.outputTab) {
-      case 1: // JSON
-      case 2: // Table
-      case 3: // Tree
-        if (explainOnly)
-          qwQueryService.selectTab(4); // vis for EE, text for CE
-        else if (queryIsAdvise)
-          qwQueryService.selectTab(6);
-        // otherwise don't change it
-        break;
-      case 4: // visual plan
-      case 5: // plan text
-        if (!queryIsExplain && !explainOnly && !queryIsAdvise)
-          qwQueryService.selectTab(1);
-        else if (queryIsAdvise)
-          qwQueryService.selectTab(6);
-        break;
-      case 6: // advice tab
-        if (!queryIsExplain && !explainOnly && !queryIsAdvise)
-          qwQueryService.selectTab(1);
-        else if (queryIsExplain || explainOnly)
-          qwQueryService.selectTab(4); // vis for EE, text for CE
-        break;
+        case 1: // JSON
+        case 2: // Table
+        case 3: // Tree
+          if (explainOnly)
+            qwQueryService.selectTab(4); // vis for EE, text for CE
+          else if (queryIsAdvise)
+            qwQueryService.selectTab(6);
+          // otherwise don't change it
+          break;
+        case 4: // visual plan
+        case 5: // plan text
+          if (!queryIsExplain && !explainOnly && !queryIsAdvise)
+            qwQueryService.selectTab(1);
+          else if (queryIsAdvise)
+            qwQueryService.selectTab(6);
+          break;
+        case 6: // advice tab
+          if (!queryIsExplain && !explainOnly && !queryIsAdvise)
+            qwQueryService.selectTab(1);
+          else if (queryIsExplain || explainOnly)
+            qwQueryService.selectTab(4); // vis for EE, text for CE
+          break;
       }
 
       //
@@ -1516,118 +1556,121 @@ function getQwQueryService(
 
           // can't recover from error, finish query
           finishQuery(newResult);
-          return(Promise.reject("building query failed"));
+          return (Promise.reject("building query failed"));
         }
-        explain_promise = $http.do(explain_request)
-        .then(function success(resp) {
-          var data = resp.data, status = resp.status;
-          //
-          //console.log("explain success: " + JSON.stringify(data));
+        if ($http.do)
+          explain_promise = $http.do(explain_request);
+        else
+          explain_promise = $http(explain_request);
 
-          // if the query finished first and produced a plan, ignore
-          // the results of the 'explain'. Only proceed if no explainResult
+        explain_promise
+          .then(function success(resp) {
+              var data = resp.data, status = resp.status;
+              //
+              //console.log("explain success: " + JSON.stringify(data));
 
-          if (!newResult.explainResult) {
-            // now check the status of what came back
-            if (data && data.status == "success" && data.results && data.results.length > 0) try {
+              // if the query finished first and produced a plan, ignore
+              // the results of the 'explain'. Only proceed if no explainResult
+
+              if (!newResult.explainResult) {
+                // now check the status of what came back
+                if (data && data.status == "success" && data.results && data.results.length > 0) try {
+
+                  // if we aren't running a regular query, set the status for explain-only
+                  if (!((queryIsExplain && explainOnly) || !explainOnly))
+                    newResult.status = "explain success";
+
+                  if (data.metrics && newResult.elapsedTime != '') {
+                    newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+                    newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
+                    newResult.resultCount = data.metrics.resultCount;
+                    newResult.mutationCount = data.metrics.mutationCount;
+                    newResult.resultSize = data.metrics.resultSize;
+                    newResult.sortCount = data.metrics.sortCount;
+                  }
+
+                  var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
+                  newResult.explainResultText = JSON.stringify(data.results[0].plan, null, '    ');
+                  newResult.explainResult =
+                    {
+                      explain: data.results[0],
+                      analysis: lists,
+                      plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
+                    };
+
+                  if (_.isArray(lists.warnings) && lists.warnings.length > 0)
+                    newResult.warnings = JSON.stringify(lists.warnings);
+
+                  // let's check all the fields to make sure they are all valid
+                  var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
+                  if (problem_fields.length > 0)
+                    newResult.explainResult.problem_fields = problem_fields;
+                }
+                  // need to handle any exceptions that might occur
+                catch (exception) {
+                  console.log("Exception analyzing query plan: " + exception);
+                  newResult.explainResult = "Internal error generating query plan: " + exception;
+                  newResult.explainResultText = "Internal error generating query plan: " + exception;
+                  newResult.status = "explain error";
+                }
+
+                // if status != success
+                else if (data.errors) {
+                  newResult.explainResult = data.errors;
+                  newResult.explainResult.query = explain_request.data.statement;
+                  newResult.explainResultText = JSON.stringify(data.errors, null, '    ');
+                  newResult.status = "explain error";
+                } else {
+                  newResult.explainResult = {'error': 'No server response for explain.'};
+                  newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '    ');
+                  newResult.status = "explain error";
+                }
+              }
+            },
+            /* error response from $http */
+            function error(resp) {
+              var data = resp.data, status = resp.status;
+              //console.log("Explain error Data: " + JSON.stringify(data));
+              //console.log("Explain error Status: " + JSON.stringify(status));
 
               // if we aren't running a regular query, set the status for explain-only
               if (!((queryIsExplain && explainOnly) || !explainOnly))
-                newResult.status = "explain success";
+                newResult.status = status || "explain error";
 
-              if (data.metrics && newResult.elapsedTime != '') {
-                newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
-                newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
-                newResult.resultCount = data.metrics.resultCount;
-                newResult.mutationCount = data.metrics.mutationCount;
-                newResult.resultSize = data.metrics.resultSize;
-                newResult.sortCount = data.metrics.sortCount;
+              // we only want to pay attention to the result if the query hasn't finished
+              // already and generated a more definitive query plan
+
+              if (!newResult.explainResult) {
+
+                if (data && _.isString(data)) {
+                  newResult.explainResult = {errors: data};
+                  newResult.explainResult.query_from_user = explain_request.data.statement;
+                } else if (data && data.errors) {
+                  if (data.errors.length > 0)
+                    data.errors[0].query_from_user = explain_request.data.statement;
+                  newResult.explainResult = {errors: data.errors};
+                } else {
+                  newResult.explainResult = {errors: "Unknown error getting explain plan"};
+                  newResult.explainResult.query_from_user = explain_request.data.statement;
+                }
+
+                newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
+
+                // if the query hasn't returned metrics, include the explain metrics,
+                // so they know how long it took before the error
+
+                if (data.metrics && newResult.elapsedTime != '') {
+                  newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+                  newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
+                  newResult.resultCount = data.metrics.resultCount;
+                  newResult.mutationCount = data.metrics.mutationCount;
+                  newResult.resultSize = data.metrics.resultSize;
+                  newResult.sortCount = data.metrics.sortCount;
+                }
               }
 
-              var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
-              newResult.explainResultText = JSON.stringify(data.results[0].plan, null, '    ');
-              newResult.explainResult =
-              {explain: data.results[0],
-                  analysis: lists,
-                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
-              };
-
-              if (_.isArray(lists.warnings) && lists.warnings.length > 0)
-                newResult.warnings = JSON.stringify(lists.warnings);
-
-              // let's check all the fields to make sure they are all valid
-              var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
-              if (problem_fields.length > 0)
-                newResult.explainResult.problem_fields = problem_fields;
-            }
-            // need to handle any exceptions that might occur
-            catch (exception) {
-              console.log("Exception analyzing query plan: " + exception);
-              newResult.explainResult = "Internal error generating query plan: " + exception;
-              newResult.explainResultText = "Internal error generating query plan: " + exception;
-              newResult.status = "explain error";
-            }
-
-            // if status != success
-            else if (data.errors) {
-              newResult.explainResult = data.errors;
-              newResult.explainResult.query = explain_request.data.statement;
-              newResult.explainResultText = JSON.stringify(data.errors, null, '    ');
-              newResult.status = "explain error";
-            }
-            else {
-              newResult.explainResult = {'error': 'No server response for explain.'};
-              newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '    ');
-              newResult.status = "explain error";
-            }
-          }
-        },
-        /* error response from $http */
-        function error(resp) {
-          var data = resp.data, status = resp.status;
-          //console.log("Explain error Data: " + JSON.stringify(data));
-          //console.log("Explain error Status: " + JSON.stringify(status));
-
-          // if we aren't running a regular query, set the status for explain-only
-          if (!((queryIsExplain && explainOnly) || !explainOnly))
-            newResult.status = status || "explain error";
-
-          // we only want to pay attention to the result if the query hasn't finished
-          // already and generated a more definitive query plan
-
-          if (!newResult.explainResult) {
-
-            if (data && _.isString(data)) {
-              newResult.explainResult = {errors: data};
-              newResult.explainResult.query_from_user = explain_request.data.statement;
-            }
-            else if (data && data.errors) {
-              if (data.errors.length > 0)
-                data.errors[0].query_from_user = explain_request.data.statement;
-              newResult.explainResult = {errors: data.errors};
-            }
-            else {
-              newResult.explainResult = {errors: "Unknown error getting explain plan"};
-              newResult.explainResult.query_from_user = explain_request.data.statement;
-            }
-
-            newResult.explainResultText = JSON.stringify(newResult.explainResult, null, '  ');
-
-            // if the query hasn't returned metrics, include the explain metrics,
-            // so they know how long it took before the error
-
-            if (data.metrics && newResult.elapsedTime != '') {
-              newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
-              newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
-              newResult.resultCount = data.metrics.resultCount;
-              newResult.mutationCount = data.metrics.mutationCount;
-              newResult.resultSize = data.metrics.resultSize;
-              newResult.sortCount = data.metrics.sortCount;
-            }
-          }
-
-          return(Promise.resolve()); // don't want to short circuit resolution of other promises
-        });
+              return (Promise.resolve()); // don't want to short circuit resolution of other promises
+            });
 
         promises.push(explain_promise);
       }
@@ -1653,211 +1696,222 @@ function getQwQueryService(
           newResult.resultSize = 0;
 
           // make sure to only finish if the explain query is also done
-          return(Promise.reject("building explain query failed"));
+          return (Promise.reject("building explain query failed"));
         }
-        var query_promise = $http.do(request)
+        var query_promise;
+
+        if ($http.do)
+          query_promise = $http.do(request);
+        else
+          query_promise = $http(request);
+
         // SUCCESS!
-        .then(function success(resp) {
-          var data = resp.data, status = resp.status;
+        query_promise
+          .then(function success(resp) {
+              var data = resp.data, status = resp.status;
 //          console.log("Success for query: " + queryText);
 //        console.log("Success Data: " + JSON.stringify(data));
 //        console.log("Success Status: " + JSON.stringify(status));
 
-          // Even though we got a successful HTTP response, it might contain warnings or errors
-          // We need to be able to show both errors and partial results, or if there are no results
-          // just the errors
+              // Even though we got a successful HTTP response, it might contain warnings or errors
+              // We need to be able to show both errors and partial results, or if there are no results
+              // just the errors
 
-          var result; // hold the result, or a combination of errors and result
-          var isEmptyResult = (!_.isArray(data.results) || data.results.length == 0);
+              var result; // hold the result, or a combination of errors and result
+              var isEmptyResult = (!_.isArray(data.results) || data.results.length == 0);
 
-          // empty result, fill it with any errors or warnings
-          if (isEmptyResult) {
-            if (data.errors)
-              result = data.errors;
-            else if (data.warnings)
-              result = data.warnings;
+              // empty result, fill it with any errors or warnings
+              if (isEmptyResult) {
+                if (data.errors)
+                  result = data.errors;
+                else if (data.warnings)
+                  result = data.warnings;
 
-            // otherwise show some context, make it obvious that results are empty
-            else {
-              result = {};
-              result.results = data.results;
-            }
-          }
-          // non-empty result: use it
-          else
-            result = data.results;
+                // otherwise show some context, make it obvious that results are empty
+                else {
+                  result = {};
+                  result.results = data.results;
+                }
+              }
+              // non-empty result: use it
+              else
+                result = data.results;
 
-          // if we have results, but also errors, record them in the result's warning object
-          if (data.warnings && data.errors)
-            newResult.warnings = "'" + JSON.stringify(data.warnings,null,2) + JSON.stringify(data.errors,null,2) + "'";
-          else if (data.warnings)
-            newResult.warnings = "'" + JSON.stringify(data.warnings,null,2) + "'";
-          else if (data.errors)
-            newResult.warnings = "'" + JSON.stringify(data.errors,null,2) + "'";
-          if (data.status == "stopped") {
-            result = {status: "Query stopped on server."};
-          }
+              // if we have results, but also errors, record them in the result's warning object
+              if (data.warnings && data.errors)
+                newResult.warnings = "'" + JSON.stringify(data.warnings, null, 2) + JSON.stringify(data.errors, null, 2) + "'";
+              else if (data.warnings)
+                newResult.warnings = "'" + JSON.stringify(data.warnings, null, 2) + "'";
+              else if (data.errors)
+                newResult.warnings = "'" + JSON.stringify(data.errors, null, 2) + "'";
+              if (data.status == "stopped") {
+                result = {status: "Query stopped on server."};
+              }
 
-          if (_.isString(newResult.warnings))
-            newResult.warnings = newResult.warnings.replace(/\n/g,'<br>').replace(/ /g,'&nbsp;');
+              if (_.isString(newResult.warnings))
+                newResult.warnings = newResult.warnings.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
 
-          // if we got no metrics, create a dummy version
-          if (!data.metrics) {
-            data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
-          }
+              // if we got no metrics, create a dummy version
+              if (!data.metrics) {
+                data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
+              }
 
-          newResult.status = data.status;
-          newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
-          newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
-          newResult.resultCount = data.metrics.resultCount;
-          if (data.metrics.mutationCount)
-            newResult.mutationCount = data.metrics.mutationCount;
-          newResult.resultSize = data.metrics.resultSize;
-          newResult.sortCount = data.metrics.sortCount;
-          if (data.rawJSON)
-            newResult.result = data.rawJSON;
-          else
-            newResult.result = angular.toJson(result, true);
-          newResult.data = result;
-          newResult.requestID = data.requestID;
+              newResult.status = data.status;
+              newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+              newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
+              newResult.resultCount = data.metrics.resultCount;
+              if (data.metrics.mutationCount)
+                newResult.mutationCount = data.metrics.mutationCount;
+              newResult.resultSize = data.metrics.resultSize;
+              newResult.sortCount = data.metrics.sortCount;
+              if (data.rawJSON)
+                newResult.result = data.rawJSON;
+              else
+                newResult.result = angular.toJson(result, true);
+              newResult.data = result;
+              newResult.requestID = data.requestID;
 
-          // did we get query timings in the result? If so, update the plan
+              // did we get query timings in the result? If so, update the plan
 
-          if (data.profile && data.profile.executionTimings) try {
-            var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings,null);
-            newResult.explainResult =
-            {explain: data.profile.executionTimings,
-                analysis: lists,
-                plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.profile.executionTimings,null,lists)};
-            newResult.explainResultText = JSON.stringify(newResult.explainResult.explain,null,'  ');
+              if (data.profile && data.profile.executionTimings) try {
+                var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings, null);
+                newResult.explainResult =
+                  {
+                    explain: data.profile.executionTimings,
+                    analysis: lists,
+                    plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.profile.executionTimings, null, lists)
+                  };
+                newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
 
-            // let's check all the fields to make sure they are all valid
-            var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
-            if (problem_fields.length > 0)
-              newResult.explainResult.problem_fields = problem_fields;
-          }
+                // let's check all the fields to make sure they are all valid
+                var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
+                if (problem_fields.length > 0)
+                  newResult.explainResult.problem_fields = problem_fields;
+              }
 
-          // need to handle any exceptions that might occur
-          catch (exception) {
-            console.log("Exception analyzing query plan: " + exception);
-            newResult.explainResult = "Internal error generating query plan: " + exception;
-          }
+                // need to handle any exceptions that might occur
+              catch (exception) {
+                console.log("Exception analyzing query plan: " + exception);
+                newResult.explainResult = "Internal error generating query plan: " + exception;
+              }
 
-          // if this was an explain query, analyze the results to get us a graphical plan
+              // if this was an explain query, analyze the results to get us a graphical plan
 
-          if (queryIsExplain && data.results && data.results[0] && data.results[0].plan) try {
-            var lists = qwQueryPlanService.analyzePlan(data.results[0].plan,null);
-            newResult.explainResult =
-            {explain: data.results[0],
-                analysis: lists,
-                plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan,null,lists)
-                /*,
-              buckets: qwQueryService.buckets,
-              tokens: qwQueryService.autoCompleteTokens*/};
-            newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
-          }
-          // need to handle any exceptions that might occur
-          catch (exception) {
-            console.log("Exception analyzing query plan: " + exception);
-            newResult.explainResult = "Internal error generating query plan: " + exception;
-            //newResult.explainResultText = "Internal error generating query plan: " + exception;
-          }
+              if (queryIsExplain && data.results && data.results[0] && data.results[0].plan) try {
+                var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
+                newResult.explainResult =
+                  {
+                    explain: data.results[0],
+                    analysis: lists,
+                    plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
+                    /*,
+                  buckets: qwQueryService.buckets,
+                  tokens: qwQueryService.autoCompleteTokens*/
+                  };
+                newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
+              }
+                // need to handle any exceptions that might occur
+              catch (exception) {
+                console.log("Exception analyzing query plan: " + exception);
+                newResult.explainResult = "Internal error generating query plan: " + exception;
+                //newResult.explainResultText = "Internal error generating query plan: " + exception;
+              }
 
-          // if the query was "advice select...", make sure the result gets put into advice
+              // if the query was "advice select...", make sure the result gets put into advice
 
-          if (queryIsAdvise) {
-            if (data && data.status == "success" && data.results && data.results.length > 0)
-              newResult.advice = data.results[0].advice.adviseinfo;
-            else
-              newResult.advice = newResult.result; // get the error message
-          }
+              if (queryIsAdvise) {
+                if (data && data.status == "success" && data.results && data.results.length > 0)
+                  newResult.advice = data.results[0].advice.adviseinfo;
+                else
+                  newResult.advice = newResult.result; // get the error message
+              }
 
 
-        },
-        /* error response from $http */
-        function error(resp) {
-          var data = resp.data, status = resp.status;
+            },
+            /* error response from $http */
+            function error(resp) {
+              var data = resp.data, status = resp.status;
 //        console.log("Error resp: " + JSON.stringify(resp));
 //        console.log("Error Data: " + JSON.stringify(data));
 
-          // if we don't get query metrics, estimate elapsed time
-          if (!data || !data.metrics) {
-            var post_ms = new Date().getTime();
-            newResult.elapsedTime = (post_ms - pre_post_ms) + "ms";
-            newResult.executionTime = newResult.elapsedTime;
-          }
+              // if we don't get query metrics, estimate elapsed time
+              if (!data || !data.metrics) {
+                var post_ms = new Date().getTime();
+                newResult.elapsedTime = (post_ms - pre_post_ms) + "ms";
+                newResult.executionTime = newResult.elapsedTime;
+              }
 
-          // no result at all? failure
-          if (data === undefined) {
-            newResult.result = '{"status": "Failure contacting server."}';
-            newResult.data = {status: "Failure contacting server."};
-            newResult.status = "errors";
-            newResult.resultCount = 0;
-            newResult.resultSize = 0;
-            return;
-          }
+              // no result at all? failure
+              if (data === undefined) {
+                newResult.result = '{"status": "Failure contacting server."}';
+                newResult.data = {status: "Failure contacting server."};
+                newResult.status = "errors";
+                newResult.resultCount = 0;
+                newResult.resultSize = 0;
+                return;
+              }
 
-          // data is null? query interrupted
-          if (data === null) {
-            newResult.result = '{"status": "Query interrupted."}';
-            newResult.data = {status: "Query interrupted."};
-            newResult.status = "errors";
-            newResult.resultCount = 0;
-            newResult.resultSize = 0;
-            return;
-          }
+              // data is null? query interrupted
+              if (data === null) {
+                newResult.result = '{"status": "Query interrupted."}';
+                newResult.data = {status: "Query interrupted."};
+                newResult.status = "errors";
+                newResult.resultCount = 0;
+                newResult.resultSize = 0;
+                return;
+              }
 
-          // result is a string? it must be an error message
-          if (_.isString(data)) {
-            newResult.data = {status: data};
-            if (status && status == 504) {
-              newResult.data.status_detail =
-                "The query workbench only supports queries running for " + qwQueryService.options.query_timeout +
-                " seconds. This value can be changed in the preferences dialog. You can also use cbq from the " +
-                "command-line for longer running queries. " +
-                "Certain DML queries, such as index creation, will continue in the " +
-                "background despite the user interface timeout.";
-            }
+              // result is a string? it must be an error message
+              if (_.isString(data)) {
+                newResult.data = {status: data};
+                if (status && status == 504) {
+                  newResult.data.status_detail =
+                    "The query workbench only supports queries running for " + qwQueryService.options.query_timeout +
+                    " seconds. This value can be changed in the preferences dialog. You can also use cbq from the " +
+                    "command-line for longer running queries. " +
+                    "Certain DML queries, such as index creation, will continue in the " +
+                    "background despite the user interface timeout.";
+                }
 
-            newResult.result = JSON.stringify(newResult.data,null,'  ');
-            newResult.status = "errors";
-            return;
-          }
+                newResult.result = JSON.stringify(newResult.data, null, '  ');
+                newResult.status = "errors";
+                return;
+              }
 
-          if (data.errors) {
-            if (_.isArray(data.errors) && data.errors.length >= 1)
-              data.errors[0].query = queryText;
-            newResult.data = data.errors;
-            newResult.result = JSON.stringify(data.errors,null,'  ');
-          }
+              if (data.errors) {
+                if (_.isArray(data.errors) && data.errors.length >= 1)
+                  data.errors[0].query = queryText;
+                newResult.data = data.errors;
+                newResult.result = JSON.stringify(data.errors, null, '  ');
+              }
 
-          if (status)
-            newResult.status = status;
-          else
-            newResult.status = "errors";
+              if (status)
+                newResult.status = status;
+              else
+                newResult.status = "errors";
 
-          if (data.metrics) {
-            newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
-            newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
-            newResult.resultCount = data.metrics.resultCount;
-            if (data.metrics.mutationCount)
-              newResult.mutationCount = data.metrics.mutationCount;
-            newResult.resultSize = data.metrics.resultSize;
-            newResult.sortCount = data.metrics.sortCount;
-          }
+              if (data.metrics) {
+                newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+                newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
+                newResult.resultCount = data.metrics.resultCount;
+                if (data.metrics.mutationCount)
+                  newResult.mutationCount = data.metrics.mutationCount;
+                newResult.resultSize = data.metrics.resultSize;
+                newResult.sortCount = data.metrics.sortCount;
+              }
 
-          if (data.requestID)
-            newResult.requestID = data.requestID;
+              if (data.requestID)
+                newResult.requestID = data.requestID;
 
-          // make sure to only finish if the explain query is also done
-          if (newResult.explainDone) {
-            // when we have errors, don't show the plan tabs
-            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
-              qwQueryService.selectTab(1);
-          }
+              // make sure to only finish if the explain query is also done
+              if (newResult.explainDone) {
+                // when we have errors, don't show the plan tabs
+                if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+                  qwQueryService.selectTab(1);
+              }
 
-          return(Promise.resolve()); // don't want to short circuit resolution of other promises
-        });
+              return (Promise.resolve()); // don't want to short circuit resolution of other promises
+            });
 
         promises.push(query_promise);
       }
@@ -1867,7 +1921,7 @@ function getQwQueryService(
       //
 
       if (!explainOnly && !queryIsAdvise) {
-        var advise_promise = runAdvise(queryText,newResult);
+        var advise_promise = runAdvise(queryText, newResult);
         if (advise_promise != null)
           promises.push(advise_promise);
       }
@@ -1875,10 +1929,14 @@ function getQwQueryService(
       // return a promise wrapping the one or two promises
       // when the queries are done, call finishQuery
 
-      return(Promise.all(promises).then(
-          function() {finishQuery(newResult);},
-          function() {finishQuery(newResult);}
-          ));
+      return (Promise.all(promises).then(
+        function () {
+          finishQuery(newResult);
+        },
+        function () {
+          finishQuery(newResult);
+        }
+      ));
     }
 
     //
@@ -1887,7 +1945,7 @@ function getQwQueryService(
 
     function runAdviseOnLatest() {
       var query = getCurrentResult();
-      var queryIsAdvise  = /^\s*advise/gmi.test(query.query);
+      var queryIsAdvise = /^\s*advise/gmi.test(query.query);
 
       // if the query already starts with 'advise', run it as a regular query
       if (queryIsAdvise) {
@@ -1913,93 +1971,102 @@ function getQwQueryService(
       query.data = {status: query.result};
       query.warnings = null;
       qwQueryService.selectTab(6);
-      runAdvise(getCurrentResult().query,getCurrentResult()).then(
-          function success(resp) {
-            if (query.advice == initialAdvice)
-              query.data = {adviseResult: resp};
-            else
-              query.data = {adviseResult: query.advice};
+      runAdvise(getCurrentResult().query, getCurrentResult()).then(
+        function success(resp) {
+          if (query.advice == initialAdvice)
+            query.data = {adviseResult: resp};
+          else
+            query.data = {adviseResult: query.advice};
 
-            query.result = JSON.stringify(query.data,null,2);
+          query.result = JSON.stringify(query.data, null, 2);
 
-            if (_.isString(query.advice))
-              query.status = "error";
-            else
-              query.status = "success";
+          if (_.isString(query.advice))
+            query.status = "error";
+          else
+            query.status = "success";
 
-            finishQuery(query);
-          },
-          function err(resp) {
-              query.advice = 'Query not advisable';
-              query.result = "Error getting advice."
-              query.data = {adviseResult: query.result};
-              query.status = "advise error";
-              finishQuery(query);
-          });
+          finishQuery(query);
+        },
+        function err(resp) {
+          query.advice = 'Query not advisable';
+          query.result = "Error getting advice."
+          query.data = {adviseResult: query.result};
+          query.status = "advise error";
+          finishQuery(query);
+        });
     };
 
-    function runAdvise(queryText,queryResult) {
+    function runAdvise(queryText, queryResult) {
       queryResult.lastRun = new Date();
 
-      var queryIsAdvisable = qwQueryService.pools && qwQueryService.pools &&
-        /^\s*select|merge|update|delete/gmi.test(queryText);
+      var queryIsAdvisable = /^\s*select|merge|update|delete/gmi.test(queryText);
 
       if (queryIsAdvisable && !multipleQueries(queryText)) {
         var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options);
         // log errors but ignore them
         if (!advise_request) {
           console.log("Couldn't build Advise query. ");
-          return(Promise.resolve("building advise query failed"));
+          return (Promise.resolve("building advise query failed"));
         }
-        var advise_promise = $http.do(advise_request)
-        .then(function success(resp) {
-          var data = resp.data, status = resp.status;
-          //
-          // if the query finished first and produced a plan, ignore
-          // the results of the 'explain'. Only proceed if no explainResult
+        var advise_promise;
 
-          // now check the status of what came back
-          if (data && data.status == "success" && data.results && data.results.length > 0) try {
-            //console.log("Advise success: " + JSON.stringify(data.results[0]));
-              queryResult.advice = data.results[0].advice.adviseinfo;
-          }
-          // need to handle any exceptions that might occur
-          catch (exception) {
-            console.log("Exception analyzing advise plan: " + exception);
-          }
+        if ($http.do)
+          advise_promise = $http.do(advise_request);
+        else
+          advise_promise = $http(advise_request);
 
-          // if status != success
-          else if (data.errors) {
-            console.log("Advise errors: " + JSON.stringify(data.errors, null, '    '));
-            queryResult.advice = "Error getting index advice, status: " + status;
-            if (status == 504)
-              queryResult.advice += " (server timeout)";
-            if (data && _.isArray(data.errors))
-              data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
-          }
-          else {
-            console.log("Unknown advise response: " + JSON.stringify(resp));
-            queryResult.advice = "Unknown response from server.";
-          }
-        },
-        /* error response from $http, log error but otherwise ignore */
-        function error(resp) {
-          var data = resp.data, status = resp.status;
-          //console.log("Advise error Data: " + JSON.stringify(data));
-          //console.log("Advise error Status: " + JSON.stringify(status));
-          queryResult.advice = "Error getting index advice, status: " + status;
-          if (status == 504)
-            queryResult.advice += " (server timeout)";
-          if (data && _.isArray(data.errors))
-            data.errors.forEach(function (err) {queryResult.advice += ", " + err.msg;});
+        advise_promise
+          .then(function success(resp) {
+              var data = resp.data, status = resp.status;
+              //
+              // if the query finished first and produced a plan, ignore
+              // the results of the 'explain'. Only proceed if no explainResult
 
-          return(Promise.resolve()); // don't want to short circuit resolution of other promises
-        });
+              // now check the status of what came back
+              if (data && data.status == "success" && data.results && data.results.length > 0) try {
+                //console.log("Advise success: " + JSON.stringify(data.results[0]));
+                queryResult.advice = data.results[0].advice.adviseinfo;
+              }
+                // need to handle any exceptions that might occur
+              catch (exception) {
+                console.log("Exception analyzing advise plan: " + exception);
+              }
+
+              // if status != success
+              else if (data.errors) {
+                console.log("Advise errors: " + JSON.stringify(data.errors, null, '    '));
+                queryResult.advice = "Error getting index advice, status: " + status;
+                if (status == 504)
+                  queryResult.advice += " (server timeout)";
+                if (data && _.isArray(data.errors))
+                  data.errors.forEach(function (err) {
+                    queryResult.advice += ", " + err.msg;
+                  });
+              } else {
+                console.log("Unknown advise response: " + JSON.stringify(resp));
+                queryResult.advice = "Unknown response from server.";
+              }
+            },
+            /* error response from $http, log error but otherwise ignore */
+            function error(resp) {
+              var data = resp.data, status = resp.status;
+              //console.log("Advise error Data: " + JSON.stringify(data));
+              //console.log("Advise error Status: " + JSON.stringify(status));
+              queryResult.advice = "Error getting index advice, status: " + status;
+              if (status == 504)
+                queryResult.advice += " (server timeout)";
+              if (data && _.isArray(data.errors))
+                data.errors.forEach(function (err) {
+                  queryResult.advice += ", " + err.msg;
+                });
+
+              return (Promise.resolve()); // don't want to short circuit resolution of other promises
+            });
 
         return advise_promise;
       }
 
-      return(Promise.resolve("Query is not advisable"));
+      return (Promise.resolve("Query is not advisable"));
     }
 
     // convenience function to determine whether a query result has actionable advice
@@ -2007,7 +2074,7 @@ function getQwQueryService(
       if (!queryResult || !queryResult.advice || !_.isArray(queryResult.advice))
         return false;
 
-      return(queryResult.advice.some(function (element) {
+      return (queryResult.advice.some(function (element) {
         return element.recommended_indexes &&
           (element.recommended_indexes.covering_indexes || element.recommended_indexes.indexes);
       }));
@@ -2059,10 +2126,17 @@ function getQwQueryService(
       var query = "foo";
 
       switch (category) {
-      case 1: query = query1; break;
-      case 2: query = query2; break;
-      case 3: query = query3; break;
-      default: return;
+        case 1:
+          query = query1;
+          break;
+        case 2:
+          query = query2;
+          break;
+        case 3:
+          query = query3;
+          break;
+        default:
+          return;
       }
 
       var result = [];
@@ -2070,127 +2144,144 @@ function getQwQueryService(
       //console.log("Got query: " + query);
 
 //      var config = {headers: {'Content-Type':'application/json','ns-server-proxy-timeout':20000}};
-     // console.log("Running monitoring cat: " + category + ", query: " + payload.statement);
+      // console.log("Running monitoring cat: " + category + ", query: " + payload.statement);
 
-      return(executeQueryUtil(query,false))
-      .then(function success(response) {
-        var data = response.data;
-        var status = response.status;
-        var headers = response.headers;
-        var config = response.config;
+      return (executeQueryUtil(query, false))
+        .then(function success(response) {
+            var data = response.data;
+            var status = response.status;
+            var headers = response.headers;
+            var config = response.config;
 
-        if (data.status == "success") {
-          result = data.results;
+            if (data.status == "success") {
+              result = data.results;
 
-          // we need to reformat the duration values coming back
-          // since they are in the most useless format ever.
+              // we need to reformat the duration values coming back
+              // since they are in the most useless format ever.
 
-          for (var i=0; i< result.length; i++) if (result[i].elapsedTime) {
-            result[i].elapsedTime = qwQueryPlanService.convertTimeToNormalizedString(result[i].elapsedTime);
-          }
-        }
-        else {
-          result = [data.errors];
-        }
+              for (var i = 0; i < result.length; i++) if (result[i].elapsedTime) {
+                result[i].elapsedTime = qwQueryPlanService.convertTimeToNormalizedString(result[i].elapsedTime);
+              }
+            } else {
+              result = [data.errors];
+            }
 
-        switch (category) {
-        case 1:
-          qwQueryService.monitoring.active_requests = result;
-          qwQueryService.monitoring.active_updated = new Date();
-          break;
-        case 2:
-          qwQueryService.monitoring.completed_requests = result;
-          qwQueryService.monitoring.completed_updated = new Date();
-          break;
-        case 3:
-          qwQueryService.monitoring.prepareds = result;
-          qwQueryService.monitoring.prepareds_updated = new Date();
-          break;
-        }
+            switch (category) {
+              case 1:
+                qwQueryService.monitoring.active_requests = result;
+                qwQueryService.monitoring.active_updated = new Date();
+                break;
+              case 2:
+                qwQueryService.monitoring.completed_requests = result;
+                qwQueryService.monitoring.completed_updated = new Date();
+                break;
+              case 3:
+                qwQueryService.monitoring.prepareds = result;
+                qwQueryService.monitoring.prepareds_updated = new Date();
+                break;
+            }
 
 
-      },
-      function error(response) {
-        var data = response.data;
-        var status = response.status;
-        var headers = response.headers;
-        var config = response.config;
+          },
+          function error(response) {
+            var data = response.data;
+            var status = response.status;
+            var headers = response.headers;
+            var config = response.config;
 
-        //console.log("Mon Error Data: " + JSON.stringify(data));
-        //console.log("Mon Error Status: " + JSON.stringify(status));
-        //console.log("Mon Error Headers: " + JSON.stringify(headers));
-        //console.log("Mon Error Config: " + JSON.stringify(config));
-        var error = "Error with query monitoring";
+            //console.log("Mon Error Data: " + JSON.stringify(data));
+            //console.log("Mon Error Status: " + JSON.stringify(status));
+            //console.log("Mon Error Headers: " + JSON.stringify(headers));
+            //console.log("Mon Error Config: " + JSON.stringify(config));
+            var error = "Error with query monitoring";
 
-        if (data && data.errors)
-          error = error + ": " + JSON.stringify(data.errors);
-        else if (status && _.isString(data))
-          error = error + ", query service returned status: " + status + ", " + data;
-        else if (status)
-          error = error + ", query service returned status: " + status;
+            if (data && data.errors)
+              error = error + ": " + JSON.stringify(data.errors);
+            else if (status && _.isString(data))
+              error = error + ", query service returned status: " + status + ", " + data;
+            else if (status)
+              error = error + ", query service returned status: " + status;
 
-        logWorkbenchError(error);
+            logWorkbenchError(error);
 //        console.log("Got error: " + error);
 
-        switch (category) {
-        case 1:
-          qwQueryService.monitoring.active_requests = [{statment: error}];
-          qwQueryService.monitoring.active_updated = new Date();
-          break;
-        case 2:
-          qwQueryService.monitoring.completed_requests = [{statement: error}];
-          qwQueryService.monitoring.completed_updated = new Date();
-          break;
-        case 3:
-          qwQueryService.monitoring.prepareds = [{statement: error}];
-          qwQueryService.monitoring.prepareds_updated = new Date();
-          break;
-        }
+            switch (category) {
+              case 1:
+                qwQueryService.monitoring.active_requests = [{statment: error}];
+                qwQueryService.monitoring.active_updated = new Date();
+                break;
+              case 2:
+                qwQueryService.monitoring.completed_requests = [{statement: error}];
+                qwQueryService.monitoring.completed_updated = new Date();
+                break;
+              case 3:
+                qwQueryService.monitoring.prepareds = [{statement: error}];
+                qwQueryService.monitoring.prepareds_updated = new Date();
+                break;
+            }
 
-      });
+          });
     };
 
     //
     // whenever the system changes, we need to update the list of valid buckets
     //
 
-    // TODO: find replacement for $on in Angular2
-    //$rootScope.$on("bucketUriChanged",updateBuckets);
-    //$rootScope.$on("checkBucketCounts",updateBucketCounts);
+    //$rootScope.$on("indexStatusURIChanged",updateBuckets/*function() {console.log("indexStatusURIChanged")}*/);
+    // if ($rootScope) {
+    //   $rootScope.$on("bucketUriChanged", updateBuckets);
+    //   $rootScope.$on("checkBucketCounts", updateBucketCounts);
+    // }
 
-    function updateBuckets(event,data) {
+    function updateBuckets(event, data) {
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
-    // get the number of docs in each bucket for which we have access
+    //
+    // get the number of docs in each visible collection on the screen
+    //
     function updateBucketCounts() {
       // build a query to get the doc count for each bucket that we know about
       var queryString = "select raw {";
-      var bucketCount = 0;
-      qwQueryService.buckets.forEach(function (bucket) {
-        if (!bucket.schema_error) {
-          if (bucketCount > 0) // second and subsequent buckets need a comma
-            queryString += ',';
+      var collectionCount = 0;
 
-          bucketCount++;
-          queryString += '"' + bucket.id + '" : (select raw count(*) from `' + bucket.id + '`)[0]';
-        }
+      qwQueryService.buckets.forEach(function (bucket) {
+        if (bucket.expanded) bucket.collections.forEach(function (collection) {
+          var scope = bucket.scopeArray.find(scope => scope.id == collection.scope);
+
+          if (!collection.schema_error && ((bucket.scopeArray.length == 1) || scope && scope.expanded)) {
+            if (collectionCount > 0) // second and subsequent buckets need a comma
+              queryString += ',';
+
+            collectionCount++;
+            var collection_path = '`' + collection.bucket + '`.`' + collection.scope + '`.`' + collection.id + '`';
+            queryString += '"' + collection_path + '" : (select raw count(*) from ' + collection_path + ')[0]';
+          }
+        })
       });
-      queryString +=  '}';
+      queryString += '}';
 
       // run the query, extract the document counts
-      executeQueryUtil(queryString, false)
-      .then(function success(resp) {
-        if (resp && resp.data && resp.data.results && resp.data.results.length)
-          qwQueryService.buckets.forEach(function (bucket) {
-            if (_.isNumber(resp.data.results[0][bucket.id]))
-              bucket.count = resp.data.results[0][bucket.id];
-          });
-      },
-      function error(resp) {
-        console.log("bucket count error: " + JSON.stringify(resp));
-      });
+      if (collectionCount)
+        executeQueryUtil(queryString, false)
+          .then(function success(resp) {
+              if (resp && resp.data && resp.data.results && resp.data.results.length)
+                qwQueryService.buckets.forEach(function (bucket) {
+                  if (bucket.expanded) bucket.collections.forEach(function (collection) {
+                    var collection_path = '`' + collection.bucket + '`.`' + collection.scope + '`.`' + collection.id + '`';
+                    if (_.isNumber(resp.data.results[0][collection_path]))
+                      collection.count = resp.data.results[0][collection_path];
+                  });
+                });
+            },
+            function error(resp) {
+              console.log("bucket count error: " + JSON.stringify(resp));
+            });
     }
+
+    //
+    // whenever we refresh the list of buckets, refresh the scope and collection info
+    //
 
     function updateBucketsCallback() {
       // make sure we have a query node
@@ -2200,262 +2291,355 @@ function getQwQueryService(
       //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 
-      var queryText = qwConstantsService.keyspaceQuery;
+      var queryText = "select keyspaces.* from system:keyspaces;";//qwConstantsService.keyspaceQuery;
 
       let res1 = executeQueryUtil(queryText, false)
-      .then(function success(resp) {
-        var data = resp.data, status = resp.status;
-
-        // remember the counts of each bucket so the screen doesn't blink when recomputing counts
-        var bucket_counts = {};
-        for (var i=0; i < qwQueryService.buckets.length; i++) {
-
-          bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
-        }
-
-        // initialize the data structure for holding all the buckets
-        qwQueryService.buckets.length = 0;
-        qwQueryService.bucket_errors = null;
-        qwQueryService.bucket_names.length = 0;
-        qwQueryService.autoCompleteTokens = {};
-
-        if (data && data.results) for (var i=0; i< data.results.length; i++) {
-          var bucket = data.results[i];
-          bucket.expanded = false;
-          bucket.schema = [];
-          bucket.indexes = [];
-          bucket.validated = !validateQueryService.validBuckets ||
-            _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1 ||
-            _.indexOf(validateQueryService.validBuckets(),".") != -1;
-          bucket.count = bucket_counts[bucket.id];
-          //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
-          if (bucket.validated) {
-            qwQueryService.buckets.push(bucket); // only include buckets we have access to
-            qwQueryService.bucket_names.push(bucket.id);
-          }
-          addToken(bucket.id,"bucket");
-          addToken('`' + bucket.id + '`',"bucket");
-        }
-
-        refreshAutoCompleteArray();
-
-        //
-        // Should we go get information for each bucket?
-        //
-
-        if (qwConstantsService.showSchemas && qwQueryService.options.auto_infer)
-          getInfoForBucketBackground(qwQueryService.buckets,0);
-
-        /////////////////////////////////////////////////////////////////////////
-        // now run a query to get the list of indexes
-        /////////////////////////////////////////////////////////////////////////
-
-        if (qwConstantsService.showSchemas) {
-          let queryText = 'select indexes.* from system:indexes where state = "online"';
-
-          let res1 = executeQueryUtil(queryText, false)
-          //res1 = $http.post("/_p/query/query/service",{statement : queryText})
-          .then(function (resp) {
+        .then(function success(resp) {
             var data = resp.data, status = resp.status;
 
-            //console.log("Got index info: " + JSON.stringify(data));
+            // remember the counts of each bucket so the screen doesn't blink when recomputing counts
+            var bucket_counts = {};
+            // for (var i=0; i < qwQueryService.buckets.length; i++) {
+            //
+            //   //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
+            // }
 
-            if (data && _.isArray(data.results)) {
-              qwQueryService.indexes = data.results;
-              // make sure each bucket knows about each relevant index
-              for (var i=0; i < data.results.length; i++) {
-                addToken(data.results[i].name,'index');
-                for (var b=0; b < qwQueryService.buckets.length; b++)
-                  if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
-                    qwQueryService.buckets[b].indexes.push(data.results[i]);
-                    break;
-                  }
+            // initialize the data structure for holding all the buckets
+            qwQueryService.buckets.length = 0;
+            qwQueryService.bucket_errors = null;
+            qwQueryService.bucket_names.length = 0;
+            qwQueryService.autoCompleteTokens = {};
+
+            if (data && data.results) {
+              // first pass over the data - get the buckets, who have a name but no scope
+              for (var i = 0; i < data.results.length; i++) if (data.results[i].id && !data.results[i].scope) {
+                var bucket = {
+                  name: data.results[i].name,
+                  id: data.results[i].id,
+                  expanded: isExpanded(data.results[i].id),
+                  schema: [],
+                  indexes: [],
+                  scopes: {},
+                  collections: []
+                };
+                bucket.validated = !validateQueryService.validBuckets ||
+                  _.indexOf(validateQueryService.validBuckets(), bucket.id) != -1 ||
+                  _.indexOf(validateQueryService.validBuckets(), ".") != -1;
+                bucket.count = bucket_counts[bucket.id];
+                if (bucket.validated) {
+                  qwQueryService.buckets.push(bucket); // only include buckets we have access to
+                  qwQueryService.bucket_names.push(bucket.id);
+                }
+                addToken(bucket.id, "bucket");
+                addToken('`' + bucket.id + '`', "bucket");
               }
+
+              // sort list of buckets
+              qwQueryService.buckets.sort((b1, b2) => (b1.name < b2.name) ? -1 : ((b1.name == b2.name) ? 0 : 1));
+
+              // second pass over the query result - get all the scopes and collections
+              for (var i = 0; i < data.results.length; i++) {
+                var record = data.results[i];
+                var bucket_id = record.bucket || record.id;
+                var scope_id = record.scope || '_default';
+                var coll_id = !record.bucket ? '_default' : record.id;
+                var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucket_id);
+                if (bucket) {
+                  bucket.scopes[scope_id] = true;
+                  var coll_expanded = isExpanded(bucket_id, scope_id, coll_id);
+                  var collection = {
+                    name: coll_id,
+                    id: coll_id,
+                    expanded: coll_expanded,
+                    bucket: bucket_id,
+                    scope: scope_id,
+                    schema: [],
+                    indexes: []
+                  };
+                  bucket.collections.push(collection);
+                }
+              }
+
+              // keep an array of scope names and expansion statuses
+              var collectionsToInfer = [];
+              qwQueryService.buckets.forEach(bucket => {
+                bucket.scopeArray = Object.keys(bucket.scopes)
+                  .map(function (scope_name) {
+                    return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
+                  });
+                bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
+
+                // also figure out which collections will need to be inferred
+                if (qwConstantsService.showSchemas)
+                  bucket.collections.forEach(collection => {
+                    if (collection.expanded)
+                      collectionsToInfer.push({
+                        bucket: bucket,
+                        scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
+                        collection: collection
+                      });
+                  });
+              });
+
+              //
+              // Should we go infer schemas for the expanded collections?
+              //
+
+              if (collectionsToInfer.length)
+                getCollectionsSchemasBackground(collectionsToInfer, 0);
+
+              //console.log("Got buckets: " + JSON.stringify(qwQueryService.buckets,null,2));
             }
 
             refreshAutoCompleteArray();
-          },
 
-          // error status from query about indexes
-          function index_error(resp) {
-            var data = resp.data, status = resp.status;
+            /////////////////////////////////////////////////////////////////////////
+            // now run a query to get the list of indexes
+            /////////////////////////////////////////////////////////////////////////
 
-            //console.log("Ind Error Data: " + JSON.stringify(data));
-            //console.log("Ind Error Status: " + JSON.stringify(status));
-            //console.log("Ind Error Headers: " + JSON.stringify(headers));
-            //console.log("Ind Error statusText: " + JSON.stringify(statusText));
+            if (qwConstantsService.showSchemas) {
+              let queryText = 'select indexes.* from system:indexes where state = "online"';
 
-            var error = "Error retrieving list of indexes";
+              let res1 = executeQueryUtil(queryText, false)
+                //res1 = $http.post("/_p/query/query/service",{statement : queryText})
+                .then(function (resp) {
+                    var data = resp.data, status = resp.status;
 
-            if (data && data.errors)
-              error = error + ": " + data.errors;
-            if (status)
-              error = error + ", contacting query service returned status: " + status;
+                    //console.log("Got index info: " + JSON.stringify(data));
+
+                    if (data && _.isArray(data.results)) {
+                      qwQueryService.indexes = data.results;
+                      // make sure each bucket knows about each relevant index
+                      for (var i = 0; i < data.results.length; i++) {
+                        addToken(data.results[i].name, 'index');
+                        for (var b = 0; b < qwQueryService.buckets.length; b++)
+                          if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
+                            qwQueryService.buckets[b].indexes.push(data.results[i]);
+                            break;
+                          }
+                      }
+                    }
+
+                    refreshAutoCompleteArray();
+                  },
+
+                  // error status from query about indexes
+                  function index_error(resp) {
+                    var data = resp.data, status = resp.status;
+
+                    //console.log("Ind Error Data: " + JSON.stringify(data));
+                    //console.log("Ind Error Status: " + JSON.stringify(status));
+                    //console.log("Ind Error Headers: " + JSON.stringify(headers));
+                    //console.log("Ind Error statusText: " + JSON.stringify(statusText));
+
+                    var error = "Error retrieving list of indexes";
+
+                    if (data && data.errors)
+                      error = error + ": " + data.errors;
+                    if (status)
+                      error = error + ", contacting query service returned status: " + status;
 //          if (response && response.statusText)
 //          error = error + ", " + response.statusText;
 
 //            console.log(error);
-            logWorkbenchError(error);
+                    logWorkbenchError(error);
 
-            qwQueryService.index_error = error;
-          }
-          );
-        }
+                    qwQueryService.index_error = error;
+                  }
+                );
+            }
 
-      },
-      /* error response from $http */
-      function error(resp) {
-        var data = resp.data, status = resp.status;
+          },
+          /* error response from $http */
+          function error(resp) {
+            var data = resp.data, status = resp.status;
 //        console.log("Schema Error Data: " + JSON.stringify(data));
 //        console.log("Schema Error Status: " + JSON.stringify(status));
 //        console.log("Schema Error Headers: " + JSON.stringify(headers));
 //        console.log("Schema Error Config: " + JSON.stringify(config));
-        var error = "Error retrieving list of buckets";
+            var error = "Error retrieving list of buckets";
 
-        if (data && data.errors)
-          error = error + ": " + JSON.stringify(data.errors);
-        else if (status)
-          error = error + ", contacting query service returned status: " + status;
+            if (data && data.errors)
+              error = error + ": " + JSON.stringify(data.errors);
+            else if (status)
+              error = error + ", contacting query service returned status: " + status;
 
-        qwQueryService.buckets.length = 0;
-        qwQueryService.autoCompleteTokens = {};
-        qwQueryService.bucket_errors = error;
-        logWorkbenchError(error);
+            qwQueryService.buckets.length = 0;
+            qwQueryService.autoCompleteTokens = {};
+            qwQueryService.bucket_errors = error;
+            logWorkbenchError(error);
+          });
+
+    }
+
+    //
+    // record the current state of expanded buckets, scopes, and collections
+    //
+
+    function updateExpandedState() {
+      var exp = {};
+      qwQueryService.buckets.forEach(function (bucket) {
+        if (bucket.expanded)
+          exp[bucket.name] = true;
+        bucket.scopeArray.forEach(function (scope) {
+          if (scope.expanded)
+            exp[bucket.name + '.' + scope.id] = true;
+        });
+        bucket.collections.forEach(function (collection) {
+          if (collection.expanded)
+            exp[bucket.name + '.' + collection.scope + '.' + collection.id] = true;
+        });
       });
 
+      //console.log("Got expanded state: " + JSON.stringify(exp,null,2));
+      qwQueryService.options.expanded = exp;
+      saveStateToStorage();
+    }
 
+    function isExpanded(bucket, scope, collection) {
+      var key = bucket;
+      if (scope) key += '.' + scope;
+      if (collection) key += '.' + collection;
+
+      return qwQueryService.options.expanded[key];
     }
 
     //
     // this method uses promises and recursion to get the schemas for a list of
-    // buckets in sequential order, waiting for each one before moving on to the next.
+    // collections in sequential order, waiting and pausing before moving on to the next.
     //
 
-    function getInfoForBucketBackground(bucketList,currentIndex,countsOnly) {
+    function getCollectionsSchemasBackground(collectionList, currentIndex, countsOnly) {
       // if we've run out of buckets, nothing more to do except get the bucket counts
-      if (currentIndex < 0 || currentIndex >= bucketList.length) {
+      if (currentIndex < 0 || currentIndex >= collectionList.length) {
         updateBucketCounts();
         return;
       }
 
-      getSchemaForBucket(bucketList[currentIndex]) // get the schema, pause, then get the next one
-      .then(function successCallback(response) {
-        setTimeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
-      }, function errorCallback(response) {
-        setTimeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
-      });
+      getSchemaForBucket(collectionList[currentIndex].bucket,
+        collectionList[currentIndex].scope,
+        collectionList[currentIndex].collection) // get the schema, pause, then get the next one
+        .then(function successCallback(response) {
+          setTimeout(function () {
+            getCollectionsSchemasBackground(collectionList, currentIndex + 1);
+          }, 500);
+        }, function errorCallback(response) {
+          setTimeout(function () {
+            getCollectionsSchemasBackground(collectionsList, currentIndex + 1);
+          }, 500);
+        });
     }
-
 
     //
     // Get a schema for a given, named bucket.
     //
 
-    function getSchemaForBucket(bucket) {
+    function getSchemaForBucket(bucket, scope, collection) {
 
-      //console.log("Getting schema for : " + bucket.id);
+      var dest = bucket; // where do we put the schema and/or errors
+      var name = '`' + bucket.id + '`';
+      if (scope) {
+        name += '.`' + scope.id + '`.`' + collection.id + '`';
+        dest = collection;
+      }
 
-      //return $http(inferQueryRequest)
-      return executeQueryUtil('infer \`' + bucket.id + '\`  with {"infer_timeout":5, "max_schema_MB":1};', false)
-      .then(function successCallback(response) {
-        //console.log("Done with schema for: " + bucket.id);
-        //console.log("Schema status: " + response.status);
-        //console.log("Schema data: " + JSON.stringify(response.data));
+      //console.log("Getting schema for : " + name);
 
-        if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
-          bucket.schema_error = response.data.warnings[0].msg;
+      return executeQueryUtil('infer ' + name + '  with {"infer_timeout":5, "max_schema_MB":1};', false)
+        .then(function successCallback(response) {
+          //console.log("Done with schema for: " + bucket.id);
+          //console.log("Schema status: " + response.status);
+          //console.log("Schema data: " + JSON.stringify(response.data));
 
-        bucket.schema.length = 0;
+          if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
+            dest.schema_error = response.data.warnings[0].msg;
 
-        if (!response || !response.data)
-          bucket.schema_error = "Empty or invalid server response: ";
-        else if (response.data.errors) {
-          bucket.schema_error = "Infer error: ";
-          if (_.isString(response.data.errors))
-            bucket.schema_error += response.data.errors;
-          else if (_.isArray(response.data.errors)) {
-            response.data.errors.forEach(function(val) {
-              if (val.msg) bucket.schema_error += val.msg + ' ';
-              else bucket.schema_error += JSON.stringify(val) + ' ';
+          dest.schema.length = 0;
+
+          if (!response || !response.data)
+            dest.schema_error = "Empty or invalid server response: ";
+          else if (response.data.errors) {
+            dest.schema_error = "Infer error: ";
+            if (_.isString(response.data.errors))
+              dest.schema_error += response.data.errors;
+            else if (_.isArray(response.data.errors)) {
+              response.data.errors.forEach(function (val) {
+                if (val.msg) dest.schema_error += val.msg + ' ';
+                else dest.schema_error += JSON.stringify(val) + ' ';
+              });
+            } else
+              dest.schema_error += JSON.stringify(response.data.errors);
+          } else if (response.data.status == "stopped") {
+            dest.schema_error = "Infer error, query stopped on server.";
+          } else if (response.data.status != "success") {
+            dest.schema_error = "Infer error: " + response.data.status;
+          } else if (_.isString(response.data.results))
+            dest.schema_error = response.data.results;
+          else {
+            //console.log("Got schema: " + JSON.stringify(response.data.results));
+            dest.schema = response.data.results[0];
+
+            var totalDocCount = 0;
+            for (var i = 0; i < dest.schema.length; i++)
+              totalDocCount += dest.schema[i]['#docs'];
+
+            getFieldNamesFromSchema(dest.schema, "");
+            getFieldNamesFromSchema(dest.schema, dest.name);
+            truncateSchema(dest.schema);
+            refreshAutoCompleteArray();
+
+            //console.log("for bucket: " + dest.id + " got " + dest.schema.length + " flavars, doc count: " + totalDocCount);
+            dest.totalDocCount = totalDocCount;
+
+            for (var i = 0; i < dest.schema.length; i++)
+              dest.schema[i]['%docs'] = (dest.schema[i]['#docs'] / totalDocCount * 100);
+
+            // we have an array of columns that are indexed. Let's mark the individual
+            // fields, now that we have a schema.
+            dest.indexed_fields = {};
+
+            // each element of the sec_ind array is an array of field names, turn into a map
+            _.forEach(dest.sec_ind, function (elem) {
+              _.forEach(elem, function (field) {
+                // for now we can't handle objects inside arrays, so we'll just flag the
+                // array field as having an index. Also, we need to remove any parens.
+                var bracket = field.indexOf('[');
+                if (bracket >= 0)
+                  field = field.substring(0, bracket);
+
+                field = field.replace(/\(/g, '').replace(/\)/g, '');
+
+                //console.log("Index on: " + field);
+                dest.indexed_fields[field] = true;
+              })
             });
-          }
-          else
-            bucket.schema_error += JSON.stringify(response.data.errors);
-        }
-        else if (response.data.status == "stopped") {
-          bucket.schema_error = "Infer error, query stopped on server.";
-        }
-        else if (response.data.status != "success") {
-          bucket.schema_error = "Infer error: " + response.data.status;
-        }
-        else if (_.isString(response.data.results))
-          bucket.schema_error = response.data.results;
-        else {
-          //console.log("Got schema: " + JSON.stringify(response.data.results));
-          bucket.schema = response.data.results[0];
 
-          var totalDocCount = 0;
-          for (var i=0; i<bucket.schema.length; i++)
-            totalDocCount += bucket.schema[i]['#docs'];
+            for (var flavor = 0; flavor < dest.schema.length; flavor++) { // iterate over flavors
+              markIndexedFields(dest.indexed_fields, dest.schema[flavor], "");
+              dest.schema[flavor].hasFields =
+                (dest.schema[flavor].properties && Object.keys(dest.schema[flavor].properties).length > 0) ||
+                dest.schema[flavor].type;
+            }
 
-          getFieldNamesFromSchema(bucket.schema,"");
-          getFieldNamesFromSchema(bucket.schema,bucket.name);
-          truncateSchema(bucket.schema);
-          refreshAutoCompleteArray();
-
-          //console.log("for bucket: " + bucket.id + " got " + bucket.schema.length + " flavars, doc count: " + totalDocCount);
-          bucket.totalDocCount = totalDocCount;
-
-          for (var i=0; i<bucket.schema.length; i++)
-            bucket.schema[i]['%docs'] = (bucket.schema[i]['#docs']/totalDocCount*100);
-
-          // we have an array of columns that are indexed. Let's mark the individual
-          // fields, now that we have a schema.
-          bucket.indexed_fields = {};
-
-          // each element of the sec_ind array is an array of field names, turn into a map
-          _.forEach(bucket.sec_ind,function(elem) {
-            _.forEach(elem,function(field) {
-              // for now we can't handle objects inside arrays, so we'll just flag the
-              // array field as having an index. Also, we need to remove any parens.
-              var bracket = field.indexOf('[');
-              if (bracket >= 0)
-                field = field.substring(0,bracket);
-
-              field = field.replace(/\(/g,'').replace(/\)/g,'');
-
-              //console.log("Index on: " + field);
-              bucket.indexed_fields[field] = true;
-            })});
-
-          for (var flavor=0; flavor<bucket.schema.length; flavor++) { // iterate over flavors
-            markIndexedFields(bucket.indexed_fields, bucket.schema[flavor], "");
-            bucket.schema[flavor].hasFields =
-              (bucket.schema[flavor].properties && Object.keys(bucket.schema[flavor].properties).length > 0) ||
-              bucket.schema[flavor].type;
+            //if (dest.schema.length)
+            //  dest.schema.unshift({Summary: "Summary: " + dest.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
+            //    hasFields: true});
           }
 
-          //if (bucket.schema.length)
-          //  bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
-          //    hasFields: true});
-        }
+        }, function errorCallback(response) {
+          var error = "Error getting schema for bucket: " + dest.id;
+          if (response)
+            if (response.data && response.data.errors) {
+              error += ", " + JSON.stringify(response.data.errors, null, '  ');
+            } else if (response.status) {
+              error += ", " + response.status;
+              if (response.statusText)
+                error += " " + response.statusText;
+            } else
+              error += JSON.stringify(response);
 
-      }, function errorCallback(response) {
-        var error = "Error getting schema for bucket: " + bucket.id;
-        if (response)
-          if (response.data && response.data.errors) {
-            error += ", " + JSON.stringify(response.data.errors,null,'  ');
-          }
-          else if (response.status) {
-            error += ", " + response.status;
-            if (response.statusText)
-              error += " " + response.statusText;
-          }
-          else
-            error += JSON.stringify(response);
-
-        bucket.schema_error = error;
-      });
+          dest.schema_error = error;
+        });
 
     };
 
@@ -2468,7 +2652,7 @@ function getQwQueryService(
     function markIndexedFields(fieldMap, schema, path) {
       //console.log("marking schema size: "+schema.fields.length + " with path: " + path);
 
-      _.forEach(schema['properties'], function(theField, field_name) {
+      _.forEach(schema['properties'], function (theField, field_name) {
         // in the list of indexed fields, the field names are quoted with back quotes
         var quoted_field_name = '`' + field_name + '`';
         if (path.length > 0)
@@ -2483,33 +2667,24 @@ function getQwQueryService(
 
         // do we have a subtype to traverse?
         if (theField.properties)
-          markIndexedFields(fieldMap,theField,path + '`' + field_name + '`.');
+          markIndexedFields(fieldMap, theField, path + '`' + field_name + '`.');
       });
     };
-
 
     //
     // show an error dialog
     //
 
-    function showErrorDialog(message,details_array) {
-      qwDialogService.showErrorDialog("Error",message,details_array,true);
+    function showErrorDialog(message, details_array) {
+      qwDialogService.showErrorDialog("Error", message, details_array, true);
     }
 
-    function showWarningDialog(message,details_array) {
-      var dialogScope = $rootScope.$new(true);
-      dialogScope.error_title = "Warning";
-      dialogScope.error_detail = message;
-      dialogScope.error_detail_array = details_array;
-
-      $uibModal.open({
-        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-        scope: dialogScope
-      });
+    function showWarningDialog(message, details_array) {
+      qwDialogService.showErrorDialog("Warning", message, details_array, true);
     }
 
     //
-    // load state from storage if possible
+    // get the query history
     //
 
     loadStateFromStorage();
@@ -2518,13 +2693,8 @@ function getQwQueryService(
     // when we are initialized, get the list of buckets
     //
 
-    setTimeout(function(){
-      updateBuckets();
-    },500);
-
-    //
-    // all done creating the service, now return it
-    //
+    setTimeout(updateBuckets, 500);
 
     return qwQueryService;
   }
+

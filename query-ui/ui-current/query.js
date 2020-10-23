@@ -14,8 +14,9 @@ import mnServersService from "/ui/app/mn_admin/mn_servers_service.js";
 import mnStatisticsNewService from "/ui/app/mn_admin/mn_statistics_service.js";
 import mnStatisticsChart from "/ui/app/mn_admin/mn_statistics_chart_directive.js"
 
-import qwQueryService from "/_p/ui/query/qw_query_service.js";
-import validateQueryService from "/_p/ui/query/validate_query_service.js";
+import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
+import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
+
 import qwConstantsService from "/_p/ui/query/qw_constants_service.js";
 import qwJsonCsvService from "/_p/ui/query/qw_json_csv_service.js";
 
@@ -30,6 +31,9 @@ import qwAce from "./data_display/qw-ace.component.js";
 import qwExplainVizD3 from "./query_plan_viz/qw-explain-viz-d3.directive.js";
 import qwAdviceViz from "./advice_viz/qw-advice-viz.directive.js";
 import qwValidJson from "./json-validator/qw-json-validator.directive.js";
+
+import {Injectable} from "/ui/web_modules/@angular/core.js";
+import {downgradeInjectable} from '/ui/web_modules/@angular/upgrade/static.js';
 
 import {
   getRecursionHelper,
@@ -55,8 +59,6 @@ angular
     mnStatisticsNewService,
     mnStatisticsChart,
 
-    qwQueryService,
-    validateQueryService,
     qwConstantsService,
     qwJsonCsvService,
 
@@ -75,6 +77,8 @@ angular
   .directive('bucketDisplay', getBucketDisplay)
   .directive('bucketCollectionsDisplay', getBucketCollectionsDisplay)
   .directive('schemaDisplay', getSchemaDisplay)
+  .factory('qwValidateQueryService', downgradeInjectable(QwValidateQueryService))
+  .factory('qwQueryService', downgradeInjectable(QwQueryService))
   .config(function($stateProvider, $transitionsProvider) {
 
     $stateProvider
@@ -120,3 +124,5 @@ angular
     });
 
   });
+
+

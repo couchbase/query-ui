@@ -1,8 +1,4 @@
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-
 import { Injectable } from "/ui/web_modules/@angular/core.js";
-import { downgradeInjectable } from '/ui/web_modules/@angular/upgrade/static.js';
 
 export { QwConstantsService };
 
@@ -19,16 +15,6 @@ class QwConstantsService {
     Object.assign(this, getQwConstantsService());
   }
 }
-
-angular
-  .module('app', [])
-  .factory('qwConstantsService', downgradeInjectable(QwConstantsService));
-
-//export default 'qwConstantsService';
-//
-//angular
-//  .module('qwConstantsService', [])
-//  .factory('qwConstantsService', getQwConstantsService);
 
 //
 // the qwConstantsService contains a number of constants used by the query workbench, such as

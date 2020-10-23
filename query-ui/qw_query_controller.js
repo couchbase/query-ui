@@ -3,13 +3,15 @@ import _ from "/ui/web_modules/lodash.js";
 import ace from '/ui/libs/ace/ace-wrapper.js';
 import n1ql from '/_p/ui/query/n1ql_parser/n1ql.js';
 
+
 export default queryController;
 
-function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryService, validateQueryService,
+function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
     $scope, $interval, $interpolate, qwConstantsService, mnPoolDefault, mnServersService, qwJsonCsvService, jQuery) {
   var $ = jQuery;
 
   var qc = this;
+  //var qwQueryService = QwQueryService;
   //console.log("Start controller at: " + new Date().toTimeString());
 
   //
@@ -25,7 +27,6 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   qc.buckets = qwQueryService.buckets;                // buckets on cluster
   qc.gettingBuckets = qwQueryService.gettingBuckets;  // busy retrieving?
   qc.updateBuckets = qwQueryService.updateBuckets;    // function to update
-  qc.updateNodes = validateQueryService.updateNodes;    // function to update
   qc.lastResult = qwQueryService.getCurrentResult; // holds the current query and result
   //qc.limit = qwQueryService.limit;            // automatic result limiter
   //qc.executingQuery = qwQueryService.executingQuery;
@@ -142,8 +143,9 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   // Do we have a REST API to work with?
   //
 
-  qc.validated = validateQueryService;
-  qc.validNodes = validateQueryService.validNodes;
+  qc.validated = qwQueryService.validateQueryService;
+  qc.validNodes = qc.validated.validNodes;
+  qc.updateNodes = qc.validated.updateNodes;    // function to update
 
   //
   // error message when result is too large to display
@@ -186,7 +188,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
   // are we enterprise?
 
-  qc.isEnterprise = validateQueryService.isEnterprise;
+  qc.isEnterprise = qc.validated.isEnterprise;
 
   qc.copyResultAsCSV = function() {copyResultAsCSV();};
 

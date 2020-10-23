@@ -1,34 +1,100 @@
 import angular from "/ui/web_modules/angular.js";
-import uiBootstrap from "/ui/web_modules/angular-ui-bootstrap.js";
-import mnPendingQueryKeeper from "/ui/app/components/mn_pending_query_keeper.js";
-import validateQueryService from "/_p/ui/query/validate_query_service.js";
-import qwConstantsService from "/_p/ui/query/qw_constants_service.js";
-import qwQueryPlanService from "/_p/ui/query/qw_query_plan_service.js";
-import mnPoolDefault from "/ui/app/components/mn_pool_default.js";
-import mnPools from "/ui/app/components/mn_pools.js";
-import qwFixLongNumberService from "/_p/ui/query/qw_fix_long_number_service.js";
+import {NgbModal} from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
 
-import _ from "/ui/web_modules/lodash.js";
+import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
+import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
+import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
+import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
+import { QwDialogService }        from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 
-export default 'qwQueryService';
+
+import { MnPendingQueryKeeper, MnPermissions, MnPools } from '/ui/app/ajs.upgraded.providers.js';
+import { MnAdminService }        from '/ui/app/mn.admin.service.js';
+
+import _                         from "/ui/web_modules/lodash.js";
+
+import { Injectable }            from "/ui/web_modules/@angular/core.js";
+import { downgradeInjectable }   from '/ui/web_modules/@angular/upgrade/static.js';
+
+import { $http }                 from '/_p/ui/query/angular-services/qw.http.js';
+
+export { QwQueryService };
+
+class QwQueryService {
+  static get annotations() { return [
+    new Injectable()
+  ]}
+
+  static get parameters() { return [
+    MnAdminService,
+    MnPendingQueryKeeper,
+    MnPermissions,
+    MnPools,
+    NgbModal,
+    QwConstantsService,
+    QwDilaogService,
+    QwFixLongNumberService,
+    QwQueryPlanService,
+    QwValidateQueryService,
+    $http,
+  ]}
+
+  constructor(
+      mnAdminService,
+      mnPendingQueryKeeper,
+      mnPermissions,
+      mnPools,
+      ngbModal,
+      qwConstantsService,
+      qwDialogService,  
+      qwFixLongNumberService,
+      qwQueryPlanService,
+      validateQueryService,
+      $http) {
+    Object.assign(this, getQwQueryService(
+        mnAdminService,
+        mnPendingQueryKeeper,
+        mnPermissions,
+        mnPools,
+        ngbModal,
+        qwConstantsService,
+        qwDialogService,
+        qwFixLongNumberService,
+        qwQueryPlanService,
+        validateQueryService,
+        $http));
+  }
+}
 
 angular
-  .module('qwQueryService', [
-    uiBootstrap,
-    mnPendingQueryKeeper,
-    qwConstantsService,
-    qwQueryPlanService,
-    mnPoolDefault,
-    mnPools,
-    validateQueryService,
-    qwFixLongNumberService
-  ])
-  .factory('qwQueryService', getQwQueryService);
+  .module('app', [])
+  .factory('qwQueryService', downgradeInjectable(QwQueryService));
 
-function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPendingQueryKeeper, validateQueryService, qwConstantsService, qwQueryPlanService, mnPoolDefault, mnPools, qwFixLongNumberService) {
+//angular
+//  .module('qwQueryService', [
+//    mnPendingQueryKeeper,
+//    qwConstantsService,
+//    qwQueryPlanService,
+//    mnPoolDefault,
+//    mnPools,
+//    validateQueryService,
+//    qwFixLongNumberService
+//  ])
+//  .factory('qwQueryService', getQwQueryService);
+
+function getQwQueryService(
+    mnAdmin,
+    mnPendingQueryKeeper,
+    mnPermissions,
+    mnPools,
+    ngbModal,
+    qwConstantsService,
+    qwFixLongNumberService,
+    qwQueryPlanService,
+    validateQueryService,
+    $http,$rootScope) {
 
     var qwQueryService = {};
-    qwQueryService.validateQueryService = validateQueryService;
 
     //
     // remember which tab is selected for output style: JSON, table, or tree
@@ -111,9 +177,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     qwQueryService.loadStateFromStorage = loadStateFromStorage;
     qwQueryService.getQueryHistory = getQueryHistory;
 
-    qwQueryService.updateExpandedState = updateExpandedState; // keep track of expanded buckets/scopes/collections
-
-  // update store the metadata about buckets
+    // update store the metadata about buckets
 
     qwQueryService.buckets = [];
     qwQueryService.bucket_names = [];
@@ -182,9 +246,6 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         scan_consistency: "not_bounded",
         positional_parameters: [],
         named_parameters: [],
-        query_context_bucket: "",
-        query_context_scope: "",
-        expanded: {},
         query_timeout: 600
     };
 
@@ -199,9 +260,6 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           scan_consistency: qwQueryService.options.scan_consistency,
           positional_parameters: qwQueryService.options.positional_parameters.slice(0),
           named_parameters: qwQueryService.options.named_parameters.slice(0),
-          query_context_bucket: qwQueryService.options.query_context_bucket,
-          query_context_scope: qwQueryService.options.query_context_scope,
-          expanded: qwQueryService.options.expanded,
           query_timeout: qwQueryService.options.query_timeout
         };
     };
@@ -522,12 +580,6 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           qwQueryService.selectTab(savedState.outputTab);
         if (savedState.options)
           qwQueryService.options = savedState.options;
-        if (!qwQueryService.options.query_context_bucket)
-          qwQueryService.options.query_context_bucket = "";
-        if (!qwQueryService.options.query_context_scope)
-          qwQueryService.options.query_context_scope = "";
-        if (!qwQueryService.options.expanded)
-          qwQueryService.options.expanded = {};
         if (savedState.doc_editor_options) {
           if (!savedState.doc_editor_options.hasOwnProperty('show_tables'))
             savedState.doc_editor_options.show_tables = false;
@@ -1056,11 +1108,11 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         return(dummy);
       }
 
-      return($http(request));
+      return($http.do(request));
     }
 
     function logWorkbenchError(errorText) {
-      $http({
+      $http.do({
           url: "/logClientError",
           method: "POST",
           data: errorText,
@@ -1102,10 +1154,6 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
             queryData[queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
 
         //console.log("Running query: " + JSON.stringify(queryData));
-        if (queryOptions.query_context_bucket)
-          queryData.query_context = 'default:' + queryOptions.query_context_bucket +
-            (queryOptions.query_context_scope ? ('.' + queryOptions.query_context_scope) + '' : '');
-        console.log("Got query context: " + queryData.query_context);
       }
 
       // if the user might want to cancel it, give it an ID
@@ -1126,8 +1174,8 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
 
       var queryRequest;
       var userAgent = 'Couchbase Query Workbench';
-      if (mnPoolDefault.export.thisNode && mnPoolDefault.export.thisNode.version)
-        userAgent += ' (' + mnPoolDefault.export.thisNode.version + ')';
+      if (mnAdmin.stream.prettyVersion)
+        userAgent += ' (' + mnAdmin.stream.prettyVersion + ')';
 
       var queryRequest = {
         url: qwConstantsService.queryURL,
@@ -1465,7 +1513,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           finishQuery(newResult);
           return(Promise.reject("building query failed"));
         }
-        explain_promise = $http(explain_request)
+        explain_promise = $http.do(explain_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //
@@ -1602,7 +1650,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           // make sure to only finish if the explain query is also done
           return(Promise.reject("building explain query failed"));
         }
-        var query_promise = $http(request)
+        var query_promise = $http.do(request)
         // SUCCESS!
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
@@ -1822,7 +1870,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       // return a promise wrapping the one or two promises
       // when the queries are done, call finishQuery
 
-      return($q.all(promises).then(
+      return(Promise.all(promises).then(
           function() {finishQuery(newResult);},
           function() {finishQuery(newResult);}
           ));
@@ -1898,7 +1946,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           console.log("Couldn't build Advise query. ");
           return(Promise.resolve("building advise query failed"));
         }
-        var advise_promise = $http(advise_request)
+        var advise_promise = $http.do(advise_request)
         .then(function success(resp) {
           var data = resp.data, status = resp.status;
           //
@@ -2101,60 +2149,43 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     // whenever the system changes, we need to update the list of valid buckets
     //
 
-    //$rootScope.$on("indexStatusURIChanged",updateBuckets/*function() {console.log("indexStatusURIChanged")}*/);
-    $rootScope.$on("bucketUriChanged",updateBuckets);
-    $rootScope.$on("checkBucketCounts",updateBucketCounts);
+    // TODO: find replacement for $on in Angular2
+    //$rootScope.$on("bucketUriChanged",updateBuckets);
+    //$rootScope.$on("checkBucketCounts",updateBucketCounts);
 
     function updateBuckets(event,data) {
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
-    //
-    // get the number of docs in each visible collection on the screen
-    //
-    function updateBucketCounts()
-    {
+    // get the number of docs in each bucket for which we have access
+    function updateBucketCounts() {
       // build a query to get the doc count for each bucket that we know about
       var queryString = "select raw {";
-      var collectionCount = 0;
-
+      var bucketCount = 0;
       qwQueryService.buckets.forEach(function (bucket) {
-        if (bucket.expanded) bucket.collections.forEach(function (collection) {
-          var scope =  bucket.scopeArray.find(scope => scope.id == collection.scope);
+        if (!bucket.schema_error) {
+          if (bucketCount > 0) // second and subsequent buckets need a comma
+            queryString += ',';
 
-          if (!collection.schema_error && ((bucket.scopeArray.length == 1) || scope && scope.expanded)) {
-            if (collectionCount > 0) // second and subsequent buckets need a comma
-              queryString += ',';
-
-            collectionCount++;
-            var collection_path = '`' + collection.bucket + '`.`' + collection.scope + '`.`' + collection.id + '`';
-            queryString += '"' + collection_path + '" : (select raw count(*) from ' + collection_path + ')[0]';
-          }
-        })
+          bucketCount++;
+          queryString += '"' + bucket.id + '" : (select raw count(*) from `' + bucket.id + '`)[0]';
+        }
       });
       queryString +=  '}';
 
       // run the query, extract the document counts
-      if (collectionCount)
       executeQueryUtil(queryString, false)
       .then(function success(resp) {
         if (resp && resp.data && resp.data.results && resp.data.results.length)
           qwQueryService.buckets.forEach(function (bucket) {
-            if (bucket.expanded) bucket.collections.forEach(function (collection) {
-              var collection_path = '`' + collection.bucket + '`.`' + collection.scope + '`.`' + collection.id + '`';
-              if (_.isNumber(resp.data.results[0][collection_path]))
-                collection.count = resp.data.results[0][collection_path];
-            });
+            if (_.isNumber(resp.data.results[0][bucket.id]))
+              bucket.count = resp.data.results[0][bucket.id];
           });
       },
       function error(resp) {
         console.log("bucket count error: " + JSON.stringify(resp));
       });
     }
-
-    //
-    // whenever we refresh the list of buckets, refresh the scope and collection info
-    //
 
     function updateBucketsCallback() {
       // make sure we have a query node
@@ -2164,18 +2195,18 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
       //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 
-      var queryText = "select keyspaces.* from system:keyspaces;"//qwConstantsService.keyspaceQuery;
+      var queryText = qwConstantsService.keyspaceQuery;
 
       let res1 = executeQueryUtil(queryText, false)
       .then(function success(resp) {
         var data = resp.data, status = resp.status;
 
-         // remember the counts of each bucket so the screen doesn't blink when recomputing counts
-         var bucket_counts = {};
-        // for (var i=0; i < qwQueryService.buckets.length; i++) {
-        //
-        //   //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
-        // }
+        // remember the counts of each bucket so the screen doesn't blink when recomputing counts
+        var bucket_counts = {};
+        for (var i=0; i < qwQueryService.buckets.length; i++) {
+
+          bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
+        }
 
         // initialize the data structure for holding all the buckets
         qwQueryService.buckets.length = 0;
@@ -2183,87 +2214,32 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         qwQueryService.bucket_names.length = 0;
         qwQueryService.autoCompleteTokens = {};
 
-        if (data && data.results) {
-          // first pass over the data - get the buckets, who have a name but no scope
-          for (var i=0; i< data.results.length; i++) if (data.results[i].id && !data.results[i].scope) {
-            var bucket = {
-              name: data.results[i].name,
-              id: data.results[i].id,
-              expanded: isExpanded(data.results[i].id),
-              schema: [],
-              indexes: [],
-              scopes: {},
-              collections: []
-            };
-            bucket.validated = !validateQueryService.validBuckets ||
-              _.indexOf(validateQueryService.validBuckets(), bucket.id) != -1 ||
-              _.indexOf(validateQueryService.validBuckets(), ".") != -1;
-            bucket.count = bucket_counts[bucket.id];
-            if (bucket.validated) {
-              qwQueryService.buckets.push(bucket); // only include buckets we have access to
-              qwQueryService.bucket_names.push(bucket.id);
-            }
-            addToken(bucket.id, "bucket");
-            addToken('`' + bucket.id + '`', "bucket");
+        if (data && data.results) for (var i=0; i< data.results.length; i++) {
+          var bucket = data.results[i];
+          bucket.expanded = false;
+          bucket.schema = [];
+          bucket.indexes = [];
+          bucket.validated = !validateQueryService.validBuckets ||
+            _.indexOf(validateQueryService.validBuckets(),bucket.id) != -1 ||
+            _.indexOf(validateQueryService.validBuckets(),".") != -1;
+          bucket.count = bucket_counts[bucket.id];
+          //console.log("Got bucket: " + bucket.id + ", valid: " + bucket.validated);
+          if (bucket.validated) {
+            qwQueryService.buckets.push(bucket); // only include buckets we have access to
+            qwQueryService.bucket_names.push(bucket.id);
           }
-
-          // sort list of buckets
-          qwQueryService.buckets.sort((b1,b2) => (b1.name < b2.name) ? -1 : ((b1.name == b2.name) ? 0 : 1));
-
-          // second pass over the query result - get all the scopes and collections
-          for (var i=0; i< data.results.length; i++) {
-            var record = data.results[i];
-            var bucket_id = record.bucket || record.id;
-            var scope_id = record.scope || '_default';
-            var coll_id = !record.bucket ? '_default' : record.id;
-            var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucket_id);
-            if (bucket) {
-              bucket.scopes[scope_id] = true;
-              var coll_expanded = isExpanded(bucket_id,scope_id,coll_id);
-              var collection = {
-                name: coll_id,
-                id: coll_id,
-                expanded: coll_expanded,
-                bucket: bucket_id,
-                scope: scope_id,
-                schema: [],
-                indexes: []
-              };
-              bucket.collections.push(collection);
-            }
-          }
-
-          // keep an array of scope names and expansion statuses
-          var collectionsToInfer = [];
-          qwQueryService.buckets.forEach(bucket => {
-            bucket.scopeArray = Object.keys(bucket.scopes)
-              .map(function(scope_name) {
-                return {id: scope_name, expanded: isExpanded(bucket.name,scope_name)};
-              });
-            bucket.collections.sort((c1,c2) => c1.name.localeCompare(c2.name));
-
-            // also figure out which collections will need to be inferred
-            if (qwConstantsService.showSchemas)
-              bucket.collections.forEach(collection => {
-                if (collection.expanded)
-                  collectionsToInfer.push({
-                    bucket:bucket,
-                    scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
-                    collection:collection});
-              });
-          });
-
-          //
-          // Should we go infer schemas for the expanded collections?
-          //
-
-          if (collectionsToInfer.length)
-            getCollectionsSchemasBackground(collectionsToInfer,0);
-
-          //console.log("Got buckets: " + JSON.stringify(qwQueryService.buckets,null,2));
+          addToken(bucket.id,"bucket");
+          addToken('`' + bucket.id + '`',"bucket");
         }
 
         refreshAutoCompleteArray();
+
+        //
+        // Should we go get information for each bucket?
+        //
+
+        if (qwConstantsService.showSchemas && qwQueryService.options.auto_infer)
+          getInfoForBucketBackground(qwQueryService.buckets,0);
 
         /////////////////////////////////////////////////////////////////////////
         // now run a query to get the list of indexes
@@ -2342,138 +2318,98 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
         logWorkbenchError(error);
       });
 
-    }
 
-    //
-    // record the current state of expanded buckets, scopes, and collections
-    //
-
-    function updateExpandedState() {
-      var exp = {};
-      qwQueryService.buckets.forEach(function(bucket) {
-        if (bucket.expanded)
-          exp[bucket.name] = true;
-        bucket.scopeArray.forEach(function(scope) {
-          if (scope.expanded)
-            exp[bucket.name + '.' + scope.id] = true;
-        });
-        bucket.collections.forEach(function(collection) {
-          if (collection.expanded)
-            exp[bucket.name + '.' + collection.scope + '.' + collection.id] = true;
-        });
-      });
-
-      //console.log("Got expanded state: " + JSON.stringify(exp,null,2));
-      qwQueryService.options.expanded = exp;
-      saveStateToStorage();
-    }
-
-    function isExpanded(bucket,scope,collection) {
-      var key = bucket;
-      if (scope) key += '.' + scope;
-      if (collection) key +=  '.' + collection;
-
-      return qwQueryService.options.expanded[key];
     }
 
     //
     // this method uses promises and recursion to get the schemas for a list of
-    // collections in sequential order, waiting and pausing before moving on to the next.
+    // buckets in sequential order, waiting for each one before moving on to the next.
     //
 
-    function getCollectionsSchemasBackground(collectionList,currentIndex,countsOnly) {
+    function getInfoForBucketBackground(bucketList,currentIndex,countsOnly) {
       // if we've run out of buckets, nothing more to do except get the bucket counts
-      if (currentIndex < 0 || currentIndex >= collectionList.length) {
+      if (currentIndex < 0 || currentIndex >= bucketList.length) {
         updateBucketCounts();
         return;
       }
 
-      getSchemaForBucket(collectionList[currentIndex].bucket,
-        collectionList[currentIndex].scope,
-        collectionList[currentIndex].collection) // get the schema, pause, then get the next one
+      getSchemaForBucket(bucketList[currentIndex]) // get the schema, pause, then get the next one
       .then(function successCallback(response) {
-        $timeout(function() {getCollectionsSchemasBackground(collectionList,currentIndex+1);},500);
+        setTimeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
       }, function errorCallback(response) {
-        $timeout(function() {getCollectionsSchemasBackground(collectionsList,currentIndex+1);},500);
+        setTimeout(function() {getInfoForBucketBackground(bucketList,currentIndex+1);},500);
       });
     }
+
 
     //
     // Get a schema for a given, named bucket.
     //
 
-    function getSchemaForBucket(bucket,scope,collection) {
+    function getSchemaForBucket(bucket) {
 
-      var dest = bucket; // where do we put the schema and/or errors
-      var name = '`' + bucket.id + '`';
-      if (scope) {
-        name += '.`' + scope.id + '`.`' + collection.id + '`';
-        dest = collection;
-      }
-
-      //console.log("Getting schema for : " + name);
+      //console.log("Getting schema for : " + bucket.id);
 
       //return $http(inferQueryRequest)
-      return executeQueryUtil('infer ' + name + '  with {"infer_timeout":5, "max_schema_MB":1};', false)
+      return executeQueryUtil('infer \`' + bucket.id + '\`  with {"infer_timeout":5, "max_schema_MB":1};', false)
       .then(function successCallback(response) {
         //console.log("Done with schema for: " + bucket.id);
         //console.log("Schema status: " + response.status);
         //console.log("Schema data: " + JSON.stringify(response.data));
 
-
         if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
-          dest.schema_error = response.data.warnings[0].msg;
+          bucket.schema_error = response.data.warnings[0].msg;
 
-        dest.schema.length = 0;
+        bucket.schema.length = 0;
 
         if (!response || !response.data)
-          dest.schema_error = "Empty or invalid server response: ";
+          bucket.schema_error = "Empty or invalid server response: ";
         else if (response.data.errors) {
-          dest.schema_error = "Infer error: ";
+          bucket.schema_error = "Infer error: ";
           if (_.isString(response.data.errors))
-            dest.schema_error += response.data.errors;
+            bucket.schema_error += response.data.errors;
           else if (_.isArray(response.data.errors)) {
             response.data.errors.forEach(function(val) {
-              if (val.msg) dest.schema_error += val.msg + ' ';
-              else dest.schema_error += JSON.stringify(val) + ' ';
+              if (val.msg) bucket.schema_error += val.msg + ' ';
+              else bucket.schema_error += JSON.stringify(val) + ' ';
             });
           }
           else
-            dest.schema_error += JSON.stringify(response.data.errors);
+            bucket.schema_error += JSON.stringify(response.data.errors);
         }
         else if (response.data.status == "stopped") {
-          dest.schema_error = "Infer error, query stopped on server.";
+          bucket.schema_error = "Infer error, query stopped on server.";
         }
         else if (response.data.status != "success") {
-          dest.schema_error = "Infer error: " + response.data.status;
+          bucket.schema_error = "Infer error: " + response.data.status;
         }
         else if (_.isString(response.data.results))
-          dest.schema_error = response.data.results;
+          bucket.schema_error = response.data.results;
         else {
           //console.log("Got schema: " + JSON.stringify(response.data.results));
-          dest.schema = response.data.results[0];
+          bucket.schema = response.data.results[0];
 
           var totalDocCount = 0;
-          for (var i=0; i<dest.schema.length; i++)
-            totalDocCount += dest.schema[i]['#docs'];
+          for (var i=0; i<bucket.schema.length; i++)
+            totalDocCount += bucket.schema[i]['#docs'];
 
-          getFieldNamesFromSchema(dest.schema,"");
-          getFieldNamesFromSchema(dest.schema,dest.name);
-          truncateSchema(dest.schema);
+          getFieldNamesFromSchema(bucket.schema,"");
+          getFieldNamesFromSchema(bucket.schema,bucket.name);
+          truncateSchema(bucket.schema);
           refreshAutoCompleteArray();
 
-          //console.log("for bucket: " + dest.id + " got " + dest.schema.length + " flavars, doc count: " + totalDocCount);
-          dest.totalDocCount = totalDocCount;
+          //console.log("for bucket: " + bucket.id + " got " + bucket.schema.length + " flavars, doc count: " + totalDocCount);
+          bucket.totalDocCount = totalDocCount;
 
-          for (var i=0; i<dest.schema.length; i++)
-            dest.schema[i]['%docs'] = (dest.schema[i]['#docs']/totalDocCount*100);
+          for (var i=0; i<bucket.schema.length; i++)
+            bucket.schema[i]['%docs'] = (bucket.schema[i]['#docs']/totalDocCount*100);
 
           // we have an array of columns that are indexed. Let's mark the individual
           // fields, now that we have a schema.
-          dest.indexed_fields = {};
+          bucket.indexed_fields = {};
 
           // each element of the sec_ind array is an array of field names, turn into a map
-          _.forEach(dest.sec_ind,function(elem) {
+          _.forEach(bucket.sec_ind,function(elem) {
             _.forEach(elem,function(field) {
               // for now we can't handle objects inside arrays, so we'll just flag the
               // array field as having an index. Also, we need to remove any parens.
@@ -2484,23 +2420,23 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
               field = field.replace(/\(/g,'').replace(/\)/g,'');
 
               //console.log("Index on: " + field);
-              dest.indexed_fields[field] = true;
+              bucket.indexed_fields[field] = true;
             })});
 
-          for (var flavor=0; flavor<dest.schema.length; flavor++) { // iterate over flavors
-            markIndexedFields(dest.indexed_fields, dest.schema[flavor], "");
-            dest.schema[flavor].hasFields =
-              (dest.schema[flavor].properties && Object.keys(dest.schema[flavor].properties).length > 0) ||
-              dest.schema[flavor].type;
+          for (var flavor=0; flavor<bucket.schema.length; flavor++) { // iterate over flavors
+            markIndexedFields(bucket.indexed_fields, bucket.schema[flavor], "");
+            bucket.schema[flavor].hasFields =
+              (bucket.schema[flavor].properties && Object.keys(bucket.schema[flavor].properties).length > 0) ||
+              bucket.schema[flavor].type;
           }
 
-          //if (dest.schema.length)
-          //  dest.schema.unshift({Summary: "Summary: " + dest.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
+          //if (bucket.schema.length)
+          //  bucket.schema.unshift({Summary: "Summary: " + bucket.schema.length + " flavors found, sample size "+ totalDocCount + " documents",
           //    hasFields: true});
         }
 
       }, function errorCallback(response) {
-        var error = "Error getting schema for bucket: " + dest.id;
+        var error = "Error getting schema for bucket: " + bucket.id;
         if (response)
           if (response.data && response.data.errors) {
             error += ", " + JSON.stringify(response.data.errors,null,'  ');
@@ -2513,7 +2449,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
           else
             error += JSON.stringify(response);
 
-        dest.schema_error = error;
+        bucket.schema_error = error;
       });
 
     };
@@ -2552,15 +2488,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     //
 
     function showErrorDialog(message,details_array) {
-      var dialogScope = $rootScope.$new(true);
-      dialogScope.error_title = "Error";
-      dialogScope.error_detail = message;
-      dialogScope.error_detail_array = details_array;
-
-      $uibModal.open({
-        templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_query_error_dialog.html',
-        scope: dialogScope
-      });
+      qwDialogService.showErrorDialog("Error",message,details_array,true);
     }
 
     function showWarningDialog(message,details_array) {
@@ -2585,7 +2513,7 @@ function getQwQueryService($rootScope, $q, $uibModal, $timeout, $http, mnPending
     // when we are initialized, get the list of buckets
     //
 
-    $timeout(function(){
+    setTimeout(function(){
       updateBuckets();
     },500);
 

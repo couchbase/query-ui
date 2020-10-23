@@ -1,9 +1,3 @@
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-
-import { Injectable } from "/ui/web_modules/@angular/core.js";
-import { downgradeInjectable } from '/ui/web_modules/@angular/upgrade/static.js';
-
 import { NgbModal, NgbModalConfig }          from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
 import { QwDocEditorDialog } from './dialogs/qw.doc.editor.dialog.component.js';
 import { QwErrorDialog }     from './dialogs/qw.error.dialog.component.js';
@@ -97,6 +91,6 @@ class QwDialogService {
 
 }
 
-angular
-  .module('app', [])
-  .factory('qwDialogService', downgradeInjectable(QwDialogService));
+// angular
+//   .module('app', [])
+//   .factory('qwDialogService', downgradeInjectable(QwDialogService));
