@@ -37,24 +37,12 @@
 <!-- Editor "header row" ----------------------------------------------------->
       <div class="wb-query-editor-header"  ng-click="qc.handleClick('editor')">
         <h4>Query Editor</h4>
-
-        <span><small>Use:</small>
-        <select ng-model="qc.qqs.options.query_context_bucket">
-          <option ng-repeat="bucket in qc.getContextBuckets()"><small>{{bucket}}</small></option>
-        </select>
-
-        <select ng-model="qc.qqs.options.query_context_scope">
-          <option ng-repeat="name in qc.getContextScopes()"><small>{{name}}</small></option>
-        </select>
-        </span>
-
         <span class="wb-history-controls">
           <span
              title="View previous queries & results" ng-click="qc.prev()"
              qw-long-press="qc.historyMenu"
              class="icon angle-icon left"
              ng-disabled="!qc.hasPrev()">
-
           </span>
           <span class="wb-history-controls-inner">
             <a ng-click="qc.historyMenu()">history</a>
@@ -68,12 +56,21 @@
              ng-disabled="!qc.hasNext()">
           </span>
         </span>
-
-        <div class="wb-fullscreen resp-hide-sml" ng-click="qc.toggleFullscreen()">
-          <span ng-if="!qc.fullscreen" class="icon fa-expand" title="expand"></span>
-          <span ng-if="qc.fullscreen" class="icon fa-compress" title="contract"></span>
-        </div>
+        <span class="wb-use">
+          <select
+             ng-model="qc.qqs.options.query_context_bucket"
+             >
+            <option value>USE...  </option>
+            <option ng-repeat="bucket in qc.getContextBuckets()">{{bucket}}</option>
+          </select>
+          <select
+             ng-if="qc.qqs.options.query_context_bucket"
+             ng-model="qc.qqs.options.query_context_scope">
+            <option ng-repeat="name in qc.getContextScopes()">{{name}}</option>
+          </select>
+        </span>
       </div>
+
 <!-- Ace editor -------------------------------------------------------------->
       <div ng-click="qc.handleClick('editor')"
          class="wb-ace-editor"
@@ -135,16 +132,23 @@
             size: {{qc.lastResult().resultSize}} bytes
           </span>
         </div>
-
-        <div>
-          <a
+<!-- format & full-screen controls ----------------------------------------- -->
+        <span class="nowrap">
+          <span
              ng-disabled="qc.executingQuery.busy"
              ng-click="$event.stopPropagation(); qc.format(); qc.handleClick('editor');"
-             class="text-smallish nowrap resp-hide-xsml">
+             class="wb-format resp-hide-sml nowrap">
             <span class="icon fa-align-right"></span>
             format
-          </a>
-        </div>
+          </span>
+          <span
+             class="wb-fullscreen resp-hide-sml"
+             ng-click="qc.toggleFullscreen()">
+            <span ng-if="!qc.fullscreen" class="icon fa-expand" title="expand"></span>
+            <span ng-if="qc.fullscreen" class="icon fa-compress" title="contract"></span>
+          </span>
+        </span>
+
       </div>
     </div>
 

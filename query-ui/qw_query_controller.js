@@ -1372,7 +1372,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   //
 
   function getContextBuckets() {
-    return [""].concat(qc.buckets.map(bucket => bucket.name));
+    return qc.buckets.map(bucket => bucket.name);
   }
 
   function getContextScopes() {
