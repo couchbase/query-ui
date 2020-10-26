@@ -91,8 +91,9 @@ class $http {
 
   handleSuccess(resp) {
     if (resp && resp.status == 200 && resp.body) {
-      if (_.isString(resp.body))
+      if (_.isString(resp.body)) try {
         resp.data = JSON.parse(resp.body);
+      } catch (e) {}
       else
         resp.data = resp.body;
     }
@@ -100,6 +101,10 @@ class $http {
   }
 
   handleFailure(resp) {
+    if (_.isString(resp.error)) try {
+      resp.data = JSON.parse(resp.error);
+    } catch (e) {}
+
     return(Promise.reject(resp));
   }
 
