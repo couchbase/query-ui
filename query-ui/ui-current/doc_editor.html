@@ -60,7 +60,7 @@
          min="1"
          max="200"
          required
-         ng-disabled="dec.options.doc_id.length"
+         ng-disabled="(dec.options.show_id && dec.options.doc_id)"
          ng-submit="dec.retrieveDocs()"
          ng-model="dec.options.limit"
          ng-class="{'ng-invalid-number': searchForm.limit.$invalid}"
@@ -82,7 +82,7 @@
          name="offset"
          min="0"
          required
-         ng-disabled="dec.options.doc_id.length"
+         ng-disabled="(dec.options.show_id && dec.options.doc_id)"
          ng-submit="dec.retrieveDocs()"
          ng-class="{'ng-invalid-number': searchForm.offset.$invalid}"
          ng-model="dec.options.offset">
@@ -140,7 +140,7 @@
     <div class="column flex-grow-2">
       <label
          class="inline"
-         ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id.length > 0) || ((dec.options.doc_id_start.length || dec.options.doc_id_end.length))">
+         ng-disabled="!dec.can_use_n1ql() || (dec.options.show_id && dec.options.doc_id.length > 0) || (!dec.options.show_id && (dec.options.doc_id_start.length || dec.options.doc_id_end.length))">
         N1QL WHERE
       </label>
       <span
@@ -157,7 +157,7 @@
          type="text"
          ng-model="dec.options.where_clause"
          ng-submit="dec.retrieveDocs()"
-         ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id.length > 0) || ((dec.options.doc_id_start.length || dec.options.doc_id_end.length))"
+         ng-disabled="!dec.can_use_n1ql() || (dec.options.show_id && dec.options.doc_id.length > 0) || (!dec.options.show_id && (dec.options.doc_id_start.length || dec.options.doc_id_end.length))"
          class="width-12"
          placeholder="{{dec.has_indexes() ? 'optional...' : 'no indexes available...'}}">
     </div>
