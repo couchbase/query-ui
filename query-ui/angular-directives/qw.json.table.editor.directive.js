@@ -96,6 +96,7 @@ import {
       component.instance.results = this.data;
       component.instance.dec = this.controller;
       component.instance.rbac = this.mnPermissions;
+      component.instance.getTooltip = getTooltip;
     }
 
 
@@ -631,20 +632,20 @@ import {
 
         if (docWayTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
-          'ngbTooltip="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB.\'"' +
+          'title="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB.\'"' +
           'placement="right"><span class="icon fa-circle-thin fa-stack-2x"></span></span>';
         else if (docTooBig)
           result += ' <span class="icon fa-exclamation-triangle" ' +
-          'ngbTooltip="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
+          'title="\'Document is ' + Math.round(tdata[row].docSize*10/(1024*1024))/10 + 'MB, editing will be slow.\'"' +
           'placement="right"></span>';
         else if (tdata[row].rawJSONError)
           result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
-          'ngbTooltip="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
+          'title="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
           tdata[row].rawJsonError + '\'"' +
           'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
         else if (tdata[row].rawJSON)
           result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
-          'ngbTooltip="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
+          'title="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
           'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
         result += '</a>';
         result += '</span>';
@@ -715,14 +716,14 @@ import {
 
         // span where the buttons would go, all disabled except include delete
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
-        '<a class="btn square-button" [disabled]="true"><span class="icon fa-edit"></span></a>' +
+        '<a class="btn square-button" [attr.disabled]="true"><span class="icon fa-edit"></span></a>' +
 
-        '<a class="btn square-button" [disabled]="true"><span class="icon fa-copy"></span></a>' +
+        '<a class="btn square-button" [attr.disabled]="true"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" (click)="dec.deleteDoc(' + row +')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
-        '<a class="btn square-button" [disabled]="true"><span class="icon fa-save"></span></a>' +
+        '<a class="btn square-button" [attr.disabled]="true"><span class="icon fa-save"></span></a>' +
 
         '</span>';
 
@@ -730,7 +731,7 @@ import {
         result += '<span class="doc-editor-cell" style="width: ' + 2*columnWidthPx  +
         'px;"><span '
         if (tdata[row].meta || tdata[row].xattrs)
-          result += 'class="cursor-pointer blue-1" ngbTooltip="{{getTooltip(' + row + ')}}" ' +
+          result += 'class="cursor-pointer blue-1" title="{{getTooltip(' + row + ')}}" ' +
           'placement="auto bottom" tooltip-is-open="showTT'+row+' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
           'tooltip-trigger="none" (click)="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
@@ -1106,7 +1107,7 @@ import {
       // can't edit incredibly long strings without the browser barfing
       else if (object && object.length > 1024*512)
         result += '<div class="text-center"><span class="icon fa-exclamation-triangle" ' +
-        'ngbTooltip="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
+        'title="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
         'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">' +
         '</span></div>';
       else

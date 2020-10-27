@@ -58,7 +58,7 @@
          min="1"
          max="200"
          required
-         [attr.disabled]="((dec.options.show_id && dec.options.doc_id) || (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end))) || null"
+         [attr.disabled]="(dec.options.show_id && dec.options.doc_id) || null"
          (submit)="dec.retrieveDocs()"
          formControlName="limit"
          [ngClass]="{'ng-invalid-number': searchForm.get('limit').invalid}"
@@ -80,7 +80,7 @@
          name="offset"
          min="0"
          required
-         [attr.disabled]="((dec.options.show_id && dec.options.doc_id) || (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end))) || null"
+         [attr.disabled]="(dec.options.show_id && dec.options.doc_id) || null"
          formControlName="offset"
          [ngClass]="{'ng-invalid-number': searchForm.get('offset').invalid}"
          >
