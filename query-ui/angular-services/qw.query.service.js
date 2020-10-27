@@ -14,6 +14,8 @@ import {MnAdminService}         from "/ui/app/mn.admin.service.js";
 
 export {QwQueryService};
 
+var queryServiceCore = null;
+
 class QwQueryService {
   static get annotations() {
     return [
@@ -49,18 +51,22 @@ class QwQueryService {
     qwFixLongNumberService,
     qwQueryPlanService,
     validateQueryService) {
-    Object.assign(this, getQwQueryService(
-      mnAdminService,
-      mnPendingQueryKeeper,
-      mnPermissions,
-      mnPools,
-      ngbModal,
-      qwConstantsService,
-      qwDialogService,
-      qwFixLongNumberService,
-      qwQueryPlanService,
-      validateQueryService,
-      $http));
+
+    if (!queryServiceCore)
+      queryServiceCore = getQwQueryService(
+        mnAdminService,
+        mnPendingQueryKeeper,
+        mnPermissions,
+        mnPools,
+        ngbModal,
+        qwConstantsService,
+        qwDialogService,
+        qwFixLongNumberService,
+        qwQueryPlanService,
+        validateQueryService,
+        $http);
+
+    Object.assign(this, queryServiceCore);
   }
 }
 
@@ -1659,7 +1665,7 @@ function getQwQueryService(
                 // if the query hasn't returned metrics, include the explain metrics,
                 // so they know how long it took before the error
 
-                if (data.metrics && newResult.elapsedTime != '') {
+                if (data && data.metrics && newResult.elapsedTime != '') {
                   newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
                   newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
                   newResult.resultCount = data.metrics.resultCount;
@@ -2697,4 +2703,3 @@ function getQwQueryService(
 
     return qwQueryService;
   }
-

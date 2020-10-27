@@ -68,9 +68,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       doc_id_end: this.dec.options.doc_id_end,
       where_clause: this.dec.options.where_clause,
     };
-    console.log("set limit to: " + this.dec.options.limit);
-    var limit = this.searchForm.get('limit');
-    console.log("limit is: " + this.searchForm.get('limit').value);
     this.searchForm.setValue(this.formOptions);
 
     var This = this;
