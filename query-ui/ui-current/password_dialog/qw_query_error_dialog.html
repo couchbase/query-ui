@@ -8,9 +8,9 @@
       <span ng-if="!show_info" class="icon red-3 fa-warning fa-2x">&nbsp;</span>
       <span ng-if="show_info" class="icon blue-3 fa-info fa-2x">&nbsp;</span>
       <span class="flex-grow-3">
-        <div ng-if="error_detail">{{error_detail | limitTo:150}}</div>
+        <div ng-if="error_detail">{{error_detail | limitTo:300}}{{error_detail.length > 300 ? '&#8230;' : ''}}</div>
         <ul class="nobullet" ng-if="error_detail_array">
-            <li ng-repeat="msg in error_detail_array | limitTo: 10">{{msg | limitTo:150}}</li>
+            <li ng-repeat="msg in error_detail_array | limitTo: 10">{{msg | limitTo:300}}{{msg.length > 300 ? '&#8230;' : ''}}</li>
         </ul>
       </span>
     </div>
