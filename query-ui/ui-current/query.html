@@ -56,7 +56,17 @@
              ng-disabled="!qc.hasNext()">
           </span>
         </span>
-        <span class="wb-use">
+          <span class="wb-use">
+            <span
+               class="fa-stack icon-info margin-right-half"
+               uib-tooltip-html="'This menu allows you to select a default bucket and scope so that collection names need not be fully qualified in the query. '"
+               tooltip-placement="auto top"
+               tooltip-append-to-body="true"
+               tooltip-trigger="mouseenter">
+            <span class="icon fa-circle-thin fa-stack-2x"></span>
+            <span class="icon fa-info fa-stack-1x"></span>
+          </span>
+
           <select
              ng-model="qc.qqs.options.query_context_bucket"
              >
