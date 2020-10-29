@@ -230,7 +230,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
 
       if (!dec.options.selected_collection) {
-        dec.options.current_result = "No bucket selected.";
+        dec.options.current_result = "No collection selected.";
         return (false);
       }
 
@@ -1267,19 +1267,33 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           (!dec.options.selected_scope || dec.scopes[bucket].indexOf(dec.options.selected_scope) < 0))
           dec.options.selected_scope = dec.scopes[bucket][0];
 
+        // if there are no collections in the current scope, show an error message
+        if (dec.collections[bucket][dec.options.selected_scope].length == 0) {
+          dec.options.selected_collection = null;
+          showErrorDialog("No collections in scope", "There are no collections in the current scope", true);
+          dec.options.current_result = "No collections in the current scope.";
+          dec.options.current_query = "";
+          return(Promise.reject());
+        }
         // same for collections, if we don't have one or it's not in the list, use the first from the list
-        if (dec.options.selected_scope && // we have a scope
+        else if (dec.options.selected_scope && // we have a scope
           dec.collections[bucket][dec.options.selected_scope][0] && // we have at least 1 collection in the list
           (!dec.options.selected_collection || // no current collection, or collection not in list
             dec.collections[bucket][dec.options.selected_scope].indexOf(dec.options.selected_collection) < 0))
           dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
 
+
       }, function error(resp) {
-        if (resp && resp.data && resp.data.errors) {
+        if (resp && resp.data && resp.data.errors)
           dec.options.current_result = JSON.stringify(resp.data.errors);
-          showErrorDialog("Error getting list of collections.", dec.options.current_result, true);
-          refreshResults();
-        }
+        else if (resp.message)
+          dec.options.current_result = JSON.stringify(resp.message);
+        else if (resp.status)
+          dec.options.current_result = "Error getting list of collections: " + resp.status;
+        else
+          dec.options.current_result = "Error getting list of collections.";
+
+        showErrorDialog("Error getting list of collections.", dec.options.current_result, true);
       });
 
       return (promise);
@@ -1304,7 +1318,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.selected_bucket && dec.options.selected_bucket.length > 0) {
         // if we don't have any buckets yet, get the bucket list first
         if (dec.buckets.length == 0)
-          getBuckets().then(retrieveDocs_inner);
+          getBuckets().then(retrieveDocs_inner,function(){});
         else
           retrieveDocs_inner();
       }
@@ -1320,12 +1334,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.searchForm.get('where_clause').setValue('');
       dec.searchForm.get('offset').setValue(0);
       dec.options.selected_bucket = event.target.value;
-      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner);
+      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner,function(){});
     }
 
     function scopeChanged(event) {
 //      console.log("Scope changed to: " + event.target.value);
-      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner);
+      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner,function(){});
     }
 
     function collectionChanged(event) {
