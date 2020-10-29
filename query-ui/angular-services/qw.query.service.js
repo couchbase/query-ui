@@ -85,6 +85,7 @@ function getQwQueryService(
 
     var qwQueryService = {};
     qwQueryService.validateQueryService = validateQueryService;
+    qwQueryService.queryPlanService = qwQueryPlanService;
 
     //
     // remember which tab is selected for output style: JSON, table, or tree

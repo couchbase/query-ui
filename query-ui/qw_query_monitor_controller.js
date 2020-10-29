@@ -2,7 +2,8 @@ import _ from "/ui/web_modules/lodash.js";
 
 export default queryMonController;
 
-function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService, validateQueryService, qwQueryPlanService, mnPoller, mnStatisticsNewService, mnHelper) {
+function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService,
+                             mnPoller, mnStatisticsNewService, mnHelper) {
 
   var qmc = this;
 
@@ -10,7 +11,8 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
   // Do we have a REST API to work with?
   //
 
-  qmc.validated = validateQueryService;
+  qmc.validated = qwQueryService.validateQueryService;
+  qmc.queryPlan = qwQueryService.queryPlanService;
 
   // should we show active, completed, or prepared queries?
 
@@ -148,11 +150,11 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
 
     // analyze the plan
     try {
-      var lists = qwQueryPlanService.analyzePlan(plan,null);
+      var lists = qmc.queryPlan.analyzePlan(plan,null);
       dialogScope.plan =
         {explain: {plan: plan, text: statement},
          analysis: lists,
-         plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(plan, null, lists)
+         plan_nodes: qmc.queryPlan.convertN1QLPlanToPlanNodes(plan, null, lists)
         };
     } catch (exception) {console.log("Got exception analyzing plan: " + JSON.stringify(exception))}
 
@@ -311,7 +313,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     // we need to pass in the name of a bucket to which we have access, even though
     // the query stats are not bucket-specific
 
-    qmc.buckets = validateQueryService.validBuckets();
+    qmc.buckets = qmc.validated.validBuckets();
     //console.log("Got buckets: "+ JSON.stringify(qmc.buckets));
     if (_.isArray(qmc.buckets) && qmc.buckets.length > 1) {
       qmc.statsConfig.bucket = qmc.buckets[1];
@@ -345,7 +347,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     var val = qmc.vitals[name];
     //console.log("Got vital: " +name + " = "+ val);
     if (_.isString(val))
-      return(qwQueryPlanService.convertTimeStringToFloat(val));
+      return(qmc.queryPlan.convertTimeStringToFloat(val));
     else
       return(val);
   }

@@ -118,17 +118,17 @@ function getValidateQueryService(mnPools,mnPermissions,mnPoolDefault,$http) {
 
     function updateValidBuckets(resp) {
       // see what buckets we have permission to access
-//      var perms = mnPermissions.export.cluster;
+      var perms = mnPermissions.export.cluster;
 //      //console.log("Got bucket permissions... " + JSON.stringify(perms));
-//
-//      _bucketList = []; _bucketStatsList = [];
-//
-//      // stats perms
-//      _clusterStatsAllowed = (perms && perms.stats && perms.stats.read);
-//
-//      // metadata perms
-//      _monitoringAllowed = (perms && perms.n1ql && perms.n1ql.meta && perms.n1ql.meta.read);
-//
+
+      _bucketList = []; _bucketStatsList = [];
+
+      // stats perms
+      _clusterStatsAllowed = (perms && perms.stats && perms.stats.read);
+
+      // metadata perms
+      _monitoringAllowed = (perms && perms.n1ql && perms.n1ql.meta && perms.n1ql.meta.read);
+
 //      // per-bucket perms
 //      if (perms && perms.bucket)
 //        _.forEach(perms.bucket,function(v,k) {
