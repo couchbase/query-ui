@@ -230,22 +230,21 @@
   </div>
 
 <!-- Query Service-Level Stats --------------------------------------------- -->
-  <div ng-init="stats = ['query_requests_250ms','query_requests_500ms','query_requests_1000ms',
-                'query_requests_5000ms']">
+  <div>
 
-  <footer ng-if="qc.validated.monitoringAllowed()" class="footer-querymonitor"> 
+  <footer ng-if="qc.validated.monitoringAllowed()" class="footer-querymonitor">
     <div class="column vertical-divider margin-0" ng-if="qc.validated.clusterStatsAllowed()">
       <span class="width-6">Queries &gt; 250ms - last min</span>
-      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_250ms") | number:0 }}</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("@query.query_requests_250ms") | number:0 }}</span>
       <br>
       <span class="width-6">Queries &gt; 500ms - last min</span>
-      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_500ms") | number:0}} </span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("@query.query_requests_500ms") | number:0}} </span>
       <br>
       <span class="width-6">Queries &gt; 1000ms - last min</span>
-      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_1000ms") | number:0}}</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("@query.query_requests_1000ms") | number:0}}</span>
       <br>
       <span class="width-6">Queries &gt; 5000ms - last min</span>
-      <span class="text-right width-6">{{qmc.getSummaryStat("query_requests_5000ms") | number:0}}</span>
+      <span class="text-right width-6">{{qmc.getSummaryStat("@query.query_requests_5000ms") | number:0}}</span>
       <br>
     </div>
     <div class="column wide vertical-divider text-center max-width-50 padding-0" ng-if="qc.validated.clusterStatsAllowed()">

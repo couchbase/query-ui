@@ -1,9 +1,9 @@
-import _ from "/ui/web_modules/lodash.js";
+import {is} from '/ui/web_modules/ramda.js';
+import mnStatsDesc from "/ui/app/mn_admin/mn_statistics_description.js";
 
 export default queryMonController;
 
-function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService,
-                             mnPoller, mnStatisticsNewService, mnHelper) {
+function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService, mnPoller, mnStatisticsNewService, mnHelper, mnPoolDefault) {
 
   var qmc = this;
 
@@ -34,7 +34,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
   qmc.get_update_flag = function() {return(qwQueryService.getMonitoringAutoUpdate());}
   qmc.options = qwQueryService.getMonitoringOptions;
 
-  qmc.getSummaryStat = getSummaryStat;
+  qmc.getSummaryStat = mnPoolDefault.export.compat.atLeast70 ? getSummaryStat70 : getSummaryStat;
 
   qmc.vitals = {};
   qmc.vitals_names = ["request.per.sec.15min","request.per.sec.5min",
@@ -64,12 +64,16 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     }
   ];
 
+  let statsNames = ['@query.query_requests_250ms', '@query.query_requests_500ms',
+                    '@query.query_requests_1000ms', '@query.query_requests_5000ms'];
+  statsNames =
+    mnPoolDefault.export.compat.atLeast70 ? statsNames.map(mnStatsDesc.mapping65) : statsNames;
+
   qmc.statsConfig = {
     node: "all",
     zoom: 60000,
     step: 1,
-    stats: ['query_requests_250ms','query_requests_500ms','query_requests_1000ms',
-            'query_requests_5000ms']
+    stats: statsNames
   };
 
   qmc.openDetailedChartDialog = openDetailedChartDialog;
@@ -211,7 +215,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     case 3: result = qmc.monitoring.prepareds_updated; break;
     }
 
-    if (_.isDate(result)) {
+    if (is(Date, result)) {
       var minutes = result.getMinutes() > 9 ? result.getMinutes() : "0" + result.getMinutes();
       var seconds = result.getSeconds() > 9 ? result.getSeconds() : "0" + result.getSeconds();
       var dateStr = result.toString();
@@ -315,7 +319,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
 
     qmc.buckets = qmc.validated.validBuckets();
     //console.log("Got buckets: "+ JSON.stringify(qmc.buckets));
-    if (_.isArray(qmc.buckets) && qmc.buckets.length > 1) {
+    if (Array.isArray(qmc.buckets) && qmc.buckets.length > 1) {
       qmc.statsConfig.bucket = qmc.buckets[1];
     }
 
@@ -329,10 +333,20 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
 
   function getSummaryStat(name) {
     var s = $scope.mnUIStats;
-    if (s && s.stats && s.stats[name] && _.isArray(s.stats[name].aggregate)) {
+    if (s && s.stats && s.stats[name] && Array.isArray(s.stats[name].aggregate)) {
       var sum = 0;
       s.stats[name].aggregate.forEach(function(n) {sum+=n});
       return(sum);
+    }
+    else
+      return null;
+  }
+
+  function getSummaryStat70(name) {
+    var s = $scope.mnUIStats;
+    name = mnStatsDesc.mapping65(name);
+    if (s && s.stats && s.stats[name] && s.stats[name].aggregate) {
+      return s.stats[name].aggregate.values.reduce((sum, n) => sum + (Number(n) || 0), 0);
     }
     else
       return null;
@@ -346,7 +360,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
   function getVital(name) {
     var val = qmc.vitals[name];
     //console.log("Got vital: " +name + " = "+ val);
-    if (_.isString(val))
+    if (is(String, val))
       return(qmc.queryPlan.convertTimeStringToFloat(val));
     else
       return(val);
