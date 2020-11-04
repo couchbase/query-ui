@@ -106,7 +106,7 @@
 
     <div class="qm-table-completed cbui-table" ng-if="qmc.isSelected(2)">
       <div class="cbui-table-header padding-left">
-        <span class="cbui-table-cell flex-grow-3 wrap" ng-click="qmc.update_completed_sort('statement')">query
+        <span class="cbui-table-cell flex-grow-3" ng-click="qmc.update_completed_sort('statement')">query
             <span ng-if="qmc.show_up_caret_completed('statement')" class="icon fa-caret-up"></span>
             <span ng-if="qmc.show_down_caret_completed('statement')" class="icon fa-caret-down"></span>
         </span>
@@ -118,11 +118,11 @@
             <span ng-if="qmc.show_up_caret_completed('elapsedTime')" class="icon fa-caret-up"></span>
             <span ng-if="qmc.show_down_caret_completed('elapsedTime')" class="icon fa-caret-down"></span>
           </span>
-          <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('resultCount')">result count
+          <span class="cbui-table-cell flex-grow-half" ng-click="qmc.update_completed_sort('resultCount')"># results
             <span ng-if="qmc.show_up_caret_completed('resultCount')" class="icon fa-caret-up"></span>
             <span ng-if="qmc.show_down_caret_completed('resultCount')" class="icon fa-caret-down"></span>
           </span>
-          <span class="cbui-table-cell" ng-click="qmc.update_completed_sort('state')">state
+          <span class="cbui-table-cell flex-grow-half" ng-click="qmc.update_completed_sort('state')">state
             <span ng-if="qmc.show_up_caret_completed('state')" class="icon fa-caret-up"></span>
             <span ng-if="qmc.show_down_caret_completed('state')" class="icon fa-caret-down"></span>
           </span>
@@ -140,12 +140,11 @@
       <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.options().completed_sort_by:qmc.options().completed_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
-             class="cbui-table-cell flex-grow-3 cursor-pointer"
-             uib-tooltip="{{result.statement}}"
+             class="cbui-table-cell flex-grow-3 cursor-pointer wrap"
+             uib-tooltip-html="'{{result.statement}}'"
              tooltip-placement="auto top"
-             tooltip-append-to-body="true"
              tooltip-class="break-word">
-            {{result.statement}}
+            {{result.statement | limitTo: 160}}
           </span>
           <span class="cbui-table-cell">
             {{result.node}}
@@ -153,10 +152,14 @@
           <span class="cbui-table-cell">
             {{result.elapsedTime}}
           </span>
-          <span class="cbui-table-cell">
+          <span
+             class="cbui-table-cell cursor-pointer flex-grow-half"
+             uib-tooltip-html="'{{result.resultCount}}'"
+             tooltip-placement="auto top"
+             tooltip-class="break-word">
             {{result.resultCount}}
           </span>
-          <span ng-class="result.errorCount ? 'orange-3 cbui-table-cell' : 'cbui-table-cell'">
+          <span ng-class="result.errorCount ? 'orange-3 cbui-table-cell' : 'cbui-table-cell'" class="flex-grow-half">
             {{result.state}}
             <span ng-if="result.errorCount" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
                 class="fa-warning icon orange-3 cursor-pointer" uib-tooltip="{{result.errors}}"></span>
@@ -165,12 +168,12 @@
              tooltip-placement="auto top"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
-            {{result.requestTime | limitTo:16}}
+            {{result.requestTime | date:"HH:mm:ss d MMM, y"}}
           </span>
           <span class="cbui-table-cell">
             {{result.users}}
           </span>
-          <span class="cbui-table-cell text-right">
+          <span class="cbui-table-cell text-right flex-grow-half">
             <a ng-if="result.plan" ng-click="qmc.showPlan(result.statement,result.plan)">plan&nbsp;</a>
             <a ui-sref="app.admin.query.workbench({query: result.statement})" class="nowrap">
               edit
