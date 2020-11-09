@@ -926,8 +926,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         };
 
         if (status == 404) {
+          var message = JSON.stringify(resp.status);
+          if (resp.statusText)
+            message += " - " + resp.statusText;
           dec.options.current_result[position].data = "ERROR: Document not found.";
-          showErrorDialog("Error with document: " + id,  JSON.stringify(data.status), true);
+          showErrorDialog("Error with document: " + idArray[position],  message, true);
         }
 
         else if (data && data.errors) {
@@ -1149,22 +1152,26 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           dec.buckets_ephemeral = {};
           var default_seen = false;
           for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
-            if (mnPermissions.export.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
+            if (mnPermissions.export.cluster.bucket[resp.data[i].name].data.docs.read) {// only include buckets we have access to
               dec.buckets.push(resp.data[i].name);
 
-            if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
-              dec.buckets_ephemeral[resp.data[i].name] = true;
+              if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
+                dec.buckets_ephemeral[resp.data[i].name] = true;
 
-            if (resp.data[i].name == dec.options.selected_bucket)
-              default_seen = true;
+              if (resp.data[i].name == dec.options.selected_bucket)
+                default_seen = true;
+            }
           }
 
           // if we didn't see the user-selected bucket, reset selected bucket to the first one
           if (!default_seen)
             if (dec.buckets.length > 0)
               dec.options.selected_bucket = dec.buckets[0];
-            else
+            else {
               dec.options.selected_bucket = "";
+              dec.options.selected_scope = "";
+              dec.options.selected_collection = "";
+            }
         }
         //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
 
