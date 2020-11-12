@@ -73,7 +73,7 @@
              [disabled]="ic.options.importing">
             <option
                class="ui-select-choices"
-               *ngFor="let bucket of ic.buckets"
+               *ngFor="let bucket of ic.getBuckets()"
                [selected]="bucket==ic.options.selected_bucket">
               <span class="select-item ellipsis">{{bucket}}</span>
             </option>

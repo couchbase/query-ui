@@ -229,6 +229,9 @@
      //
 
      var algebra = {};
+     algebra.IK_ASC = "IK_ASC";
+     algebra.IK_DESC = "IK_DESC";
+     algebra.IK_MISSING = "IK_MISSING";
      algebra.EMPTY_USE = new expr("EMPTY_USE");
      algebra.GetAggregate = function(name, dummy, has_window)                {var a = new expr("Aggregate"); a.ops.name = name; return a;}
      algebra.MapPairs = function(pairs)                                      {var a = new expr("Pairs"); a.ops.pairs = pairs; return a;}
@@ -238,8 +241,16 @@
      algebra.NewAnsiNest = function(from,join_type,join_term,for_ident)      {var a = new expr("AnsiNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewAnsiRightJoin = function(keyspace,join_term,for_ident)       {var a = new expr("AnsiRightJoin"); a.ops.ks = keyspace; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewBuildIndexes = function(keyspace,opt_index,index_names)      {var a = new expr("BuildIndexes"); a.ops.keyspace = keyspace; a.opt_index = opt_index; a.ops.index_names = index_names; return a;};
+
+     algebra.NewCommitTransaction = function()                               {var a = new expr("CommitTransaction");};
+     algebra.NewCreateScope = function(name)                                 {var a = new expr("Create Scope"); a.ops.name = name;}
+     algebra.NewDropScope = function(name)                                   {var a = new expr("Drop Scope"); a.ops.name = name;}
+     algebra.NewCreateCollection = function(name)                            {var a = new expr("Create Collection"); a.ops.name = name;}
+     algebra.NewDropCollection = function(name)                              {var a = new expr("Drop Collection"); a.ops.name = name;}
+     algebra.NewFlushCollection = function(name)                             {var a = new expr("Flush Collection"); a.ops.name = name;}
+
      algebra.NewCreateFunction = function(name,body,params)                  {var a = new expr("CreateFunction"); a.ops.name = name; a.ops.body = body; a.ops.params = params;}
-     algebra.NewCreateIndex = function(index_name,keyspace,index_terms,index_partition,index_where,index_using,index_with) 
+     algebra.NewCreateIndex = function(index_name,keyspace,index_terms,index_partition,index_where,index_using,index_with)
        {var a = new expr("CreateIndex"); 
        a.ops.index_name = index_name; 
        a.ops.keyspace = keyspace; 
@@ -263,6 +274,7 @@
      algebra.NewGroupTerm = function(expression,opt_as_alias)                 {var a = new expr("GroupTerm"); a.ops.expression = expression; a.ops.opt_as_alias = opt_as_alias; return a;};
      algebra.NewIndexJoin = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexJoin"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewIndexKeyTerm = function(index_term,opt_dir)                   {var a = new expr("IndexKeyTerm"); a.ops.index_term = index_term; a.ops.opt_dir = opt_dir; return a;};
+     algebra.NewIndexKeyTermAttributes = function(ikattr,ikattr2)             {var a = new expr("IndexKeyTermAttrs"); a.ops.kattr = ikattr; a.ops.kattr2 = ikattr;};
      algebra.NewIndexNest = function(from,join_type,join_term,for_ident)      {var a = new expr("IndexNest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; a.ops.for_ident = for_ident; return a;};
      algebra.NewIndexRef = function(index_name,opt_using)                     {var a = new expr("IndexRef"); a.ops.index_name = index_name; a.ops.opt_using = opt_using; return a;};
      algebra.NewInferKeyspace = function(keyspace,infer_using,infer_with)     {var a = new expr("InferKeyspace"); a.ops.keyspace = keyspace; a.ops.infer_using = infer_using; a.ops.infer_with = infer_with; return a;};
@@ -272,6 +284,8 @@
      algebra.NewIntersectAll = function(select_terms,intersect_term)          {var a = new expr("IntersectAll"); a.ops.select_terms = select_terms; a.ops.intersect_term = intersect_term; return a;};
      algebra.NewJoin = function(from,join_type,join_term)                     {var a = new expr("Join"); a.ops.from = from; a.ops.join_type = join_type; a.ops.join_term = join_term; return a;};
      algebra.NewKeyspaceRef = function(namespace,keyspace,alias)              {var a = new expr("KeyspaceRef"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
+     algebra.NewKeyspaceRefFromExpression = function(keyspace,alias)          {var a = new expr("KeyspaceRefFromExpr"); a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
+     algebra.NewKeyspaceRefWithContext = function(keyspace,alias)             {var a = new expr("KeyspaceRefWithContext"); a.ops.keyspace = keyspace; a.ops.alias = alias; return a;};
      algebra.NewKeyspaceTerm = function(namespace,keyspace,as_alias,opt_use)  {var a = new expr("KeyspaceTerm"); a.ops.namespace = namespace; a.ops.keyspace = keyspace; a.ops.as_alias = as_alias; a.ops.opt_use = opt_use; return a;};
      algebra.NewKeyspaceTermFromPath = function(path,as_alias,opt_use_keys,opt_use_indexes)  {var a = new expr("KeyspaceTermFromPath"); a.ops.path = path; a.ops.as_alias = as_alias; a.ops.opt_use_keys = opt_use_keys; a.ops.opt_use_indexes = opt_use_indexes; return a;};
      algebra.NewMerge = function(keyspace,merge_source,key,merge_actions,opt_limit,returning) {var a = new expr("Merge"); a.ops.keyspace = keyspace; a.ops.merge_source = merge_source; a.ops.key = key; a.ops.merge_actions = merge_actions; a.ops.opt_limit = opt_limit; a.ops.returning = returning; return a;};
@@ -296,14 +310,18 @@
      algebra.NewRawProjection = function(distinct,expression,as_alias)        {var a = new expr("RawProjection"); a.ops.distinct = distinct; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
      algebra.NewResultTerm = function(expression,star,as_alias)               {var a = new expr("ResultTerm"); a.ops.expression = expression; a.ops.star = star; a.ops.as_alias = as_alias; return a;};
      algebra.NewRevokeRule = function(role_list,user_list,keyspace_list)      {var a = new expr("RevokeRule"); a.ops.role_list = role_list; a.ops.user_list = user_list; a.ops.keyspace_list = keyspace_list; return a;};
+     algebra.NewRollbackTransaction = function()                              {var a = new expr("RollbackTransaction");};
+     algebra.NewSavepoint = function(name)                                    {var a = new expr("Savepoint"); a.ops.name = name;};
      algebra.NewSelect = function(select_terms,order_by,offset,limit)         {var a = new expr("Select"); a.ops.select_terms = select_terms; a.ops.order_by = order_by; a.ops.offset = offset; a.ops.limit = limit; return a;};
      algebra.NewSelectTerm = function(term)                                   {var a = new expr("SelectTerm"); a.ops.term = term; return a;};
      algebra.NewSet = function(set_terms)                                     {var a = new expr("Set"); a.ops.set_terms = set_terms; return a;};
      algebra.NewSetTerm = function(path,expression,update_for)                {var a = new expr("SetTerm"); a.ops.path = path; a.ops.expression = expression; a.ops.update_for = update_for; return a;};
      algebra.NewSortTerm = function(expression,desc,order_nulls_pos)          {var a = new expr("SortTerm"); a.ops.expression = expression; a.ops.desc = desc; a.order_nulls_pos = order_nulls_pos; return a;};
+     algebra.NewStartTransaction = function(isolation)                        {var a = new expr("StartTransaction"); a.ops.isolation = isolation;};
      algebra.NewSubquery = function(fullselect)                               {var a = new expr("Subquery"); a.ops.fullselect = fullselect; return a;};
      algebra.NewSubqueryTerm = function(select_term,as_alias)                 {var a = new expr("SubqueryTerm"); a.ops.select_term = select_term; a.ops.as_alias = as_alias; return a;};
-     algebra.NewSubselect = function(with_expr,from,_let,where,group,select)   {var a = new expr("Subselect"); a.ops.with_expr = with_expr; a.ops.from = from; a.ops._let = _let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
+     algebra.NewSubselect = function(with_expr,from,_let,where,group,select)  {var a = new expr("Subselect"); a.ops.with_expr = with_expr; a.ops.from = from; a.ops._let = _let; a.ops.where = where; a.ops.group = group; a.ops.select = select; return a;};
+     algebra.NewTransactionIsolation = function(level)                        {var a = new expr("TransactionIsolation"); a.ops.level = level;};
      algebra.NewUnion = function(first,second)                                {var a = new expr("Union"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewUnionAll = function(first,second)                             {var a = new expr("UnionAll"); a.ops.first = first; a.ops.second = second; return a;};
      algebra.NewUnnest = function(from,join_type,expression,as_alias)         {var a = new expr("Unnest"); a.ops.from = from; a.ops.join_type = join_type; a.ops.expression = expression; a.ops.as_alias = as_alias; return a;};
@@ -442,6 +460,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "array"                         { return("ARRAY"); }
 "as"                            { return("AS"); }
 "asc"                           { return("ASC"); }
+"at"                            { return("AT"); }
 "begin"                         { return("BEGIN"); }
 "between"                       { return("BETWEEN"); }
 "binary"                        { return("BINARY"); }
@@ -457,6 +476,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "collate"                       { return("COLLATE"); }
 "collection"                    { return("COLLECTION"); }
 "commit"                        { return("COMMIT"); }
+"committed"                     { return("COMMITTED"); }
 "connect"                       { return("CONNECT"); }
 "continue"                      { return("CONTINUE"); }
 "correlated"                    { return("CORRELATED"); }
@@ -487,8 +507,10 @@ qid                         [`](([`][`])|[^`])+[`]
 "explain"                       { return("EXPLAIN") }
 "false"                         { return("FALSE"); }
 "fetch"                         { return("FETCH"); }
+"filter"                        { return("FILTER"); }
 "first"                         { return("FIRST"); }
 "flatten"                       { return("FLATTEN"); }
+"flush"                         { return("FLUSH"); }
 "following"                     { return("FOLLOWING"); }
 "for"                           { return("FOR"); }
 "force"                         { return("FORCE"); }
@@ -516,6 +538,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "intersect"                     { return("INTERSECT"); }
 "into"                          { return("INTO"); }
 "is"                            { return("IS"); }
+"isolation"                     { return("ISOLATION"); }
 "javascript"                    { return("JAVASCRIPT"); }
 "join"                          { return("JOIN"); }
 "key"                           { return("KEY"); }
@@ -527,6 +550,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "left"                          { return("LEFT"); }
 "let"                           { return("LET"); }
 "letting"                       { return("LETTING"); }
+"level"                         { return("LEVEL"); }
 "like"                          { return("LIKE"); }
 "limit"                         { return("LIMIT"); }
 "lsm"                           { return("LSM"); }
@@ -552,6 +576,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "offset"                        { return("OFFSET"); }
 "on"                            { return("ON"); }
 "option"                        { return("OPTION"); }
+"options"                       { return("OPTIONS"); }
 "or"                            { return("OR"); }
 "order"                         { return("ORDER"); }
 "others"                        { return("OTHERS"); }
@@ -572,9 +597,11 @@ qid                         [`](([`][`])|[^`])+[`]
 "public"                        { return("PUBLIC"); }
 "range"                         { return("RANGE"); }
 "raw"                           { return("RAW"); }
+"read"                          { return("READ"); }
 "realm"                         { return("REALM"); }
 "reduce"                        { return("REDUCE"); }
 "rename"                        { return("RENAME"); }
+"replace"                       { return("REPLACE"); }
 "respect"                       { return("RESPECT"); }
 "return"                        { return("RETURN"); }
 "returning"                     { return("RETURNING"); }
@@ -585,7 +612,9 @@ qid                         [`](([`][`])|[^`])+[`]
 "row"                           { return("ROW"); }
 "rows"                          { return("ROWS"); }
 "satisfies"                     { return("SATISFIES"); }
+"savepoint"                     { return("SAVEPOINT"); }
 "schema"                        { return("SCHEMA"); }
+"scope"                         { return("SCOPE"); }
 "select"                        { return("SELECT"); }
 "self"                          { return("SELF"); }
 "semi"                          { return("SEMI"); }
@@ -599,6 +628,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "then"                          { return("THEN"); }
 "ties"                          { return("TIES"); }
 "to"                            { return("TO"); }
+"tran"                          { return("TRAN"); }
 "transaction"                   { return("TRANSACTION"); }
 "trigger"                       { return("TRIGGER"); }
 "true"                          { return("TRUE"); }
@@ -624,6 +654,7 @@ qid                         [`](([`][`])|[^`])+[`]
 "when"                          { return("WHEN"); }
 "where"                         { return("WHERE"); }
 "while"                         { return("WHILE"); }
+"window"                        { return("WINDOW"); }
 "with"                          { return("WITH"); }
 "within"                        { return("WITHIN"); }
 "work"                          { return("WORK"); }
@@ -757,6 +788,8 @@ update_statistics
 role_stmt
 |
 function_stmt
+|
+transaction_stmt
 ;
 
 advise:
@@ -851,22 +884,20 @@ USING construction_expr
 ;
 
 infer:
-infer_keyspace
-;
-
-infer_keyspace:
-INFER opt_keyspace keyspace_ref opt_infer_using opt_infer_ustat_with
+INFER opt_keyspace_collection simple_keyspace_ref opt_infer_using opt_infer_ustat_with
 {
     $$ = algebra.NewInferKeyspace($3, $4, $5)
 }
 ;
 
-opt_keyspace:
+opt_keyspace_collection:
 /* empty */
 {
 }
 |
 KEYSPACE
+|
+COLLECTION
 ;
 
 opt_infer_using:
@@ -918,6 +949,10 @@ merge
 
 ddl_stmt:
 index_stmt
+|
+scope_stmt
+|
+collection_stmt
 ;
 
 role_stmt:
@@ -936,12 +971,38 @@ alter_index
 build_index
 ;
 
+scope_stmt:
+create_scope
+|
+drop_scope
+;
+
+collection_stmt:
+create_collection
+|
+drop_collection
+|
+flush_collection
+;
+
 function_stmt:
 create_function
 |
 drop_function
 |
 execute_function
+;
+
+transaction_stmt:
+start_transaction
+|
+commit_transaction
+|
+rollback_transaction
+|
+savepoint
+|
+set_transaction_isolation
 ;
 
 fullselect:
@@ -1053,26 +1114,16 @@ select_from
 ;
 
 from_select:
-from opt_let opt_where opt_group select_clause
+opt_with from opt_let opt_where opt_group opt_window_clause select_clause
 {
-    $$ = algebra.NewSubselect(nil, $1, $2, $3, $4, $5)
-}
-|
-opt_with from opt_let opt_where opt_group select_clause
-{
-    $$ = algebra.NewSubselect($1, $2, $3, $4, $5, $6)
+    $$ = algebra.NewSubselect($1, $2, $3, $4, $5, $6, $7)
 }
 ;
 
 select_from:
-select_clause opt_from opt_let opt_where opt_group
+opt_with select_clause opt_from opt_let opt_where opt_group opt_window_clause
 {
-    $$ = algebra.NewSubselect(nil, $2, $3, $4, $5, $1)
-}
-|
-opt_with select_clause opt_from opt_let opt_where opt_group
-{
-    $$ = algebra.NewSubselect($1, $3, $4, $5, $6, $2)
+    $$ = algebra.NewSubselect($1, $3, $4, $5, $6, $7, $2)
 }
 ;
 
@@ -1343,13 +1394,15 @@ namespace_term keyspace_name
     $$ = algebra.NewPathShort($1,$2)
 }
 |
-namespace_term bucket_name scope_name DOT keyspace_name
+namespace_term bucket_name DOT scope_name DOT keyspace_name
 {
     $$ = algebra.NewPathLong($1,$2,$4,$6)
 }
 ;
 
-
+/* for namespaces we have to have a rule with the namespace followed by the colon
+   to resolve most shift reduce / reduce reduce conflicts
+*/
 namespace_term:
 namespace_name
 |
@@ -1360,14 +1413,14 @@ SYSTEM COLON
 ;
 
 namespace_name:
-IDENT COLON 
+NAMESPACE_ID COLON
 {
     $$ = $1;
 }
 ;
 
 bucket_name:
-IDENT DOT
+IDENT
 {
     $$ = $1;
 }
@@ -1375,10 +1428,16 @@ IDENT DOT
 
 scope_name:
 IDENT
+{
+    $$ = $1;
+}
 ;
 
 keyspace_name:
 IDENT
+{
+    $$ = $1;
+}
 ;
 
 opt_use:
@@ -1473,7 +1532,7 @@ index_refs COMMA index_ref
 ;
 
 index_ref:
-index_name opt_index_using
+opt_index_name opt_index_using
 {
     $$ = algebra.NewIndexRef($1, $2);
 }
@@ -1590,6 +1649,9 @@ alias EQ expr
  *************************************************/
 
 opt_with:
+/* empty */
+{ $$ = null; }
+|
 WITH with_list
 {
     $$ = $2
@@ -1867,36 +1929,52 @@ INSERT INTO keyspace_ref opt_values_header values_list opt_returning
     $$ = algebra.NewInsertValues($3, $5, $6)
 }
 |
-INSERT INTO keyspace_ref LPAREN key_expr opt_value_expr RPAREN fullselect opt_returning
+INSERT INTO keyspace_ref LPAREN key_val_options_expr_header RPAREN fullselect opt_returning
 {
-    $$ = algebra.NewInsertSelect($3, $5, $6, $8, $9)
+    $$ = algebra.NewInsertSelect($3, $5, $7, $8)
+}
+;
+
+simple_keyspace_ref:
+keyspace_name opt_as_alias
+{
+    $$ = algebra.NewKeyspaceRefWithContext($1, $2)
+}
+|
+keyspace_path opt_as_alias
+{
+    $$ = algebra.NewKeyspaceRefFromPath($1, $2)
+}
+|
+bucket_name DOT scope_name DOT keyspace_name  opt_as_alias
+{
+    var path =  $1 + "." + $3 + "." + $5;
+    $$ = algebra.NewKeyspaceRefFromPath(path, $6)
 }
 ;
 
 keyspace_ref:
-namespace_term keyspace_name opt_as_alias
+simple_keyspace_ref
 {
-    $$ = algebra.NewKeyspaceRef($1, $2, $3)
+    $$ = $1
 }
 |
-keyspace_name opt_as_alias
+param_expr opt_as_alias
 {
-    $$ = algebra.NewKeyspaceRef("", $1, $2)
+    $$ = algebra.NewKeyspaceRefFromExpression($1, $2)
 }
 ;
 
 opt_values_header:
 /* empty */
 |
-LPAREN KEY COMMA VALUE RPAREN
+LPAREN opt_primary KEY COMMA VALUE RPAREN
 |
-LPAREN PRIMARY KEY COMMA VALUE RPAREN
+LPAREN opt_primary KEY COMMA VALUE COMMA OPTIONS RPAREN
 ;
 
 key:
-KEY
-|
-PRIMARY KEY
+opt_primary KEY
 ;
 
 values_list:
@@ -1910,20 +1988,45 @@ values_list COMMA next_values
 ;
 
 values:
-VALUES LPAREN expr COMMA expr RPAREN
+VALUES key_val_expr
 {
-    $$ = [{Key: $3, Value: $5}];
+    $$ = $2;
+}
+|
+VALUES key_val_options_expr
+{
+    $$ = $2;
 }
 ;
 
 next_values:
 values {$$ = $1;}
 |
-LPAREN expr COMMA expr RPAREN
+key_val_expr
 {
-    $$ = [{Key: $2, Value: $4}];
+    $$ = $1
+}
+|
+key_val_options_expr
+{
+    $$ = $1
 }
 ;
+
+key_val_expr:
+LPAREN expr COMMA expr RPAREN
+{
+    $$ = [{Key: $2, Value: $4}]
+}
+;
+
+key_val_options_expr:
+LPAREN expr COMMA expr COMMA expr RPAREN
+{
+    $$ = [{Key: $2, Value: $4, Options: $6}]
+}
+;
+
 
 opt_returning:
 /* empty */
@@ -1953,31 +2056,50 @@ raw expr
 }
 ;
 
-key_expr:
+key_expr_header:
 key expr
 {
     $$ = $2
 }
 ;
 
-opt_value_expr:
-/* empty */
+value_expr_header:
+VALUE expr
 {
     $$ = nil
 }
-|
-value_expr
+;
+
+options_expr_header:
+OPTIONS expr
 {
-    $$ = $1
+    $$ = $2
 }
 ;
 
-value_expr:
-COMMA VALUE expr
+key_val_options_expr_header:
+key_expr_header
 {
-    $$ = $3
+    $$ = [{Key: $1, Value: null}]
+}
+|
+key_expr_header COMMA value_expr_header
+{
+    $$ = [{Key: $1, Value: $3}]
+}
+|
+key_expr_header COMMA value_expr_header COMMA options_expr_header
+{
+    $$ = [{Key: $1, Value: $3, Options: $5}]
+}
+|
+key_expr_header COMMA options_expr_header
+{
+    $$ = [{Key: $1, Value: null, Options: $5}]
 }
 ;
+
+
 
 
 /*************************************************
@@ -1992,9 +2114,9 @@ UPSERT INTO keyspace_ref opt_values_header values_list opt_returning
     $$ = algebra.NewUpsertValues($3, $5, $6)
 }
 |
-UPSERT INTO keyspace_ref LPAREN key_expr opt_value_expr RPAREN fullselect opt_returning
+UPSERT INTO keyspace_ref LPAREN key_val_options_expr_header RPAREN fullselect opt_returning
 {
-    $$ = algebra.NewUpsertSelect($3, $5, $6, $8, $9)
+    $$ = algebra.NewUpsertSelect($3, $5, $5, $8, $8)
 }
 ;
 
@@ -2059,9 +2181,39 @@ set_terms COMMA set_term
 set_term:
 path EQ expr opt_update_for
 {
-    $$ = algebra.NewSetTerm($1, $3, $4)
+    $$ = algebra.NewSetTerm($1, $3, $4, nil)
+}
+|
+function_meta_expr DOT path EQ expr
+{
+    $$ = algebra.NewSetTerm($3, $5, nil, $1);
+    /*
+    if $1 != nil && algebra.IsValidMetaMutatePath($3){
+         $$ = algebra.NewSetTerm($3, $5, nil, $1)
+    } else if $1 != nil {
+         yylex.Error(fmt.Sprintf("SET clause has invalid path %s",  $3.String()))
+	 yylex.(*lexer).Stop()
+    }
+    */
 }
 ;
+
+function_meta_expr:
+function_name LPAREN opt_exprs RPAREN
+{
+    $$ = $1
+    /*
+    f, ok := expression.GetFunction($1)
+    if ok && strings.ToLower($1) == "meta" && len($3) >= f.MinArgs() && len($3) <= f.MaxArgs() {
+         $$ = f.Constructor()($3...)
+    } else {
+         yylex.Error(fmt.Sprintf("SET clause has invalid path %s", $1))
+	 yylex.(*lexer).Stop()
+    }
+    */
+}
+;
+
 
 opt_update_for:
 /* empty */
@@ -2177,7 +2329,7 @@ path opt_update_for
  *************************************************/
 
 merge:
-MERGE INTO keyspace_ref opt_use_merge USING simple_from_term ON opt_key expr merge_actions opt_limit opt_returning
+MERGE INTO simple_keyspace_ref opt_use_merge USING simple_from_term ON opt_key expr merge_actions opt_limit opt_returning
 {
      switch ($6.type) {
          case "SubqueryTerm":
@@ -2303,17 +2455,22 @@ opt_where
 merge_insert:
 expr opt_where
 {
-    $$ = algebra.NewMergeInsert(nil,$1,$2)
+    $$ = algebra.NewMergeInsert($1, $2)
 }
 |
-LPAREN expr COMMA expr RPAREN opt_where
+key_val_expr opt_where
 {
-    $$ = algebra.NewMergeInsert($2, $4, $6)
+    $$ = algebra.NewMergeInsert($1, $2)
 }
 |
-LPAREN key_expr value_expr RPAREN opt_where
+key_val_options_expr opt_where
 {
-    $$ = algebra.NewMergeInsert($2, $3, $5)
+    $$ = algebra.NewMergeInsert($1, $2)
+}
+|
+LPAREN key_val_options_expr_header RPAREN opt_where
+{
+    $$ = algebra.NewMergeInsert($2, $4)
 }
 ;
 
@@ -2329,7 +2486,7 @@ GRANT role_list TO user_list
     $$ = algebra.NewGrantRole($2, nil, $4)
 }
 |
-GRANT role_list ON keyspace_list TO user_list
+GRANT role_list ON keyspace_scope_list TO user_list
 {
     $$ = algebra.NewGrantRole($2, $4, $6)
 }
@@ -2375,16 +2532,48 @@ DELETE
 }
 ;
 
-keyspace_list:
-IDENT
+keyspace_scope_list:
+keyspace_scope
 {
-    $$ = [$1];
+    $$ = $1
 }
 |
-keyspace_list COMMA IDENT
+keyspace_scope_list COMMA keyspace_scope
 {
-    $1.push($3);
-    $$ = $1;
+	$1.push($3)
+	$$ = $1
+}
+;
+
+keyspace_scope:
+keyspace_name
+{
+    $$ = $1
+}
+|
+namespace_name keyspace_name
+{
+    $$ = {Namespace: $1, Keyspace: $2}
+}
+|
+namespace_name bucket_name DOT scope_name DOT keyspace_name
+{
+    $$ = {Namespace: $1, Bucket: $2, Scope: $4, Keyspace: $6}
+}
+|
+bucket_name DOT scope_name DOT keyspace_name
+{
+    $$ = {Bucket: $1, Scope: $3, Keyspace: $5}
+}
+|
+namespace_name bucket_name DOT scope_name
+{
+    $$ = {Namespace: $1, Bucket: $2, Scope: $4}
+}
+|
+bucket_name DOT scope_name
+{
+    $$ = {Bucket: $1, Scope: $3}
 }
 ;
 
@@ -2422,13 +2611,84 @@ IDENT COLON IDENT
 revoke_role:
 REVOKE role_list FROM user_list
 {
-    $$ = algebra.NewRevokeRole($2, nil, $4);
+    $$ = algebra.NewRevokeRole($2, nil, $4)
 }
 |
-REVOKE role_list ON keyspace_list FROM user_list
+REVOKE role_list ON keyspace_scope_list FROM user_list
 {
-    $$ = algebra.NewRevokeRole($2, $4, $6);
+    $$ = algebra.NewRevokeRole($2, $4, $6)
 }
+;
+
+/*************************************************
+ *
+ * CREATE SCOPE
+ *
+ *************************************************/
+
+create_scope:
+CREATE SCOPE named_scope_ref
+{
+    $$ = algebra.NewCreateScope($3)
+}
+;
+
+/*************************************************
+ *
+ * DROP SCOPE
+ *
+ *************************************************/
+
+drop_scope:
+DROP SCOPE named_scope_ref
+{
+    $$ = algebra.NewDropScope($3)
+}
+;
+
+/*************************************************
+ *
+ * CREATE COLLECTION
+ *
+ *************************************************/
+
+create_collection:
+CREATE COLLECTION named_keyspace_ref
+{
+    $$ = algebra.NewCreateCollection($3)
+}
+;
+
+/*************************************************
+ *
+ * DROP COLLECTION
+ *
+ *************************************************/
+
+drop_collection:
+DROP COLLECTION named_keyspace_ref
+{
+    $$ = algebra.NewDropCollection($3)
+}
+;
+
+/*************************************************
+ *
+ * FLUSH COLLECTION
+ *
+ *************************************************/
+
+flush_collection:
+flush_or_truncate COLLECTION named_keyspace_ref
+{
+    $$ = algebra.NewFlushCollection($3)
+}
+;
+
+flush_or_truncate:
+FLUSH
+|
+TRUNCATE
 ;
 
 /*************************************************
@@ -2462,15 +2722,47 @@ index_name:
 IDENT
 ;
 
+opt_index_name:
+{ $$ = "" }
+|
+index_name
+;
+
 named_keyspace_ref:
+simple_named_keyspace_ref
+|
+namespace_name bucket_name
+{
+    $$ = algebra.NewKeyspaceRefFromPath($1, $2)
+}
+|
+bucket_name DOT scope_name DOT keyspace_name
+{
+    $$ = algebra.NewKeyspaceRefFromPath($1, $3, $5)
+}
+;
+
+simple_named_keyspace_ref:
 keyspace_name
 {
     $$ = algebra.NewKeyspaceRef("", $1, "")
 }
 |
-namespace_name keyspace_name
+namespace_name bucket_name DOT scope_name DOT keyspace_name
 {
-    $$ = algebra.NewKeyspaceRef($1, $2, "")
+    $$ = algebra.NewKeyspaceRefFromPath($1, $2, $4, $6)
+}
+;
+
+named_scope_ref:
+namespace_name bucket_name DOT scope_name
+{
+    $$ = algebra.NewScopeRefFromPath($1, $2, $4)
+}
+|
+bucket_name DOT scope_name
+{
+    $$ = algebra.NewScopeRefFromPath($1, $3)
 }
 ;
 
@@ -2545,7 +2837,7 @@ index_terms COMMA index_term
 ;
 
 index_term:
-index_term_expr opt_dir
+index_term_expr opt_ikattr
 {
    $$ = algebra.NewIndexKeyTerm($1, $2)
 }
@@ -2600,6 +2892,37 @@ WHERE index_expr
 }
 ;
 
+opt_ikattr:
+/* empty */
+{ $$ = algebra.IK_NONE }
+|
+ikattr
+{ $$ = $1 }
+|
+ikattr ikattr
+{
+/*
+   attr, valid := algebra.NewIndexKeyTermAttributes($1,$2)
+   if !valid {
+       yylex.Error("Duplicate or Invalid index key attribute")
+   }
+*/
+   $$ = algebra.NewIndexKeyTermAttributes($1,$2)
+}
+;
+
+
+ikattr:
+ASC
+{ $$ = algebra.IK_ASC }
+|
+DESC
+{ $$ = algebra.IK_DESC }
+|
+MISSING
+{ $$ = algebra.IK_MISSING }
+;
+
 
 /*************************************************
  *
@@ -2613,9 +2936,14 @@ DROP PRIMARY INDEX ON named_keyspace_ref opt_index_using
     $$ = algebra.NewDropIndex($5, "#primary", $6) 
 }
 |
-DROP INDEX named_keyspace_ref DOT index_name opt_index_using
+DROP INDEX simple_named_keyspace_ref DOT index_name opt_index_using
 {
     $$ = algebra.NewDropIndex($3, $5, $6)
+}
+|
+DROP INDEX index_name ON named_keyspace_ref opt_index_using
+{
+    $$ = algebra.NewDropIndex($5, $3, $6)
 }
 ;
 
@@ -2626,9 +2954,14 @@ DROP INDEX named_keyspace_ref DOT index_name opt_index_using
  *************************************************/
 
 alter_index:
-ALTER INDEX named_keyspace_ref DOT index_name opt_index_using index_with
+ALTER INDEX simple_named_keyspace_ref DOT index_name opt_index_using index_with
 {
     $$ = algebra.NewAlterIndex($3, $5, $6, $7)
+}
+|
+ALTER INDEX index_name ON named_keyspace_ref opt_index_using index_with
+{
+    $$ = algebra.NewAlterIndex($5, $3, $6, $7)
 }
 ;
 
@@ -2652,17 +2985,29 @@ BUILD INDEX ON named_keyspace_ref LPAREN exprs RPAREN opt_index_using
  *************************************************/
 
 create_function:
-CREATE FUNCTION func_name LPAREN parm_list RPAREN func_body
+CREATE opt_replace FUNCTION func_name LPAREN parm_list RPAREN func_body
 {
     /*
-    if $7 != nil {
-    err := $7.SetVarNames($5)
+    if $8 != nil {
+    err := $8.SetVarNames($6)
     if err != nil {
         yylex.Error(err.Error())
         }
     }
     */
-    $$ = algebra.NewCreateFunction($3, $7, $5);
+    $$ = algebra.NewCreateFunction($4, $8, $2);
+}
+;
+
+opt_replace:
+/* empty */
+{
+    $$ = false
+}
+|
+OR REPLACE
+{
+    $$ = true
 }
 ;
 
@@ -2698,22 +3043,27 @@ namespace_term keyspace_name
     */
     $$ = [$1,$2];
 }
-/* TODO function names for collections
 |
-namespace_term bucket_name scope_name DOT keyspace_name
+namespace_term bucket_name DOT scope_name DOT keyspace_name
 {
+/*
     name, err := functions.Constructor([]string{$1, $2, $4, $6}, yylex.(*lexer).Namespace())
     if $$ != nil {
     yylex.Error(err.Error())
     }
     $$ = name
-    //$$ = [$1,$2,$4,$6];
-}
 */
+    $$ = [$1,$2,$4,$6];
+}
 ;
 
 parm_list:
 /* empty */
+{
+    $$ = nil
+}
+|
+DOT DOT DOT
 {
     $$ = nil
 }
@@ -2761,11 +3111,11 @@ LANGUAGE INLINE AS expr
     */
 }
 |
-LANGUAGE GOLANG AS LBRACE STR COMMA STR RBRACE
+LANGUAGE GOLANG AS STR AT STR
 {   
-    $$ = [$5,$7]
+    $$ = [$4,$6]
     /*
-    body, err := golang.NewGolangBody($5, $7)
+    body, err := golang.NewGolangBody($6, $4)
     if err != nil {
         yylex.Error(err.Error())
     } else { 
@@ -2774,11 +3124,11 @@ LANGUAGE GOLANG AS LBRACE STR COMMA STR RBRACE
     */
 }
 |
-LANGUAGE JAVASCRIPT AS LBRACE STR COMMA STR RBRACE
+LANGUAGE JAVASCRIPT AS STR AT STR
 {
-   $$ = [$5,$7]
+   $$ = [$4,$6]
    /*
-    body, err := javascript.NewJavascriptBody($5, $7)
+    body, err := javascript.NewJavascriptBody($6, $4)
     if err != nil {
         yylex.Error(err.Error())
     } else {
@@ -2814,7 +3164,6 @@ EXECUTE FUNCTION func_name LPAREN opt_exprs RPAREN
 }
 ;
 
-
 /*************************************************
  *
  * UPDATE STATISTICS
@@ -2824,7 +3173,62 @@ EXECUTE FUNCTION func_name LPAREN opt_exprs RPAREN
 update_statistics:
 UPDATE STATISTICS opt_for named_keyspace_ref LPAREN update_stat_terms RPAREN opt_infer_ustat_with
 {
-    $$ = algebra.NewUpdateStatistics($4, $6, $8)
+    $$ = algebra.NewUpdateStatistics($4, $6, $8, nul, false)
+}
+|
+UPDATE STATISTICS opt_for named_keyspace_ref DELETE LPAREN update_stat_terms RPAREN
+{
+    $$ = algebra.NewUpdateStatistics($4, $7, nil, nil, true)
+}
+|
+UPDATE STATISTICS opt_for named_keyspace_ref DELETE ALL
+{
+    $$ = algebra.NewUpdateStatistics($4, nil, nil, nil, true)
+}
+|
+UPDATE STATISTICS opt_for named_keyspace_ref INDEX LPAREN index_refs RPAREN opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($4, nil, $9, $7, false)
+}
+|
+UPDATE STATISTICS FOR INDEX simple_named_keyspace_ref DOT index_name opt_index_using opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($5, nil, $9, algebra.NewIndexRef($7, $8), false)
+}
+|
+UPDATE STATISTICS FOR INDEX index_name ON simple_named_keyspace_ref opt_index_using opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($7, nil, $9, algebra.NewIndexRef($5, $8), false)
+}
+|
+ANALYZE opt_keyspace_collection named_keyspace_ref LPAREN update_stat_terms RPAREN opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($3, $5, $7, nil, false)
+}
+|
+ANALYZE opt_keyspace_collection named_keyspace_ref DELETE STATISTICS LPAREN update_stat_terms RPAREN
+{
+    $$ = algebra.NewUpdateStatistics($3, $7, nil, nil, true)
+}
+|
+ANALYZE opt_keyspace_collection named_keyspace_ref DELETE STATISTICS
+{
+    $$ = algebra.NewUpdateStatistics($3, nil, nil, nil, true)
+}
+|
+ANALYZE opt_keyspace_collection named_keyspace_ref INDEX LPAREN index_refs RPAREN opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($3, nil, $8, $6, false)
+}
+|
+ANALYZE INDEX simple_named_keyspace_ref DOT index_name opt_index_using opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($3, nil, $7, [$5, $6], false)
+}
+|
+ANALYZE INDEX index_name ON simple_named_keyspace_ref opt_index_using opt_infer_ustat_with
+{
+    $$ = algebra.NewUpdateStatistics($5, nil, $7, [$3, $6], false)
 }
 ;
 
@@ -3476,28 +3880,28 @@ ELSE expr
  *************************************************/
 
 function_expr:
-NTH_VALUE LPAREN exprs RPAREN opt_from_first_last opt_nulls_treatment window_clause
+NTH_VALUE LPAREN exprs RPAREN opt_from_first_last opt_nulls_treatment window_function_details
 {
     var fname = "nth_value";
     $$ = algebra.GetAggregate(fname, false, ($7 != null));
 }
 |
-function_name opt_exprs RPAREN opt_nulls_treatment opt_window_clause
+function_name opt_exprs RPAREN opt_filter opt_nulls_treatment opt_window_function
 {
     $$ = expression.NewFunction($1,$2);
 }
 |
-function_name agg_quantifier expr RPAREN opt_window_clause
+function_name agg_quantifier expr RPAREN opt_filter opt_window_clause
 {
     $$ = expression.NewFunction($1,$3,true);
 }
 |
-function_name STAR RPAREN opt_window_clause
+function_name STAR RPAREN opt_filter opt_window_function
 {
     $$ = expression.NewFunction($1,"star");
 }
 |
-namespace_term keyspace_name LPAREN opt_exprs RPAREN
+long_func_name LPAREN opt_exprs RPAREN
 {
     $$ = expression.NewFunction($2,$4);
 }
@@ -3505,6 +3909,8 @@ namespace_term keyspace_name LPAREN opt_exprs RPAREN
 
 function_name:
 IDENT LPAREN {$$ = $1;}
+|
+REPLACE LPAREN
 ;
 
 
@@ -3672,19 +4078,55 @@ DISTINCT expr
 }
 ;
 
+/*************************************************
+ *
+ * WINDOW clause
+ *
+ *************************************************/
+
 opt_window_clause:
 /* empty */
 { $$ = nil }
 |
-window_clause
-{ $$ = $1 }
+WINDOW window_list
+{
+    $$ = $2
+}
 ;
 
-window_clause:
-OVER LPAREN opt_window_partition opt_order_by opt_window_frame RPAREN
+window_list:
+window_term
 {
-    $$ = algebra.NewWindowTerm($3,$4,$5)
+    $$ = $1
 }
+|
+window_list COMMA window_term
+{
+    $1.push($3);
+    $$ = $1;
+}
+;
+
+window_term:
+IDENT AS window_specification
+{
+    $$ = [$3]
+    //$$.SetAsWindowName($1)
+}
+;
+
+window_specification:
+LPAREN opt_window_name opt_window_partition opt_order_by opt_window_frame RPAREN
+{
+    $$ = algebra.NewWindowTerm($2,$3,$4,$5, false)
+}
+;
+
+opt_window_name:
+/* empty */
+{ $$ = "" }
+|
+IDENT
 ;
 
 opt_window_partition:
@@ -3706,7 +4148,6 @@ window_frame_modifier window_frame_extents opt_window_frame_exclusion
     $$ = algebra.NewWindowFrame($1|$3, $2)
 }
 ;
-
 
 window_frame_modifier:
 ROWS
@@ -3839,3 +4280,141 @@ DISTINCT
    $$ = algebra.AGGREGATE_DISTINCT
 }
 ;
+
+
+opt_filter:
+/* empty */
+{ $$ = nil }
+|
+FILTER LPAREN where RPAREN
+{ $$ = $3 }
+;
+
+opt_window_function:
+/* empty */
+{ $$ = nil }
+|
+window_function_details
+{ $$ = $1 }
+;
+
+window_function_details:
+OVER IDENT
+{
+    $$ = algebra.NewWindowTerm($2,nil,nil, nil, true)
+}
+|
+OVER window_specification
+{
+    $$ = $2
+}
+;
+
+/*************************************************
+ *
+ * <START|BEGIN> <TRANSACTION | TRAN | WORK> [ISOLATION LEVEL READ COMMITED]
+ *
+ *************************************************/
+
+start_transaction:
+start_or_begin transaction opt_isolation_level
+{
+    $$ = algebra.NewStartTransaction($3)
+}
+;
+
+commit_transaction:
+COMMIT opt_transaction
+{
+    $$ = algebra.NewCommitTransaction()
+}
+;
+
+rollback_transaction:
+ROLLBACK opt_transaction opt_savepoint
+{
+    $$ = algebra.NewRollbackTransaction($3)
+}
+;
+
+start_or_begin:
+START
+|
+BEGIN
+;
+
+opt_transaction:
+/* empty */
+{}
+|
+transaction
+;
+
+transaction:
+TRAN
+|
+TRANSACTION
+|
+WORK
+;
+
+opt_savepoint:
+/* empty */
+{
+    $$ = ""
+}
+|
+TO SAVEPOINT savepoint_name
+{
+    $$ = $3
+}
+;
+
+savepoint_name:
+IDENT
+{
+    $$ = $1
+}
+;
+
+opt_isolation_level:
+/* empty */
+{
+    $$ = "datastore.IL_READ_COMMITTED"
+}
+|
+isolation_level
+{
+    $$ = $1
+}
+;
+
+isolation_level:
+ISOLATION LEVEL isolation_val
+{
+    $$ = $3
+}
+;
+
+isolation_val:
+READ COMMITTED
+{
+    $$ = "datastore.IL_READ_COMMITTED"
+}
+;
+
+set_transaction_isolation:
+SET TRANSACTION isolation_level
+{
+    $$ = algebra.NewTransactionIsolation($3)
+}
+;
+
+savepoint:
+SAVEPOINT savepoint_name
+{
+    $$ = algebra.NewSavepoint($2)
+}
+;
+
+export default n1ql;

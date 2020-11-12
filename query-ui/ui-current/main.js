@@ -5,6 +5,7 @@ import ace from '/ui/libs/ace/ace-wrapper.js';
 import { NgModule } from '/ui/web_modules/@angular/core.js';
 import { UIRouterUpgradeModule } from '/ui/web_modules/@uirouter/angular-hybrid.js';
 
+import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
 import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
 import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
@@ -33,6 +34,7 @@ angular
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
+      ngShow: "rbac.cluster.bucket['.'].data.docs.read && rbac.cluster.bucket['.'].n1ql.select.execute",
       index: 1
     });
 
@@ -98,6 +100,7 @@ class QueryUI {
       // the query workbench. This should go away once the workbench is
       // migrated to Angular
       providers: [
+        QwCollectionsService,
         QwConstantsService,
         QwDialogService,
         QwFixLongNumberService,

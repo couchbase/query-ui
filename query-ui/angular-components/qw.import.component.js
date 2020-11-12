@@ -49,9 +49,9 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     
     // get our buckets and options from the import service, so they persist
     // between invocations (especially when an import is in progress)
-    ic.buckets = qis.buckets;
     ic.options = qis.options;
     ic.doImport = qis.doImport;
+    ic.getBuckets = qis.getBuckets;
     ic.getScopes = qis.getScopes;
     ic.getCollections = qis.getCollections;
 
@@ -353,7 +353,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       }
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
-        var promise = qwImportService.getBuckets();
+        qwImportService.getBuckets();
         if (!validateQueryService.valid())
           qis.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
         });

@@ -145,7 +145,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
     template:
       '<h5 class="row">' +
       ' <div class="disclosure lower medium" ng-class="{disclosed: bucket.expanded}" ng-click="changeBucketExpanded(bucket)">{{bucket.id}}</div>' +
-      ' <small ng-if="bucket.collections"> {{bucket.collections.length}} collection<span ng-hide="bucket.collections.length == 1">s</span></small>' +
+      ' <small ng-if="bucket.collections"> {{bucket.collections.length' + '}} collection<span ng-hide="bucket.collections.length == 1">s</span></small>' +
       '</h5>' +
       '<div ng-if="bucket.expanded" class="text-smaller margin-bottom-half">' +
       //   for each scope in the bucket...
@@ -159,7 +159,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
       '           ng-class="{\'margin-bottom-half\': collection.expanded}">' +
       '        <h6 ng-click="changeCollectionExpanded(bucket,scope,collection)" ' +
       '            class="disclosure higher tight row" ng-class="{disclosed: collection.expanded}">{{collection.id}}' +
-      '        <small ng-if="collection.count">{{collection.count}} docs</small></h6>' +
+      '        <small ng-if="collection.count != null">{{collection.count}} docs</small></h6>' +
       // if the collection is expanded, show its schema
       '        <div ng-if="collection.expanded" class="margin-bottom-half margin-left-1">' +
                 // error?
@@ -209,6 +209,8 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
         scope.changeScopeExpanded = function(s) {
           s.expanded = !s.expanded;
           qwQueryService.updateExpandedState();
+          if (s.expanded)
+            qwQueryService.updateBucketCounts();
         };
         scope.changeCollectionExpanded= function(bucket,scope,collection) {
           collection.expanded = !collection.expanded;

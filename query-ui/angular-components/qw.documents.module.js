@@ -13,6 +13,7 @@ import { QwDocsSubNavComponent } from './qw.documents.subnav.js';
 
 import { QwDirectivesModule }     from "../angular-directives/qw.directives.module.js";
 
+import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
 import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
 import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
@@ -105,6 +106,7 @@ class QwDocumentsModule {
         NgxAceModule.forRoot(),
         ],
       providers: [
+        QwCollectionsService,
         QwConstantsService,
         QwDialogService,
         QwFixLongNumberService,

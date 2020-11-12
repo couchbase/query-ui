@@ -1,6 +1,7 @@
 import {NgbModal}               from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
 import _                        from '/ui/web_modules/lodash.js';
 
+import {QwCollectionsService}   from "/_p/ui/query/angular-services/qw.collections.service.js";
 import {QwConstantsService}     from "/_p/ui/query/angular-services/qw.constants.service.js";
 import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import {QwValidateQueryService} from '/_p/ui/query/angular-services/qw.validate.query.service.js';
@@ -31,6 +32,7 @@ class QwQueryService {
       MnPermissions,
       MnPools,
       NgbModal,
+      QwCollectionsService,
       QwConstantsService,
       QwDialogService,
       QwFixLongNumberService,
@@ -46,6 +48,7 @@ class QwQueryService {
     mnPermissions,
     mnPools,
     ngbModal,
+    qwCollectionsService,
     qwConstantsService,
     qwDialogService,
     qwFixLongNumberService,
@@ -59,6 +62,7 @@ class QwQueryService {
         mnPermissions,
         mnPools,
         ngbModal,
+        qwCollectionsService,
         qwConstantsService,
         qwDialogService,
         qwFixLongNumberService,
@@ -76,6 +80,7 @@ function getQwQueryService(
   mnPermissions,
   mnPools,
   ngbModal,
+  qwCollectionsService,
   qwConstantsService,
   qwDialogService,
   qwFixLongNumberService,
@@ -1376,7 +1381,7 @@ function getQwQueryService(
     // recursive function to run queries one after the other
     //
 
-    function runBatchQuery(parentResult, queryArray, curIndex, explainOnly) {
+    function runBatchQuery(parentResult, queryArray, curIndex, explainOnly, txId) {
 
       // if we successfully executed the final query, set the parent status to the status of the last query
       if (curIndex >= queryArray.length) {
@@ -1388,7 +1393,7 @@ function getQwQueryService(
       parentResult.status = "Executing " + (curIndex + 1) + "/" + queryArray.length;
 
       return executeSingleQuery(queryArray[curIndex], explainOnly, parentResult.batch_results[curIndex]).then(
-        function success() {
+        function success(resp) {
           addBatchResultsToParent(parentResult, curIndex);
 
           // only run the next query if this query was a success
@@ -1400,7 +1405,7 @@ function getQwQueryService(
             finishParentQuery(parentResult, curIndex, true);
         },
         // if we get failure, the parent status is the status of the last query to run
-        function fail() {
+        function fail(resp) {
           addBatchResultsToParent(parentResult, curIndex);
           finishParentQuery(parentResult, curIndex, true);
         }
@@ -2249,6 +2254,7 @@ function getQwQueryService(
     //
     function updateBucketCounts() {
       // build a query to get the doc count for each bucket that we know about
+      //console.log("Updating bucket counts");
       var queryString = "select raw {";
       var collectionCount = 0;
 
@@ -2293,6 +2299,90 @@ function getQwQueryService(
     function updateBucketsCallback() {
       // make sure we have a query node
       if (!validateQueryService.valid())
+        return;
+
+      // for those buckets that are valid for querying, add them to the list
+      validateQueryService.validBuckets().forEach(bucketName => {
+
+        // if we don't know about this bucket, add it
+        if (!qwQueryService.buckets.find(bucket => bucket.id == bucketName)) {
+          var bucket = {
+            name: bucketName,
+            id: bucketName,
+            expanded: isExpanded(bucketName),
+            schema: [],
+            indexes: [],
+            scopes: {},
+            validated: true,
+            //count: bucket_counts[bucketName],
+            collections: []
+          };
+          qwQueryService.buckets.push(bucket);
+          qwQueryService.bucket_names.push(bucket.id);
+          addToken(bucket.id, "bucket");
+          addToken('`' + bucket.id + '`', "bucket");
+        }
+
+        // for each bucket, get the scopes and collections
+        qwCollectionsService.getScopesForBucket(bucketName,function(bucketName) {
+          var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucketName);
+          var scopes = qwCollectionsService.getScopesForBucket(bucketName);
+          scopes.forEach(function(scopeName) {
+            addToken(scopeName, "scope");
+            addToken('`' + scopeName + '`', "scope");
+            addToken(bucketName + "." + scopeName, "scope");
+            addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
+
+            bucket.scopes[scopeName] = true;
+            var colls = qwCollectionsService.getCollectionsForBucketScope(bucketName,scopeName);
+            // add the collection if it's not there already
+            colls.forEach(collName =>
+              {if (!bucket.collections.find(coll => coll.id == collName && coll.scope == scopeName))
+                bucket.collections.push({
+                  name: collName,
+                  id: collName,
+                  expanded: isExpanded(bucketName,scopeName,collName),
+                  bucket: bucketName,
+                  scope: scopeName,
+                  schema: [],
+                  indexes: [],
+                });
+                addToken(collName, "collection");
+                addToken('`' + collName + '`', "collection");
+                addToken(bucketName + "." + scopeName + "." + collName, "collection");
+                addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
+              }
+            );
+          });
+
+          // make an array of scope names and expansion status
+          bucket.scopeArray = Object.keys(bucket.scopes)
+            .map(function (scope_name) {
+              return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
+            });
+          bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
+
+          // also figure out which collections will need to be inferred
+          var collectionsToInfer = [];
+          if (qwConstantsService.showSchemas)
+            bucket.collections.forEach(collection => {
+              if (collection.expanded)
+                collectionsToInfer.push({
+                  bucket: bucket,
+                  scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
+                  collection: collection
+                });
+            });
+
+          // Should we go infer schemas for the expanded collections?
+          if (collectionsToInfer.length)
+            getCollectionsSchemasBackground(collectionsToInfer, 0);
+        });
+      });
+
+      refreshAutoCompleteArray();
+
+      if (validateQueryService.valid())
         return;
 
       //console.log("Inside updateBucketsCallback");
@@ -2361,7 +2451,8 @@ function getQwQueryService(
                     bucket: bucket_id,
                     scope: scope_id,
                     schema: [],
-                    indexes: []
+                    indexes: [],
+                    count: record.count
                   };
                   bucket.collections.push(collection);
                 }
