@@ -1,7 +1,7 @@
 import angular from "/ui/web_modules/angular.js";
 
 import { Injectable } from '/ui/web_modules/@angular/core.js';
-import { HttpClient } from '/ui/web_modules/@angular/common/http.js';
+import { HttpClient, HttpHeaders } from '/ui/web_modules/@angular/common/http.js';
 
 import _ from "/ui/web_modules/lodash.js";
 
@@ -53,7 +53,8 @@ class $http {
   configToOptions(config) {
    var options = {observe: 'response'};
    if (config.headers)
-     options.headers = config.headers;
+     options.headers = new HttpHeaders(config.headers);
+
    if (config.params)
      options.params = config.params;
    return(options);
@@ -63,21 +64,24 @@ class $http {
     config = config || {};
     config.url = url;
     config.method = 'GET';
+
     return(this.http.get(url,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
   };
 
 
   post(url, data, config) {
-    var config = {};
+    config = config || {};
     config.url = url;
     config.method = 'POST';
+
     return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
   }
 
   put(url, data, config) {
-    var config = {};
+    config = config || {};
     config.url = url;
     config.method = 'PUT';
+
     return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
   }
 
@@ -85,6 +89,7 @@ class $http {
     config = {};
     config.url = url;
     config.method = 'DELETE';
+
     return(this.http.delete(config.url,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
   }
 

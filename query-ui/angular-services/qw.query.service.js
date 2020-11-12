@@ -1223,8 +1223,8 @@ function getQwQueryService(
 
       var queryRequest;
       var userAgent = 'Couchbase Query Workbench';
-      if (mnAdmin.stream.prettyVersion)
-        userAgent += ' (' + qwQueryService.version + ')';
+      //if (mnAdmin.stream.prettyVersion)
+      //  userAgent += ' (' + JSON.stringify(mnAdmin.stream.prettyVersion) + ')';
 
       var queryRequest = {
         url: qwConstantsService.queryURL,
@@ -1232,7 +1232,7 @@ function getQwQueryService(
         headers: {
           'Content-Type': 'application/json', 'ns-server-proxy-timeout':
             (qwQueryService.options.query_timeout + 1) * 1000,
-          'ignore-401': 'true', 'CB-User-Agent': userAgent
+          'ignore-401': 'true', 'CB-User-Agent': userAgent, 'isNotForm': 'true'
         },
         data: queryData,
         mnHttp: {
