@@ -17,6 +17,7 @@ function getQwDocEditorService(
 
   var des = {};
   des.getAndShowDocument = getAndShowDocument;
+  des.getAndShowDocumentWithinCollection = getAndShowDocumentWithinCollection;
   des.showDocEditor = showDocEditor;
 
   //
@@ -24,6 +25,42 @@ function getQwDocEditorService(
   //
   function getAndShowDocument(bucket,docId) {
     var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(bucket) + "/docs/" + myEncodeURIComponent(docId);
+
+    $http({
+      url: rest_url,
+      method: "GET"
+    }).then(
+        function success(resp) {
+          if (resp && resp.status == 200 && resp.data) {
+
+            var docInfo = resp.data;
+            var docId = docInfo.meta.id;
+
+            // did we get a json doc back?
+            if (docInfo && docInfo.json && docInfo.meta)
+              showDocEditor(docId,js_beautify(docInfo.json,{"indent_size": 2}),
+                  JSON.stringify(docInfo.meta,null,2),true);
+
+            // maybe a single binary doc?
+            else if (docInfo && docInfo.meta && (docInfo.base64 === "" || docInfo.base64))
+              showDocEditor(docId,atob(docInfo.base64),docInfo.meta,true);
+          }
+
+        },
+        function error(resp) {
+
+        }
+      );
+  }
+
+  //
+  // retrieve a document by ID within a scope and a collection and show it in a dialog
+  //
+  function getAndShowDocumentWithinCollection(bucket,scope,collection,docId) {
+    var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(bucket) +
+          "/scopes/" + myEncodeURIComponent(scope) +
+          "/collections/" + myEncodeURIComponent(collection) +
+          "/docs/" + myEncodeURIComponent(docId);
 
     $http({
       url: rest_url,
