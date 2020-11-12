@@ -268,6 +268,8 @@ function getQwQueryService(
       expanded: {},
       query_timeout: 600
     };
+    
+    qwQueryService.set_options = function(new_options) {qwQueryService.options = new_options;};
 
     // clone options so we can have a scratch copy for the dialog box
     qwQueryService.clone_options = function () {
@@ -1717,6 +1719,7 @@ function getQwQueryService(
         else
           query_promise = $http(request);
 
+        //console.log("Running request:" + JSON.stringify(request,null,2));
         // SUCCESS!
         query_promise
           .then(function success(resp) {
@@ -2347,6 +2350,8 @@ function getQwQueryService(
                   schema: [],
                   indexes: [],
                 });
+
+
                 addToken(collName, "collection");
                 addToken('`' + collName + '`', "collection");
                 addToken(bucketName + "." + scopeName + "." + collName, "collection");

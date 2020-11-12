@@ -973,20 +973,22 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
   function options() {
     dialogScope.options = qwQueryService.clone_options();
+    var pp = dialogScope.options.positional_parameters;
+    var np = dialogScope.options.named_parameters;
     dialogScope.options.positional_parameters = [];
     dialogScope.options.named_parameters = [];
 
     // the named & positional parameters are values, convert to JSON
-    if (qwQueryService.options.positional_parameters)
-      for (var i=0; i < qwQueryService.options.positional_parameters.length; i++)
+    if (pp)
+      for (var i=0; i < pp.length; i++)
         dialogScope.options.positional_parameters[i] =
-      JSON.stringify(qwQueryService.options.positional_parameters[i]);
+      JSON.stringify(pp[i]);
 
-    if (qwQueryService.options.named_parameters)
-      for (var i=0; i < qwQueryService.options.named_parameters.length; i++) {
+    if (np)
+      for (var i=0; i < np.length; i++) {
         dialogScope.options.named_parameters.push({
-          name: qwQueryService.options.named_parameters[i].name,
-          value: JSON.stringify(qwQueryService.options.named_parameters[i].value)
+          name: np[i].name,
+          value: JSON.stringify(np[i].value)
         });
       }
 
@@ -1010,7 +1012,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
           dialogScope.options.named_parameters[i].value =
         JSON.parse(dialogScope.options.named_parameters[i].value);
 
-      qwQueryService.options = dialogScope.options;
+      qwQueryService.set_options(dialogScope.options);
       qwQueryService.saveStateToStorage();
     });
 
