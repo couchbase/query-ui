@@ -1223,35 +1223,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     function getScopesAndCollectionsForBucket(bucket) {
-      // get the indexes associated with any collection in the bucket, but we must have a query service
-      dec.indexes[bucket] = {};
-
-      if (validateQueryService.valid()) {
-        var query = 'select bucket_id, is_primary, keyspace_id, scope_id, state from system:indexes where (keyspace_id = "' +
-          bucket + '" and bucket_id is missing) or bucket_id = "' + bucket + '";';
-        qwQueryService.executeQueryUtil(query, false)
-          .then(function success(resp) {
-            dec.indexes[bucket] = {};
-            if (resp && resp.data && _.isArray(resp.data.results))
-              resp.data.results.forEach(function (index) {
-                // old indexes don't have a scope or collection
-                if (!index.scope_id) {
-                  index.scope_id = '_default';
-                  index.keyspace_id = '_default';
-                }
-                dec.indexes[bucket][index.scope_id] = dec.indexes[bucket][index.scope_id] || {};
-                dec.indexes[bucket][index.scope_id][index.keyspace_id] =
-                  dec.indexes[bucket][index.scope_id][index.keyspace_id] || {};
-                if (index.is_primary)
-                  dec.indexes[bucket][index.scope_id][index.keyspace_id].primary = true;
-                else
-                  dec.indexes[bucket][index.scope_id][index.keyspace_id].secondary = true;
-              });
-            //console.log("Got indexes for: " + bucket + " as: \n"+JSON.stringify(dec.indexes[bucket],null,2));
-          }, function error(resp) {
-            console.log("Error getting indexes for " + bucket + ", " + JSON.stringify(resp, null, 2));
-          });
-      }
 
       // get the scopes and collections from the REST API
       var promise = $http.do({
@@ -1412,6 +1383,39 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         else {
           handleBucketParam();
         }
+
+        // we have all the buckets, now get the indexes
+
+        // get the indexes associated with any collection
+        // create a placeholder for each bucket
+        validateQueryService.validBuckets().forEach(bucketName => {dec.indexes[bucketName] = {};});
+
+        //
+        // get the indexes from the REST API, and record whether each collection has a primary or secondary index
+        //
+        var promise = $http.do({
+          url: "../indexStatus",
+          method: "GET"
+        }).then(function success(resp) {
+          if (resp.status == 200 && resp.body && _.isArray(resp.body.indexes)) {
+            resp.body.indexes.forEach(index => {
+              var bucketName = index.bucket;
+              var scopeName = index.scope;
+              var collName = index.collection;
+              var primary = index.definition.startsWith("CREATE PRIMARY");
+              dec.indexes[bucketName][scopeName] = dec.indexes[bucketName][scopeName] || {};
+              dec.indexes[bucketName][scopeName][collName] = dec.indexes[bucketName][scopeName][collName] || {};
+              if (primary)
+                dec.indexes[bucketName][scopeName][collName].primary = true;
+              else
+                dec.indexes[bucketName][scopeName][collName].secondary = true;
+            });
+          }
+          //console.log("Got resp: " + JSON.stringify(resp.body));
+        }, function error(resp) {
+        });
+
+
       });
 
     }

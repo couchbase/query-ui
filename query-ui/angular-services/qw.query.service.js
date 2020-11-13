@@ -2249,6 +2249,7 @@ function getQwQueryService(
     // }
 
     function updateBuckets(event, data) {
+      qwCollectionsService.refreshBuckets();
       validateQueryService.getBucketsAndNodes(updateBucketsCallback);
     }
 
