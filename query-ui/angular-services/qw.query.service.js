@@ -268,7 +268,7 @@ function getQwQueryService(
       expanded: {},
       query_timeout: 600
     };
-    
+
     qwQueryService.set_options = function(new_options) {qwQueryService.options = new_options;};
 
     // clone options so we can have a scratch copy for the dialog box
@@ -1164,7 +1164,7 @@ function getQwQueryService(
         });
     }
 
-    function buildQueryRequest(queryText, is_user_query, queryOptions) {
+    function buildQueryRequest(queryText, is_user_query, queryOptions, txId) {
 
       //console.log("Building query: " + queryText);
       //
@@ -1210,6 +1210,9 @@ function getQwQueryService(
       if (is_user_query) {
         queryData.client_context_id = UUID.generate();
         queryData.pretty = true;
+        queryData.controls = true;
+        if (txId)
+          queryData.txid = txId;
       }
       // for auditing, note that the non-user queries are "INTERNAL"
       else
@@ -1394,13 +1397,18 @@ function getQwQueryService(
       // launch a query
       parentResult.status = "Executing " + (curIndex + 1) + "/" + queryArray.length;
 
-      return executeSingleQuery(queryArray[curIndex], explainOnly, parentResult.batch_results[curIndex]).then(
+      return executeSingleQuery(queryArray[curIndex], explainOnly, parentResult.batch_results[curIndex],txId).then(
         function success(resp) {
+          if (parentResult.batch_results[curIndex].stmtType == "START_TRANSACTION")
+            txId = parentResult.batch_results[curIndex].data[0].txid;
+          else if (parentResult.batch_results[curIndex].stmtType == "COMMIT" ||
+                   parentResult.batch_results[curIndex].stmtType == "ROLLBACK")
+            txId = null;
           addBatchResultsToParent(parentResult, curIndex);
 
           // only run the next query if this query was a success
           if (parentResult.batch_results[curIndex].status_success()) {
-            runBatchQuery(parentResult, queryArray, curIndex + 1, explainOnly);
+            runBatchQuery(parentResult, queryArray, curIndex + 1, explainOnly, txId);
           }
           // with failure, end the query
           else
@@ -1505,7 +1513,7 @@ function getQwQueryService(
     //   marking the query as no longer busy when that happens
     //
 
-    function executeSingleQuery(queryText, explainOnly, newResult) {
+    function executeSingleQuery(queryText, explainOnly, newResult, txId) {
       var pre_post_ms = new Date().getTime(); // when did we start?
       var promises = []; // we may run explain only, or explain + actual  query
       //console.log("Running query: " + queryText);
@@ -1525,6 +1533,7 @@ function getQwQueryService(
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
       var queryIsAdvise = /^\s*advise/gmi.test(queryText);
+      var queryIsTransaction = /^\s*begin|start|commit|rollback/gmi.test(queryText);
       var explain_promise;
 
       // the result tabs can show data, explain results, or show advice. Make sure the tab setting is
@@ -1558,7 +1567,8 @@ function getQwQueryService(
       // run the explain version of the query, if appropriate
       //
 
-      if (!queryIsExplain && (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
+      if (!queryIsExplain && !queryIsTransaction &&
+        (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
 
         var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options);
         if (!explain_request) {
@@ -1698,7 +1708,7 @@ function getQwQueryService(
 
       if ((queryIsExplain && explainOnly) || !explainOnly) {
 
-        var request = buildQueryRequest(queryText, true, qwQueryService.options);
+        var request = buildQueryRequest(queryText, true, qwQueryService.options, txId);
         newResult.client_context_id = request.data.client_context_id;
         //console.log("Got client context id: " + newResult.client_context_id);
 
@@ -1769,6 +1779,12 @@ function getQwQueryService(
               // if we got no metrics, create a dummy version
               if (!data.metrics) {
                 data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
+              }
+
+              // get the stmtType to keep track of transactions
+              if (data.controls) {
+                newResult.stmtType = data.controls.stmtType;
+                newResult.use_cbo = data.controls.use_cbo;
               }
 
               newResult.status = data.status;
@@ -1935,7 +1951,7 @@ function getQwQueryService(
       // let's run ADVISE on the query to see if there's a better way to do it
       //
 
-      if (!explainOnly && !queryIsAdvise) {
+      if (!explainOnly && !queryIsAdvise && !queryIsTransaction) {
         var advise_promise = runAdvise(queryText, newResult);
         if (advise_promise != null)
           promises.push(advise_promise);
@@ -2300,6 +2316,9 @@ function getQwQueryService(
     // whenever we refresh the list of buckets, refresh the scope and collection info
     //
 
+  var needsQuotes = /.*[ `.-]/ig;
+
+
     function updateBucketsCallback() {
       // make sure we have a query node
       if (!validateQueryService.valid())
@@ -2323,7 +2342,8 @@ function getQwQueryService(
           };
           qwQueryService.buckets.push(bucket);
           qwQueryService.bucket_names.push(bucket.id);
-          addToken(bucket.id, "bucket");
+          if (!bucket.id.match(needsQuotes))
+            addToken(bucket.id, "bucket");
           addToken('`' + bucket.id + '`', "bucket");
         }
 
@@ -2332,9 +2352,11 @@ function getQwQueryService(
           var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucketName);
           var scopes = qwCollectionsService.getScopesForBucket(bucketName);
           scopes.forEach(function(scopeName) {
-            addToken(scopeName, "scope");
+            if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
+              addToken(scopeName, "scope");
+              addToken(bucketName + "." + scopeName, "scope");
+            }
             addToken('`' + scopeName + '`', "scope");
-            addToken(bucketName + "." + scopeName, "scope");
             addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
 
             bucket.scopes[scopeName] = true;
@@ -2352,10 +2374,11 @@ function getQwQueryService(
                   indexes: [],
                 });
 
-
-                addToken(collName, "collection");
+                if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
+                  addToken(collName, "collection");
+                  addToken(bucketName + "." + scopeName + "." + collName, "collection");
+                }
                 addToken('`' + collName + '`', "collection");
-                addToken(bucketName + "." + scopeName + "." + collName, "collection");
                 addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
               }
             );
