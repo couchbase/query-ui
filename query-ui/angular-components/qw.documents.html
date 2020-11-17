@@ -5,7 +5,7 @@
      *ngIf="dec.options.selected_bucket">
     <div class="header-controls">
       <a (click)="dec.createBlankDoc()"
-       [hidden]="!dec.rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert || !dec.getCollections().length">
+       [hidden]="!dec.can_add_document()">
         ADD <span class="resp-hide-xsml">DOCUMENT</span>
       </a>
     </div>

@@ -194,6 +194,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     var largeDoc = 1024 * 1024;
 
     //
+    // can we add a new document? only if collection selected and permissions
+    //
+
+    dec.can_add_document = function() {
+      if (dec.getCollections().length == 0 || !dec.options.selected_collection)
+        return false;
+      else
+        // TODO - need to check permissions on selected collection
+        return true;
+    };
+
+    //
     // call the activate method for initialization
     //
 
