@@ -346,7 +346,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     var s = $scope.mnUIStats;
     name = mnStatsDesc.mapping65(name);
     if (s && s.stats && s.stats[name] && s.stats[name].aggregate) {
-      return s.stats[name].aggregate.values.reduce((sum, n) => sum + (Number(n) || 0), 0);
+      return s.stats[name].aggregate.values.reduce((sum, v) => sum + (Number(v[1]) || 0), 0);
     }
     else
       return null;
