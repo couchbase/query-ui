@@ -1533,7 +1533,7 @@ function getQwQueryService(
       var queryIsExplain = /^\s*explain/gmi.test(queryText);
       var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
       var queryIsAdvise = /^\s*advise/gmi.test(queryText);
-      var queryIsTransaction = /^\s*begin|start|commit|rollback/gmi.test(queryText);
+      var queryIsTransaction = /^\s*(begin|start|commit|rollback|savepoint)/gmi.test(queryText);
       var explain_promise;
 
       // the result tabs can show data, explain results, or show advice. Make sure the tab setting is
