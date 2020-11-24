@@ -1415,6 +1415,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               var scopeName = index.scope;
               var collName = index.collection;
               var primary = index.definition.startsWith("CREATE PRIMARY");
+              dec.indexes[bucketName] = dec.indexes[bucketName] || {};
               dec.indexes[bucketName][scopeName] = dec.indexes[bucketName][scopeName] || {};
               dec.indexes[bucketName][scopeName][collName] = dec.indexes[bucketName][scopeName][collName] || {};
               if (primary)
