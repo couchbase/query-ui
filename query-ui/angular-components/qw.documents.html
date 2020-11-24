@@ -18,7 +18,7 @@
   <div [formGroup]="searchForm" class="controls resp-med">
 
     <div class="column">
-      <label>Location <small>bucket.scope.collection</small></label>
+      <label>Keyspace <small>bucket.scope.collection</small></label>
       <div>
         <select formControlName="selected_bucket" (change)="dec.bucketChanged($event)">
             <option *ngFor="let name of dec.buckets" [selected]="name==dec.options.selected_bucket">
