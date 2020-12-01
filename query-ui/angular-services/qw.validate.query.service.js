@@ -165,7 +165,7 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
         }
         // otherwise only include buckets that we're allow to query or see stats.
         else {
-          if (bucket_perms.n1ql && bucket_perms.n1ql.select && bucket_perms.n1ql.select.execute)
+          //if (bucket_perms.n1ql && bucket_perms.n1ql.select && bucket_perms.n1ql.select.execute)
             _bucketList.push(bucket.name);
           if (bucket_perms.stats && bucket_perms.stats.read)
             _bucketStatsList.push(bucket.name);

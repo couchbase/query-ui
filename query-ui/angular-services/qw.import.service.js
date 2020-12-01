@@ -55,6 +55,13 @@ function getQwImportService(
   qis.buckets = [];
   qis.collections = {};
   qis.scopes = {}; // indexed by bucket name
+  qis.getMeta = function() {
+    return {
+      buckets: qis.buckets,
+      collections: qis.collections,
+      scopes: qis.scopes
+    };
+  };
 
   qis.options = {
     selected_bucket: "",
@@ -74,10 +81,7 @@ function getQwImportService(
     last_import_status: ""
   };
 
-  qis.getBuckets = getBuckets;
-  qis.getScopes = getScopes;
-  qis.getCollections = getCollections;
-
+  qis.updateBuckets = updateBuckets;
   qis.bucketChanged = bucketChanged;
   qis.scopeChanged = scopeChanged;
 
@@ -250,65 +254,54 @@ function getQwImportService(
   // get a list of buckets from the server via the REST API
   //
 
-  function getBuckets() {
-    return qwCollectionsService.getBuckets(bucketsChangedCallback);
+  function updateBuckets() {
+    qwCollectionsService.getBuckets().then(meta => bucketsChangedCallback(meta));
   }
 
-  function bucketsChangedCallback() {
+  function bucketsChangedCallback(meta) {
     var default_seen = false;
-    var buckets = getBuckets();
-    if (buckets.length > 0 && !qis.options.selected_bucket)
-      qis.options.selected_bucket = buckets[0];
+    qis.buckets = meta.buckets;
+    console.log("qis.buckets is now: " + JSON.stringify(qis.buckets));
+    qis.scopes = meta.scopes;
+    qis.collections = meta.collections;
+    if (qis.buckets.length > 0 && !qis.options.selected_bucket)
+      qis.options.selected_bucket = qis.buckets[0];
 
     if (qis.options.selected_bucket)
-      getScopes();
+      qwCollectionsService.getScopesForBucket(qis.options.selected_bucket).then(meta => scopesChangedCallback(meta));
   }
 
-  //
-  // for any bucket we need to get the scopes and collections
-  //
+  function scopesChangedCallback(meta) {
+    qis.buckets = meta.buckets;
+    console.log("qis.buckets is now: " + JSON.stringify(qis.buckets));
+    qis.scopes = meta.scopes;
+    qis.collections = meta.collections;
 
-  function getScopes() {
-    if (qis.options.selected_bucket)
-      return (qwCollectionsService.getScopesForBucket(qis.options.selected_bucket,scopesChangedCallback));
-    else
-      return [];
-  };
-
-  function scopesChangedCallback() {
-    var scopes = getScopes();
+    if (!qis.options.selected_bucket)
+      return;
 
     // if we don't have a scope, or didn't see it in the list, use the first one from the list
-    if (scopes.length &&
-      (!qis.options.selected_scope || scopes.indexOf(qis.options.selected_scope) < 0))
-      qis.options.selected_scope = scopes[0];
+    if (qis.scopes[qis.options.selected_bucket] && qis.scopes[qis.options.selected_bucket].length &&
+      (!qis.options.selected_scope ||
+        qis.scopes[qis.options.selected_bucket].indexOf(qis.options.selected_scope) < 0))
+      qis.options.selected_scope = qis.scopes[qis.options.selected_bucket][0];
 
-    // when the scopes may have changed, get the collections
-    getCollections();
-  }
+    // make sure we have collections to work with
+    if (!qis.options.selected_scope || !qis.collections[qis.options.selected_bucket] ||
+      !qis.collections[qis.options.selected_bucket][qis.options.selected_scope])
+      return;
 
-  function getCollections() {
-    if (qis.options.selected_bucket && qis.options.selected_scope)
-      return qwCollectionsService.getCollectionsForBucketScope(qis.options.selected_bucket,
-        qis.options.selected_scope,
-        collectionsChangedCallback);
-    else
-      return [];
-  };
-
-  function collectionsChangedCallback() {
-      var collections = getCollections();
+    var collections = qis.collections[qis.options.selected_bucket][qis.options.selected_scope];
 
     // if we don't have a collection, or didn't see it in the list, use the first one from the list
-    if (qis.options.selected_bucket && qis.options.selected_scope && // we have a scope
-      collections.length && // we have at least 1 collection in the list
+    if (collections.length && // we have at least 1 collection in the list
       (!qis.options.selected_collection || // no current collection, or collection not in list
         collections.indexOf(qis.options.selected_collection) < 0))
       qis.options.selected_collection = collections[0];
-  }
+   }
 
   //
-  // when the bucket changes, refresh the scopes and collections for that bucket
+  // when the user selects a new bucket, get the scopes and collections for that bucket
   // (unless there is no specified bucket, and reset everything
   //
 
@@ -319,8 +312,10 @@ function getQwImportService(
       qis.options.selected_collection = null;
       qis.collections = {};
       qis.scopes = {};
-    } else
-      getScopes();
+    } else {
+      if (qis.options.selected_bucket)
+        qwCollectionsService.getScopesForBucket(qis.options.selected_bucket).then(meta => scopesChangedCallback(meta));
+    }
   }
 
   // when the scope changes, the model for the collections menu can change without
@@ -328,7 +323,7 @@ function getQwImportService(
   // the selected_collection is on the list of current collections, otherwise set
   // the selected_collection to the first on the list
   function scopeChanged(event) {
-    var collections = getCollections();
+    var collections = qis.collections[qis.options.selected_bucket][qis.options.selected_scope];
     if (collections.length > 0 && collections.indexOf(qis.options.selected_collection) < 0)
       qis.options.selected_collection = collections[0];
   }

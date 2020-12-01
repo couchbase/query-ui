@@ -11,13 +11,13 @@ import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 import {pluck, filter, switchMap, distinctUntilChanged, withLatestFrom,
   shareReplay, takeUntil, tap, map} from '/ui/web_modules/rxjs/operators.js';
 
-
+import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
 import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import {QwQueryService}         from "/_p/ui/query/angular-services/qw.query.service.js";
 import {QwValidateQueryService} from "/_p/ui/query/angular-services/qw.validate.query.service.js";
 import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
 
-import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
+import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
 
 export {QwDocumentsComponent};
 
@@ -37,6 +37,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     return [
       ChangeDetectorRef,
       MnPermissions,
+      QwCollectionsService,
       QwDialogService,
       QwFixLongNumberService,
       QwQueryService,
@@ -89,6 +90,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   constructor(
     changeDetectorRef,
     mnPermissions,
+    qwCollectionsService,
     qwDialogService,
     qwFixLongNumberService,
     qwQueryService,
@@ -170,7 +172,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
     //
 
-    dec.getTopKeys = getTopKeys;
     dec.retrieveDocs = retrieveDocs;
     dec.createBlankDoc = createBlankDoc;
     dec.nextBatch = nextBatch;
@@ -279,7 +280,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           dec.options.current_result = "WHERE clause not supported unless bucket has primary or secondary index.";
           return (false);
         }
-        return (N1QL)
+        return (N1QL);
       }
 
       // shouldn't get here
@@ -1080,129 +1081,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
-    // get a list of hot keys for the current bucket via the REST API
-    //
-
-    function getTopKeys() {
-      if (dec.options.queryBusy) // don't have 2 retrieves going at once
-        return;
-
-      // if we're already showing top keys, go back to regular docs
-      if (dec.options.showTopKeys) {
-        dec.options.showTopKeys = false;
-        retrieveDocs();
-        return;
-      }
-
-      dec.options.showTopKeys = true;
-      dec.options.queryBusy = true;
-      dec.options.current_query = "top keys for bucket: " + dec.options.selected_bucket;
-      dec.options.current_result = [];
-
-      var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-        // "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
-        // "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
-        "/stats";
-      var promise = $http.do({
-        url: Url,
-        method: "GET"
-      }).then(function success(resp) {
-        if (resp && resp.status == 200 && resp.data && resp.data.hot_keys && resp.data.hot_keys.length) {
-          // get the IDs for the top keys
-          var top_keys = [];
-          var ops = {};
-
-          for (var i = 0; i < resp.data.hot_keys.length; i++) {
-            top_keys.push(resp.data.hot_keys[i].name);
-            ops[resp.data.hot_keys[i].name] = resp.data.hot_keys[i].ops;
-          }
-
-          getDocsForIdArray(top_keys).then(function () {
-            for (var i = 0; i < dec.options.current_result.length; i++)
-              dec.options.current_result[i].ops = ops[dec.options.current_result[i].id];
-            //console.log("results: " + JSON.stringify(dec.options.current_result));
-            dec.options.queryBusy = false;
-          });
-        } else {
-          dec.options.current_result = "No top keys found.";
-        }
-        //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
-
-      }, function error(resp) {
-        var data = resp.data, status = resp.status;
-
-        dec.options.current_result = "Error getting top keys: " + resp.status;
-        dec.options.queryBusy = false;
-      });
-
-      return (promise);
-    }
-
-    //
-    // get a list of buckets from the server via the REST API
-    //
-
-    function getBuckets() {
-      return getBuckets_rest();
-    }
-
-
-    function getBuckets_rest() {
-      dec.buckets = [];
-      dec.buckets_ephemeral = {};
-      dec.collections = {};
-      dec.buckets = [];
-
-      // get the buckets from the REST API
-      var promise = $http.do({
-        url: "../pools/default/buckets/",
-        method: "GET"
-      }).then(function success(resp) {
-        if (resp && resp.status == 200 && resp.data) {
-          // get the bucket names
-          dec.buckets.length = 0;
-          dec.buckets_ephemeral = {};
-          var default_seen = false;
-          for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
-            if (mnPermissions.export.cluster.bucket[resp.data[i].name].data.docs.read) {// only include buckets we have access to
-              dec.buckets.push(resp.data[i].name);
-
-              if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
-                dec.buckets_ephemeral[resp.data[i].name] = true;
-
-              if (resp.data[i].name == dec.options.selected_bucket)
-                default_seen = true;
-            }
-          }
-
-          // if we didn't see the user-selected bucket, reset selected bucket to the first one
-          if (!default_seen)
-            if (dec.buckets.length > 0)
-              dec.options.selected_bucket = dec.buckets[0];
-            else {
-              dec.options.selected_bucket = "";
-              dec.options.selected_scope = "";
-              dec.options.selected_collection = "";
-            }
-        }
-        //console.log("Got buckets2: " + JSON.stringify(dec.buckets));
-
-        if (dec.options.selected_bucket)
-          return (getScopesAndCollectionsForBucket(dec.options.selected_bucket));
-      }, function error(resp) {
-        var data = resp.data, status = resp.status;
-
-        if (data && data.errors) {
-          dec.options.current_result = JSON.stringify(data.errors);
-          showErrorDialog("Error getting list of buckets.", dec.options.current_result, true);
-          refreshResults();
-        }
-      });
-
-      return (promise);
-    }
-
-    //
     // does a collection have primary or secondary indexes?
     //
 
@@ -1231,90 +1109,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
-    // for any bucket we need to get the scopes and collections
-    //
-
-    function getScopesAndCollectionsForBucket(bucket) {
-
-      // get the scopes and collections from the REST API
-      var promise = $http.do({
-        url: "../pools/default/buckets/" + encodeURI(bucket) + "/collections",
-        method: "GET"
-      }).then(function success(resp) {
-        if (resp && resp.status == 200 && resp.data && _.isArray(resp.data.scopes)) {
-          // get the scopes, and for each the collection names
-          dec.scopes[bucket] = [];
-          dec.collections[bucket] = {}; // map indexed on scope name
-
-          resp.data.scopes.forEach(function (scope) {
-            dec.scopes[bucket].push(scope.name);
-            dec.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
-          });
-        }
-
-        // if we don't have a current selected_scope, or didn't see it in the list, use the first one from the list
-        if (dec.scopes[bucket][0] &&
-          (!dec.options.selected_scope || dec.scopes[bucket].indexOf(dec.options.selected_scope) < 0))
-          dec.options.selected_scope = dec.scopes[bucket][0];
-
-        // if there are no collections in the current scope, show an error message
-        if (dec.collections[bucket][dec.options.selected_scope].length == 0) {
-          dec.options.selected_collection = null;
-          showErrorDialog("No collections in scope", "There are no collections in the current scope", true);
-          dec.options.current_result = "No collections in the current scope.";
-          dec.options.current_query = "";
-          return(Promise.reject());
-        }
-        // same for collections, if we don't have one or it's not in the list, use the first from the list
-        else if (dec.options.selected_scope && // we have a scope
-          dec.collections[bucket][dec.options.selected_scope][0] && // we have at least 1 collection in the list
-          (!dec.options.selected_collection || // no current collection, or collection not in list
-            dec.collections[bucket][dec.options.selected_scope].indexOf(dec.options.selected_collection) < 0))
-          dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
-
-
-      }, function error(resp) {
-        if (resp && resp.data && resp.data.errors)
-          dec.options.current_result = JSON.stringify(resp.data.errors);
-        else if (resp.message)
-          dec.options.current_result = JSON.stringify(resp.message);
-        else if (resp.status)
-          dec.options.current_result = "Error getting list of collections: " + resp.status;
-        else
-          dec.options.current_result = "Error getting list of collections.";
-
-        showErrorDialog("Error getting list of collections.", dec.options.current_result, true);
-      });
-
-      return (promise);
-
-    }
-
-    //
-    // bucket names comes in when we navigate here
-    //
-
-    function handleBucketParam() {
-
-      // // if we get a bucket as a parameter, that overrides current defaults
-      // if (false && _.isString($stateParams.bucket) && $stateParams.bucket.length > 0 &&
-      //   $stateParams.bucket != dec.options.selected_bucket) {
-      //   dec.options.selected_bucket = $stateParams.bucket;
-      //   dec.options.where_clause = ''; // reset the where clause
-      //   dec.options.offset = 0; // start off from the beginning
-      // }
-
-      // if we got a param, or a saved user-selected value, select it and get the docs
-      if (dec.options.selected_bucket && dec.options.selected_bucket.length > 0) {
-        // if we don't have any buckets yet, get the bucket list first
-        if (dec.buckets.length == 0)
-          getBuckets().then(retrieveDocs_inner,function(){});
-        else
-          retrieveDocs_inner();
-      }
-    }
-
-    //
     // bucket changed via menu
     //
 
@@ -1324,17 +1118,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.searchForm.get('where_clause').setValue('');
       dec.searchForm.get('offset').setValue(0);
       dec.options.selected_bucket = event.target.value;
-      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner,function(){});
+      qwCollectionsService.getScopesForBucket(dec.options.selected_bucket).then(meta => scopeCollUpdate(meta));
     }
 
     function scopeChanged(event) {
-//      console.log("Scope changed to: " + event.target.value);
-      getScopesAndCollectionsForBucket(dec.options.selected_bucket).then(retrieveDocs_inner,function(){});
+      //console.log("Scope changed to: " + event.target.value + );
+      qwCollectionsService.getScopesForBucket(dec.options.selected_bucket).then(meta => scopeCollUpdate(meta));
     }
 
     function collectionChanged(event) {
-//      console.log("Collection changed to: " + event.target.value);
-      retrieveDocs_inner();
+      //console.log("Collection changed to: " + event.target.value);
+      if (dec.options.selected_collection)
+        retrieveDocs_inner();
     }
 
     //
@@ -1375,62 +1170,119 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
+    // when the metedata is updated, update our state
+    //
+
+    function bucketsUpdate(metadata) {
+      metadataUpdate(metadata);
+
+      // if the selected_bucket in options is in the list of buckets, we will use it,
+      // otherwise set it to the first bucket.
+      if (!dec.options.selected_bucket || !dec.buckets.indexOf(dec.options.selected_bucket) == -1)
+        if (dec.buckets.length)
+          dec.options.selected_bucket = dec.buckets[0];
+        else {
+          dec.options.selected_bucket = "";
+          dec.options.selected_scope = "";
+          dec.options.selected_collection = "";
+        }
+
+      // create an index placeholder for each bucket
+      dec.buckets.forEach(bucketName => dec.indexes[bucketName] = {});
+
+      //
+      // we have all the buckets, now get the indexes from the REST API, and
+      // record whether each collection has a primary or secondary index
+      //
+      var promise = $http.do({
+        url: "../indexStatus",
+        method: "GET"
+      }).then(function success(resp) {
+        if (resp.status == 200 && resp.body && _.isArray(resp.body.indexes)) {
+          resp.body.indexes.forEach(index => {
+            var bucketName = index.bucket;
+            var scopeName = index.scope;
+            var collName = index.collection;
+            var primary = index.definition.startsWith("CREATE PRIMARY");
+            dec.indexes[bucketName] = dec.indexes[bucketName] || {};
+            dec.indexes[bucketName][scopeName] = dec.indexes[bucketName][scopeName] || {};
+            dec.indexes[bucketName][scopeName][collName] = dec.indexes[bucketName][scopeName][collName] || {};
+            if (primary)
+              dec.indexes[bucketName][scopeName][collName].primary = true;
+            else
+              dec.indexes[bucketName][scopeName][collName].secondary = true;
+          });
+        }
+
+        // now we have the indexes, get scopes for any selected bucket
+        if (dec.options.selected_bucket)
+          qwCollectionsService.getScopesForBucket(dec.options.selected_bucket).then(meta => scopeCollUpdate(meta));
+
+      }, function error(resp) {
+        console.log("Error getting indexes: " + JSON.stringify(resp.body));
+      });
+
+    }
+
+    // called whenever the list of scopes/collections changes
+    function scopeCollUpdate(metadata) {
+      metadataUpdate(metadata);
+
+      var bucket = dec.options.selected_bucket;
+      // nothing further to do if we don't have a selected bucket yet, or no scopes
+      if (!bucket || dec.scopes[bucket].length == 0)
+        return;
+
+      // see if the selected scope and collection are available
+      if (dec.scopes[bucket][0] &&
+        (!dec.options.selected_scope || dec.scopes[bucket].indexOf(dec.options.selected_scope) < 0))
+        dec.options.selected_scope = dec.scopes[bucket][0];
+
+      // can't do anything if no selected scope, or no collections
+      if (!dec.options.selected_scope || !dec.collections[bucket] ||
+        !dec.collections[bucket][dec.options.selected_scope])
+        return;
+
+      // if there are no collections in the current scope, show an error message
+      if (dec.collections[bucket][dec.options.selected_scope].length == 0) {
+        dec.options.selected_collection = null;
+        showErrorDialog("No collections in scope", "There are no collections in the current scope", true);
+        dec.options.current_result = "No collections in the current scope.";
+        dec.options.current_query = "";
+        return;
+      }
+      // we have collections, do any match the default?
+      else if (dec.collections[bucket][dec.options.selected_scope][0] && // we have at least 1 collection in the list
+        (!dec.options.selected_collection || // no current collection, or collection not in list
+          dec.collections[bucket][dec.options.selected_scope].indexOf(dec.options.selected_collection) < 0))
+        dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
+
+      if (dec.options.selected_collection)
+        retrieveDocs_inner();
+    }
+
+    function metadataUpdate(metadata) {
+      dec.buckets = metadata.buckets;
+      dec.buckets_ephemeral = metadata.buckets_ephemeral;
+      dec.scopes = metadata.scopes;
+      dec.collections = metadata.collections;
+    }
+
+    //
     // when we activate, check with the query service to see if we have a query node. If
     // so, we can use n1ql, if not, use the regular mode.
     //
 
     function activate() {
-      // the following checks whether the query service is active, and if so updates the list of buckets and checks their index status
+      // the following checks whether the query service is active, and if so updates the list of buckets
+      // and checks their index status
       qwQueryService.updateBuckets();
 
-      // regardless, we need to use the REST API to find out which buckets are ephemeral, since they behave differently
-      validateQueryService.getBucketsAndNodes(function () {
-        //console.log("Query service callback, getting ready to handle bucket param: " + $stateParams.bucket);
+      //qwCollectionsService.bucket_bus('bucket_metadata').subscribe(bucketsUpdate);
+      //qwCollectionsService.bucket_bus('scopes_coll_metadata').subscribe(scopeCollUpdate);
 
-        var promise = getBuckets();
-
-        // wait until after the buckets are retrieved to set the bucket name, if it was passed to us
-        if (promise)
-          promise.then(handleBucketParam);
-        else {
-          handleBucketParam();
-        }
-
-        // we have all the buckets, now get the indexes
-
-        // get the indexes associated with any collection
-        // create a placeholder for each bucket
-        validateQueryService.validBuckets().forEach(bucketName => {dec.indexes[bucketName] = {};});
-
-        //
-        // get the indexes from the REST API, and record whether each collection has a primary or secondary index
-        //
-        var promise = $http.do({
-          url: "../indexStatus",
-          method: "GET"
-        }).then(function success(resp) {
-          if (resp.status == 200 && resp.body && _.isArray(resp.body.indexes)) {
-            resp.body.indexes.forEach(index => {
-              var bucketName = index.bucket;
-              var scopeName = index.scope;
-              var collName = index.collection;
-              var primary = index.definition.startsWith("CREATE PRIMARY");
-              dec.indexes[bucketName] = dec.indexes[bucketName] || {};
-              dec.indexes[bucketName][scopeName] = dec.indexes[bucketName][scopeName] || {};
-              dec.indexes[bucketName][scopeName][collName] = dec.indexes[bucketName][scopeName][collName] || {};
-              if (primary)
-                dec.indexes[bucketName][scopeName][collName].primary = true;
-              else
-                dec.indexes[bucketName][scopeName][collName].secondary = true;
-            });
-          }
-          //console.log("Got resp: " + JSON.stringify(resp.body));
-        }, function error(resp) {
-        });
-
-
-      });
-
+      // use the collections service to get the list of buckets from the REST API
+      qwCollectionsService.getBuckets().then(meta => bucketsUpdate(meta));
     }
   }
 

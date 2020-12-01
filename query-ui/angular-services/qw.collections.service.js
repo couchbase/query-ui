@@ -1,6 +1,7 @@
-import {$http} from '/_p/ui/query/angular-services/qw.http.js';
-import _ from '/ui/web_modules/lodash.js';
+import {$http}         from '/_p/ui/query/angular-services/qw.http.js';
 import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import pubsub          from '/ui/web_modules/rxjs-pubsub.js';
+import _               from '/ui/web_modules/lodash.js';
 
 export {QwCollectionsService};
 
@@ -36,14 +37,31 @@ function getQwCollectionsService(
 
   var qcs = {};
   qcs.buckets = [];
-  qcs.collections = {};
+  qcs.buckets_ephemeral = {};
   qcs.scopes = {}; // indexed by bucket name
+  qcs.collections = {};
   qcs.rbac = mnPermissions.export;
+
+  qcs.metadata = {
+    buckets: qcs.buckets,
+    buckets_ephemeral: qcs.buckets_ephemeral,
+    scopes: qcs.scopes,
+    collections: qcs.collections
+  };
 
   qcs.getBuckets = getBuckets;
   qcs.refreshBuckets = refreshBuckets;
   qcs.getScopesForBucket = getScopesForBucket;
-  qcs.getCollectionsForBucketScope = getCollectionsForBucketScope;
+
+  qcs.bucket_bus = pubsub.create();
+
+  function publishBucketState() {
+    qcs.bucket_bus.publish('bucket_metadata', qcs.metadata);
+  }
+
+  function publishScopeCollState() {
+    qcs.bucket_bus.publish('scopes_coll_metadata', qcs.metadata);
+  }
 
   //
   // get a list of buckets from the server via the REST API
@@ -57,15 +75,23 @@ function getQwCollectionsService(
       if (resp && resp.status == 200 && resp.data) {
         // get the bucket names
         qcs.buckets.length = 0;
+        qcs.buckets_ephemeral = {};
         for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
-          if (qcs.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
-            qcs.buckets.push(resp.data[i].name);
+          //if (qcs.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
+          qcs.buckets.push(resp.data[i].name);
+
+          if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
+            qcs.buckets_ephemeral[resp.data[i].name] = true;
         }
       }
+      publishBucketState();
+      return(qcs.metadata);
     }, function error(resp) {
       var data = resp.data, status = resp.status;
       qcs.buckets.length = 0;
       console.log("Error getting buckets: " + JSON.stringify(resp));
+      publishBucketState();
+      return(qcs.metadata);
     });
 
     return (promise);
@@ -77,9 +103,10 @@ function getQwCollectionsService(
   //
 
   function refreshScopesAndCollectionsForBucket(bucket) {
+    console.log("Refreshing for bucket: " + bucket);
     // get the buckets from the REST API
     var promise = $http.do({
-      url: "../pools/default/buckets/" + encodeURI(bucket) + "/collections",
+      url: "../pools/default/buckets/" + encodeURI(bucket) + "/scopes",
       method: "GET"
     }).then(function success(resp) {
       if (resp && resp.status == 200 && resp.data && _.isArray(resp.data.scopes)) {
@@ -95,48 +122,37 @@ function getQwCollectionsService(
           qcs.scopes[bucket].push(scope.name);
           qcs.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
         });
+
       }
 
       qcs.scopes[bucket] = qcs.scopes[bucket].sort();
-
+      publishScopeCollState();
+      return(qcs.metadata);
     }, function error(resp) {
       qcs.scopes[bucket] = [];
       console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
+      publishScopeCollState();
+      return(qcs.metadata);
     });
 
     return (promise);
   }
 
-  function getBuckets(bucketsChangeCallback) {
+  function getBuckets() {
     if (qcs.buckets.length == 0)
-      refreshBuckets().then(function() {if (bucketsChangeCallback) bucketsChangeCallback();});
+      return(refreshBuckets());
 
-    return (qcs.buckets);
+    return (Promise.resolve(qcs.metadata));
   }
 
-  function getScopesForBucket(bucket, scopesChangedCallback) {
-    // if we don't have any scopes, check
+  function getScopesForBucket(bucket) {
+    // if we don't have any scopes, check and callback
     if (!qcs.scopes[bucket] || !qcs.scopes[bucket].length) {
       qcs.scopes[bucket] = [];
-      refreshScopesAndCollectionsForBucket(bucket).then(() => {if (scopesChangedCallback) scopesChangedCallback(bucket)});
+      return(refreshScopesAndCollectionsForBucket(bucket));
     }
 
-    return (qcs.scopes[bucket]);
-  };
-
-  function getCollectionsForBucketScope(bucket, scope, collectionsChangedCallback) {
-    if (!bucket || !scope)
-      return [];
-
-    // if we don't have any collections yet, retrieve them
-    if (!qcs.collections[bucket] || !qcs.collections[bucket][scope]) {
-      if (!qcs.collections[bucket])
-        qcs.collections[bucket] = {};
-
-      refreshScopesAndCollectionsForBucket(bucket).then(() => {if (collectionsChangedCallback) collectionsChangedCallback(bucket,scope)});
-    }
-
-    return qcs.collections[bucket][scope];
+    return (Promise.resolve(qcs.metadata));
   };
 
   //

@@ -2308,7 +2308,9 @@ function getQwQueryService(
                 });
             },
             function error(resp) {
-              console.log("bucket count error: " + JSON.stringify(resp));
+              // we might get this if the user doesn't have permission to run queries
+              // on the collection
+              //console.log("bucket count error: " + JSON.stringify(resp));
             });
     }
 
@@ -2337,6 +2339,7 @@ function getQwQueryService(
             indexes: [],
             scopes: {},
             validated: true,
+            scopeArray: [],
             //count: bucket_counts[bucketName],
             collections: []
           };
@@ -2345,68 +2348,71 @@ function getQwQueryService(
           if (!bucket.id.match(needsQuotes))
             addToken(bucket.id, "bucket");
           addToken('`' + bucket.id + '`', "bucket");
-        }
 
-        // for each bucket, get the scopes and collections
-        qwCollectionsService.getScopesForBucket(bucketName,function(bucketName) {
-          var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucketName);
-          var scopes = qwCollectionsService.getScopesForBucket(bucketName);
-          scopes.forEach(function(scopeName) {
-            if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
-              addToken(scopeName, "scope");
-              addToken(bucketName + "." + scopeName, "scope");
-            }
-            addToken('`' + scopeName + '`', "scope");
-            addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
+          // if the bucket is expanded, get the scopes and collections
+          if (bucket.expanded) {
+            // for each bucket, get the scopes and collections
+            qwCollectionsService.getScopesForBucket(bucketName).then(function(metadata) {
 
-            bucket.scopes[scopeName] = true;
-            var colls = qwCollectionsService.getCollectionsForBucketScope(bucketName,scopeName);
-            // add the collection if it's not there already
-            colls.forEach(collName =>
-              {if (!bucket.collections.find(coll => coll.id == collName && coll.scope == scopeName))
-                bucket.collections.push({
-                  name: collName,
-                  id: collName,
-                  expanded: isExpanded(bucketName,scopeName,collName),
-                  bucket: bucketName,
-                  scope: scopeName,
-                  schema: [],
-                  indexes: [],
-                });
-
-                if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
-                  addToken(collName, "collection");
-                  addToken(bucketName + "." + scopeName + "." + collName, "collection");
+              var scopes = metadata.scopes[bucketName];
+              if (scopes) scopes.forEach(function(scopeName) {
+                if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
+                  addToken(scopeName, "scope");
+                  addToken(bucketName + "." + scopeName, "scope");
                 }
-                addToken('`' + collName + '`', "collection");
-                addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
-              }
-            );
-          });
+                addToken('`' + scopeName + '`', "scope");
+                addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
 
-          // make an array of scope names and expansion status
-          bucket.scopeArray = Object.keys(bucket.scopes)
-            .map(function (scope_name) {
-              return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
-            });
-          bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
+                bucket.scopes[scopeName] = true;
+                var colls = metadata.collections[bucketName][scopeName];
+                // add the collection if it's not there already
+                colls.forEach(collName =>
+                  {if (!bucket.collections.find(coll => coll.id == collName && coll.scope == scopeName))
+                    bucket.collections.push({
+                      name: collName,
+                      id: collName,
+                      expanded: isExpanded(bucketName,scopeName,collName),
+                      bucket: bucketName,
+                      scope: scopeName,
+                      schema: [],
+                      indexes: [],
+                    });
 
-          // also figure out which collections will need to be inferred
-          var collectionsToInfer = [];
-          if (qwConstantsService.showSchemas)
-            bucket.collections.forEach(collection => {
-              if (collection.expanded)
-                collectionsToInfer.push({
-                  bucket: bucket,
-                  scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
-                  collection: collection
+                    if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
+                      addToken(collName, "collection");
+                      addToken(bucketName + "." + scopeName + "." + collName, "collection");
+                    }
+                    addToken('`' + collName + '`', "collection");
+                    addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
+                  }
+                );
+              });
+
+              // make an array of scope names and expansion status
+              bucket.scopeArray = Object.keys(bucket.scopes)
+                .map(function (scope_name) {
+                  return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
                 });
-            });
+              bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
-          // Should we go infer schemas for the expanded collections?
-          if (collectionsToInfer.length)
-            getCollectionsSchemasBackground(collectionsToInfer, 0);
-        });
+              // also figure out which collections will need to be inferred
+              var collectionsToInfer = [];
+              if (qwConstantsService.showSchemas)
+                bucket.collections.forEach(collection => {
+                  if (collection.expanded)
+                    collectionsToInfer.push({
+                      bucket: bucket,
+                      scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
+                      collection: collection
+                    });
+                });
+
+              // Should we go infer schemas for the expanded collections?
+              if (collectionsToInfer.length)
+                getCollectionsSchemasBackground(collectionsToInfer, 0);
+            });
+          }
+        }
       });
 
       refreshAutoCompleteArray();
@@ -2417,185 +2423,185 @@ function getQwQueryService(
       //console.log("Inside updateBucketsCallback");
       // use a query to get buckets with a primary index
 
-      var queryText = "select keyspaces.* from system:keyspaces;";//qwConstantsService.keyspaceQuery;
-
-      let res1 = executeQueryUtil(queryText, false)
-        .then(function success(resp) {
-            var data = resp.data, status = resp.status;
-
-            // remember the counts of each bucket so the screen doesn't blink when recomputing counts
-            var bucket_counts = {};
-            // for (var i=0; i < qwQueryService.buckets.length; i++) {
-            //
-            //   //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
-            // }
-
-            // initialize the data structure for holding all the buckets
-            qwQueryService.buckets.length = 0;
-            qwQueryService.bucket_errors = null;
-            qwQueryService.bucket_names.length = 0;
-            qwQueryService.autoCompleteTokens = {};
-
-            if (data && data.results) {
-              // first pass over the data - get the buckets, who have a name but no scope
-              for (var i = 0; i < data.results.length; i++) if (data.results[i].id && !data.results[i].scope) {
-                var bucket = {
-                  name: data.results[i].name,
-                  id: data.results[i].id,
-                  expanded: isExpanded(data.results[i].id),
-                  schema: [],
-                  indexes: [],
-                  scopes: {},
-                  collections: []
-                };
-                bucket.validated = !validateQueryService.validBuckets ||
-                  _.indexOf(validateQueryService.validBuckets(), bucket.id) != -1 ||
-                  _.indexOf(validateQueryService.validBuckets(), ".") != -1;
-                bucket.count = bucket_counts[bucket.id];
-                if (bucket.validated) {
-                  qwQueryService.buckets.push(bucket); // only include buckets we have access to
-                  qwQueryService.bucket_names.push(bucket.id);
-                }
-                addToken(bucket.id, "bucket");
-                addToken('`' + bucket.id + '`', "bucket");
-              }
-
-              // sort list of buckets
-              qwQueryService.buckets.sort((b1, b2) => (b1.name < b2.name) ? -1 : ((b1.name == b2.name) ? 0 : 1));
-
-              // second pass over the query result - get all the scopes and collections
-              for (var i = 0; i < data.results.length; i++) {
-                var record = data.results[i];
-                var bucket_id = record.bucket || record.id;
-                var scope_id = record.scope || '_default';
-                var coll_id = !record.bucket ? '_default' : record.id;
-                var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucket_id);
-                if (bucket) {
-                  bucket.scopes[scope_id] = true;
-                  var coll_expanded = isExpanded(bucket_id, scope_id, coll_id);
-                  var collection = {
-                    name: coll_id,
-                    id: coll_id,
-                    expanded: coll_expanded,
-                    bucket: bucket_id,
-                    scope: scope_id,
-                    schema: [],
-                    indexes: [],
-                    count: record.count
-                  };
-                  bucket.collections.push(collection);
-                }
-              }
-
-              // keep an array of scope names and expansion statuses
-              var collectionsToInfer = [];
-              qwQueryService.buckets.forEach(bucket => {
-                bucket.scopeArray = Object.keys(bucket.scopes)
-                  .map(function (scope_name) {
-                    return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
-                  });
-                bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
-
-                // also figure out which collections will need to be inferred
-                if (qwConstantsService.showSchemas)
-                  bucket.collections.forEach(collection => {
-                    if (collection.expanded)
-                      collectionsToInfer.push({
-                        bucket: bucket,
-                        scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
-                        collection: collection
-                      });
-                  });
-              });
-
-              //
-              // Should we go infer schemas for the expanded collections?
-              //
-
-              if (collectionsToInfer.length)
-                getCollectionsSchemasBackground(collectionsToInfer, 0);
-
-              //console.log("Got buckets: " + JSON.stringify(qwQueryService.buckets,null,2));
-            }
-
-            refreshAutoCompleteArray();
-
-            /////////////////////////////////////////////////////////////////////////
-            // now run a query to get the list of indexes
-            /////////////////////////////////////////////////////////////////////////
-
-            if (qwConstantsService.showSchemas) {
-              let queryText = 'select indexes.* from system:indexes where state = "online"';
-
-              let res1 = executeQueryUtil(queryText, false)
-                //res1 = $http.post("/_p/query/query/service",{statement : queryText})
-                .then(function (resp) {
-                    var data = resp.data, status = resp.status;
-
-                    //console.log("Got index info: " + JSON.stringify(data));
-
-                    if (data && _.isArray(data.results)) {
-                      qwQueryService.indexes = data.results;
-                      // make sure each bucket knows about each relevant index
-                      for (var i = 0; i < data.results.length; i++) {
-                        addToken(data.results[i].name, 'index');
-                        for (var b = 0; b < qwQueryService.buckets.length; b++)
-                          if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
-                            qwQueryService.buckets[b].indexes.push(data.results[i]);
-                            break;
-                          }
-                      }
-                    }
-
-                    refreshAutoCompleteArray();
-                  },
-
-                  // error status from query about indexes
-                  function index_error(resp) {
-                    var data = resp.data, status = resp.status;
-
-                    //console.log("Ind Error Data: " + JSON.stringify(data));
-                    //console.log("Ind Error Status: " + JSON.stringify(status));
-                    //console.log("Ind Error Headers: " + JSON.stringify(headers));
-                    //console.log("Ind Error statusText: " + JSON.stringify(statusText));
-
-                    var error = "Error retrieving list of indexes";
-
-                    if (data && data.errors)
-                      error = error + ": " + data.errors;
-                    if (status)
-                      error = error + ", contacting query service returned status: " + status;
-//          if (response && response.statusText)
-//          error = error + ", " + response.statusText;
-
-//            console.log(error);
-                    logWorkbenchError(error);
-
-                    qwQueryService.index_error = error;
-                  }
-                );
-            }
-
-          },
-          /* error response from $http */
-          function error(resp) {
-            var data = resp.data, status = resp.status;
-//        console.log("Schema Error Data: " + JSON.stringify(data));
-//        console.log("Schema Error Status: " + JSON.stringify(status));
-//        console.log("Schema Error Headers: " + JSON.stringify(headers));
-//        console.log("Schema Error Config: " + JSON.stringify(config));
-            var error = "Error retrieving list of buckets";
-
-            if (data && data.errors)
-              error = error + ": " + JSON.stringify(data.errors);
-            else if (status)
-              error = error + ", contacting query service returned status: " + status;
-
-            qwQueryService.buckets.length = 0;
-            qwQueryService.autoCompleteTokens = {};
-            qwQueryService.bucket_errors = error;
-            logWorkbenchError(error);
-          });
+//       var queryText = "select keyspaces.* from system:keyspaces;";//qwConstantsService.keyspaceQuery;
+//
+//       let res1 = executeQueryUtil(queryText, false)
+//         .then(function success(resp) {
+//             var data = resp.data, status = resp.status;
+//
+//             // remember the counts of each bucket so the screen doesn't blink when recomputing counts
+//             var bucket_counts = {};
+//             // for (var i=0; i < qwQueryService.buckets.length; i++) {
+//             //
+//             //   //bucket_counts[qwQueryService.buckets[i].id] = qwQueryService.buckets[i].count;
+//             // }
+//
+//             // initialize the data structure for holding all the buckets
+//             qwQueryService.buckets.length = 0;
+//             qwQueryService.bucket_errors = null;
+//             qwQueryService.bucket_names.length = 0;
+//             qwQueryService.autoCompleteTokens = {};
+//
+//             if (data && data.results) {
+//               // first pass over the data - get the buckets, who have a name but no scope
+//               for (var i = 0; i < data.results.length; i++) if (data.results[i].id && !data.results[i].scope) {
+//                 var bucket = {
+//                   name: data.results[i].name,
+//                   id: data.results[i].id,
+//                   expanded: isExpanded(data.results[i].id),
+//                   schema: [],
+//                   indexes: [],
+//                   scopes: {},
+//                   collections: []
+//                 };
+//                 bucket.validated = !validateQueryService.validBuckets ||
+//                   _.indexOf(validateQueryService.validBuckets(), bucket.id) != -1 ||
+//                   _.indexOf(validateQueryService.validBuckets(), ".") != -1;
+//                 bucket.count = bucket_counts[bucket.id];
+//                 if (bucket.validated) {
+//                   qwQueryService.buckets.push(bucket); // only include buckets we have access to
+//                   qwQueryService.bucket_names.push(bucket.id);
+//                 }
+//                 addToken(bucket.id, "bucket");
+//                 addToken('`' + bucket.id + '`', "bucket");
+//               }
+//
+//               // sort list of buckets
+//               qwQueryService.buckets.sort((b1, b2) => (b1.name < b2.name) ? -1 : ((b1.name == b2.name) ? 0 : 1));
+//
+//               // second pass over the query result - get all the scopes and collections
+//               for (var i = 0; i < data.results.length; i++) {
+//                 var record = data.results[i];
+//                 var bucket_id = record.bucket || record.id;
+//                 var scope_id = record.scope || '_default';
+//                 var coll_id = !record.bucket ? '_default' : record.id;
+//                 var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucket_id);
+//                 if (bucket) {
+//                   bucket.scopes[scope_id] = true;
+//                   var coll_expanded = isExpanded(bucket_id, scope_id, coll_id);
+//                   var collection = {
+//                     name: coll_id,
+//                     id: coll_id,
+//                     expanded: coll_expanded,
+//                     bucket: bucket_id,
+//                     scope: scope_id,
+//                     schema: [],
+//                     indexes: [],
+//                     count: record.count
+//                   };
+//                   bucket.collections.push(collection);
+//                 }
+//               }
+//
+//               // keep an array of scope names and expansion statuses
+//               var collectionsToInfer = [];
+//               qwQueryService.buckets.forEach(bucket => {
+//                 bucket.scopeArray = Object.keys(bucket.scopes)
+//                   .map(function (scope_name) {
+//                     return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
+//                   });
+//                 bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
+//
+//                 // also figure out which collections will need to be inferred
+//                 if (qwConstantsService.showSchemas)
+//                   bucket.collections.forEach(collection => {
+//                     if (collection.expanded)
+//                       collectionsToInfer.push({
+//                         bucket: bucket,
+//                         scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
+//                         collection: collection
+//                       });
+//                   });
+//               });
+//
+//               //
+//               // Should we go infer schemas for the expanded collections?
+//               //
+//
+//               if (collectionsToInfer.length)
+//                 getCollectionsSchemasBackground(collectionsToInfer, 0);
+//
+//               //console.log("Got buckets: " + JSON.stringify(qwQueryService.buckets,null,2));
+//             }
+//
+//             refreshAutoCompleteArray();
+//
+//             /////////////////////////////////////////////////////////////////////////
+//             // now run a query to get the list of indexes
+//             /////////////////////////////////////////////////////////////////////////
+//
+//             if (qwConstantsService.showSchemas) {
+//               let queryText = 'select indexes.* from system:indexes where state = "online"';
+//
+//               let res1 = executeQueryUtil(queryText, false)
+//                 //res1 = $http.post("/_p/query/query/service",{statement : queryText})
+//                 .then(function (resp) {
+//                     var data = resp.data, status = resp.status;
+//
+//                     //console.log("Got index info: " + JSON.stringify(data));
+//
+//                     if (data && _.isArray(data.results)) {
+//                       qwQueryService.indexes = data.results;
+//                       // make sure each bucket knows about each relevant index
+//                       for (var i = 0; i < data.results.length; i++) {
+//                         addToken(data.results[i].name, 'index');
+//                         for (var b = 0; b < qwQueryService.buckets.length; b++)
+//                           if (data.results[i].keyspace_id === qwQueryService.buckets[b].id) {
+//                             qwQueryService.buckets[b].indexes.push(data.results[i]);
+//                             break;
+//                           }
+//                       }
+//                     }
+//
+//                     refreshAutoCompleteArray();
+//                   },
+//
+//                   // error status from query about indexes
+//                   function index_error(resp) {
+//                     var data = resp.data, status = resp.status;
+//
+//                     //console.log("Ind Error Data: " + JSON.stringify(data));
+//                     //console.log("Ind Error Status: " + JSON.stringify(status));
+//                     //console.log("Ind Error Headers: " + JSON.stringify(headers));
+//                     //console.log("Ind Error statusText: " + JSON.stringify(statusText));
+//
+//                     var error = "Error retrieving list of indexes";
+//
+//                     if (data && data.errors)
+//                       error = error + ": " + data.errors;
+//                     if (status)
+//                       error = error + ", contacting query service returned status: " + status;
+// //          if (response && response.statusText)
+// //          error = error + ", " + response.statusText;
+//
+// //            console.log(error);
+//                     logWorkbenchError(error);
+//
+//                     qwQueryService.index_error = error;
+//                   }
+//                 );
+//             }
+//
+//           },
+//           /* error response from $http */
+//           function error(resp) {
+//             var data = resp.data, status = resp.status;
+// //        console.log("Schema Error Data: " + JSON.stringify(data));
+// //        console.log("Schema Error Status: " + JSON.stringify(status));
+// //        console.log("Schema Error Headers: " + JSON.stringify(headers));
+// //        console.log("Schema Error Config: " + JSON.stringify(config));
+//             var error = "Error retrieving list of buckets";
+//
+//             if (data && data.errors)
+//               error = error + ": " + JSON.stringify(data.errors);
+//             else if (status)
+//               error = error + ", contacting query service returned status: " + status;
+//
+//             qwQueryService.buckets.length = 0;
+//             qwQueryService.autoCompleteTokens = {};
+//             qwQueryService.bucket_errors = error;
+//             logWorkbenchError(error);
+//           });
 
     }
 

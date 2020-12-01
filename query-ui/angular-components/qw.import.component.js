@@ -46,14 +46,27 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     this.configForm = new FormGroup({
         useKey: new FormControl()
     });
-    
+
     // get our buckets and options from the import service, so they persist
     // between invocations (especially when an import is in progress)
     ic.options = qis.options;
     ic.doImport = qis.doImport;
-    ic.getBuckets = qis.getBuckets;
-    ic.getScopes = qis.getScopes;
-    ic.getCollections = qis.getCollections;
+    ic.getBuckets = function() {
+      return qis.getMeta().buckets;
+    };
+    ic.getScopes = function() {
+      var meta = qis.getMeta();
+      return qis.options.selected_bucket ? meta.scopes[qis.options.selected_bucket] : [];
+    };
+    ic.getCollections = function() {
+      var meta = qis.getMeta();
+      if (!qis.options.selected_bucket || !qis.options.selected_scope ||
+        !meta.collections[qis.options.selected_bucket] ||
+        !meta.collections[qis.options.selected_bucket][qis.options.selected_scope])
+        return [];
+
+      return meta.collections[qis.options.selected_bucket][qis.options.selected_scope];
+    }
 
     ic.bucketChanged = qis.bucketChanged;
     ic.scopeChanged = qis.scopeChanged;
@@ -69,7 +82,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     ic.validQueryService = validateQueryService.valid;
 
     ic.selectFile = function() {
-      var fileInput = document.getElementById("loadQuery"); 
+      var fileInput = document.getElementById("loadQuery");
       fileInput.value = null;
       fileInput.addEventListener('change',handleFileSelect,false);
       fileInput.click();
@@ -79,7 +92,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         mode: 'text',
         showGutter: true,
      };
-    
+
     ic.onEditorReady = function(editor) {
       editor.setOptions(ic.aceFileOptions);
     }
@@ -88,7 +101,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         mode: 'ace/mode/json',
         showGutter: true,
      };
-    
+
     ic.onJsonReady = function(editor) {
       editor.setOptions(ic.aceJsonOptions);
     }
@@ -255,7 +268,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         ic.selectTab(1);
         ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
       }
-      
+
       // For some reason the data table is not updating except when the tab changes, so force a change, then back
       // if that is the currently selected tab
       if (ic.isSelected(2)) {
@@ -353,7 +366,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       }
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
-        qwImportService.getBuckets();
+        qwImportService.updateBuckets();
         if (!validateQueryService.valid())
           qis.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
         });
