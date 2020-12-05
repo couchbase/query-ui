@@ -59,6 +59,7 @@
         <span class="wb-use">
           <select
              ng-model="qc.qqs.options.query_context_bucket"
+             ng-change="qc.qqs.query_context_bucket_changed()"
              uib-tooltip-html="'Set a default bucket and scope to use for your queries, so you may write queries with only the collection name.'"
              tooltip-placement="auto top"
              tooltip-append-to-body="true"

@@ -103,7 +103,7 @@ function getQwCollectionsService(
   //
 
   function refreshScopesAndCollectionsForBucket(bucket) {
-    console.log("Refreshing for bucket: " + bucket);
+    //console.log("Refreshing for bucket: " + bucket);
     // get the buckets from the REST API
     var promise = $http.do({
       url: "../pools/default/buckets/" + encodeURI(bucket) + "/scopes",

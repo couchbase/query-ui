@@ -25,7 +25,7 @@ angular
       state: 'app.admin.docs.editor',
       includedByState: 'app.admin.docs',
       plugIn: 'workbenchTab',
-//      ngShow: "rbac.cluster.bucket['.'].data.docs.read  && rbac.cluster.bucket['.'].data.xattr.read",
+      //ngShow: "rbac.cluster.collections['.:.:.'].data.docs.read  && rbac.cluster.collections['.:.:.'].data.xattr.read",
       index: 0
     });
 
@@ -34,7 +34,7 @@ angular
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
-//      ngShow: "rbac.cluster.bucket['.'].data.docs.read && rbac.cluster.bucket['.'].n1ql.select.execute",
+      //ngShow: "rbac.cluster.collections['.:.:.'].data.docs.read && rbac.cluster.collections['.:.:.'].n1ql.select.execute",
       index: 1
     });
 
