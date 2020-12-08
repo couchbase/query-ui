@@ -426,11 +426,16 @@ import {
   var openBrace = /\{/gi;
   var closeBrace = /\{/gi;
   var quote = /"/gi;
+  var amp = /&/gi;
+  var backs = /\\/gi;
 
   var mySanitize = function(str) {
     if (!str) return ('');
     else if (_.isString(str))
-      return(str.replace(lt,'&lt;')
+      return(str
+          .replace(amp,'&amp;')
+          .replace(backs,'&#92;')
+          .replace(lt,'&lt;')
           .replace(gt,'&gt;')
           .replace(openBrace,'&#123;')
           .replace(closeBrace,'&#125;')
@@ -595,7 +600,7 @@ import {
         '<fieldset class="doc-editor-fieldset" [disabled]="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
         '<div class="doc-editor-row" ' +
         '*ngIf="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
-        
+
         result += '<span class="doc-editor-cell" style="width:' + columnWidthPx*1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
@@ -736,7 +741,8 @@ import {
           'tooltip-trigger="none" (click)="showTT'+row+' = !showTT'+row+ '"';
         result += '>' + mySanitize(tdata[row].id) + '</span></span>';
 
-        var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : " base64 not available";
+        var binary = tdata[row].base64 ? tdata[row].base64.substring(0,150) : "base64 not available";
+        binary = mySanitize(JSON.stringify(binary));
         if (tdata[row].base64 && tdata[row].base64.length > 150)
           binary += "...";
 
@@ -1101,7 +1107,7 @@ import {
       if (_.isNumber(object))
         result += '<input type="number" step="any" ' + model + inputStyle + no_edit + '>';
       else if (_.isBoolean(object))
-        result += '<select ' + model + inputStyle + no_edit + 
+        result += '<select ' + model + inputStyle + no_edit +
             '><option *ngFor="let c of [{n: \'false\', v: false}, {n:\'true\', v: true}]" [ngValue]="c.v">{{c.n}}</option></select>';
 
       // can't edit incredibly long strings without the browser barfing
