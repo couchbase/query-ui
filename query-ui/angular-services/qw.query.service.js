@@ -1424,6 +1424,8 @@ function getQwQueryService(
       },
       // if we get failure, the parent status is the status of the last query to run
       function fail(resp) {
+        parentResult.batch_results[curIndex].status = resp.statusText;
+        parentResult.batch_results[curIndex].data = resp.data.errors;
         addBatchResultsToParent(parentResult, curIndex);
         finishParentQuery(parentResult, curIndex, true);
       }
@@ -1538,10 +1540,10 @@ function getQwQueryService(
     // unless the query is prepare - we can't explain those
     //
 
-    var queryIsExplain = /^\s*explain/gmi.test(queryText);
-    var queryIsPrepare = /^\s*prepare/gmi.test(queryText);
-    var queryIsAdvise = /^\s*advise/gmi.test(queryText);
-    var queryIsTransaction = /^\s*(begin|start|commit|rollback|savepoint)/gmi.test(queryText);
+    var queryIsExplain = /^\s*explain/gi.test(queryText);
+    var queryIsPrepare = /^\s*prepare/gi.test(queryText);
+    var queryIsAdvise = /^\s*advise/gi.test(queryText);
+    var queryIsTransaction = /^\s*(begin|start|commit|rollback|savepoint)/gi.test(queryText);
     var explain_promise;
 
     // the result tabs can show data, explain results, or show advice. Make sure the tab setting is
@@ -1968,14 +1970,16 @@ function getQwQueryService(
     // return a promise wrapping the one or two promises
     // when the queries are done, call finishQuery
 
-    return (Promise.all(promises).then(
-      function () {
+    var all_done = Promise.all(promises);
+    all_done.then(
+      function success() {
         finishQuery(newResult);
       },
-      function () {
+      function fail() {
         finishQuery(newResult);
       }
-    ));
+    );
+    return(all_done);
   }
 
   //
@@ -1984,7 +1988,7 @@ function getQwQueryService(
 
   function runAdviseOnLatest() {
     var query = getCurrentResult();
-    var queryIsAdvise = /^\s*advise/gmi.test(query.query);
+    var queryIsAdvise = /^\s*advise/gi.test(query.query);
 
     // if the query already starts with 'advise', run it as a regular query
     if (queryIsAdvise) {
@@ -2038,7 +2042,7 @@ function getQwQueryService(
   function runAdvise(queryText, queryResult) {
     queryResult.lastRun = new Date();
 
-    var queryIsAdvisable = /^\s*select|merge|update|delete/gmi.test(queryText);
+    var queryIsAdvisable = /^\s*select|merge|update|delete/gi.test(queryText);
 
     if (queryIsAdvisable && !multipleQueries(queryText)) {
       var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options);
