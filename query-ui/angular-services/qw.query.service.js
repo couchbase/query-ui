@@ -272,7 +272,9 @@ function getQwQueryService(
     query_context_bucket: "",
     query_context_scope: "",
     expanded: {},
-    query_timeout: 600
+    query_timeout: 600,
+    transaction_timeout: 120,
+    use_cbo: true,
   };
 
   qwQueryService.set_options = function (new_options) {
@@ -293,7 +295,9 @@ function getQwQueryService(
       query_context_bucket: qwQueryService.options.query_context_bucket,
       query_context_scope: qwQueryService.options.query_context_scope,
       expanded: qwQueryService.options.expanded,
-      query_timeout: qwQueryService.options.query_timeout
+      query_timeout: qwQueryService.options.query_timeout,
+      transaction_timeout: qwQueryService.options.transaction_timeout,
+      use_cbo: qwQueryService.options.use_cbo,
     };
   };
 
@@ -580,14 +584,13 @@ function getQwQueryService(
 
     if (hasLocalStorage && _.isString(localStorage[localStorageKey])) try {
       var savedState = JSON.parse(localStorage[localStorageKey]);
-      //console.log("Got saved state: " + JSON.stringify(savedState));
-//        if (savedState.lastResult) {
-//          //console.log("Got last result: " + JSON.stringify(savedState.lastResult));
-//          lastResult.copyIn(savedState.lastResult);
-//        }
-//        else
-//          console.log("No last result");
 
+      // copy all the saved options into our own structures
+      Object.assign(qwQueryService.options,savedState.options);
+      Object.assign(qwQueryService.doc_editor_options,savedState.doc_editor_options);
+      Object.assign(monitoringOptions,savedState.monitoringOptions);
+
+      // copy the query history
       if (savedState.pastQueries) {
         pastQueries = [];
         _.forEach(savedState.pastQueries, function (queryRes, index) {
@@ -608,10 +611,10 @@ function getQwQueryService(
 
       getCurrentResult().savedQuery = getCurrentResult().query; // remember query if edited later
 
-      if (savedState.outputTab)
-        qwQueryService.selectTab(savedState.outputTab);
-      if (savedState.options)
-        qwQueryService.options = savedState.options;
+      //
+      // backward compatibility: some options were missing in prior versions
+      //
+
       if (!qwQueryService.options.query_context_bucket)
         qwQueryService.options.query_context_bucket = "";
       if (!qwQueryService.options.query_context_scope)
@@ -623,26 +626,16 @@ function getQwQueryService(
           savedState.doc_editor_options.show_tables = false;
         if (!savedState.doc_editor_options.hasOwnProperty('show_id'))
           savedState.doc_editor_options.show_id = true;
-        qwQueryService.doc_editor_options = savedState.doc_editor_options;
       }
-      if (savedState.query_plan_options) {
-        qwQueryService.query_plan_options = savedState.query_plan_options;
-      }
-
-      if (savedState.monitoringOptions) {
-        monitoringOptions = savedState.monitoringOptions;
-        // handle backward compatibility
-        if (!monitoringOptions.active_sort_by) {
-          monitoringOptions.active_sort_by = 'elapsedTime';
-          monitoringOptions.active_sort_reverse = true;
-          monitoringOptions.completed_sort_by = 'elapsedTime';
-          monitoringOptions.completed_sort_reverse = true;
-          monitoringOptions.prepared_sort_by = 'elapsedTime';
-          monitoringOptions.prepared_sort_reverse = true;
-        }
+      if (savedState.monitoringOptions && !monitoringOptions.active_sort_by) {
+        monitoringOptions.active_sort_by = 'elapsedTime';
+        monitoringOptions.active_sort_reverse = true;
+        monitoringOptions.completed_sort_by = 'elapsedTime';
+        monitoringOptions.completed_sort_reverse = true;
+        monitoringOptions.prepared_sort_by = 'elapsedTime';
+        monitoringOptions.prepared_sort_reverse = true;
       }
 
-      // handle case where stored value of options might be not yet defined
       if (qwQueryService.options.auto_infer !== true && qwQueryService.options.auto_infer !== false)
         qwQueryService.options.auto_infer = true;
 
@@ -651,6 +644,13 @@ function getQwQueryService(
 
       if (qwQueryService.options.dont_save_queries !== true && qwQueryService.options.dont_save_queries !== false)
         qwQueryService.options.dont_save_queries = false;
+
+      if (qwQueryService.options.use_cbo !== true && qwQueryService.options.use_cbo !== false)
+        qwQueryService.options.use_cbo = true;
+
+      if (!qwQueryService.options.transaction_timeout)
+        qwQueryService.options.transaction_timeout = 120;
+
 
     } catch (err) {
       console.log("Error loading state: " + err);
@@ -1219,6 +1219,8 @@ function getQwQueryService(
       queryData.client_context_id = UUID.generate();
       queryData.pretty = true;
       queryData.controls = true;
+      queryData.use_cbo = queryOptions.use_cbo;
+      queryData.txtimeout = JSON.stringify(queryOptions.transaction_timeout) + "s";
       if (txId)
         queryData.txid = txId;
     }

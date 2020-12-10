@@ -29,6 +29,10 @@
         <input id="for-auto-format" type="checkbox" ng-model="options.auto_format">
         <label for="for-auto-format" class="checkbox">Automatically format queries before executing</label>
       </div>
+      <div class="formrow" ng-if="mode != 'analytics'">
+        <input id="for-cbo" type="checkbox" ng-model="options.use_cbo">
+        <label for="for-cbo" class="checkbox">Use Cost-Based Optimizer</label>
+      </div>
       <div class="formrow" ng-hide="mode == 'analytics'">
         <input id="for-dont-save" type="checkbox" ng-model="options.dont_save_queries">
         <label for="for-dont-save" class="checkbox inline margin-right-zero">Don't save query history</label>
@@ -101,6 +105,11 @@
           name="timeout" ng-class="{'ng-invalid-number': prefs_form.timeout.$invalid}"></input>
       </div>
 
+      <div class="formrow" ng-if="mode != 'analytics'">
+        <label>Transaction Timeout</label>
+        <input type="number" max="1000000" min="1" id="pwd" ng-model="options.transaction_timeout"
+               name="txtimeout" ng-class="{'ng-invalid-number': prefs_form.timeout.$invalid}"></input>
+      </div>
     </div>
 
     <div class="panel-footer">
