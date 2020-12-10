@@ -199,7 +199,7 @@
       <div class="text-center">
         <button
            (click)="ic.doImport()"
-           [disabled]="!ic.options.docData.length || !ic.options.selected_bucket || !ic.validQueryService()"
+           [disabled]="!ic.canImport()"
            class="fix-width-3">
            <span *ngIf="!ic.options.importing">Import Data</span>
            <span *ngIf="ic.options.importing">Cancel Import</span>

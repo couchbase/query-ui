@@ -324,8 +324,14 @@ function getQwImportService(
   // the selected_collection to the first on the list
   function scopeChanged(event) {
     var collections = qis.collections[qis.options.selected_bucket][qis.options.selected_scope];
-    if (collections.length > 0 && collections.indexOf(qis.options.selected_collection) < 0)
-      qis.options.selected_collection = collections[0];
+
+    // if the selected collection is available we can just use it, so proceed if not found
+    if (collections.indexOf(qis.options.selected_collection) < 0) {
+      if (collections.length > 0)
+        qis.options.selected_collection = collections[0];
+      else
+        qis.options.selected_collection = "";
+    }
   }
 
   /**

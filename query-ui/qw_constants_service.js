@@ -70,7 +70,7 @@ function getQwConstantsService() {
 
   //
   // the nsserver proxy has a maximum request size
-  qwConstantsService.maxRequestSize = 1048500;
+  qwConstantsService.maxRequestSize = 10485000;
 
   //
   // should we show the query options button?

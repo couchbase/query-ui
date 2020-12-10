@@ -118,6 +118,12 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       }
     };
 
+    // can we import?
+    ic.canImport = function() {
+      return ic.options.docData.length && ic.options.selected_bucket && ic.validQueryService() &&
+        ic.options.selected_collection && ic.options.selected_scope;
+    };
+
     // regex to figure out what format the data appears to be
     var looksLikeTSV = /^[^\t\n]+[\t]/;
     var looksLikeCSV = /^[^,\n]+[,]/;
