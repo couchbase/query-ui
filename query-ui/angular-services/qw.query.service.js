@@ -1172,7 +1172,7 @@ function getQwQueryService(
       });
   }
 
-  function buildQueryRequest(queryText, is_user_query, queryOptions, txId) {
+  function buildQueryRequest(queryText, is_user_query, queryOptions, txId, txImplicit) {
 
     //console.log("Building query: " + queryText);
     //
@@ -1211,6 +1211,11 @@ function getQwQueryService(
         queryData.query_context = 'default:' + queryOptions.query_context_bucket +
           (queryOptions.query_context_scope ? ('.' + queryOptions.query_context_scope) + '' : '');
       //console.log("Got query context: " + queryData.query_context);
+
+      if (is_user_query) {
+        queryData.use_cbo = queryOptions.use_cbo;
+        queryData.txtimeout = JSON.stringify(queryOptions.transaction_timeout) + "s";
+      }
     }
 
     // if the user might want to cancel it, give it an ID
@@ -1219,10 +1224,9 @@ function getQwQueryService(
       queryData.client_context_id = UUID.generate();
       queryData.pretty = true;
       queryData.controls = true;
-      queryData.use_cbo = queryOptions.use_cbo;
-      queryData.txtimeout = JSON.stringify(queryOptions.transaction_timeout) + "s";
       if (txId)
         queryData.txid = txId;
+      queryData.tximplicit = txImplicit;
     }
     // for auditing, note that the non-user queries are "INTERNAL"
     else
@@ -1311,7 +1315,7 @@ function getQwQueryService(
   // and execute them, updating the UI to show progress
   //
 
-  function executeUserQuery(explainOnly) {
+  function executeUserQuery(explainOnly,txImplicit) {
     // if the user edited an already-run query, add the edited query to the end of the history
     var query = getCurrentResult();
     if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
@@ -1375,7 +1379,7 @@ function getQwQueryService(
 
     // otherwise only a single query, run it
     else
-      queryExecutionPromise = executeSingleQuery(queryText, explainOnly, newResult)
+      queryExecutionPromise = executeSingleQuery(queryText, explainOnly, newResult, null, txImplicit)
         .then(
           function success() {
             if (!newResult.status_success()) // if errors, go to tab 1
@@ -1525,7 +1529,7 @@ function getQwQueryService(
   //   marking the query as no longer busy when that happens
   //
 
-  function executeSingleQuery(queryText, explainOnly, newResult, txId) {
+  function executeSingleQuery(queryText, explainOnly, newResult, txId, txImplicit) {
     var pre_post_ms = new Date().getTime(); // when did we start?
     var promises = []; // we may run explain only, or explain + actual  query
     //console.log("Running query: " + queryText);
@@ -1579,7 +1583,7 @@ function getQwQueryService(
     // run the explain version of the query, if appropriate
     //
 
-    if (!queryIsExplain && !queryIsTransaction &&
+    if (!queryIsExplain && !queryIsTransaction && !queryIsAdvise &&
       (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
 
       var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options);
@@ -1720,7 +1724,7 @@ function getQwQueryService(
 
     if ((queryIsExplain && explainOnly) || !explainOnly) {
 
-      var request = buildQueryRequest(queryText, true, qwQueryService.options, txId);
+      var request = buildQueryRequest(queryText, true, qwQueryService.options, txId, txImplicit);
       newResult.client_context_id = request.data.client_context_id;
       //console.log("Got client context id: " + newResult.client_context_id);
 
@@ -1963,7 +1967,7 @@ function getQwQueryService(
     // let's run ADVISE on the query to see if there's a better way to do it
     //
 
-    if (!explainOnly && !queryIsAdvise && !queryIsTransaction) {
+    if (!explainOnly && !queryIsExplain && !queryIsAdvise && !queryIsTransaction) {
       var advise_promise = runAdvise(queryText, newResult);
       if (advise_promise != null)
         promises.push(advise_promise);

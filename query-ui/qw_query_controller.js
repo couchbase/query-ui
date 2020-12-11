@@ -821,7 +821,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   // functions for running queries and saving results to a file
   //
 
-  function query(explainOnly) {
+  function query(explainOnly,txImplicit) {
     // make sure there is a query to run
     if (qc.lastResult().query.trim().length == 0)
       return;
@@ -868,7 +868,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     if (warningPromise)
       warningPromise.then(
         function success() {
-          var promise = qwQueryService.executeUserQuery(explainOnly);
+          var promise = qwQueryService.executeUserQuery(explainOnly,txImplicit);
           // also have the input grab focus at the end
           if (promise)
             promise.then(doneWithQuery,doneWithQuery);
@@ -880,7 +880,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     // otherwise just proceed
 
     else {
-      var promise = qwQueryService.executeUserQuery(explainOnly);
+      var promise = qwQueryService.executeUserQuery(explainOnly,txImplicit);
       // also have the input grab focus at the end
       if (promise)
         promise.then(doneWithQuery,doneWithQuery);
