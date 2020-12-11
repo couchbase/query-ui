@@ -1759,10 +1759,13 @@ function getQwQueryService(
             // just the errors
 
             var result; // hold the result, or a combination of errors and result
-            var isEmptyResult = (!_.isArray(data.results) || data.results.length == 0);
 
+          if (!data) {
+            result = {status: "No data returned from server"};
+            data = {status: status};
+          }
             // empty result, fill it with any errors or warnings
-            if (isEmptyResult) {
+          else if (!_.isArray(data.results) || data.results.length == 0) {
               if (data.errors)
                 result = data.errors;
               else if (data.warnings)
@@ -1794,7 +1797,7 @@ function getQwQueryService(
 
             // if we got no metrics, create a dummy version
             if (!data.metrics) {
-              data.metrics = {elapsedTime: 0.0, executionTime: 0.0, resultCount: 0, resultSize: "0", elapsedTime: 0.0}
+              data.metrics = {elapsedTime: "0.0s", executionTime: "0.0s", resultCount: 0, resultSize: "0"};
             }
 
             // get the stmtType to keep track of transactions
