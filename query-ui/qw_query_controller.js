@@ -405,7 +405,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
           e[0].start.column > 0 && // and the previous line wasn't blank
           curSession.getLine(e[0].start.row).trim()[curSession.getLine(e[0].start.row).trim().length -1] === ';' &&
           endsWithSemi.test(qc.lastResult().query))
-        qc.query();
+        qc.query({});
 
       qc.inputEditor.ignoreCR = false;
     }
@@ -821,7 +821,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   // functions for running queries and saving results to a file
   //
 
-  function query(explainOnly,txImplicit) {
+  function query({explainOnly= false,txImplicit= false}) {
     // make sure there is a query to run
     if (qc.lastResult().query.trim().length == 0)
       return;

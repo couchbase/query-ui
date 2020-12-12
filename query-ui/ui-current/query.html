@@ -85,7 +85,7 @@
 <!-- wrapper under query editor for button and stats ------------------------->
       <div class="wb-query-editor-footer"  ng-click="qc.handleClick('results')">
         <span class="wb-button-wrapper nowrap">
-          <button ng-click="qc.query()" class="wb-button-execute">
+          <button ng-click="qc.query({})" class="wb-button-execute">
             <div ng-if="!qc.lastResult().busy">Execute</div>
             <div ng-if="qc.lastResult().busy" class="icon-button">
               Cancel
@@ -94,7 +94,7 @@
           </button>
           <button
              ng-disabled="qc.lastResult().busy"
-             ng-click="qc.query(true)"
+             ng-click="qc.query({explainOnly: true})"
              class="outline tight">
             Explain
             <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
