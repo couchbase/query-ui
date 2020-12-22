@@ -81,7 +81,6 @@
          ui-ace="qc.aceInputOptions"
          ng-model="qc.lastResult().query">
       </div>
-
 <!-- wrapper under query editor for button and stats ------------------------->
       <div class="wb-query-editor-footer"  ng-click="qc.handleClick('results')">
         <span class="wb-button-wrapper nowrap">
@@ -92,20 +91,42 @@
               <span class="icon fa-spinner fa-spin fa-pulse"></span>
             </div>
           </button>
-          <button
-             ng-disabled="qc.lastResult().busy"
-             ng-click="qc.query({explainOnly: true})"
-             class="outline tight">
-            Explain
-            <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
-          </button>
-          <button ng-if="qc.isEnterprise()"
-             ng-disabled="qc.lastResult().busy"
-             ng-click="qc.runAdviseOnLatest()"
-             class="outline tight">
-             Advise
-            <span  ng-if="qc.lastResult().busy" class="icon fa-spinner fa-spin fa-pulse"></span>
-          </button>
+          <div
+             class="cbui-drawer"
+             ng-class="{open : poolDefault.openDrawer}">
+            <div
+               class="cbui-drawer-opener"
+               title="show more actions"
+               ng-click="poolDefault.openDrawer = true">
+              |<span class="icon fa-angle-right"></span>
+            </div>
+            <div class="nowrap">
+              <button
+                 ng-disabled="qc.lastResult().busy"
+                 ng-click="qc.query({explainOnly: true})"
+                 class="outline tight">
+                Explain
+              </button>
+              <button ng-if="qc.isEnterprise()"
+                 ng-disabled="qc.lastResult().busy"
+                 ng-click="qc.runAdviseOnLatest()"
+                 class="outline tight">
+                 Advise
+              </button>
+              <button ng-if="qc.isEnterprise()"
+                 ng-disabled="qc.lastResult().busy"
+                 ng-click="qc.query({txImplicit: true})"
+                 class="outline tight">
+                Run As Transaction
+              </button>
+            </div>
+            <div
+               class="cbui-drawer-closer"
+               title="hide this"
+               ng-click="poolDefault.openDrawer = false">
+              <span class="icon fa-times-circle padding-half"></span>
+            </div>
+          </div>
         </span>
 <!-- query execution summary stats -------------------------------------------->
         <div class="wb-result-summary">
@@ -137,7 +158,7 @@
           </span>
         </div>
 <!-- format & full-screen controls ----------------------------------------- -->
-        <span class="nowrap">
+        <div class="nowrap" style="padding: 0 0 .25rem 0;">
           <span
              ng-disabled="qc.executingQuery.busy"
              ng-click="$event.stopPropagation(); qc.format(); qc.handleClick('editor');"
@@ -151,7 +172,7 @@
             <span ng-if="!qc.fullscreen" class="icon fa-expand" title="expand"></span>
             <span ng-if="qc.fullscreen" class="icon fa-compress" title="contract"></span>
           </span>
-        </span>
+        </div>
 
       </div>
     </div>
