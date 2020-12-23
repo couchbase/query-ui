@@ -63,37 +63,11 @@
         </div>
 
         <div class="formrow">
-          <label>Destination <small>bucket.scope.collection</small></label>
-          <select
-             [(ngModel)]="ic.options.selected_bucket"
-             [ngModelOptions]="{standalone: true}"
-              name="bucket"
-             class="cbui-select width-4"
-             (change)="ic.bucketChanged($event)"
-             [disabled]="ic.options.importing">
-            <option
-               class="ui-select-choices"
-               *ngFor="let bucket of ic.getBuckets()"
-               [selected]="bucket==ic.options.selected_bucket">
-              <span class="select-item ellipsis">{{bucket}}</span>
-            </option>
-          </select>
-
-          <select (change)="ic.scopeChanged($event)" [ngModelOptions]="{standalone: true}"
-                  name="scope" class="cbui-select width-4" [(ngModel)]="ic.options.selected_scope"
-                  [disabled]="ic.options.importing">
-            <option *ngFor="let name of ic.getScopes()">
-              {{name}}
-            </option>
-          </select>
-
-          <select [ngModelOptions]="{standalone: true}"
-                  name="collection" class="cbui-select width-4" [(ngModel)]="ic.options.selected_collection"
-                  [disabled]="ic.options.importing">
-            <option *ngFor="let name of ic.getCollections()">
-              {{name}}
-            </option>
-          </select>
+          <qw-collection-menu label="Destination"
+                              [initialSelection]="ic.options"
+                              (onSelection)="ic.collectionMenuCallback($event)"
+                              [disabled]="ic.options.importing">
+          </qw-collection-menu>
         </div>
 
         <div class="formrow">

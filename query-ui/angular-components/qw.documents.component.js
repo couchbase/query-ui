@@ -84,7 +84,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   }
 
   ngAfterInit() {
-    console.log("Docs afterInit");
+    //console.log("Docs afterInit");
   }
 
   constructor(
@@ -140,8 +140,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.currentDocs = [];
     dec.buckets = [];
     dec.buckets_ephemeral = {};
-    dec.collections = {};
-    dec.scopes = {}; // indexed by bucket name
     dec.indexes = {};
     dec.show_id = show_id;
     dec.hideAllTooltips = true;
@@ -155,17 +153,17 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
 
-    dec.getScopes = function () {
-      if (dec.scopes && dec.options.selected_bucket)
-        return (dec.scopes[dec.options.selected_bucket]);
-      else
-        return [];
-    };
-    dec.getCollections = function () {
-      if (dec.scopes && dec.options.selected_bucket && dec.options.selected_scope && dec.collections[dec.options.selected_bucket])
-        return dec.collections[dec.options.selected_bucket][dec.options.selected_scope];
-      else
-        return [];
+    dec.collectionMenuCallback = function(event) {
+      if (event && (dec.options.selected_bucket != event.bucket || dec.options.selected_scope != event.scope ||
+        dec.options.selected_collection != event.collection))
+      {
+        dec.options.selected_bucket = event.bucket;
+        dec.options.selected_scope = event.scope;
+        dec.options.selected_collection = event.collection;
+
+        if (event.bucket && event.scope && event.collection)
+          retrieveDocs_inner();
+      }
     };
 
     //
@@ -185,10 +183,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     dec.updatingRow = -1;
 
-    dec.bucketChanged = bucketChanged;
-    dec.scopeChanged = scopeChanged;
-    dec.collectionChanged = collectionChanged;
-
     var N1QL = "N1QL";
     var KV = "KV";
 
@@ -199,7 +193,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     dec.can_add_document = function() {
-      if (dec.getCollections().length == 0 || !dec.options.selected_collection)
+      if (!dec.options.selected_collection)
         return false;
       else
         // TODO - need to check permissions on selected collection
@@ -1109,30 +1103,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
-    // bucket changed via menu
-    //
-
-    function bucketChanged(event) {
-      if (!event.target.value) return;
-
-      dec.searchForm.get('where_clause').setValue('');
-      dec.searchForm.get('offset').setValue(0);
-      dec.options.selected_bucket = event.target.value;
-      qwCollectionsService.getScopesForBucket(dec.options.selected_bucket).then(meta => scopeCollUpdate(meta));
-    }
-
-    function scopeChanged(event) {
-      //console.log("Scope changed to: " + event.target.value + );
-      qwCollectionsService.getScopesForBucket(dec.options.selected_bucket).then(meta => scopeCollUpdate(meta));
-    }
-
-    function collectionChanged(event) {
-      //console.log("Collection changed to: " + event.target.value);
-      if (dec.options.selected_collection)
-        retrieveDocs_inner();
-    }
-
-    //
     // if the user updates something, we like to refresh the results, unless
     // there are unsaved changes
     //
@@ -1170,22 +1140,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
-    // when the metedata is updated, update our state
+    // when we first get the list of buckets, get the index status for each
     //
 
     function bucketsUpdate(metadata) {
       metadataUpdate(metadata);
-
-      // if the selected_bucket in options is in the list of buckets, we will use it,
-      // otherwise set it to the first bucket.
-      if (!dec.options.selected_bucket || !dec.buckets.indexOf(dec.options.selected_bucket) == -1)
-        if (dec.buckets.length)
-          dec.options.selected_bucket = dec.buckets[0];
-        else {
-          dec.options.selected_bucket = "";
-          dec.options.selected_scope = "";
-          dec.options.selected_collection = "";
-        }
 
       // create an index placeholder for each bucket
       dec.buckets.forEach(bucketName => dec.indexes[bucketName] = {});
@@ -1214,58 +1173,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           });
         }
 
-        // now we have the indexes, get scopes for any selected bucket
-        if (dec.options.selected_bucket)
-          qwCollectionsService.getScopesForBucket(dec.options.selected_bucket).then(meta => scopeCollUpdate(meta));
+        // if we have selected becket/scope/collection, get the initial set of documents
+        if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection)
+            retrieveDocs_inner();
 
       }, function error(resp) {
         console.log("Error getting indexes: " + JSON.stringify(resp.body));
       });
-
-    }
-
-    // called whenever the list of scopes/collections changes
-    function scopeCollUpdate(metadata) {
-      metadataUpdate(metadata);
-
-      var bucket = dec.options.selected_bucket;
-      // nothing further to do if we don't have a selected bucket yet, or no scopes
-      if (!bucket || dec.scopes[bucket].length == 0)
-        return;
-
-      // see if the selected scope and collection are available
-      if (dec.scopes[bucket][0] &&
-        (!dec.options.selected_scope || dec.scopes[bucket].indexOf(dec.options.selected_scope) < 0))
-        dec.options.selected_scope = dec.scopes[bucket][0];
-
-      // can't do anything if no selected scope, or no collections
-      if (!dec.options.selected_scope || !dec.collections[bucket] ||
-        !dec.collections[bucket][dec.options.selected_scope])
-        return;
-
-      // if there are no collections in the current scope, show an error message
-      if (dec.collections[bucket][dec.options.selected_scope].length == 0) {
-        dec.options.selected_collection = null;
-        showErrorDialog("No collections in scope", "There are no collections in the current scope", true);
-        dec.options.current_result = "No collections in the current scope.";
-        dec.options.current_query = "";
-        return;
-      }
-      // we have collections, do any match the default?
-      else if (dec.collections[bucket][dec.options.selected_scope][0] && // we have at least 1 collection in the list
-        (!dec.options.selected_collection || // no current collection, or collection not in list
-          dec.collections[bucket][dec.options.selected_scope].indexOf(dec.options.selected_collection) < 0))
-        dec.options.selected_collection = dec.collections[bucket][dec.options.selected_scope][0];
-
-      if (dec.options.selected_collection)
-        retrieveDocs_inner();
     }
 
     function metadataUpdate(metadata) {
       dec.buckets = metadata.buckets;
       dec.buckets_ephemeral = metadata.buckets_ephemeral;
-      dec.scopes = metadata.scopes;
-      dec.collections = metadata.collections;
     }
 
     //

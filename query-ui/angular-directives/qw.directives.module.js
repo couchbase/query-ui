@@ -10,6 +10,7 @@ import { QwJsonDataTable }     from "./qw.json.datatable.directive.js";
 import { QwJsonTree }          from "./qw.json.tree.directive.js";
 import { QwJsonTableEditor2 }  from "./qw.json.table.editor.directive.js";
 import { QwExplainViz }        from "./qw.explain.viz.component.js";
+import { QwCollectionMenu }    from "./qw.collection.menu.component.js"
 
 import { QwDialogService }     from "./qw.dialog.service.js";
 import { QwDocEditorDialog }   from "./dialogs/qw.doc.editor.dialog.component.js";
@@ -27,6 +28,7 @@ class QwDirectivesModule {
     new NgModule({
       declarations: [
         QwDocEditorDialog,
+        QwCollectionMenu,
         QwErrorDialog,
         QwExplainViz,
         QwInputDialog,
@@ -36,10 +38,11 @@ class QwDirectivesModule {
         QwJsonTree
       ],
       bootstrap: [ // need to include dialog components here
-        QwJsonTableEditor2,
-        QwErrorDialog,
+        QwCollectionMenu,
         QwDocEditorDialog,
+        QwErrorDialog,
         QwInputDialog,
+        QwJsonTableEditor2,
         ],
       imports: [
         FormsModule,
@@ -49,6 +52,7 @@ class QwDirectivesModule {
         NgxAceModule.forRoot(),
       ],
       exports: [
+        QwCollectionMenu,
         QwDocEditorDialog,
         QwErrorDialog,
         QwExplainViz,

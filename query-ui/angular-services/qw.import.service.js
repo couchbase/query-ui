@@ -1,4 +1,3 @@
-import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
 import {QwDialogService} from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 import {QwQueryService} from '/_p/ui/query/angular-services/qw.query.service.js';
 import {$http} from '/_p/ui/query/angular-services/qw.http.js';
@@ -17,7 +16,6 @@ class QwImportService {
   static get parameters() {
     return [
       MnPermissions,
-      QwCollectionsService,
       QwDialogService,
       QwQueryService,
       $http,
@@ -26,13 +24,11 @@ class QwImportService {
 
   constructor(
     mnPermissions,
-    qwCollectionsService,
     qwDialogService,
     qwQueryService,
     $http) {
     Object.assign(this, getQwImportService(
       mnPermissions,
-      qwCollectionsService,
       qwDialogService,
       qwQueryService,
       $http));
@@ -44,7 +40,6 @@ class QwImportService {
 
 function getQwImportService(
   mnPermissions,
-  qwCollectionsService,
   qwDialogService,
   qwQueryService,
   $http) {
@@ -52,16 +47,6 @@ function getQwImportService(
   var qis = {};
 
   qis.rbac = mnPermissions.export;
-  qis.buckets = [];
-  qis.collections = {};
-  qis.scopes = {}; // indexed by bucket name
-  qis.getMeta = function() {
-    return {
-      buckets: qis.buckets,
-      collections: qis.collections,
-      scopes: qis.scopes
-    };
-  };
 
   qis.options = {
     selected_bucket: "",
@@ -80,10 +65,6 @@ function getQwImportService(
     fileSize: 0,
     last_import_status: ""
   };
-
-  qis.updateBuckets = updateBuckets;
-  qis.bucketChanged = bucketChanged;
-  qis.scopeChanged = scopeChanged;
 
   qis.closeAllDialogs = function () {
     console.log("Close all dialogs.");
@@ -247,91 +228,6 @@ function getQwImportService(
     qis.options.fileName = "";
     qis.options.fileSize = 0;
     qis.options.status = "";
-  }
-
-
-  //
-  // get a list of buckets from the server via the REST API
-  //
-
-  function updateBuckets() {
-    qwCollectionsService.getBuckets().then(meta => bucketsChangedCallback(meta));
-  }
-
-  function bucketsChangedCallback(meta) {
-    var default_seen = false;
-    qis.buckets = meta.buckets;
-    console.log("qis.buckets is now: " + JSON.stringify(qis.buckets));
-    qis.scopes = meta.scopes;
-    qis.collections = meta.collections;
-    if (qis.buckets.length > 0 && !qis.options.selected_bucket)
-      qis.options.selected_bucket = qis.buckets[0];
-
-    if (qis.options.selected_bucket)
-      qwCollectionsService.getScopesForBucket(qis.options.selected_bucket).then(meta => scopesChangedCallback(meta));
-  }
-
-  function scopesChangedCallback(meta) {
-    qis.buckets = meta.buckets;
-    console.log("qis.buckets is now: " + JSON.stringify(qis.buckets));
-    qis.scopes = meta.scopes;
-    qis.collections = meta.collections;
-
-    if (!qis.options.selected_bucket)
-      return;
-
-    // if we don't have a scope, or didn't see it in the list, use the first one from the list
-    if (qis.scopes[qis.options.selected_bucket] && qis.scopes[qis.options.selected_bucket].length &&
-      (!qis.options.selected_scope ||
-        qis.scopes[qis.options.selected_bucket].indexOf(qis.options.selected_scope) < 0))
-      qis.options.selected_scope = qis.scopes[qis.options.selected_bucket][0];
-
-    // make sure we have collections to work with
-    if (!qis.options.selected_scope || !qis.collections[qis.options.selected_bucket] ||
-      !qis.collections[qis.options.selected_bucket][qis.options.selected_scope])
-      return;
-
-    var collections = qis.collections[qis.options.selected_bucket][qis.options.selected_scope];
-
-    // if we don't have a collection, or didn't see it in the list, use the first one from the list
-    if (collections.length && // we have at least 1 collection in the list
-      (!qis.options.selected_collection || // no current collection, or collection not in list
-        collections.indexOf(qis.options.selected_collection) < 0))
-      qis.options.selected_collection = collections[0];
-   }
-
-  //
-  // when the user selects a new bucket, get the scopes and collections for that bucket
-  // (unless there is no specified bucket, and reset everything
-  //
-
-  function bucketChanged(event) {
-    qis.options.selected_bucket = event.target.value;
-    if (!event.target.value) {
-      qis.options.selected_scope = null;
-      qis.options.selected_collection = null;
-      qis.collections = {};
-      qis.scopes = {};
-    } else {
-      if (qis.options.selected_bucket)
-        qwCollectionsService.getScopesForBucket(qis.options.selected_bucket).then(meta => scopesChangedCallback(meta));
-    }
-  }
-
-  // when the scope changes, the model for the collections menu can change without
-  // triggering a change in the underlying collection value. Make sure the value of
-  // the selected_collection is on the list of current collections, otherwise set
-  // the selected_collection to the first on the list
-  function scopeChanged(event) {
-    var collections = qis.collections[qis.options.selected_bucket][qis.options.selected_scope];
-
-    // if the selected collection is available we can just use it, so proceed if not found
-    if (collections.indexOf(qis.options.selected_collection) < 0) {
-      if (collections.length > 0)
-        qis.options.selected_collection = collections[0];
-      else
-        qis.options.selected_collection = "";
-    }
   }
 
   /**

@@ -51,25 +51,6 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     // between invocations (especially when an import is in progress)
     ic.options = qis.options;
     ic.doImport = qis.doImport;
-    ic.getBuckets = function() {
-      return qis.getMeta().buckets;
-    };
-    ic.getScopes = function() {
-      var meta = qis.getMeta();
-      return qis.options.selected_bucket ? meta.scopes[qis.options.selected_bucket] : [];
-    };
-    ic.getCollections = function() {
-      var meta = qis.getMeta();
-      if (!qis.options.selected_bucket || !qis.options.selected_scope ||
-        !meta.collections[qis.options.selected_bucket] ||
-        !meta.collections[qis.options.selected_bucket][qis.options.selected_scope])
-        return [];
-
-      return meta.collections[qis.options.selected_bucket][qis.options.selected_scope];
-    }
-
-    ic.bucketChanged = qis.bucketChanged;
-    ic.scopeChanged = qis.scopeChanged;
 
     // local functions and variables
     ic.aceOutputLoaded = aceOutputLoaded;
@@ -104,7 +85,15 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
     ic.onJsonReady = function(editor) {
       editor.setOptions(ic.aceJsonOptions);
-    }
+    };
+
+    ic.collectionMenuCallback = function(event) {
+      if (event) {
+        ic.options.selected_bucket = event.bucket;
+        ic.options.selected_scope = event.scope;
+        ic.options.selected_collection = event.collection;
+      }
+    };
 
     // data pills
     ic.selected = 1;
@@ -372,7 +361,6 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       }
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
-        qwImportService.updateBuckets();
         if (!validateQueryService.valid())
           qis.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
         });

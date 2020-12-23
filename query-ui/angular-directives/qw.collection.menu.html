@@ -1,0 +1,20 @@
+<div class="column">
+  <label class="controls margin-bottom-0">{{label}}&nbsp;<small>bucket.scope.collection</small></label>
+  <div>
+    <select (change)="bucketChanged($event)">
+      <option *ngFor="let name of buckets" [selected]="name==selected_bucket" [disabled]="disabled">
+        {{name}}
+      </option>
+    </select>
+    <select (change)="scopeChanged($event)">
+      <option *ngFor="let name of getScopes()" [selected]="name==selected_scope" [disabled]="disabled">
+        {{name}}
+      </option>
+    </select>
+    <select (change)="collectionChanged($event)">
+      <option *ngFor="let name of getCollections()" [selected]="name==selected_collection" [disabled]="disabled">
+        {{name}}
+      </option>
+    </select>
+  </div>
+</div>

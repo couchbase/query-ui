@@ -18,26 +18,7 @@
   <div [formGroup]="searchForm" class="controls resp-med">
 
     <div class="column">
-      <label>Keyspace <small>bucket.scope.collection</small></label>
-      <div>
-        <select formControlName="selected_bucket" (change)="dec.bucketChanged($event)">
-            <option *ngFor="let name of dec.buckets" [selected]="name==dec.options.selected_bucket">
-              {{name}}
-            </option>
-        </select>
-
-        <select formControlName="selected_scope" (change)="dec.scopeChanged($event)">
-          <option *ngFor="let name of dec.getScopes()" [selected]="name==dec.options.selected_scope">
-            {{name}}
-          </option>
-        </select>
-
-        <select formControlName="selected_collection" (change)="dec.collectionChanged($event)">
-          <option *ngFor="let name of dec.getCollections()" [selected]="name==dec.options.selected_collection">
-            {{name}}
-          </option>
-        </select>
-      </div>
+      <qw-collection-menu label="Keyspace" [initialSelection]="dec.options" (onSelection)="dec.collectionMenuCallback($event)"></qw-collection-menu>
     </div>
 
     <div class="column">
@@ -200,7 +181,7 @@
     </div>
   </div>
 
-<!-- results (documents or status messages) ***************************** -->
+  <!-- results (documents or status messages) ***************************** -->
   <div *ngIf="dec.options.queryBusy">Retrieving results...</div>
   <div *ngIf="dec.show_results">
     <div class="row" *ngIf="dec.options.selected_bucket && dec.options.current_query.length > 0">

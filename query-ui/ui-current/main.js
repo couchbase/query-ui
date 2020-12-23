@@ -5,6 +5,7 @@ import ace from '/ui/libs/ace/ace-wrapper.js';
 import { NgModule } from '/ui/web_modules/@angular/core.js';
 import { UIRouterUpgradeModule } from '/ui/web_modules/@uirouter/angular-hybrid.js';
 
+import { QwCollectionMenu }       from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
 import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
 import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
@@ -13,6 +14,8 @@ import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.s
 import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
 import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
 import { $http }                  from '/_p/ui/query/angular-services/qw.http.js';
+
+import { QwDirectivesModule }     from "/_p/ui/query/angular-directives/qw.directives.module.js";
 
 angular
   .module(app)
@@ -62,6 +65,7 @@ class QueryUI {
   static get annotations() { return [
     new NgModule({
       imports: [
+        QwDirectivesModule,
         UIRouterUpgradeModule.forRoot({
           states: [
           {
@@ -109,6 +113,9 @@ class QueryUI {
         QwValidateQueryService,
         $http,
 
+      ],
+      entryComponents: [
+        QwCollectionMenu
       ]
     })
   ]}

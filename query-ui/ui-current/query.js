@@ -1,39 +1,39 @@
 import angular from "/ui/web_modules/angular.js";
 import _ from "/ui/web_modules/lodash.js";
 
-import uiRouter from "/ui/web_modules/@uirouter/angularjs.js";
-import uiBootstrap from "/ui/web_modules/angular-ui-bootstrap.js";
-import uiAce from "/ui/libs/ui-ace.js";
-import ngClipboard from "/ui/libs/ngclipboard.js";
-import mnJquery from "/ui/app/components/mn_jquery.js";
+import uiRouter                 from "/ui/web_modules/@uirouter/angularjs.js";
+import uiBootstrap              from "/ui/web_modules/angular-ui-bootstrap.js";
 
-import mnPoll from "/ui/app/components/mn_poll.js";
-import mnHelper from "/ui/app/components/mn_helper.js";
-import mnPoolDefault from "/ui/app/components/mn_pool_default.js";
-import mnServersService from "/ui/app/mn_admin/mn_servers_service.js";
-import mnStatisticsNewService from "/ui/app/mn_admin/mn_statistics_service.js";
-import mnStatisticsChart from "/ui/app/mn_admin/mn_statistics_chart_directive.js"
+import uiAce                    from "/ui/libs/ui-ace.js";
+import ngClipboard              from "/ui/libs/ngclipboard.js";
 
-import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
-//import qwQueryService from "/_p/ui/query/qw_query_service.js";
+import mnJquery                 from "/ui/app/components/mn_jquery.js";
+import mnPoll                   from "/ui/app/components/mn_poll.js";
+import mnHelper                 from "/ui/app/components/mn_helper.js";
+import mnPoolDefault            from "/ui/app/components/mn_pool_default.js";
+import mnServersService         from "/ui/app/mn_admin/mn_servers_service.js";
+import mnStatisticsNewService   from "/ui/app/mn_admin/mn_statistics_service.js";
+import mnStatisticsChart        from "/ui/app/mn_admin/mn_statistics_chart_directive.js"
 
-import qwConstantsService from "/_p/ui/query/qw_constants_service.js";
-import qwJsonCsvService from "/_p/ui/query/qw_json_csv_service.js";
+import { QwQueryService }       from "/_p/ui/query/angular-services/qw.query.service.js";
+import { QwCollectionMenu }     from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
 
-import queryController from "/_p/ui/query/qw_query_controller.js";
+import qwConstantsService       from "/_p/ui/query/qw_constants_service.js";
+import qwJsonCsvService         from "/_p/ui/query/qw_json_csv_service.js";
+import queryController          from "/_p/ui/query/qw_query_controller.js";
 import qwQueryMonitorController from "/_p/ui/query/qw_query_monitor_controller.js";
 
-import qwLongPress from "/_p/ui/query/long_press/qw-long-press.directive.js";
-import qwJsonTree from "./data_display/qw-json-tree.directive.js";
-import qwJsonDatatable from "./data_display/qw-json-datatable.directive.js";
+import qwLongPress       from "/_p/ui/query/long_press/qw-long-press.directive.js";
+import qwJsonTree        from "./data_display/qw-json-tree.directive.js";
+import qwJsonDatatable   from "./data_display/qw-json-datatable.directive.js";
 import qwJsonTableEditor from "./data_display/qw-json-table-editor.directive.js";
-import qwAce from "./data_display/qw-ace.component.js";
-import qwExplainVizD3 from "./query_plan_viz/qw-explain-viz-d3.directive.js";
-import qwAdviceViz from "./advice_viz/qw-advice-viz.directive.js";
-import qwValidJson from "./json-validator/qw-json-validator.directive.js";
+import qwAce             from "./data_display/qw-ace.component.js";
+import qwExplainVizD3    from "./query_plan_viz/qw-explain-viz-d3.directive.js";
+import qwAdviceViz       from "./advice_viz/qw-advice-viz.directive.js";
+import qwValidJson       from "./json-validator/qw-json-validator.directive.js";
 
 import {downgradeInjectable} from '/ui/web_modules/@angular/upgrade/static.js';
+import {downgradeComponent}  from "/ui/web_modules/@angular/upgrade/static.js";
 
 import {
   getRecursionHelper,
@@ -79,6 +79,7 @@ angular
   .directive('bucketDisplay', getBucketDisplay)
   .directive('bucketCollectionsDisplay', getBucketCollectionsDisplay)
   .directive('schemaDisplay', getSchemaDisplay)
+  .directive('qwCollectionMenu', downgradeComponent({component: QwCollectionMenu}))
   .factory('qwQueryService', downgradeInjectable(QwQueryService))
   .config(function($stateProvider, $transitionsProvider) {
 
