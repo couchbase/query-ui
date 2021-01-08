@@ -46,23 +46,20 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
   qmc.getVital = getVital;
   qmc.showPlan = showPlan;
 
-  qmc.charts = [
-    {
-      stats: {"@query.query_requests": true},
+  qmc.charts = ([
+    "@query.query_requests",
+    "@query.query_avg_req_time",
+    "@query.query_avg_svc_time"
+  ]).map(name => {
+    name = mnPoolDefault.export.compat.atLeast70 ? mnStatsDesc.mapping65(name) : name;
+    let stats = {};
+    stats[name] = true;
+    return {
+      stats: stats,
       size: "tiny",
       specificStat: true
-    },
-    {
-      stats: {"@query.query_avg_req_time": true},
-      size: "tiny",
-      specificStat: true
-    },
-    {
-      stats: {"@query.query_avg_svc_time": true},
-      size: "tiny",
-      specificStat: true
-    }
-  ];
+    };
+  });
 
   let statsNames = ['@query.query_requests_250ms', '@query.query_requests_500ms',
                     '@query.query_requests_1000ms', '@query.query_requests_5000ms'];
