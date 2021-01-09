@@ -66,20 +66,18 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
 
   notifyChange() {
-    if (this.selected_bucket && this.selected_scope && this.selected_collection)
-      this.onSelection.next({
-        bucket: this.selected_bucket,
-        scope: this.selected_scope,
-        collection: this.selected_collection,
-      });
+    var allSelected = this.selected_bucket && this.selected_scope && this.selected_collection;
+    var selection = {
+      bucket: allSelected ? this.selected_bucket : null,
+      scope: allSelected ? this.selected_scope : null,
+      collection: allSelected ? this.selected_collection : null,
+    };
+
+    this.onSelection.next(selection);
 
     // onSelection doesn't work with AngularJS, use callback instead
     if (this.callback)
-      this.callback({
-        bucket: this.selected_bucket,
-        scope: this.selected_scope,
-        collection: this.selected_collection,
-      });
+      this.callback(selection);
   }
 
   //
@@ -93,9 +91,15 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.collections = meta.collections;
     if (this.buckets.length > 0 && !this.selected_bucket)
       this.selected_bucket = this.buckets[0];
+    else if (this.buckets.length == 0)
+      this.selected_bucket = "";
+
+    this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
 
     if (this.selected_bucket)
       this.qwCollectionsService.getScopesForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
+    else
+      this.notifyChange();
   }
 
   scopeListChangedCallback(meta) {
@@ -103,8 +107,14 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.scopes = meta.scopes;
     this.collections = meta.collections;
 
-    if (!this.selected_bucket)
+    this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
+
+    if (!this.selected_bucket || !this.scopes[this.selected_bucket] || !this.collections[this.selected_bucket]) {
+      this.selected_scope = "";
+      this.selected_collection = "";
+      this.notifyChange();
       return;
+    }
 
     // if we don't have a scope, or didn't see it in the list, use the first one from the list
     if (this.scopes[this.selected_bucket] && this.scopes[this.selected_bucket].length &&

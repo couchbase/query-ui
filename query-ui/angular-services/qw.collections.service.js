@@ -40,34 +40,28 @@ function getQwCollectionsService(
   qcs.buckets_ephemeral = {};
   qcs.scopes = {}; // indexed by bucket name
   qcs.collections = {};
+  qcs.errors = [];
   qcs.rbac = mnPermissions.export;
 
   qcs.metadata = {
     buckets: qcs.buckets,
     buckets_ephemeral: qcs.buckets_ephemeral,
     scopes: qcs.scopes,
-    collections: qcs.collections
+    collections: qcs.collections,
+    errors: qcs.errors
   };
 
   qcs.getBuckets = getBuckets;
   qcs.refreshBuckets = refreshBuckets;
   qcs.getScopesForBucket = getScopesForBucket;
 
-  qcs.bucket_bus = pubsub.create();
-
-  function publishBucketState() {
-    qcs.bucket_bus.publish('bucket_metadata', qcs.metadata);
-  }
-
-  function publishScopeCollState() {
-    qcs.bucket_bus.publish('scopes_coll_metadata', qcs.metadata);
-  }
-
   //
   // get a list of buckets from the server via the REST API
   //
 
   function refreshBuckets() {
+    qcs.errors.length = 0;
+
     var promise = $http.do({
       url: "../pools/default/buckets/",
       method: "GET"
@@ -84,13 +78,16 @@ function getQwCollectionsService(
             qcs.buckets_ephemeral[resp.data[i].name] = true;
         }
       }
-      publishBucketState();
       return(qcs.metadata);
     }, function error(resp) {
       var data = resp.data, status = resp.status;
       qcs.buckets.length = 0;
-      console.log("Error getting buckets: " + JSON.stringify(resp));
-      publishBucketState();
+      var error = {status: resp.status};
+      if (resp.error)
+        Object.assign(error,resp.error);
+      qcs.errors.length = 0;
+      qcs.errors.push(error);
+      //console.log("Error getting buckets: " + JSON.stringify(resp));
       return(qcs.metadata);
     });
 
@@ -103,6 +100,7 @@ function getQwCollectionsService(
   //
 
   function refreshScopesAndCollectionsForBucket(bucket) {
+    qcs.errors.length = 0;
     //console.log("Refreshing for bucket: " + bucket);
     // get the buckets from the REST API
     var promise = $http.do({
@@ -126,12 +124,15 @@ function getQwCollectionsService(
       }
 
       qcs.scopes[bucket] = qcs.scopes[bucket].sort();
-      publishScopeCollState();
       return(qcs.metadata);
     }, function error(resp) {
       qcs.scopes[bucket] = [];
-      console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
-      publishScopeCollState();
+      var error = {status: resp.status};
+      if (resp.error)
+        Object.assign(error,resp.error);
+      qcs.errors.length = 0;
+      qcs.errors.push(error);
+      //console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
       return(qcs.metadata);
     });
 

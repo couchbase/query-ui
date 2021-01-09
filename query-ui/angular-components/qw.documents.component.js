@@ -153,13 +153,16 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
 
+    // wheneverthe collection menu is changed
     dec.collectionMenuCallback = function(event) {
+      console.log("collectionMenuCallback: " + JSON.stringify(event));
       if (event && (dec.options.selected_bucket != event.bucket || dec.options.selected_scope != event.scope ||
         dec.options.selected_collection != event.collection))
       {
         dec.options.selected_bucket = event.bucket;
         dec.options.selected_scope = event.scope;
         dec.options.selected_collection = event.collection;
+        dec.searchForm.get('where_clause').setValue('');
 
         if (event.bucket && event.scope && event.collection)
           retrieveDocs_inner();
@@ -926,7 +929,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         //console.log("Got REST error status: " + status + ", data: " + JSON.stringify(resp));
         dec.options.current_result[position] = {
           id: idArray[position],
-          data: {},
+          data: {status: resp.status, error: resp.error},
           meta: {type: "json"},
           xattrs: {},
           error: true
@@ -942,16 +945,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
         else if (data && data.errors) {
           dec.options.current_result[position].data = "ERROR: " + JSON.stringify(data.errors);
-          //showErrorDialog("Error with document: " + id,  JSON.stringify(data.errors), true);
-        } else if (resp.statusText) {
+        } else if (resp && resp.error) {
+          dec.options.current_result[position].data = "ERROR: " + JSON.stringify(resp.error);
+        } else if (resp.statusText && !resp.error) {
           dec.options.current_result[position].data = "ERROR: " + JSON.stringify(resp.statusText);
-          //showErrorDialog("Error with document: " + id,  JSON.stringify(resp.statusText), true);
         }
-
-        // if there was only one document we were looking for, make the error message the entire result
-        if (idArray.length == 1)
-          dec.options.current_result = dec.options.current_result[position].data;
-      }
+       }
     }
 
     //

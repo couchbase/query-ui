@@ -20,6 +20,11 @@ import { QwDirectivesModule }     from "/_p/ui/query/angular-directives/qw.direc
 angular
   .module(app)
   .config(function (mnPluggableUiRegistryProvider, mnPermissionsProvider) {
+    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!read" ); // needed for Documents and Query
+    mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read" ); // needed for Documents
+    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute" );
+
+
     ace.config.set('basePath','/ui/libs/ace');
 
     // Angular8 version of the DocEditor
@@ -28,7 +33,8 @@ angular
       state: 'app.admin.docs.editor',
       includedByState: 'app.admin.docs',
       plugIn: 'workbenchTab',
-      //ngShow: "rbac.cluster.collections['.:.:.'].data.docs.read  && rbac.cluster.collections['.:.:.'].data.xattr.read",
+      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read",
+//      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read",
       index: 0
     });
 
@@ -37,7 +43,7 @@ angular
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
-      //ngShow: "rbac.cluster.collections['.:.:.'].data.docs.read && rbac.cluster.collections['.:.:.'].n1ql.select.execute",
+      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].n1ql.select.execute",
       index: 1
     });
 

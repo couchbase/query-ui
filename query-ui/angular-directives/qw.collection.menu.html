@@ -16,5 +16,12 @@
         {{name}}
       </option>
     </select>
+    <span
+       *ngIf="errors"
+       placement="auto"
+       tooltip-append-to-body="true"
+       class="fa-warning icon orange-3 cursor-pointer"
+       [ngbTooltip]="errors">
+    </span>
   </div>
 </div>
