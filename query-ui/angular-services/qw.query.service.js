@@ -277,6 +277,8 @@ function getQwQueryService(
     use_cbo: true,
   };
 
+  qwQueryService.get_auto_format = function() {return qwQueryService.options.auto_format;};
+
   qwQueryService.set_options = function (new_options) {
     qwQueryService.options = new_options;
   };

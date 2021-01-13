@@ -841,7 +841,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
       qc.lastResult().query = qc.lastResult().query.trim();
 
     // if the user wants auto-formatting, format the query
-    if (qwQueryService.options.auto_format)
+    if (qwQueryService.get_auto_format())
       format();
 
     //var queryStr = qc.lastResult().query;
