@@ -155,7 +155,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     // wheneverthe collection menu is changed
     dec.collectionMenuCallback = function(event) {
-      console.log("collectionMenuCallback: " + JSON.stringify(event));
+      //console.log("collectionMenuCallback: " + JSON.stringify(event));
       if (event && (dec.options.selected_bucket != event.bucket || dec.options.selected_scope != event.scope ||
         dec.options.selected_collection != event.collection))
       {
