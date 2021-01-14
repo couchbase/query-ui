@@ -410,39 +410,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.updatingRow >= 0)
         return;
 
-      // bring up a dialog to get the new key
+      var json = dec.options.current_result[row].rawJSON || JSON.stringify(dec.options.current_result[row].data,null,2);
 
-      var promise = qwDialogService.showInputDialog("Save As", "New Document Key ", dec.options.current_result[row].id + '_copy');
-
-      hideTooltips();
-      promise.then(function success(newDocKey) {
-        dec.updatingRow = row;
-
-        var promise;
-        if (dec.options.current_result[row].rawJSON)
-          promise = saveDoc(row, dec.options.current_result[row].rawJSON, newDocKey);
-        else
-          promise = saveDoc(row, JSON.stringify(dec.options.current_result[row].data), newDocKey);
-
-        // did the query succeed?
-        promise.then(function success(resp) {
-            //console.log("successfully copied form: " + form);
-            dec.updatingRow = -1;
-            if (!resp.data.errors) {
-              form.form.markAsPristine();
-              setTimeout(refreshUnlessUnsaved, 100);
-            }
-          },
-
-          // ...or fail?
-          function error(resp) {
-            var data = resp.data, status = resp.status;
-
-            //showErrorDialog("Error Copying Document", JSON.stringify(data),true);
-            dec.updatingRow = -1;
-          });
-
-      });
+      // bring up a dialog with a copy of the doc, and a new id
+      showNewDocEditor(dec.options.current_result[row].id + '_copy', json);
     }
 
 
