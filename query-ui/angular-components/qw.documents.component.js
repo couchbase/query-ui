@@ -764,16 +764,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
                 dec.options.queryBusy = false;
               });
             } else if (data.errors) {
-              var errorText = [];
-              errorText.push("Query: " + query);
+              var errorText = "";
               for (var i = 0; i < data.errors.length; i++) {
-                errorText.push("Code: " + data.errors[i].code);
-                errorText.push('Message: "' + data.errors[i].msg + '"');
+                errorText += "<br><small><b>Code:</b> " + data.errors[i].code + '</small>';
+                errorText += '<br><small><b>Message: </b>"' + data.errors[i].msg + '"</small>';
               }
 
-              //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
-
-              dec.options.queryBusy = false;
+              dec.options.current_result = errorText;
+              refreshResults();
             }
 
             // shouldn't get here
@@ -781,6 +779,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               dec.options.queryBusy = false;
               console.log("N1ql Query Fail/Success, data: " + JSON.stringify(data));
             }
+
+            dec.options.queryBusy = false;
           },
 
           // ...or fail?
@@ -808,6 +808,13 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
 
               //console.log("Got error: " + dec.options.current_result);
+            }
+            else {
+              var error = "Error: " + status + "<br>";
+              if (resp.message)
+                error += resp.message;
+              dec.options.current_result = error;
+              refreshResults();
             }
             dec.options.queryBusy = false;
           });
