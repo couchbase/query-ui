@@ -68,7 +68,7 @@
         <div class="cbui-tablerow padding-left">
           <span
              class="cbui-table-cell flex-grow-3 cursor-pointer"
-             uib-tooltip="{{result.statement}}"
+             uib-tooltip-html="'{{result.statement}}'"
              tooltip-placement="auto top"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
@@ -140,7 +140,7 @@
       <section ng-repeat="result in qmc.monitoring.completed_requests | orderBy:qmc.options().completed_sort_by:qmc.options().completed_sort_reverse">
         <div class="cbui-tablerow padding-left">
           <span
-             class="cbui-table-cell flex-grow-3 cursor-pointer wrap"
+             class="cbui-table-cell flex-grow-3 cursor-pointer"
              uib-tooltip-html="'{{result.statement}}'"
              tooltip-placement="auto top"
              tooltip-class="break-word">
