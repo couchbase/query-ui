@@ -157,7 +157,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
 
-    // wheneverthe collection menu is changed
+    // wheneverthe collection menu is changed, remove any 'where' clause and offset
     dec.collectionMenuCallback = function(event) {
       //console.log("collectionMenuCallback: " + JSON.stringify(event));
       if (event && (dec.options.selected_bucket != event.bucket || dec.options.selected_scope != event.scope ||
@@ -167,6 +167,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         dec.options.selected_scope = event.scope;
         dec.options.selected_collection = event.collection;
         dec.searchForm.get('where_clause').setValue('');
+        dec.searchForm.get('offset').setValue(0);
 
         if (event.bucket && event.scope && event.collection)
           retrieveDocs_inner();
