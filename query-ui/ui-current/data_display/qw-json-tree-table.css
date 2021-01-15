@@ -154,6 +154,7 @@ td.ajtd-type-array {
   white-space: nowrap;            /* keep as a single row */
   overflow-x: scroll;             /* horizontal scroll with data */
   overflow: -moz-scrollbars-none; /* hide scrollbar in firefox */
+  scrollbar-width: none;          /* a different way to hide firefox scrollbars */
   overflow-y: hidden;
   border-bottom: solid 1px #d1d1d1;
   background-color: #eceff2 !important;
