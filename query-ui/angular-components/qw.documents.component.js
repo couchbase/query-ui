@@ -11,6 +11,8 @@ import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 import {pluck, filter, switchMap, distinctUntilChanged, withLatestFrom,
   shareReplay, takeUntil, tap, map} from '/ui/web_modules/rxjs/operators.js';
 
+import { Subject } from '/ui/web_modules/rxjs.js';
+
 import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
 import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import {QwQueryService}         from "/_p/ui/query/angular-services/qw.query.service.js";
@@ -28,7 +30,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         templateUrl: "/_p/ui/query/angular-components/qw.documents.html",
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
-//      changeDetection: ChangeDetectionStrategy.OnPush
+//        changeDetection: ChangeDetectionStrategy.OnPush
       })
     ]
   }
@@ -136,6 +138,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.options.doc_id_start = null;
     dec.options.doc_id_end = null;
     dec.options.current_result = [];
+    dec.options.result_subject = new Subject();
+    dec.options.result_notify = function() {dec.options.result_subject.next(dec.options.current_result);};
     dec.show_results = true;
     dec.currentDocs = [];
     dec.buckets = [];
@@ -761,6 +765,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             // we get a list of document IDs, create an array and retrieve detailed docs for each
             if (data && data.status && data.status == 'success') {
               getDocsForIdArray(idArray).then(function () {
+                dec.options.current_result.length = idArray.length;
+                dec.options.result_notify();
                 dec.options.queryBusy = false;
               });
             } else if (data.errors) {
@@ -831,7 +837,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       var sizeWarning = {warnedYet: false};
 
       //console.log("Getting docs for: " + JSON.stringify(idArray));
-      dec.options.current_result.length = idArray.length;
+      //dec.options.current_result.length = idArray.length;
 
       for (var i = 0; i < idArray.length; i++) {
         var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
@@ -989,6 +995,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.show_id && dec.options.doc_id && dec.options.doc_id.length) {
         getDocsForIdArray([dec.options.doc_id]).then(function () {
           //console.log("results: " + JSON.stringify(dec.options.current_result));
+          dec.options.result_notify();
           dec.options.queryBusy = false;
         });
         return;
@@ -1026,6 +1033,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
             getDocsForIdArray(idArray).then(function () {
               //console.log("results: " + JSON.stringify(dec.options.current_result));
+              dec.options.result_notify();
               dec.options.queryBusy = false;
             });
           }

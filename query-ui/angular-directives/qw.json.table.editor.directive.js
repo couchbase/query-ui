@@ -53,7 +53,7 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
         inputs: [
-          "data",      // an array of documents, or a string error message
+          "data_subject",  // an observable Subject of an array of documents, or a string error message
           "controller" // qw.documents.component
         ],
       })
@@ -71,7 +71,6 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
   constructor(compiler, vcr, mnPermissions) {
     super();
     this.compiler = compiler;
-    this.viewContainerRef = vcr;
     this.mnPermissions = mnPermissions.export;
   }
 
@@ -131,8 +130,11 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
-    this.tableHTML = createHTMLFromJson(this.data);
-    this.addComponent(this.tableHTML);
+    this.data_subject.subscribe(val => {
+      this.data = val;
+      this.tableHTML = createHTMLFromJson(val);
+      this.addComponent(this.tableHTML);
+    });
     This = this;
   }
 
@@ -496,7 +498,7 @@ function makeHTMLTopLevel() {
 
   for (var row = 0; row < tdata.length; row++) {
     // handle JSON docs
-    if (tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json") {// they'd all better have these
+    if (tdata[row] && tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json") {// they'd all better have these
       var docTooBig = tdata[row].docSize > 1024 * 1024;
       var docWayTooBig = tdata[row].docSize > 10 * 1024 * 1024;
       var docError = tdata[row].error;
