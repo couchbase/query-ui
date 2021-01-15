@@ -152,11 +152,11 @@
   </form>
 
 <!-- row for result query text, toggle, & next/previous buttons *********** -->
-  <div
-     *ngIf="dec.options.selected_bucket && dec.options.current_query.length > 0"
-     class="row resp-sml margin-bottom-half">
+  <div class="row resp-sml margin-bottom-half"   *ngIf="!dec.options.queryBusy && dec.options.selected_bucket && dec.options.current_query.length > 0">
     <div class="text-small resp-margin-sml">
-      <strong><span *ngIf="dec.resultSize()">{{dec.resultSize()}}</span>
+      <strong>
+        <span *ngIf="dec.resultSize()">{{dec.resultSize()}}</span>
+        <span *ngIf="!dec.resultSize()">No </span>
        Results for&nbsp;</strong> <em>{{dec.options.current_query}}</em>
     </div>
     <div class="row text-small resp-margin-sml">
@@ -184,7 +184,7 @@
   <!-- results (documents or status messages) ***************************** -->
   <div *ngIf="dec.options.queryBusy">Retrieving results...</div>
   <div *ngIf="dec.show_results">
-    <div class="row" *ngIf="dec.options.selected_bucket && dec.options.current_query.length > 0">
+    <div class="row" *ngIf="dec.options.selected_bucket">
       <div class="doc-editor-results show-scrollbar">
         <qw-json-table-editor2
            *ngIf="!dec.options.queryBusy"

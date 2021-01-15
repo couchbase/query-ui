@@ -322,13 +322,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
-    // angular change detection doesn't seem to work properly in cases where
-    // the current results are set to a string. We can force the results pane
-    // to update by triggering *ngIf off and on.
+    // trigger the
     //
     function refreshResults() {
-      dec.show_results = false;
-      setTimeout(() => dec.show_results = true, 100);
+      dec.options.result_notify();
     }
 
     //
@@ -765,9 +762,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             // we get a list of document IDs, create an array and retrieve detailed docs for each
             if (data && data.status && data.status == 'success') {
               getDocsForIdArray(idArray).then(function () {
-                dec.options.current_result.length = idArray.length;
-                dec.options.result_notify();
                 dec.options.queryBusy = false;
+                dec.options.result_notify();
               });
             } else if (data.errors) {
               var errorText = "";
@@ -837,7 +833,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       var sizeWarning = {warnedYet: false};
 
       //console.log("Getting docs for: " + JSON.stringify(idArray));
-      //dec.options.current_result.length = idArray.length;
+      dec.options.current_result.length = idArray.length;
 
       for (var i = 0; i < idArray.length; i++) {
         var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
@@ -995,8 +991,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.show_id && dec.options.doc_id && dec.options.doc_id.length) {
         getDocsForIdArray([dec.options.doc_id]).then(function () {
           //console.log("results: " + JSON.stringify(dec.options.current_result));
-          dec.options.result_notify();
           dec.options.queryBusy = false;
+          dec.options.result_notify();
         });
         return;
       }
@@ -1033,8 +1029,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
             getDocsForIdArray(idArray).then(function () {
               //console.log("results: " + JSON.stringify(dec.options.current_result));
-              dec.options.result_notify();
               dec.options.queryBusy = false;
+              dec.options.result_notify();
             });
           }
           //console.log("Current Result: " + JSON.stringify(dec.options.current_result));

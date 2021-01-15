@@ -25,11 +25,12 @@ var my_decorate = (this && this.__decorate) || function (decorators, target, key
 
 
 import {
-  ViewContainerRef,
-  ViewChild,
+  ChangeDetectorRef,
   Compiler,
   Component,
   NgModule,
+  ViewContainerRef,
+  ViewChild,
   ViewEncapsulation
 } from '/ui/web_modules/@angular/core.js';
 
@@ -62,14 +63,16 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
 
   static get parameters() {
     return [
+      ChangeDetectorRef,
       Compiler,
       ViewContainerRef,
       MnPermissions,
     ]
   }
 
-  constructor(compiler, vcr, mnPermissions) {
+  constructor(changeDetectorRef,compiler, vcr, mnPermissions) {
     super();
+    this.cdr = changeDetectorRef;
     this.compiler = compiler;
     this.mnPermissions = mnPermissions.export;
   }
@@ -127,6 +130,7 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
     component.instance.sortTable = sortTable;
     component.instance.isSorted = isSorted;
     component.instance.sortForward = doSortForward;
+    this.cdr.markForCheck();
   }
 
   ngOnInit() {
