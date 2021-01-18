@@ -164,7 +164,7 @@ function sortTable($event, index) {
   sortById = (index < startSortColumn);
   var colname = "";
   if ($event && $event.target && $event.target.dataset && $event.target.dataset.colname)
-    colname = $event.currentTarget.dataset.colname;
+    colname = unsanitize($event.currentTarget.dataset.colname);
   else
     colname = $event.currentTarget.textContent;
 
@@ -340,6 +340,7 @@ var gt = />/gi;
 var openBrace = /\{/gi;
 var closeBrace = /\{/gi;
 var quote = /"/gi;
+var singleQuote = /'/gi;
 var amp = /&/gi;
 var backs = /\\/gi;
 
@@ -354,6 +355,34 @@ var mySanitize = function (str) {
         .replace(openBrace, '&#123;')
         .replace(closeBrace, '&#125;')
         .replace(quote, '&#34;')
+    );
+  else
+    return (str);
+};
+
+var mySanitizeQuotes = function (str) {
+  if (!str) return ('');
+  else if (_.isString(str))
+    return (str
+        .replace(singleQuote, "\\'")
+        .replace(quote, '&#34;')
+    );
+  else
+    return (str);
+};
+
+// for sorting we need to take a sanitized column name and bring it back
+var unsanitize = function(str) {
+  if (!str) return ('');
+  else if (_.isString(str))
+    return (str
+        .replace(/&#92;/g,'\\')
+        .replace(/&lt;/g,'<')
+        .replace(/&gt;/g,'>')
+        .replace(/&#123;/g,'{' )
+        .replace(/&#125;/g,'}' )
+        .replace(/&#34;/g,'"')
+        .replace(/&amp;/g,'&' )
     );
   else
     return (str);
@@ -467,7 +496,7 @@ function createHTMLheader(meta) {
     if (mySanitize(key).length > 25 * meta.columnWidths[key])
       columnHeaders += ' title="' + mySanitize(key) + '" ';
 
-    columnHeaders += 'data-colname="' + key + '">' + mySanitize(key) +
+    columnHeaders += 'data-colname="' + mySanitize(key) + '">' + mySanitize(key) +
       '<span class="caret-subspan icon" *ngIf="isSorted(' + col + ')" [ngClass]="' +
       "{'fa-caret-down': sortForward(), 'fa-caret-up': !sortForward()}" + '"></span></span>';
   });
@@ -600,9 +629,9 @@ function makeHTMLTopLevel() {
         Object.keys(meta.topLevelKeys).sort().forEach(function (key, index) {
           var item = tdata[row].data[key];
           var childSize = {width: 1};
-          var disabled = !!tdata[row].rawJSON || docTooBig || docError;
+          var disabled = !!tdata[row].rawJSON || docTooBig || docError || key.indexOf('"') > -1;
           var childHTML = (item || item === 0 || item === "" || item === false) ?
-            makeHTMLtable(item, '[' + row + '].data[\'' + key.replace(/'/g, "\\'") + '\']', childSize, disabled) : '&nbsp;';
+            makeHTMLtable(item, '[' + row + '].data[\'' + mySanitizeQuotes(key) + '\']', childSize, disabled) : '&nbsp;';
           result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
             columnWidths[key] * columnWidthPx + 'px;">' + childHTML + '</span>';
         });
@@ -982,7 +1011,7 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
     // figure out the widths of each column
     _.forIn(object, function (value, key) {
       var childSize = {width: 1};
-      var childHTML = makeHTMLtable(value, prefix + "['" + key.replace(/'/g, "\\'") + "']", childSize, disabled);
+      var childHTML = makeHTMLtable(value, prefix + "['" + mySanitizeQuotes(key) + "']", childSize, disabled);
       if (!columnWidths[key] || childSize.width > columnWidths[key])
         columnWidths[key] = childSize.width;
       dataRow += '<span class="doc-editor-cell" style="width: ' + columnWidths[key] * columnWidthPx + 'px">' + childHTML + '</span>';
@@ -1009,6 +1038,8 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
     var model = ' [(ngModel)]="results' + prefix + '" name="' + mySanitize(prefix) + '" ';
     var inputStyle = ' style="width: ' + (columnWidthPx - 10) + 'px; margin-left: 0px"';
     var no_edit = disabled ? ' [disabled]="true" ' : '';
+    if (disabled && prefix.indexOf('&#34') != -1)
+      no_edit += ' title="Tabular editing does not support field names with embedded quotes. Edit entire document instead." ';
 
     //result += '{{results' + prefix + '}}';
     if (_.isNumber(object))

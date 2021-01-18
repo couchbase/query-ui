@@ -3,6 +3,7 @@ import {MnLifeCycleHooksToStream}     from '/ui/app/mn.core.js';
 import {Component, ViewEncapsulation, ChangeDetectorRef} from '/ui/web_modules/@angular/core.js';
 
 import { QwImportService }         from '../angular-services/qw.import.service.js';
+import { QwDialogService }         from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 import { QwValidateQueryService }  from '../angular-services/qw.validate.query.service.js';
 import {FormControl, FormGroup}    from '/ui/web_modules/@angular/forms.js';
 
@@ -24,6 +25,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       ChangeDetectorRef,
+      QwDialogService,
       QwImportService,
       QwValidateQueryService,
       ];
@@ -35,7 +37,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   }
 
 
-  constructor(cdr, qwImportService, validateQueryService) {
+  constructor(cdr, qwDialogService, qwImportService, validateQueryService) {
     super();
 
     var ic = this;
@@ -178,7 +180,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
           parseAs(ic.formats[0]);
 
         else {
-          qis.showErrorDialog("Import Warning","Data doesn't look like JSON list/lines, CSV, or TSV. Try a different parsing format.", true);
+          qwDialogService.showErrorDialog("Import Warning","Data doesn't look like JSON list/lines, CSV, or TSV. Try a different parsing format.", true);
           ic.selectTab(1);
           ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
         }
@@ -187,7 +189,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       // handle any errors reading the file
       var handleReaderError = function(e) {
         //qis.closeAllDialogs();
-        qis.showErrorDialog("File Loading Error", 'Errors loading file: ' + JSON.stringify(e), true);
+        qwDialogService.showErrorDialog("File Loading Error", 'Errors loading file: ' + JSON.stringify(e), true);
       }
       reader.addEventListener("error",handleReaderError);
       reader.addEventListener("abort",handleReaderError);
@@ -226,7 +228,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         try {
           ic.options.docData = JSON.parse(ic.options.fileData);
         } catch (e) {
-          qis.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON list: ' + JSON.stringify(e), true);
+          qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON list: ' + JSON.stringify(e), true);
         }
         break;
 
@@ -238,7 +240,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
           catch (e) {parseErrors += JSON.stringify(e);}
         });
         if (parseErrors.length > 0)
-          qis.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON: ' + JSON.stringify(parseErrors).slice(0,255), true);
+          qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON: ' + JSON.stringify(parseErrors).slice(0,255), true);
         break;
 
       }
@@ -259,7 +261,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       }
       // no records seen?
       else {
-        qis.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON List/Lines)", true);
+        qwDialogService.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON List/Lines)", true);
         ic.selectTab(1);
         ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
       }
@@ -362,7 +364,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       // see if we have access to a query service
       validateQueryService.getBucketsAndNodes(function() {
         if (!validateQueryService.valid())
-          qis.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
+          qwDialogService.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
         });
     }
 

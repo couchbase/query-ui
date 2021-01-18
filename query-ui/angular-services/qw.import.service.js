@@ -66,9 +66,6 @@ function getQwImportService(
     last_import_status: ""
   };
 
-  qis.closeAllDialogs = function () {
-    console.log("Close all dialogs.");
-  };
   qis.doImport = doImport;
 
   //

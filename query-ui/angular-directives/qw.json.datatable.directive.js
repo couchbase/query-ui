@@ -16,9 +16,9 @@
  * and not a string. If you pass a string, it is parsed as JavaScript.
  */
 
-import { ViewEncapsulation, 
+import { ViewEncapsulation,
          ChangeDetectionStrategy,
-         Directive, 
+         Directive,
          ElementRef,
          Renderer2 } from '/ui/web_modules/@angular/core.js';
 import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
@@ -196,7 +196,10 @@ function sortTable(spanElem, renderer) {
     prevSortElem = spanElem;
 
     sortForward = true;
-    sortField = spanElem.innerText;
+    if (spanElem.dataset && spanElem.dataset.colname)
+      sortField = spanElem.dataset.colname;
+    else
+      sortField = spanElem.innerText;
     spanElem.firstElementChild.classList.add("icon", "fa-caret-down");
   }
 
@@ -377,7 +380,8 @@ function createHTMLheader(meta, inner) {
     Object.keys(meta.innerKeys).sort().forEach(function(fieldName,index) {
       var size = meta.innerKeys[fieldName].size;
       headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-      size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
+      size + 'ch"' + 'class="data-table-header-cell" data-colname="' + mySanitize(fieldName) + '">' + mySanitize(fieldName) +
+        '<span class="caret-subspan"></span></span>';
     });
 
   // special case, we have arrayInnerObjects which may have innerKeys and arrayInnerPrims
@@ -399,7 +403,8 @@ function createHTMLheader(meta, inner) {
       Object.keys(meta.arrayInnerObjects.innerKeys).sort().forEach(function(fieldName,index) {
         var size = meta.arrayInnerObjects.innerKeys[fieldName].size;
         headerHTML += '<span style="min-width: ' + size + 'ch; max-width:' +
-        size + 'ch"' + 'class="data-table-header-cell">' + mySanitize(fieldName) +'<span class="caret-subspan"></span></span>';
+        size + 'ch"' + 'class="data-table-header-cell" data-colname="' + mySanitize(fieldName) + '">' + mySanitize(fieldName) +
+          '<span class="caret-subspan"></span></span>';
       });
     }
   }
@@ -649,8 +654,27 @@ function createHTMLforValue(item,fieldData,path) {
 
 var lt = /</gi;
 var gt = />/gi;
-var mySanitize = function(str) {
-  return(str.replace(lt,'&lt;').replace(gt,'&gt;'));
+var openBrace = /\{/gi;
+var closeBrace = /\{/gi;
+var quote = /"/gi;
+var singleQuote = /'/gi;
+var amp = /&/gi;
+var backs = /\\/gi;
+
+var mySanitize = function (str) {
+  if (!str) return ('');
+  else if (_.isString(str))
+    return (str
+        .replace(amp, '&amp;')
+        .replace(backs, '&#92;')
+        .replace(lt, '&lt;')
+        .replace(gt, '&gt;')
+        .replace(openBrace, '&#123;')
+        .replace(closeBrace, '&#125;')
+        .replace(quote, '&#34;')
+    );
+  else
+    return (str);
 };
 
 //
