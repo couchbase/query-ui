@@ -1433,7 +1433,10 @@ function getQwQueryService(
       // if we get failure, the parent status is the status of the last query to run
       function fail(resp) {
         parentResult.batch_results[curIndex].status = resp.statusText;
-        parentResult.batch_results[curIndex].data = resp.data.errors;
+        if (resp.data && resp.data.errors)
+          parentResult.batch_results[curIndex].data = resp.data.errors;
+        else
+          parentResult.batch_results[curIndex].data = resp.statusText;
         addBatchResultsToParent(parentResult, curIndex);
         finishParentQuery(parentResult, curIndex, true);
       }
