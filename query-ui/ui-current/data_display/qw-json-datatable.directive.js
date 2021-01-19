@@ -709,13 +709,12 @@ export default "qwJsonDataTable";
             var value = item[fieldName];
 
             var fieldHeight = getItemHeight(value,meta.arrayInnerObjects.innerKeys[fieldName]);
-            //console.log("Field: " + fieldName + " height: " + fieldHeight);
             if (fieldHeight > lineHeight)
               lineHeight = fieldHeight;
           }
 
           // handle any non-objects
-          if (meta.arrayInnerObjects.arrayInnerPrims && (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
+          if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item)) {
             var fieldHeight = getItemHeight(item,meta.arrayInnerObjects);
             if (fieldHeight > lineHeight)
               lineHeight = fieldHeight;
@@ -739,7 +738,7 @@ export default "qwJsonDataTable";
     }
 
     /////////////////////////////////////////////////////////////////////////////
-    // given an data item, figure out how much size it needs in the table.
+    // given a data item, figure out how much size it needs in the table.
     // estimate size in terms of characters.
     //
     // we call this for instance of the field in each document/row, so it keeps
