@@ -248,7 +248,7 @@
       <br>
     </div>
     <div class="column wide vertical-divider text-center max-width-50 padding-0" ng-if="qc.validated.clusterStatsAllowed()">
-      <div ng-if="qmc.buckets[1]">
+      <div>
         <span ng-repeat="chart in qmc.charts track by $index" class="statistics-tiny">
           <mn-statistics-chart
            style="display:block;"
@@ -256,7 +256,6 @@
            zoom="minute"
            rbac="rbac"
            node="all"
-           bucket="{{qmc.buckets[1]}}"
            ng-click="qmc.openDetailedChartDialog($index)"
            config="chart">
           </mn-statistics-chart>
