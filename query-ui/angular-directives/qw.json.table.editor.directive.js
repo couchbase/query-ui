@@ -26,6 +26,7 @@ var my_decorate = (this && this.__decorate) || function (decorators, target, key
 
 import {
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
   Compiler,
   Component,
   NgModule,
@@ -53,8 +54,9 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
         template: '<p #container></p>',
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
+        changeDetection: ChangeDetectionStrategy.OnPush,
         inputs: [
-          "data_subject",  // an observable Subject of an array of documents, or a string error message
+          "config_subject",  // an observable Subject with results, field vs. text editing, and whether query is busy
           "controller" // qw.documents.component
         ],
       })
@@ -85,9 +87,6 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
       constructor() {
       }
 
-      myMethod() {
-        console.log("In myMethod");
-      }
     }
 
     // js equivalent of @ViewChild('target', {static: false, read: ViewContainerRef})
@@ -130,19 +129,25 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
     component.instance.sortTable = sortTable;
     component.instance.isSorted = isSorted;
     component.instance.sortForward = doSortForward;
-    this.cdr.markForCheck();
   }
 
   ngOnInit() {
-    this.data_subject.subscribe(val => {
-      this.data = val;
-      this.tableHTML = createHTMLFromJson(val);
-      this.addComponent(this.tableHTML);
-    });
     This = this;
+    this.subscription = this.config_subject.subscribe(val => {
+      if (this.controller.options.current_result != this.data) {
+        this.data = this.controller.options.current_result;
+        this.tableHTML = createHTMLFromJson(this.data);
+        this.addComponent(this.tableHTML);
+      }
+      this.cdr.markForCheck();
+    });
   }
 
   ngAfterViewInit() {
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 }
 

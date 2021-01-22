@@ -138,8 +138,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.options.doc_id_start = null;
     dec.options.doc_id_end = null;
     dec.options.current_result = [];
-    dec.options.result_subject = new Subject();
-    dec.options.result_notify = function() {dec.options.result_subject.next(dec.options.current_result);};
+    dec.options.config_subject = new Subject();
+    dec.options.config_notify = function() {
+      dec.options.config_subject.next();
+    };
     dec.show_results = true;
     dec.currentDocs = [];
     dec.buckets = [];
@@ -326,7 +328,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // trigger the
     //
     function refreshResults() {
-      dec.options.result_notify();
+      dec.options.config_notify();
     }
 
     //
@@ -648,6 +650,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     dec.options.queryBusy = false;
 
+    function markBusy(busy) {
+      dec.options.queryBusy = busy;
+      refreshResults();
+    }
+
     function retrieveDocs() {
       checkUnsavedChanges(retrieveDocs_inner);
     }
@@ -744,7 +751,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.options.current_query = query;
       dec.options.current_result = [];
 
-      dec.options.queryBusy = true;
+      markBusy(true);
       qwQueryService.executeQueryUtil(query, true)
 
         // did the query succeed?
@@ -763,8 +770,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             // we get a list of document IDs, create an array and retrieve detailed docs for each
             if (data && data.status && data.status == 'success') {
               getDocsForIdArray(idArray).then(function () {
-                dec.options.queryBusy = false;
-                dec.options.result_notify();
+                markBusy(false);
               });
             } else if (data.errors) {
               var errorText = "";
@@ -774,16 +780,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               }
 
               dec.options.current_result = errorText;
-              refreshResults();
             }
 
             // shouldn't get here
             else {
-              dec.options.queryBusy = false;
               console.log("N1ql Query Fail/Success, data: " + JSON.stringify(data));
+              markBusy(false);
             }
 
-            dec.options.queryBusy = false;
           },
 
           // ...or fail?
@@ -806,20 +810,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
                 errorHTML += message + '<br>'
               });
               dec.options.current_result = errorHTML;
-              refreshResults();
-
-              //showErrorDialog("Error with document retrieval N1QL query.", errorText, true);
-
-              //console.log("Got error: " + dec.options.current_result);
             }
             else {
               var error = "Error: " + status + "<br>";
               if (resp.message)
                 error += resp.message;
               dec.options.current_result = error;
-              refreshResults();
             }
-            dec.options.queryBusy = false;
+            markBusy(false);
           });
 
     }
@@ -985,15 +983,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
 
       // get the stats from the Query service
-      dec.options.queryBusy = true;
+      markBusy(true);
       dec.options.current_result = [];
 
       // we just get a single ID if they specified a doc_id
       if (dec.options.show_id && dec.options.doc_id && dec.options.doc_id.length) {
         getDocsForIdArray([dec.options.doc_id]).then(function () {
           //console.log("results: " + JSON.stringify(dec.options.current_result));
-          dec.options.queryBusy = false;
-          dec.options.result_notify();
+          markBusy(false);
         });
         return;
       }
@@ -1030,8 +1027,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
             getDocsForIdArray(idArray).then(function () {
               //console.log("results: " + JSON.stringify(dec.options.current_result));
-              dec.options.queryBusy = false;
-              dec.options.result_notify();
+              markBusy(false);
             });
           }
           //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
@@ -1048,10 +1044,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           showErrorDialog("Error getting documents.",
             "Couldn't retrieve: " + dec.options.selected_bucket + " offset: " + dec.options.offset +
             " limit " + dec.options.limit + ', Error:' + dec.options.current_result, true);
-          refreshResults();
         }
 
-        dec.options.queryBusy = false;
+        markBusy(false);
       });
 
     }

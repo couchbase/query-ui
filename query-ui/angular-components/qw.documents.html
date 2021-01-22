@@ -161,7 +161,7 @@
     </div>
     <div class="row text-small resp-margin-sml">
       <label for="show_tables" class="toggle-control">
-        <input
+        <input (change)="dec.options.config_notify()"
            type="checkbox" id="show_tables"
            [(ngModel)]="dec.options.show_tables">
         <span class="toggle-control-body"></span>
@@ -183,12 +183,11 @@
 
   <!-- results (documents or status messages) ***************************** -->
   <div *ngIf="dec.options.queryBusy">Retrieving results...</div>
-  <div *ngIf="dec.show_results">
+  <div [hidden]="!dec.show_results || dec.options.queryBusy">
     <div class="row" *ngIf="dec.options.selected_bucket">
       <div class="doc-editor-results show-scrollbar">
         <qw-json-table-editor2
-           *ngIf="!dec.options.queryBusy"
-           [data_subject]="dec.options.result_subject"
+           [config_subject]="dec.options.config_subject"
            [controller]="dec"></qw-json-table-editor2>
       </div>
     </div>
