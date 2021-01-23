@@ -2387,6 +2387,8 @@ function getQwQueryService(
         }
       }
     });
+
+    refreshAutoCompleteArray();
   }
 
   //
