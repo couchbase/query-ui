@@ -670,7 +670,7 @@ function makeHTMLTopLevel() {
 
       // span where the buttons would go, all disabled except include delete
       result += '<span class="doc-editor-cell" style="width:' + columnWidthPx * 1.25 + 'px"> ' +
-        '<a class="btn square-button" [attr.disabled]="true"><span class="icon fa-edit"></span></a>' +
+        '<a class="btn square-button" (click)="dec.editDoc(' + row + ',true)"><span class="icon fa-eye"></span></a>' +
 
         '<a class="btn square-button" [attr.disabled]="true"><span class="icon fa-copy"></span></a>' +
 

@@ -487,6 +487,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.current_result[row].rawJSON)
         doc_string = js_beautify(dec.options.current_result[row].rawJSON, {"indent_size": 2});
 
+      // for binary docs, base64
+      else if (dec.options.current_result[row].meta.type === "base64")
+        doc_string = JSON.stringify(dec.options.current_result[row].base64);
+
       // handle empty documents
       else if (!dec.options.current_result[row].data)
         doc_string = "";
@@ -502,7 +506,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       };
       var meta_str = JSON.stringify(meta_obj, null, 2);
 
-      qwDialogService.showDocEditorDialog(readonly, 'Edit Document', doc_id, doc_string, meta_str)
+      qwDialogService.showDocEditorDialog(readonly, (readonly?'View Document':'Edit Document'), doc_id, doc_string, meta_str)
         .then(function ok(result) {
           // reformat the doc for compactness, but only if no long numbers present
           result.json = js_beautify(result.json, {
