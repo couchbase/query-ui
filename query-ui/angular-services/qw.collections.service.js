@@ -1,6 +1,5 @@
 import {$http}         from '/_p/ui/query/angular-services/qw.http.js';
 import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
-import pubsub          from '/ui/web_modules/rxjs-pubsub.js';
 import _               from '/ui/web_modules/lodash.js';
 
 export {QwCollectionsService};
