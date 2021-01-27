@@ -60,9 +60,9 @@ function getQwCollectionsService(
 
   function refreshBuckets() {
     qcs.errors.length = 0;
-
+    var url = "../pools/default/buckets/";
     var promise = $http.do({
-      url: "../pools/default/buckets/",
+      url: url,
       method: "GET"
     }).then(function success(resp) {
       if (resp && resp.status == 200 && resp.data) {
@@ -81,9 +81,12 @@ function getQwCollectionsService(
     }, function error(resp) {
       var data = resp.data, status = resp.status;
       qcs.buckets.length = 0;
-      var error = {status: resp.status};
+      var error = {status: resp.status, url: url};
       if (resp.error)
-        Object.assign(error,resp.error);
+        if (_.isString(resp.error))
+          error.message = resp.error;
+        else
+          Object.assign(error,resp.error);
       qcs.errors.length = 0;
       qcs.errors.push(error);
       //console.log("Error getting buckets: " + JSON.stringify(resp));
@@ -100,10 +103,10 @@ function getQwCollectionsService(
 
   function refreshScopesAndCollectionsForBucket(bucket) {
     qcs.errors.length = 0;
-    //console.log("Refreshing for bucket: " + bucket);
-    // get the buckets from the REST API
+    var url = "../pools/default/buckets/" + encodeURI(bucket) + "/scopes";
+    // get the scopes and collections for the bucket from the REST API
     var promise = $http.do({
-      url: "../pools/default/buckets/" + encodeURI(bucket) + "/scopes",
+      url: url,
       method: "GET"
     }).then(function success(resp) {
       if (resp && resp.status == 200 && resp.data && _.isArray(resp.data.scopes)) {
@@ -126,9 +129,12 @@ function getQwCollectionsService(
       return(qcs.metadata);
     }, function error(resp) {
       qcs.scopes[bucket] = [];
-      var error = {status: resp.status};
+      var error = {status: resp.status, url: url};
       if (resp.error)
-        Object.assign(error,resp.error);
+        if (_.isString(resp.error))
+          error.message = resp.error;
+        else
+          Object.assign(error,resp.error);
       qcs.errors.length = 0;
       qcs.errors.push(error);
       //console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
