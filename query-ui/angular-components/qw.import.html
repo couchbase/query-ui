@@ -1,3 +1,9 @@
+<div *ngIf="!ic.docImporter()">
+  Insufficient permissions to import documents. User must have at least Data Writer on one or more
+  collections, and also the ability to view scopes and collections on that bucket.
+</div>
+
+<div *ngIf="ic.docImporter()">
   <qw-docs-subnav></qw-docs-subnav>
 
   <!-- form name="searchForm" -->
@@ -183,3 +189,4 @@
       </div>
     </footer>
   <!-- /form -->
+</div>

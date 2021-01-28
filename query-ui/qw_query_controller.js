@@ -7,7 +7,8 @@ import n1ql from '/_p/ui/query/n1ql_parser/n1ql.js';
 export default queryController;
 
 function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryService,
-    $scope, $interval, $interpolate, qwConstantsService, mnPoolDefault, mnServersService, qwJsonCsvService, jQuery) {
+    $scope, $interval, $interpolate, qwConstantsService, mnPoolDefault, mnServersService,
+    mnPermissions, qwJsonCsvService, jQuery) {
   var $ = jQuery;
 
   var qc = this;
@@ -33,6 +34,12 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   qc.emptyQuery = function() {return(qwQueryService.getResult().query.length == 0);}
   qc.emptyResult = qwQueryService.emptyResult;
   qc.hasRecommendedIndex = qwQueryService.hasRecommendedIndex;
+
+  qc.rbac = mnPermissions.export;
+  qc.queryPermitted = function() {
+    return qc.rbac.cluster.collection['.:.:.'].data.docs.read &&
+      qc.rbac.cluster.collection['.:.:.'].n1ql.select.execute;
+  };
 
   // some functions for handling query history, going backward and forward
 
@@ -747,7 +754,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     if (qc.inputEditor) {
       // give the query editor at least 3 lines, but it might want more if the query has > 3 lines
       var lines = qc.inputEditor.getSession().getLength();       // how long in the query?
-      var desiredQueryHeight = Math.max(23,(lines-1)*22-21);         // make sure height no less than 23
+      var desiredQueryHeight = Math.max(23,(lines-1)*22-16);         // make sure height no less than 23
 
       // when focused on the query editor, give it up to 3/4 of the total height, but make sure the results
       // never gets smaller than 270

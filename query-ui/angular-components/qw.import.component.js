@@ -6,6 +6,7 @@ import { QwImportService }         from '../angular-services/qw.import.service.j
 import { QwDialogService }         from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 import { QwValidateQueryService }  from '../angular-services/qw.validate.query.service.js';
 import {FormControl, FormGroup}    from '/ui/web_modules/@angular/forms.js';
+import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 
 import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "/ui/web_modules/d3-dsv.js";
 
@@ -25,6 +26,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       ChangeDetectorRef,
+      MnPermissions,
       QwDialogService,
       QwImportService,
       QwValidateQueryService,
@@ -37,7 +39,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   }
 
 
-  constructor(cdr, qwDialogService, qwImportService, validateQueryService) {
+  constructor(cdr, mnPermissions, qwDialogService, qwImportService, validateQueryService) {
     super();
 
     var ic = this;
@@ -48,6 +50,12 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     this.configForm = new FormGroup({
         useKey: new FormControl()
     });
+
+    ic.rbac = mnPermissions.export;
+    ic.docImporter = function() {
+      return ic.rbac.cluster.collection['.:.:.'].data.docs.write &&
+        ic.rbac.cluster.collection['.:.:.'].collections.read;
+    };
 
     // get our buckets and options from the import service, so they persist
     // between invocations (especially when an import is in progress)

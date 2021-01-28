@@ -8,9 +8,6 @@ import _                                                 from "/ui/web_modules/l
 
 import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 
-import {pluck, filter, switchMap, distinctUntilChanged, withLatestFrom,
-  shareReplay, takeUntil, tap, map} from '/ui/web_modules/rxjs/operators.js';
-
 import { Subject } from '/ui/web_modules/rxjs.js';
 
 import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
@@ -98,6 +95,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     var dec = {};
     this.dec = dec;
     dec.rbac = mnPermissions.export;
+    dec.docViewer = function() {
+      return dec.rbac.cluster.collection['.:.:.'].data.docs.read &&
+      dec.rbac.cluster.collection['.:.:.'].collections.read;
+    };
     dec.searchForm = this.searchForm;
 
     this.uiRouter = uiRouter;

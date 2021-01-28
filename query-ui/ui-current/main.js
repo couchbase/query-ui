@@ -21,6 +21,7 @@ angular
   .module(app)
   .config(function (mnPluggableUiRegistryProvider, mnPermissionsProvider) {
     mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!read" ); // needed for Documents and Query
+    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!write" ); // needed for Import
     mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read" ); // needed for Documents
     mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute" );
 
@@ -34,7 +35,6 @@ angular
       includedByState: 'app.admin.docs',
       plugIn: 'workbenchTab',
       ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read",
-//      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read",
       index: 0
     });
 

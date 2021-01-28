@@ -1,4 +1,9 @@
-<div class="doc-editor">
+<div *ngIf="!dec.docViewer()">
+  Insufficient permissions to view documents. User must have at least Data Reader on one or more
+  collections, and also the ability to view scopes and collections in that bucket.
+</div>
+
+<div class="doc-editor" *ngIf="dec.docViewer()">
 
   <mn-element-cargo
      depot="actions"

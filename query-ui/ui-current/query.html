@@ -1,5 +1,10 @@
+<div ng-show="!qc.queryPermitted()">
+  Insufficient permissions to run queries. User must have at least Data Reader and Query Select on
+  one or more collections.
+</div>
+
 <div
-   ng-show="qc.validated.valid()"
+   ng-show="qc.validated.valid() && qc.queryPermitted()"
    class="wb-wrapper">
 
   <mn-element-cargo depot="actions" ng-if="qc.validated.valid()">
@@ -251,7 +256,7 @@
     </div>
     <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body narrow-scrollbar">
       <div class="row margin-bottom-half">
-        <h4>Data Insights</h4>
+        <h5>Buckets <span class="resp-hide-med">, Scopes, Collections</span></h5>
         <div class="insights-sidebar-expand" ng-click="qc.toggleAnalysisSize()">
           <span ng-if="!qc.analysisExpanded" class="icon fa-expand" title="expand"></span>
           <span ng-if="qc.analysisExpanded" class="icon fa-compress" title="contract"></span>

@@ -8,6 +8,7 @@ import uiAce                    from "/ui/libs/ui-ace.js";
 import ngClipboard              from "/ui/libs/ngclipboard.js";
 
 import mnJquery                 from "/ui/app/components/mn_jquery.js";
+import mnPermissions            from "/ui/app/components/mn_permissions.js";
 import mnPoll                   from "/ui/app/components/mn_poll.js";
 import mnHelper                 from "/ui/app/components/mn_helper.js";
 import mnPoolDefault            from "/ui/app/components/mn_pool_default.js";
@@ -52,8 +53,9 @@ angular
     ngClipboard,
     mnJquery,
 
-    mnPoll,
     mnHelper,
+    mnPermissions,
+    mnPoll,
     mnPoolDefault,
     mnServersService,
     mnStatisticsNewService,
