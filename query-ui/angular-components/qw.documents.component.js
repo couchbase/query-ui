@@ -61,9 +61,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     this.formOptions = {
-      selected_bucket: this.dec.options.selected_bucket,
-      selected_scope: this.dec.options.selected_scope,
-      selected_collection: this.dec.options.selected_collection,
       limit: this.dec.options.limit,
       offset: this.dec.options.offset,
       doc_id: this.dec.options.doc_id,
@@ -74,9 +71,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     this.searchForm.setValue(this.formOptions);
 
     var This = this;
-    this.searchForm.get('selected_bucket').valueChanges.subscribe(data => This.dec.options.selected_bucket = data);
-    this.searchForm.get('selected_scope').valueChanges.subscribe(data => This.dec.options.selected_scope = data);
-    this.searchForm.get('selected_collection').valueChanges.subscribe(data => This.dec.options.selected_collection = data);
     this.searchForm.get('limit').valueChanges.subscribe(data => This.dec.options.limit = data);
     this.searchForm.get('offset').valueChanges.subscribe(data => This.dec.options.offset = data);
     this.searchForm.get('doc_id').valueChanges.subscribe(data => This.dec.options.doc_id = data);
@@ -110,11 +104,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     // form for selecting documents
     this.searchForm = new FormGroup({
-      selected_bucket: new FormControl(),
-      selected_scope: new FormControl(),
-      selected_collection: new FormControl(),
-      limit: new FormControl(),
-      offset: new FormControl(),
+      limit: new FormControl(10),
+      offset: new FormControl(0),
       doc_id: new FormControl(),
       doc_id_start: new FormControl(),
       doc_id_end: new FormControl(),
@@ -1038,7 +1029,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         }
       }, function error(resp) {
         var data = resp.data, status = resp.status;
-        //console.log("Got REST error status: " + status/* + ", data: " + JSON.stringify(data)*/);
+        //console.log("Got REST error status: " + status + ", resp: " + JSON.stringify(resp,null,2));
 
         if (data) {
           if (data.errors)
@@ -1155,7 +1146,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         }
 
         // if we have selected becket/scope/collection, get the initial set of documents
-        if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection)
+        if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection &&
+            dec.buckets.indexOf(dec.options.selected_bucket) != -1)
             retrieveDocs_inner();
 
       }, function error(resp) {

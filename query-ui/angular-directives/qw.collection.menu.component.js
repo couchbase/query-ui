@@ -3,6 +3,8 @@
  */
 
 import { ViewEncapsulation,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   EventEmitter,
@@ -11,6 +13,8 @@ import { ViewEncapsulation,
 import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
 
 import { CommonModule } from '/ui/web_modules/@angular/common.js';
+
+import { Subject } from '/ui/web_modules/rxjs.js';
 
 import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
 
@@ -30,11 +34,13 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   ]}
 
   static get parameters() { return [
+    ChangeDetectorRef,
     QwCollectionsService
   ] }
 
-  constructor(qwCollectionsService) {
+  constructor(changeDetectorRef,qwCollectionsService) {
     super();
+    this.cdr = changeDetectorRef;
     this.qwCollectionsService = qwCollectionsService;
     this.onSelection = new EventEmitter();
 
@@ -47,6 +53,9 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.buckets = [];
     this.scopes = {};      // scopes and collections indexed by bucket name
     this.collections = {};
+
+    this.scopes_subject = new Subject();
+    this.collections_subject = new Subject();
   }
 
   ngOnInit() {
@@ -55,10 +64,16 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       this.selected_scope = this.initialSelection.selected_scope;
       this.selected_collection = this.initialSelection.selected_collection;
     }
-    this.qwCollectionsService.getBuckets().then(meta => this.bucketListChangedCallback(meta));
+    this.qwCollectionsService.refreshBuckets().then(meta => this.bucketListChangedCallback(meta));
   }
 
   ngAfterViewInit() {
+  }
+
+  // update the scopes and collections menus when they change
+  update_scopes_collections_menu() {
+    this.scopes_subject.next(this.selected_bucket ? this.scopes[this.selected_bucket] : []);
+    this.collections_subject.next(this.getCollections());
   }
 
   //
@@ -85,15 +100,19 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
 
   bucketListChangedCallback(meta) {
-    var default_seen = false;
     this.buckets = meta.buckets;
     this.scopes = this.scopes;
     this.collections = meta.collections;
+    // if our previously selected bucket has been removed, reset
+    if (this.selected_bucket && this.buckets.indexOf(this.selected_bucket) == -1)
+      this.selected_bucket = "";
+    // if we don't have a selected bucket, use the first in the list (if any)
     if (this.buckets.length > 0 && !this.selected_bucket)
       this.selected_bucket = this.buckets[0];
     else if (this.buckets.length == 0)
       this.selected_bucket = "";
 
+    this.update_scopes_collections_menu();
     this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
 
     if (this.selected_bucket)
@@ -135,6 +154,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
         collections.indexOf(this.selected_collection) < 0))
       this.selected_collection = collections[0];
 
+    this.update_scopes_collections_menu();
+
     this.notifyChange();
   }
 
@@ -155,8 +176,10 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       this.scopes = {};
     } else {
       if (this.selected_bucket)
-        this.qwCollectionsService.getScopesForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
+        this.qwCollectionsService.refreshScopesAndCollectionsForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
     }
+
+    this.update_scopes_collections_menu();
   }
 
   // when the scope changes, the model for the collections menu can change without
@@ -180,6 +203,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
         this.selected_collection = "";
     }
 
+    this.update_scopes_collections_menu();
     this.notifyChange();
   }
 
@@ -193,14 +217,6 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
   // functions used in the HTML for getting the current lists of buckets, scopes, and collections
   //
-
-  getBuckets() {
-    return this.buckets;
-  }
-
-  getScopes() {
-    return this.selected_bucket ? this.scopes[this.selected_bucket] : [];
-  }
 
   getCollections() {
     if (!this.selected_bucket || !this.selected_scope ||

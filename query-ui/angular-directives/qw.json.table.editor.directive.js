@@ -545,6 +545,7 @@ function makeHTMLTopLevel() {
       var setPristineName = formName + '.markAsPristine';
       var invalidName = formName + '.invalid';
       result += '<form #' + formName + '="ngForm" name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25) * columnWidthPx + 'px" ' +
+        ' *ngIf="dec.options.current_result[' + row + ']"' +
         ' (submit)="dec.updateDoc(' + row + ',' + formName + ')">' +
         '<fieldset class="doc-editor-fieldset" [disabled]="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
         '<div class="doc-editor-row" ' +

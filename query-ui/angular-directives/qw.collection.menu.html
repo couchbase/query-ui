@@ -7,12 +7,12 @@
       </option>
     </select>
     <select (change)="scopeChanged($event)">
-      <option *ngFor="let name of getScopes()" [selected]="name==selected_scope" [disabled]="disabled">
+      <option *ngFor="let name of scopes_subject | async" [selected]="name==selected_scope" [disabled]="disabled">
         {{name}}
       </option>
     </select>
     <select (change)="collectionChanged($event)">
-      <option *ngFor="let name of getCollections()" [selected]="name==selected_collection" [disabled]="disabled">
+      <option *ngFor="let name of collections_subject | async" [selected]="name==selected_collection" [disabled]="disabled">
         {{name}}
       </option>
     </select>

@@ -53,6 +53,7 @@ function getQwCollectionsService(
   qcs.getBuckets = getBuckets;
   qcs.refreshBuckets = refreshBuckets;
   qcs.getScopesForBucket = getScopesForBucket;
+  qcs.refreshScopesAndCollectionsForBucket = refreshScopesAndCollectionsForBucket;
 
   //
   // get a list of buckets from the server via the REST API
