@@ -76,6 +76,7 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
     },
     updateValidBuckets: getBuckets,
     updateNodes: getNodes,
+    getNodes: getNodes,
     getBucketsAndNodes: getBuckets
   }
 
@@ -89,6 +90,7 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
       _validNodes = mnPoolDefault.getUrlsRunningService(mnPoolDefault.latestValue().value.nodes, "n1ql", null);
     else
       _validNodes = [];
+    return(_validNodes);
   }
 
   //
@@ -114,6 +116,15 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
     _otherStatus = null;
     _otherError = null;
     _bucketsInProgress = true;
+
+    // can't do anything if no nodes running query service
+    if (!getNodes().length) {
+      _valid = false;
+      _bucketsInProgress = false;
+      while (_callbackList.length) // call each callback to let them know we're done
+        _callbackList.pop()();
+      return;
+    }
 
     // meanwhile issue a query to the local node get the list of buckets
     var queryData = {statement: "select buckets.name from system:buckets;"};
