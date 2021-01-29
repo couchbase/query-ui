@@ -175,7 +175,7 @@ function getQwImportService(
               // otherwise done with import
               else {
                 qis.options.importing = false;
-                qwDialogService.showErrorDialog("Import Complete", qis.options.last_import_status, null, true);
+                qwDialogService.showInfoDialog("Import Complete", qis.options.last_import_status);
                 resetOptions();
               }
             }

@@ -42,6 +42,18 @@ class QwDialogService {
     return(this.dialogRef.result);
   }
 
+  //
+  // this info dialog returns a promise when the user clicks "OK", the only option
+  //
+  showInfoDialog(title,detail) {
+    this.dialogRef = this.modalService.open(QwErrorDialog);
+    this.dialogRef.componentInstance.error_title = title;
+    this.dialogRef.componentInstance.error_detail = detail;
+    this.dialogRef.componentInstance.error_detail_array = null;
+    this.dialogRef.componentInstance.info = true;
+    this.dialogRef.componentInstance.hide_cancel = true;
+    return(this.dialogRef.result);
+  }
 
   //
   // this shows the document editor dialog, with parameters for:
