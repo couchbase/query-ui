@@ -39,7 +39,6 @@ let documentsStates = [
       url: '/editor?bucket&scope&collection',
       name: 'app.admin.docs.editor',
       data: {
-//    permissions: "cluster.bucket['.'].collections.read", // restricted by permissions?
         title: "Documents",  // appears in breadcrumbs in title bar
         compat: "atLeast70"    // Cheshire Cat
       },

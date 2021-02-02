@@ -549,7 +549,7 @@ function makeHTMLTopLevel() {
         ' (submit)="dec.updateDoc(' + row + ',' + formName + ')">' +
         '<fieldset class="doc-editor-fieldset" [disabled]="!rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert">' +
         '<div class="doc-editor-row" ' +
-        '*ngIf="!dec.options.current_result[' + row + '].deleted">'; // new row for each object
+        '[hidden]="dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
       result += '<span class="doc-editor-cell" style="width:' + columnWidthPx * 1.25 + 'px"> ' +
 
@@ -605,15 +605,6 @@ function makeHTMLTopLevel() {
       result += '</a>';
       result += '</span>';
 
-      // if we are showing top keys, add the ops per second
-      if (meta.hasOps) {
-        if (tdata[row].ops && _.isNumber(tdata[row].ops))
-          tdata[row].ops = Math.round(tdata[row].ops * 1000) / 1000;
-
-        result += '<span class="doc-editor-cell" style="width:' + 0.5 * columnWidthPx + 'px">' + tdata[row].ops + '</span>';
-      }
-
-
       // if we have unnamed items like arrays or primitives, they go in the next column
       if (meta.hasNonObject) {
         result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width:' +
@@ -647,8 +638,8 @@ function makeHTMLTopLevel() {
         var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
         if (json.length > max_length)
           json = json.substring(0, max_length) + '...';
-        result += '<span *ngIf="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5 * columnWidthPx + 'px;">'
-          + mySanitize(json) + '</span>';
+        result += '<span *ngIf="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5 * columnWidthPx + 'px;">' +
+          '{{dec.options.current_result[' + row + '].display_json}}</span>';
       }
 
       // for a null document, output a message saying so

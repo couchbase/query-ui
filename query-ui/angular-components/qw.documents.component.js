@@ -350,11 +350,13 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.updatingRow = row;
 
       var newJson = JSON.stringify(dec.options.current_result[row].data);
+      update_display_json(row, newJson);
       var promise = saveDoc(row, newJson);
 
       // if it succeeded, mark the row as clean
       promise.then(function success() { // errors are handled by saveDoc()
         form.form.markAsPristine();
+        refreshResults();
         dec.updatingRow = -1;
       });
     }
@@ -440,13 +442,16 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               //console.log("successfully deleted row: " + row);
               dec.updatingRow = -1;
               dec.options.current_result[row].deleted = true;
+              refreshResults();
             },
 
             // ...or fail?
             function error(resp) {
               var data = resp.data, status = resp.status;
+              var error = resp.error ? JSON.stringify(resp.error) :
+                "Status: " + resp.status + " " + resp.statusText;
 
-              showErrorDialog("Error Deleting Document", JSON.stringify(data), true)
+              showErrorDialog("Error Deleting Document", error, true)
                 .then(function () {
                   dec.updatingRow = -1;
                 });
@@ -877,6 +882,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
                 id: docId, docSize: docInfo.json.length, data: doc.data, meta: docInfo.meta,
                 xattrs: docInfo.xattrs, rawJSON: doc.rawJSON ? docInfo.json : null, rawJSONError: doc.rawJSONError
               };
+
+            update_display_json(position, docInfo.json);
           }
 
           // maybe a single binary doc?
@@ -886,6 +893,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
               {id: docInfo.meta.id, base64: atob(docInfo.base64), meta: docInfo.meta, xattrs: docInfo.xattrs};
           } else
             console.log("Unknown document: " + JSON.stringify(docInfo));
+
+          // viewable version of the document JSON
+
         } catch (e) {
           dec.options.current_result[position] = {
             id: idArray[position],
@@ -897,6 +907,22 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         }
       }
     }
+
+    // each document will have a "display_json" field that contains a version of the json that is truncated
+    // if necessary
+
+    var max_display_length = 200;
+
+    function update_display_json(row,json) {
+      var display_json = json;
+      if (json && json.length > max_display_length)
+        display_json = json.substring(0, max_display_length) + '...';
+      dec.options.current_result[row].display_json = display_json;
+    }
+
+    //
+    // when getting the documents by ID, handle any failures
+    //
 
     function getDocReturnErrorHandler(position, idArray) {
       return function error(resp) {
