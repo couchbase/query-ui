@@ -2,6 +2,7 @@ import { NgbModal, NgbModalConfig }          from '/ui/web_modules/@ng-bootstrap
 import { QwDocEditorDialog } from './dialogs/qw.doc.editor.dialog.component.js';
 import { QwErrorDialog }     from './dialogs/qw.error.dialog.component.js';
 import { QwInputDialog }     from './dialogs/qw.input.dialog.component.js';
+import { QwNoticeDialog }    from './dialogs/qw.notice.dialog.component.js';
 
 export { QwDialogService };
 
@@ -99,6 +100,30 @@ class QwDialogService {
     this.dialogRef.componentInstance.body_message = body_message;
     this.dialogRef.componentInstance.input_value = input_value;
     return(this.dialogRef.result);
+  }
+
+  //
+  // show a dialog with a message for the user
+  //
+  // e.g.
+  //
+  // qwDialogService.showNoticeDialog("Warning","You selected a large file, it may take some time to load")
+  //   .then(function close(result)   {console.log("User hit OK, 'result' is value entered by the user");})
+  //
+  showNoticeDialog(header_message, body_message, input_value) {
+    this.dialogRef = this.modalService.open(QwNoticeDialog);
+    this.dialogRef.componentInstance.header_message = header_message;
+    this.dialogRef.componentInstance.body_message = body_message;
+    return(this.dialogRef.result);
+  }
+
+
+  //
+  // close all dialogs
+  //
+
+  closeAllDialogs() {
+    this.modalService.dismissAll();
   }
 
 }

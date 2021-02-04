@@ -16,6 +16,7 @@ import { QwDialogService }     from "./qw.dialog.service.js";
 import { QwDocEditorDialog }   from "./dialogs/qw.doc.editor.dialog.component.js";
 import { QwErrorDialog }       from "./dialogs/qw.error.dialog.component.js";
 import { QwInputDialog }       from "./dialogs/qw.input.dialog.component.js";
+import { QwNoticeDialog }      from "./dialogs/qw.notice.dialog.component.js";
 
 // angularJS wrapped directives
 import { QwJsonTableEditorDirective } from "./qw.wrapped.directives.js";
@@ -35,13 +36,15 @@ class QwDirectivesModule {
         QwJsonDataTable,
         QwJsonTableEditor2,
         QwJsonTableEditorDirective,
-        QwJsonTree
+        QwJsonTree,
+        QwNoticeDialog,
       ],
       bootstrap: [ // need to include dialog components here
         QwCollectionMenu,
         QwDocEditorDialog,
         QwErrorDialog,
         QwInputDialog,
+        QwNoticeDialog,
         QwJsonTableEditor2,
         ],
       imports: [
@@ -59,7 +62,8 @@ class QwDirectivesModule {
         QwJsonDataTable,
         QwJsonTableEditor2,
         QwJsonTableEditorDirective,
-        QwJsonTree
+        QwJsonTree,
+        QwNoticeDialog,
       ],
       entryComponents: {
 //        QwDocEditorDialog,

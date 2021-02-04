@@ -156,22 +156,14 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
       // post a dialog for large files, since loading can take a while
 
-      if (ic.options.fileSize > 5) {
-        //qis.closeAllDialogs();
-
-        var dialogScope = $rootScope.$new(true);
-        dialogScope.title = "Loading Data File...";
-        dialogScope.detail = "Loading file " + fileName + ", size: " + ic.options.fileSize +
-                              "MB, which may take a while.";
-        $uibModal.open({
-          templateUrl: '../_p/ui/query/ui-current/password_dialog/qw_notice_dialog.html',
-          scope: dialogScope
-        });
-      }
+       if (ic.options.fileSize > 5) {
+         qwDialogService.showNoticeDialog("Loading Data File...",
+         "Loading file " + fileName + ", size: " + ic.options.fileSize +
+                               "MB, which may take a while.");
+       }
 
       var reader = new FileReader();
       reader.addEventListener("loadend",function() {
-        //qis.closeAllDialogs();
         ic.options.fileData = reader.result;
         ic.options.fields = [];
         ic.selectTab(2);
@@ -192,11 +184,12 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
           ic.selectTab(1);
           ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
         }
+        qwDialogService.closeAllDialogs();
       });
 
       // handle any errors reading the file
       var handleReaderError = function(e) {
-        //qis.closeAllDialogs();
+        qwDialogService.closeAllDialogs();
         qwDialogService.showErrorDialog("File Loading Error", 'Errors loading file: ' + JSON.stringify(e), true);
       }
       reader.addEventListener("error",handleReaderError);
