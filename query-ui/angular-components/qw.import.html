@@ -6,37 +6,24 @@
 <div *ngIf="ic.docImporter()">
   <qw-docs-subnav></qw-docs-subnav>
 
-  <!-- form name="searchForm" -->
-    <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
-      <div class="width-4 import-col1">
-        <p class="text-small inline">
-          Select a tab/comma delimited or JSON list/lines file to import.
-          <a
-             [ngbTooltip]="fileFormatTipContent"
-             placement="auto"
-             tooltip-append-to-body="true">
-            See file format details
-          </a>
-          <ng-template #fileFormatTipContent>
-            This import UI supports the following formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul>
-          </ng-template>
-        </p>
-        <div class="row flex-left margin-bottom-2">
-          <span>
-            <input
-               type="file"
-               id="loadQuery"
-               name="files"
-               style="display: none"
-               accept=".txt,.json,.csv,.tsv">
-            <button
-               (click)="ic.selectFile()"
-               class="margin-right-1"
-               [disabled]="ic.options.importing">
-              Select File to Import...
-              <span *ngIf="ic.options.queryBusy" class="icon-button"></span>
-            </button>
-          </span>
+  <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
+    <div class="width-4 import-col1">
+      <div class="formrow row flex-left items-top">
+        <span>
+          <input
+             type="file"
+             id="loadQuery"
+             name="files"
+             style="display: none"
+             accept=".txt,.json,.csv,.tsv">
+          <button
+             (click)="ic.selectFile()"
+             class="margin-right-1"
+             [disabled]="ic.options.importing">
+            Select File to Import...
+            <span *ngIf="ic.options.queryBusy" class="icon-button"></span>
+          </button>
+          <br>
           <div class="text-smaller">
             {{ic.options.status}}
             <span
@@ -44,149 +31,158 @@
               class="loading">
             </span>
           </div>
-        </div>
-        <div class="formrow">
-          <div class="row">
-            <label>Parse File As</label>
-            <span
-               class="text-normal text-smaller green-1"
-               *ngIf="options.docData.length > 0">
-              found {{ic.options.docData.length}} records
-            </span>
-          </div>
+        </span>
+        <p class="text-smaller">
+          tab/comma delimited or JSON list/lines<br>
+          <a
+             [ngbTooltip]="fileFormatTipContent"
+             placement="right"
+             appendToBody="true">
+            file format details
+          </a>
+          <ng-template #fileFormatTipContent>
+            This import UI supports the following formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul>
+          </ng-template>
+        </p>
+      </div>
+
+      <div class="formrow row flex-left items-bottom">
+        <span>
+          <label>Parse File As</label>
           <select
              on-select="ic.parseAs($item)"
              [(ngModel)]="ic.options.selectedFormat"
              [ngModelOptions]="{standalone: true}"
              class="cbui-select"
              name="format"
-             [disabled]="ic.options.importing"
-             >
+             [disabled]="ic.options.importing">
             <option *ngFor="let item of ic.formats" [selected]="item==ic.options.selectedFormat">
               <span class="select-item ellipsis" ng-bind-html="item">{{item}}</span>
             </option>
           </select>
-        </div>
-
-        <div class="formrow">
-          <qw-collection-menu label="Destination"
-                              [initialSelection]="ic.options"
-                              (onSelection)="ic.collectionMenuCallback($event)"
-                              [disabled]="ic.options.importing">
-          </qw-collection-menu>
-        </div>
-
-        <div class="formrow">
-          <label class="inline">Import With Document ID</label>
-          <ng-template #docIdTipContent>
-            <body class="text-small">
-              Every document stored in Couchbase requires a unique Document ID.
-              For the ID, you can select an automatically generated UUID, or a
-              field from the data. If you choose a field, it much have a distinct
-              value for every document. Any duplicate ID values will cause later
-              documents to overwrite earlier ones with the same ID value.
-            </body>
-          </ng-template>
-          <span
-            class="fa-stack icon-info"
-            [ngbTooltip]="docIdTipContent"
-            triggers="click:blur"
-            placement="auto"
-            tooltip-append-to-body="true">
-            <span class="icon fa-circle-thin fa-stack-2x"></span>
-            <span class="icon fa-info fa-stack-1x"></span>
-           </span>
-          <form [formGroup]="configForm" class="forms">
-          <div>
-            <input type="radio" id="guid" formControlName="useKey" [value]="false">
-            <label for="guid">UUID</label>
-          </div>
-          <div><fieldset class="hidden-fieldset" [disabled]="!(ic.options.fields.length > 0) || ic.options.importing">
-            <input type="radio" id="field" formControlName="useKey" [value]="true">
-            <label for="field"
-                   [attr.disabled]="(!(ic.options.fields.length > 0) || ic.options.importing) ? true : null">
-              Value of Field:
-            </label>
-            <select
-               [disabled]="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
-               [(ngModel)]="ic.options.selectedDocIDField"
-               [ngModelOptions]="{standalone: true}"
-               theme="selectize"
-               name="idField"
-               class="cbui-select">
-              <option ng-enabled="ic.options.useKey" class="ui-select-choices" *ngFor="let field of ic.options.fields">
-                <span ng-enabled="ic.options.useKey" class="select-item ellipsis" ng-bind-html="field">{{field}}</span>
-              </option>
-            </select>
-            <span
-               *ngIf="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0"
-               placement="auto"
-               tooltip-append-to-body="true"
-               class="fa-warning icon orange-3 cursor-pointer"
-               ngbTooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found.">
-             </span>
-            </fieldset>
-          </div>
-        </form>
+        </span>
+        <div
+           class="text-smaller green-1 indent-1"
+           *ngIf="options.docData.length > 0">
+          found {{ic.options.docData.length}} records
         </div>
       </div>
 
-      <div class="width-8">
-        <div class="import-clinote">
-          <p class="text-small">
-            For faster performance, or datasets greater than 100MB, use the
-            command-line tool <span class="monospaced bold">cbimport</span>.
-          </p>
-          <textarea class="monospaced">{{ic.getCbimport()}}</textarea>
-          <p class="text-fine margin-bottom-2">
-            command generated from your file, destination, and ID selections on the left
-          </p>
-        </div>
+      <div class="formrow">
+        <qw-collection-menu label="Destination"
+                            [initialSelection]="ic.options"
+                            (onSelection)="ic.collectionMenuCallback($event)"
+                            [disabled]="ic.options.importing">
+        </qw-collection-menu>
+      </div>
 
-        <div class="row row-min margin-bottom-half margin-top-neg-half resp-hide-sml">
-          <label>File Contents</label>
-          <span class="pills">
-          <a (click)="ic.selectTab(1)"
-             [ngClass]="{selected: ic.isSelected(1)}">Raw File</a>
-          <a (click)="ic.selectTab(2)"
-             [ngClass]="{selected: ic.isSelected(2)}">Parsed Table</a>
-          <a (click)="ic.selectTab(3)"
-             [ngClass]="{selected: ic.isSelected(3)}">Parsed JSON</a>
-          </span>
+      <div class="formrow">
+        <label class="inline">Import With Document ID</label>
+        <ng-template #docIdTipContent>
+          <body class="text-small">
+            Every document stored in Couchbase requires a unique Document ID.
+            For the ID, you can select an automatically generated UUID, or a
+            field from the data. If you choose a field, it much have a distinct
+            value for every document. Any duplicate ID values will cause later
+            documents to overwrite earlier ones with the same ID value.
+          </body>
+        </ng-template>
+        <span
+          class="fa-stack icon-info"
+          [ngbTooltip]="docIdTipContent"
+          triggers="click:blur"
+          placement="auto"
+          tooltip-append-to-body="true">
+          <span class="icon fa-circle-thin fa-stack-2x"></span>
+          <span class="icon fa-info fa-stack-1x"></span>
+         </span>
+        <form [formGroup]="configForm" class="forms">
+        <div>
+          <input type="radio" id="guid" formControlName="useKey" [value]="false">
+          <label for="guid">UUID</label>
         </div>
-
-        <div class="importdata-parsedwrapper resp-hide-sml">
-          <div
-             *ngIf="ic.isSelected(1)"
-             class="wb-results-json">
-             <ngx-ace [(ngModel)]="ic.options.fileData" (ready)="onEditorReady($event)"></ngx-ace>
-          </div>
-          <div
-             *ngIf="ic.isSelected(2)"
-             class="wb-results-table import-table-panel"
-             [qwJsonDataTable2]="ic.options.docData">
-          </div>
-          <div
-             *ngIf="ic.isSelected(3)"
-             class="wb-results-json"
-             >
-             <ngx-ace [(ngModel)]="ic.options.docJson" (ready)="onJsonReady($event)"></ngx-ace>
-           </div>
+        <div><fieldset class="hidden-fieldset" [disabled]="!(ic.options.fields.length > 0) || ic.options.importing">
+          <input type="radio" id="field" formControlName="useKey" [value]="true">
+          <label for="field"
+                 [attr.disabled]="(!(ic.options.fields.length > 0) || ic.options.importing) ? true : null">
+            Value of Field:
+          </label>
+          <select
+             [disabled]="!ic.options.useKey || !(ic.options.fields.length > 0) || ic.options.importing"
+             [(ngModel)]="ic.options.selectedDocIDField"
+             [ngModelOptions]="{standalone: true}"
+             theme="selectize"
+             name="idField"
+             class="cbui-select">
+            <option ng-enabled="ic.options.useKey" class="ui-select-choices" *ngFor="let field of ic.options.fields">
+              <span ng-enabled="ic.options.useKey" class="select-item ellipsis" ng-bind-html="field">{{field}}</span>
+            </option>
+          </select>
+          <span
+             *ngIf="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0"
+             placement="auto"
+             tooltip-append-to-body="true"
+             class="fa-warning icon orange-3 cursor-pointer"
+             ngbTooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found.">
+           </span>
+          </fieldset>
         </div>
+      </form>
       </div>
     </div>
-    <footer class="footer-import">
-      <div class="text-center">
-        <button
-           (click)="ic.doImport()"
-           [disabled]="!ic.canImport()"
-           class="fix-width-3">
-           <span *ngIf="!ic.options.importing">Import Data</span>
-           <span *ngIf="ic.options.importing">Cancel Import</span>
-        </button>
-        <br>
-        <div class="width-12">{{ic.options.last_import_status}}</div>
+
+    <div class="width-8">
+      <div class="import-clinote">
+        <p class="text-small">
+          For faster performance, or datasets greater than 100MB, use the
+          command-line tool <span class="monospaced bold">cbimport</span>.
+        </p>
+        <textarea class="monospaced">{{ic.getCbimport()}}</textarea>
+        <p class="text-fine margin-bottom-2">
+          command generated from your file, destination, and ID selections on the left
+        </p>
       </div>
-    </footer>
-  <!-- /form -->
+
+      <div class="row row-min margin-bottom-half margin-top-neg-half resp-hide-sml">
+        <label>File Contents</label>
+        <span class="pills">
+        <a (click)="ic.selectTab(1)"
+           [ngClass]="{selected: ic.isSelected(1)}">Raw File</a>
+        <a (click)="ic.selectTab(2)"
+           [ngClass]="{selected: ic.isSelected(2)}">Parsed Table</a>
+        <a (click)="ic.selectTab(3)"
+           [ngClass]="{selected: ic.isSelected(3)}">Parsed JSON</a>
+        </span>
+      </div>
+
+      <div class="importdata-parsedwrapper resp-hide-sml">
+        <div
+           *ngIf="ic.isSelected(1)"
+           class="wb-results-json">
+           <ngx-ace [(ngModel)]="ic.options.fileData" (ready)="onEditorReady($event)"></ngx-ace>
+        </div>
+        <div
+           *ngIf="ic.isSelected(2)"
+           class="wb-results-table import-table-panel"
+           [qwJsonDataTable2]="ic.options.docData">
+        </div>
+        <div
+           *ngIf="ic.isSelected(3)"
+           class="wb-results-json">
+           <ngx-ace [(ngModel)]="ic.options.docJson" (ready)="onJsonReady($event)"></ngx-ace>
+         </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer-import">
+    <div class="text-center">
+      <button
+         (click)="ic.doImport()"
+         [disabled]="!ic.canImport()"
+         class="fix-width-3">
+         <span *ngIf="!ic.options.importing">Import Data</span>
+         <span *ngIf="ic.options.importing">Cancel Import</span>
+      </button>
+    </div>
+  </footer>
 </div>
