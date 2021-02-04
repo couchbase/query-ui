@@ -77,6 +77,10 @@ class QwDocEditorDialog extends MnLifeCycleHooksToStream {
       if ((this.mainEditor.getSession().getValue().trim().length == 0) ||
           (this.mainEditor.getSession().getValue().trim().length > 10*1024*1024))
         return true;
+
+      // don't allow empty doc id
+      if (!this.doc_id)
+        return true;
     }
     return false;
   }

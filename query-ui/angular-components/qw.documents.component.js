@@ -367,7 +367,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     function createBlankDoc() {
       // bring up a dialog to get the new key
-      showNewDocEditor('newDocID',
+      showNewDocEditor('',
         '{\n"click": "to edit",\n"with JSON": "there are no reserved field names"\n}');
     }
 
