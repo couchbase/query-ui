@@ -1078,6 +1078,9 @@ function getQwQueryService(
       var queryInFly = mnPendingQueryKeeper.getQueryInFly(queryResult.client_context_id);
       queryInFly && queryInFly.canceler("test");
 
+      queryResult.busy = false;
+      queryResult.status = "Cancelling...";
+
       //
       // also submit a new query to delete the running query on the server
       //
@@ -1088,13 +1091,21 @@ function getQwQueryService(
       executeQueryUtil(query, false)
 
         .then(function success() {
-//        console.log("Success cancelling query.");
+            //console.log("Success cancelling query.");
+            if (queryResult.status == "Cancelling...") {
+              queryResult.status = "Cancelled";
+              queryResult.data = {status: "Query cancelled"};
+              queryResult.result = JSON.stringify(queryResult.data);
+            }
           },
 
           // sanity check - if there was an error put a message in the console.
           function error(resp) {
             logWorkbenchError("Error cancelling query: " + JSON.stringify(resp));
-//          console.log("Error cancelling query.");
+            queryResult.status = "Cancellation Failed.";
+            queryResult.data = {status: "Query cancelled", response: resp};
+            queryResult.result = JSON.stringify(queryResult.data);
+            //console.log("Error cancelling query.");
           });
 
     }
@@ -1755,9 +1766,9 @@ function getQwQueryService(
       query_promise
         .then(function success(resp) {
             var data = resp.data, status = resp.status;
-//          console.log("Success for query: " + queryText);
-//        console.log("Success Data: " + JSON.stringify(data));
-//        console.log("Success Status: " + JSON.stringify(status));
+            //console.log("Success for query: " + queryText);
+            //console.log("Success Data: " + JSON.stringify(data));
+            //console.log("Success Status: " + JSON.stringify(status));
 
             // Even though we got a successful HTTP response, it might contain warnings or errors
             // We need to be able to show both errors and partial results, or if there are no results
@@ -1886,8 +1897,9 @@ function getQwQueryService(
           /* error response from $http */
           function error(resp) {
             var data = resp.data, status = resp.status;
-//        console.log("Error resp: " + JSON.stringify(resp));
-//        console.log("Error Data: " + JSON.stringify(data));
+            //console.log("Error for query: " + queryText);
+            //console.log("Error resp: " + JSON.stringify(resp));
+            //console.log("Error Data: " + JSON.stringify(data));
 
             // if we don't get query metrics, estimate elapsed time
             if (!data || !data.metrics) {

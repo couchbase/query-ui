@@ -754,7 +754,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     if (qc.inputEditor) {
       // give the query editor at least 3 lines, but it might want more if the query has > 3 lines
       var lines = qc.inputEditor.getSession().getLength();       // how long in the query?
-      var desiredQueryHeight = Math.max(23,(lines-1)*22-16);         // make sure height no less than 23
+      var desiredQueryHeight = Math.max(23,(lines-1)*22-14);         // make sure height no less than 23
 
       // when focused on the query editor, give it up to 3/4 of the total height, but make sure the results
       // never gets smaller than 270
