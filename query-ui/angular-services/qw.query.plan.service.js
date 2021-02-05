@@ -814,6 +814,7 @@ function getQwQueryPlanService() {
       plan['#time_normal'] = convertTimeFloatToFormattedString(parsedValue);
       plan['#time_absolute'] = parsedValue;
       lists.total_time += parsedValue;
+      //console.log("Got operator: " + operatorName + ", stats: " + JSON.stringify(plan['#stats']));
       //console.log("Got time:" + plan['#time'] + ", parsed: " + plan['#time_normal'] + ', abs: ' + plan['#time_absolute']);
     }
 
@@ -837,14 +838,10 @@ function getQwQueryPlanService() {
     }
 
     // parallel groups are like sequences, but with only one child
-    else if (operatorName === "Parallel" && plan['~child']) {
+    else if (plan['~child']) {
       analyzePlan(plan['~child'],lists);
       return(lists);
     }
-
-
-
-
 
     // Prepare operators have their plan inside prepared.operator
     else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
