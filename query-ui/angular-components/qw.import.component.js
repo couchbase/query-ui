@@ -146,7 +146,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       var fileName = this.files[0].name;
 
       if (fileSize/1024/1024 > 100) {
-        ic.options.status = this.files[0].name + " is too large (> 100 MB)";
+        ic.options.status = this.files[0].name + " is too large (> 100 MiB)";
         return;
       }
 
@@ -159,7 +159,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
        if (ic.options.fileSize > 5) {
          qwDialogService.showNoticeDialog("Loading Data File...",
          "Loading file " + fileName + ", size: " + ic.options.fileSize +
-                               "MB, which may take a while.");
+                               "MiB, which may take a while.");
        }
 
       var reader = new FileReader();
@@ -182,7 +182,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         else {
           qwDialogService.showErrorDialog("Import Warning","Data doesn't look like JSON list/lines, CSV, or TSV. Try a different parsing format.", true);
           ic.selectTab(1);
-          ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+          ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MiB)";
         }
         qwDialogService.closeAllDialogs();
       });
@@ -248,7 +248,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
       // now get the list of fields common to all documents, as possible doc IDs
       if (ic.options.docData.length) {
-        ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+        ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MiB)";
         if (!ic.options.showTable)
           ic.options.docJson = JSON.stringify(ic.options.docData,null,2);
 
@@ -264,7 +264,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       else {
         qwDialogService.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON List/Lines)", true);
         ic.selectTab(1);
-        ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MB)";
+        ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MiB)";
       }
 
       // For some reason the data table is not updating except when the tab changes, so force a change, then back

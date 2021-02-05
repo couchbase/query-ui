@@ -76,7 +76,7 @@ function getQwImportService(
     // if we are already importing, cancel the import
     if (qis.options.importing) {
       qis.options.cancel_import = true;
-      qis.options.last_import_status = "Cancelling import...";
+      qis.options.last_import_status = "Canceling import...";
       return;
     }
 
@@ -86,7 +86,7 @@ function getQwImportService(
 
     // must have selected bucket and at least one document to import
     if (!qis.options.selected_bucket || qis.options.selected_bucket.length == 0) {
-      qwDialogService.showErrorDialog("Import Error", 'No bucket selected to import into.', null, true);
+      qwDialogService.showErrorDialog("Import Error", 'No keyspace selected.', null, true);
       qis.options.importing = false;
       return;
     }
@@ -124,7 +124,7 @@ function getQwImportService(
     while (docNum < qis.options.docData.length) {
       // have we been cancelled?
       if (qis.options.cancel_import) {
-        qis.options.last_import_status = "Import cancelled.";
+        qis.options.last_import_status = "Import canceled";
         qis.options.importing = false;
         qis.options.cancel_import = false;
         return;
@@ -143,7 +143,7 @@ function getQwImportService(
 
       // can't import very big documents
       if (docText.length > maxDocSize) {
-        qwDialogService.showErrorDialog("Import Error at Document " + docNum, "GUI can't import documents " + maxDocSizeMB + "MB or larger, use cbimport.", null, true);
+        qwDialogService.showErrorDialog("Import Error at Document " + docNum, "GUI can't import documents " + maxDocSizeMB + "MiB or larger, use cbimport.", null, true);
         qis.options.importing = false;
         return;
       }
@@ -167,7 +167,7 @@ function getQwImportService(
               //console.log(query.substr(0,250));
               qis.options.importing = false;
             } else {
-              qis.options.last_import_status = "From: " + qis.options.fileName + " imported " + (docNum + 1) + " of " + qis.options.docData.length + " docs.";
+              qis.options.last_import_status = "Imported " + (docNum + 1) + " of " + qis.options.docData.length + " docs " + " from: " + qis.options.fileName;
               // more data to import?
               if (docNum < qis.options.docData.length - 1) {
                 setTimeout(getNextSaveN1QL(docNum + 1), 1);
@@ -209,7 +209,6 @@ function getQwImportService(
       saveDocsViaN1QL(startingDocNum);
     };
   }
-
 
   //
   // reset options when done

@@ -18,7 +18,7 @@
              accept=".txt,.json,.csv,.tsv">
           <button
              (click)="ic.selectFile()"
-             class="margin-right-1"
+             class="margin-right-1 margin-bottom-quarter"
              [disabled]="ic.options.importing">
             Select File to Import...
             <span *ngIf="ic.options.queryBusy" class="icon-button"></span>
@@ -169,20 +169,24 @@
         <div
            *ngIf="ic.isSelected(3)"
            class="wb-results-json">
-           <ngx-ace [(ngModel)]="ic.options.docJson" (ready)="onJsonReady($event)"></ngx-ace>
-         </div>
+          <ngx-ace [(ngModel)]="ic.options.docJson" (ready)="onJsonReady($event)"></ngx-ace>
+        </div>
       </div>
     </div>
   </div>
   <footer class="footer-import">
-    <div class="text-center">
-      <button
-         (click)="ic.doImport()"
-         [disabled]="!ic.canImport()"
-         class="fix-width-3">
-         <span *ngIf="!ic.options.importing">Import Data</span>
-         <span *ngIf="ic.options.importing">Cancel Import</span>
-      </button>
+    <button
+       (click)="ic.doImport()"
+       [disabled]="!ic.canImport()"
+       class="fix-width-3 margin-right-1">
+      <div *ngIf="!ic.options.importing">Import Data</div>
+      <div *ngIf="ic.options.importing" class="icon-button">
+        Cancel Import
+        <span class="icon fa-spinner fa-spin fa-pulse"></span>
+      </div>
+    </button>
+    <div *ngIf="ic.options.importing">
+      {{ic.options.last_import_status}}
     </div>
   </footer>
 </div>
