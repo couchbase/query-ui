@@ -429,7 +429,7 @@
       dialogScope.searchDoc = function() {
         config.loadModule("ace/ext/cb-searchbox",
         function(e) {
-          if (dialogScope.showData && dialogScope.editor) e.Search(dialogScope.editor);
+          if (dialogScope.showData && dialogScope.editor) e.Search(dialogScope.editor,true);
           else if (!dialogScope.showData && dialogScope.meta_editor) e.Search(dialogScope.meta_editor);
           });
       }
