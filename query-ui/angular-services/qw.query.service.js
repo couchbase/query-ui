@@ -2057,7 +2057,9 @@ function getQwQueryService(
         finishQuery(query);
       },
       function err(resp) {
-        query.advice = 'Query not advisable';
+        query.advice = 'Error generating query advice';
+        if (resp.data && resp.data.errors)
+          query.advice += ": " + JSON.stringify(resp.data.errors);
         query.result = "Error getting advice."
         query.data = {adviseResult: query.result};
         query.status = "advise error";
