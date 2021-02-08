@@ -40,11 +40,13 @@ function getD3Explain($compile,$timeout,qwQueryService) {
           content = "";
 
           if (_.isString(data))
-            content = '<p class="text-small margin-left-half">' + data + '</p>';
+            content = '<p class="text-small margin-left-half">Query error: {{data}}</p>';
           else if (_.isArray(data))
             content = '<p class="text-small margin-left-half">Graphical plans are not supported for multiple query sequences. Try the plan text view.</p>';
-          else if (data["No data to display"] || data.errors)
-            content = '<p class="text-small margin-left-half">' + JSON.stringify(data) + '</p>';
+          else if (data.errors)
+            content = '<p class="text-small margin-left-half">Query error: {{data.errors}}</p>';
+          else if (data["No data to display"])
+            content = '<p class="text-small margin-left-half">Query error: {{data}}</p>';
 
           // summarize plan in panel at the top
           if (data.analysis) {
