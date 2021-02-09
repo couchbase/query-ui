@@ -334,7 +334,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
     // weird bug - sometimes the query is not up to date with the text area
     if (qc.inputEditor.getSession().getValue() != qc.lastResult().query)
-      qc.lastResult().query = qc.inputEditor.getSession().getValue();
+      qc.lastResult().set_query(qc.inputEditor.getSession().getValue());
 
     // show a placeholder when nothing has been typed
     var curSession = qc.inputEditor.getSession();
@@ -386,7 +386,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
         }
 
         if (newBytes.length > 0)
-          qc.lastResult().query = newBytes + curBytes;
+          set_query(newBytes + curBytes);
       }
 
       // after past grab focus, move to end
@@ -401,7 +401,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
       if (e[0].lines && e[0].lines.length > 1 && e[0].lines[0].length > 0 &&
           pos.row == (qc.inputEditor.getSession().getLength()-1) &&
           pos.column == line.length)
-        qc.lastResult().query = qc.lastResult().query.trim();
+        set_query(qc.lastResult().query.trim());
 
       // if they hit enter and the query ends with a semicolon, run the query
       if (qwConstantsService.autoExecuteQueryOnEnter && // auto execute enabled
@@ -487,7 +487,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   //
 
   function format() {
-    qc.lastResult().query = mode_n1ql.Instance.format(qc.lastResult().query,4);
+    set_query(mode_n1ql.Instance.format(qc.lastResult().query,4));
   }
 
   // this function is used for autocompletion of dynamically known names such
@@ -825,6 +825,20 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   }
 
   //
+  // The Ace editor uses, as its model, the query from the current selection in the query history.
+  // there seems to be an occasional race condition when setting the query in the query history, only
+  // to have it overwritten by the Ace editor. This function changes both at the same time, to avoid
+  // a race.
+  //
+
+  function set_query(new_query) {
+    if (new_query != qc.lastResult().query) {
+      qc.lastResult().set_query(new_query);
+      qc.inputEditor.getSession().setValue(new_query);
+    }
+  }
+
+  //
   // functions for running queries and saving results to a file
   //
 
@@ -845,13 +859,11 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     // remove trailing whitespace to keep query from growing, and avoid
     // syntax errors (query parser doesn't like \n after ;
     if (endsWithSemi.test(qc.lastResult().query))
-      qc.lastResult().query = qc.lastResult().query.trim();
+      set_query(qc.lastResult().query.trim());
 
     // if the user wants auto-formatting, format the query
     if (qwQueryService.get_auto_format())
       format();
-
-    //var queryStr = qc.lastResult().query;
 
     // do a sanity check to warn users about dangerous queries
     var warningPromise = null;

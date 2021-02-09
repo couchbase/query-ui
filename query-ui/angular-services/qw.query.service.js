@@ -396,6 +396,13 @@ function getQwQueryService(
       this.status == 'explain error');
   };
 
+  QueryResult.prototype.set_query = function(new_query) {
+    this.query = new_query;
+  };
+
+  QueryResult.prototype.get_query = function() {
+    return(this.query);
+  };
   //
   // clone a query object, but omit the data and plan (which might take lots of space)
   //
@@ -1330,6 +1337,7 @@ function getQwQueryService(
 
   function executeUserQuery(explainOnly,txImplicit) {
     // if the user edited an already-run query, add the edited query to the end of the history
+
     var query = getCurrentResult();
     if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
       var result = executingQueryTemplate.clone();
