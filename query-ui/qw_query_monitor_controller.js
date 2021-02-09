@@ -3,7 +3,8 @@ import mnStatsDesc from "/ui/app/mn_admin/mn_statistics_description.js";
 
 export default queryMonController;
 
-function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService, mnPoller, mnStatisticsNewService, mnHelper, mnPoolDefault) {
+function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $timeout, qwQueryService, mnPoller,
+                             mnStatisticsNewService, mnHelper, mnPoolDefault) {
 
   var qmc = this;
 
@@ -72,6 +73,8 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     step: 1,
     stats: statsNames
   };
+
+  qmc.queryMonitorStatsPoller = mnStatisticsNewService.createStatsPoller($scope);
 
   qmc.openDetailedChartDialog = openDetailedChartDialog;
 
@@ -246,7 +249,7 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     new mnPoller($scope, update).setInterval(5000).cycle(); // run update() every 5 seconds
 
     // subscribe to stats
-    qmc.statsPoller = mnStatisticsNewService.subscribeUIStatsPoller(qmc.statsConfig,$scope);
+    qmc.statsPoller = qmc.queryMonitorStatsPoller.subscribeUIStatsPoller(qmc.statsConfig,$scope);
 
     // Prevent the backspace key from navigating back. Thanks StackOverflow!
     $(document).unbind('keydown').bind('keydown', function (event) {
