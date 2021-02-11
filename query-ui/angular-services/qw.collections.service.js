@@ -69,7 +69,7 @@ function getQwCollectionsService(
       if (resp && resp.status == 200 && resp.data) {
         // get the bucket names
         qcs.buckets.length = 0;
-        qcs.buckets_ephemeral = {};
+        Object.keys(qcs.buckets_ephemeral).forEach(function(key) { delete qcs.buckets_ephemeral[key]; });
         for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
           //if (qcs.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
           qcs.buckets.push(resp.data[i].name);
