@@ -117,8 +117,10 @@ function getQwImportService(
 
   function saveDocsViaN1QL(docNum) {
     var firstDoc = docNum;
-    var base_query = "UPSERT INTO `" + qis.options.selected_bucket + '`.`' +
-      qis.options.selected_scope + '`.`' + qis.options.selected_collection + "` (KEY, VALUE) VALUES ";
+    var base_query = "UPSERT INTO `" + qis.options.selected_bucket;
+    if (qis.options.selected_scope) // for mixed clusters there may not be a scope/collection
+      base_query += '`.`' + qis.options.selected_scope + '`.`' + qis.options.selected_collection
+    base_query += '` (KEY, VALUE) VALUES ';
     var query = base_query;
 
     while (docNum < qis.options.docData.length) {

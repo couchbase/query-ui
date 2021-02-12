@@ -61,7 +61,7 @@
              ng-disabled="!qc.hasNext()">
           </span>
         </span>
-        <span class="wb-use">
+        <span class="wb-use" ng-if="qc.compat.atLeast70">
           <select
              ng-model="qc.qqs.options.query_context_bucket"
              ng-change="qc.qqs.query_context_bucket_changed()"
@@ -96,7 +96,21 @@
               <span class="icon fa-spinner fa-spin fa-pulse"></span>
             </div>
           </button>
-          <div
+          <div ng-if="!qc.compat.atLeast70" class="padding-left-half padding-right-half">
+              <button
+                 ng-disabled="qc.lastResult().busy"
+                 ng-click="qc.query({explainOnly: true})"
+                 class="outline tight">
+                Explain
+              </button>
+              <button ng-if="qc.isEnterprise()"
+                      ng-disabled="qc.lastResult().busy"
+                      ng-click="qc.runAdviseOnLatest()"
+                      class="outline tight">
+                 Advise
+              </button>
+          </div>
+          <div ng-if="qc.compat.atLeast70"
              class="cbui-drawer"
              ng-class="{open : poolDefault.openDrawer}">
             <div
@@ -256,7 +270,7 @@
     </div>
     <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body narrow-scrollbar">
       <div class="row margin-bottom-half">
-        <h5>Data Insights <small class="resp-hide-med">buckets, scopes, collections</small></h5>
+        <h5>Data Insights <small class="resp-hide-med" ng-if="qc.compat.atLeast70">buckets, scopes, collections</small></h5>
         <div class="insights-sidebar-expand" ng-click="qc.toggleAnalysisSize()">
           <span ng-if="!qc.analysisExpanded" class="icon fa-expand" title="expand"></span>
           <span ng-if="qc.analysisExpanded" class="icon fa-compress" title="contract"></span>
@@ -266,7 +280,7 @@
       <section>
         <span ng-repeat="bucket in qc.buckets">
           <!-- div bucket-display="bucket"></div-->
-          <div bucket-collections-display="bucket"></div>
+          <div bucket-collections-display="bucket" compat="qc.compat"></div>
         </span>
       </section>
 

@@ -21,6 +21,8 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
   qc.version = "1.0.9 (DP 9)";
 
+  qc.compat = mnPoolDefault.export.compat;
+
   //
   // alot of state is provided by the qwQueryService
   //

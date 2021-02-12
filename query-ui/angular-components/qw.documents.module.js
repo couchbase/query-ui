@@ -40,7 +40,7 @@ let documentsStates = [
       name: 'app.admin.docs.editor',
       data: {
         title: "Documents",  // appears in breadcrumbs in title bar
-        compat: "atLeast70"    // Cheshire Cat
+        //compat: "atLeast70"    // Cheshire Cat
       },
       params: { // can parameters be sent via the URL?
         bucket: {
@@ -68,7 +68,7 @@ let documentsStates = [
       data: {
 //    permissions: "cluster.bucket['.'].collections.read", // restricted by permissions?
         title: "Documents",  // appears in breadcrumbs in title bar
-        compat: "atLeast70"    // Cheshire Cat
+ //       compat: "atLeast70"    // Cheshire Cat
       },
       views: {
         "main@app.admin": {

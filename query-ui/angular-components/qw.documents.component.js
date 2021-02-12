@@ -6,7 +6,7 @@ import {UIRouter}                                        from '/ui/web_modules/@
 import js_beautify                                       from "/ui/web_modules/js-beautify.js";
 import _                                                 from "/ui/web_modules/lodash.js";
 
-import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import {MnPermissions, MnPoolDefault}                    from '/ui/app/ajs.upgraded.providers.js';
 
 import { Subject } from '/ui/web_modules/rxjs.js';
 
@@ -36,6 +36,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     return [
       ChangeDetectorRef,
       MnPermissions,
+      MnPoolDefault,
       QwCollectionsService,
       QwDialogService,
       QwFixLongNumberService,
@@ -83,6 +84,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   constructor(
     changeDetectorRef,
     mnPermissions,
+    mnPoolDefault,
     qwCollectionsService,
     qwDialogService,
     qwFixLongNumberService,
@@ -95,6 +97,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     var dec = {};
     this.dec = dec;
     dec.rbac = mnPermissions.export;
+    dec.compat = mnPoolDefault.export.compat;
     dec.docViewer = function() {
       return dec.rbac.cluster.collection['.:.:.'].data.docs.read &&
       dec.rbac.cluster.collection['.:.:.'].collections.read;
@@ -233,12 +236,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         return (false);
       }
 
-      if (!dec.options.selected_scope) {
+      if (dec.compat.atLeast70 && !dec.options.selected_scope) {
         dec.options.current_result = "No scope selected.";
         return (false);
       }
 
-      if (!dec.options.selected_collection) {
+      if (dec.compat.atLeast70 && !dec.options.selected_collection) {
         dec.options.current_result = "No collection selected.";
         return (false);
       }
@@ -462,9 +465,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     function deleteDoc_rest(row) {
-      var Url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-        "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
-        "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+      var Url = get_base_url() +
         "/docs/" + myEncodeURIComponent(dec.options.current_result[row].id);
 
       return $http.delete(Url, {method: "DELETE", url: Url});
@@ -580,9 +581,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
 
     function saveDoc_rest(row, newJson, newKey) {
-      var Url = "/pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-        "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
-        "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+      var Url = get_base_url() +
         "/docs/" + (newKey ? myEncodeURIComponent(newKey) : myEncodeURIComponent(dec.options.current_result[row].id));
 
       if (newJson.length > largeDoc) {
@@ -725,12 +724,16 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // create a query based on either limit/skip or where clause
 
       // can't do anything without a bucket, scope, and collection
-      if (!dec.options.selected_bucket || !dec.options.selected_scope || !dec.options.selected_collection)
+      if (!dec.options.selected_bucket ||
+        (dec.compat.atLeast70 && (!dec.options.selected_scope || !dec.options.selected_collection)))
         return;
 
       // start making a query that only returns doc IDs
-      var query = 'select meta().id from `' + dec.options.selected_bucket + '`.`' +
-        dec.options.selected_scope + '`.`' + dec.options.selected_collection + '` data ';
+      var query = 'select meta().id from `' + dec.options.selected_bucket;
+      // no scopes/collections for mixed clusters
+      if (dec.options.selected_scope)
+        query += '`.`' + dec.options.selected_scope + '`.`' + dec.options.selected_collection;
+      query += '` data ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
@@ -824,6 +827,20 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
+    // base URL for all REST calls given selected bucket, scope, collection
+    //
+    // for mixed clusters, we might not have a scope/collection
+    //
+
+    function get_base_url() {
+      var url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket);
+      if (dec.options.selected_scope)
+        url += "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
+          "/collections/" + myEncodeURIComponent(dec.options.selected_collection);
+      return url;
+    }
+
+    //
     // given an array of IDs, get the documents, metadata, and xattrs for each ID, and put
     // them into the current result
     //
@@ -836,9 +853,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.options.current_result.length = idArray.length;
 
       for (var i = 0; i < idArray.length; i++) {
-        var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-          "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
-          "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+        var rest_url = get_base_url() +
           "/docs/" + myEncodeURIComponent(idArray[i]);
         //console.log("  url: " + rest_url);
 
@@ -1018,9 +1033,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
 
       // otherwise use skip, offset, and optionally start & end keys
-      var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(dec.options.selected_bucket) +
-        "/scopes/" + myEncodeURIComponent(dec.options.selected_scope) +
-        "/collections/" + myEncodeURIComponent(dec.options.selected_collection) +
+      var rest_url = get_base_url() +
         "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
 
       if (!dec.options.show_id && dec.options.doc_id_start)
@@ -1078,21 +1091,35 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     function has_prim() {
-      if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection &&
+      var scope = dec.options.selected_scope, collection = dec.options.selected_collection;
+      // no collections on mixed clusters
+      if (!dec.compat.atLeast70) {
+        scope = "_default";
+        collection = "_default";
+      }
+
+      if (dec.options.selected_bucket && scope && collection &&
         dec.indexes[dec.options.selected_bucket] &&
-        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope] &&
-        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection])
-        return dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection].primary;
+        dec.indexes[dec.options.selected_bucket][scope] &&
+        dec.indexes[dec.options.selected_bucket][scope][collection])
+        return dec.indexes[dec.options.selected_bucket][scope][collection].primary;
       else
         return false;
     }
 
     function has_sec() {
-      if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection &&
+      var scope = dec.options.selected_scope, collection = dec.options.selected_collection;
+      // no collections on mixed clusters
+      if (!dec.compat.atLeast70) {
+        scope = "_default";
+        collection = "_default";
+      }
+
+      if (dec.options.selected_bucket && scope && collection &&
         dec.indexes[dec.options.selected_bucket] &&
-        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope] &&
-        dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection])
-        return dec.indexes[dec.options.selected_bucket][dec.options.selected_scope][dec.options.selected_collection].secondary;
+        dec.indexes[dec.options.selected_bucket][scope] &&
+        dec.indexes[dec.options.selected_bucket][scope][collection])
+        return dec.indexes[dec.options.selected_bucket][scope][collection].secondary;
       else
         return false;
     }

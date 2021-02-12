@@ -144,7 +144,7 @@
     <div class="column">
       <button
          type="submit" value="submit"
-         [disabled]="searchForm.invalid || !dec.options.selected_bucket || !dec.options.selected_collection"
+         [disabled]="searchForm.invalid || !dec.options.selected_bucket || (dec.compat.atLeast70 && !dec.options.selected_collection)"
          (click)="dec.retrieveDocs()"
          class="fix-width-3">
           Retrieve Docs

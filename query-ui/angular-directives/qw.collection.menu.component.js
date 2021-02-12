@@ -11,10 +11,9 @@ import { ViewEncapsulation,
   NgModule,
   Renderer2 } from '/ui/web_modules/@angular/core.js';
 import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
-
-import { CommonModule } from '/ui/web_modules/@angular/common.js';
-
-import { Subject } from '/ui/web_modules/rxjs.js';
+import { MnPoolDefault }            from '/ui/app/ajs.upgraded.providers.js';
+import { CommonModule }             from '/ui/web_modules/@angular/common.js';
+import { Subject }                  from '/ui/web_modules/rxjs.js';
 
 import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
 
@@ -35,10 +34,11 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
   static get parameters() { return [
     ChangeDetectorRef,
+    MnPoolDefault,
     QwCollectionsService
   ] }
 
-  constructor(changeDetectorRef,qwCollectionsService) {
+  constructor(changeDetectorRef,mnPoolDefault,qwCollectionsService) {
     super();
     this.cdr = changeDetectorRef;
     this.qwCollectionsService = qwCollectionsService;
@@ -54,6 +54,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.scopes = {};      // scopes and collections indexed by bucket name
     this.collections = {};
 
+    this.compat = mnPoolDefault.export.compat;
+
     this.scopes_subject = new Subject();
     this.collections_subject = new Subject();
   }
@@ -61,8 +63,10 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   ngOnInit() {
     if (this.initialSelection) {
       this.selected_bucket = this.initialSelection.selected_bucket;
-      this.selected_scope = this.initialSelection.selected_scope;
-      this.selected_collection = this.initialSelection.selected_collection;
+      if (this.compat.atLeast70) {
+        this.selected_scope = this.initialSelection.selected_scope;
+        this.selected_collection = this.initialSelection.selected_collection;
+      }
     }
     this.qwCollectionsService.refreshBuckets().then(meta => this.bucketListChangedCallback(meta));
   }
@@ -81,7 +85,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
 
   notifyChange() {
-    var allSelected = this.selected_bucket && this.selected_scope && this.selected_collection;
+    var allSelected = this.selected_bucket &&
+      (!this.compat.atLeast70 || (this.selected_scope && this.selected_collection));
     var selection = {
       bucket: allSelected ? this.selected_bucket : null,
       scope: allSelected ? this.selected_scope : null,
@@ -115,8 +120,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.update_scopes_collections_menu();
     this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
 
-    if (this.selected_bucket)
-      this.qwCollectionsService.getScopesForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
+    if (this.selected_bucket && this.compat.atLeast70)
+        this.qwCollectionsService.getScopesForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
     else
       this.notifyChange();
   }
@@ -175,8 +180,10 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       this.collections = {};
       this.scopes = {};
     } else {
-      if (this.selected_bucket)
+      if (this.selected_bucket && this.compat.atLeast70)
         this.qwCollectionsService.refreshScopesAndCollectionsForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
+      else
+        this.notifyChange();
     }
 
     this.update_scopes_collections_menu();

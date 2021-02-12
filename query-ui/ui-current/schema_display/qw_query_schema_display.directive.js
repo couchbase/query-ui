@@ -140,7 +140,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
 
   return {
     restrict: 'A',
-    scope: { bucket: '=bucketCollectionsDisplay' },
+    scope: { bucket: '=bucketCollectionsDisplay', compat: '=compat' },
     //templateUrl: 'template/bucket-display.tmpl',
     template:
       '<h5 class="row">' +
@@ -148,6 +148,18 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
       ' <small ng-if="bucket.collections.length > 0"> {{bucket.collections.length' + '}} collection<span ng-hide="bucket.collections.length == 1">s</span></small>' +
       '</h5>' +
       '<div ng-if="bucket.expanded" class="text-smaller margin-bottom-half">' +
+      //   for mixed clusters, a bucket will have its own schema, otherwise it will be at the collection level
+      '  <div ng-if="!compat.atLeast70">' +
+      '    <div ng-if="bucket.schema_error">{{bucket.schema_error}}</div>' +
+      '    <span ng-repeat="flavor in bucket.schema">' +
+      '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure tight row" ng-class="{disclosed: flavor.Show}" ' +
+      '           ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
+      '        <span>{{flavor.Flavor || "schema " + ($index+1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span>' +
+      '        <span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
+      '      <div ng-show="flavor.Show && flavor.hasFields !== true"><ul><li>No fields found.</div>' +
+      '          <schema-display ng-if="!flavor.Summary && flavor.Show" schema="flavor" path=""></schema-display>' +
+      '    </span>' +
+      '  </div>' +
       //   for each scope in the bucket...
       '  <div ng-repeat="scope in bucket.scopeArray" class="insights-scope">' +
       '    <h6 ng-click="changeScopeExpanded(scope)" class="margin-bottom-quarter higher tight" ' +

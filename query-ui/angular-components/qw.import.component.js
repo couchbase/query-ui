@@ -6,7 +6,7 @@ import { QwImportService }         from '../angular-services/qw.import.service.j
 import { QwDialogService }         from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 import { QwValidateQueryService }  from '../angular-services/qw.validate.query.service.js';
 import {FormControl, FormGroup}    from '/ui/web_modules/@angular/forms.js';
-import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import {MnPermissions, MnPoolDefault } from '/ui/app/ajs.upgraded.providers.js';
 
 import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "/ui/web_modules/d3-dsv.js";
 
@@ -27,6 +27,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     return [
       ChangeDetectorRef,
       MnPermissions,
+      MnPoolDefault,
       QwDialogService,
       QwImportService,
       QwValidateQueryService,
@@ -39,13 +40,14 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   }
 
 
-  constructor(cdr, mnPermissions, qwDialogService, qwImportService, validateQueryService) {
+  constructor(cdr, mnPermissions, mnPoolDefault, qwDialogService, qwImportService, validateQueryService) {
     super();
 
     var ic = this;
     var qis = qwImportService;
     ic.cdr = cdr;
     this.ic = ic;
+    this.compat = mnPoolDefault.export.compat;
 
     this.configForm = new FormGroup({
         useKey: new FormControl()
@@ -120,7 +122,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     // can we import?
     ic.canImport = function() {
       return ic.options.docData.length && ic.options.selected_bucket && ic.validQueryService() &&
-        ic.options.selected_collection && ic.options.selected_scope;
+        (!this.compat.atLeast70 || (ic.options.selected_collection && ic.options.selected_scope));
     };
 
     // regex to figure out what format the data appears to be

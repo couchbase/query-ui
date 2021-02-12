@@ -1,16 +1,16 @@
 import {NgbModal} from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
 import _ from '/ui/web_modules/lodash.js';
 
-import {QwCollectionsService} from "/_p/ui/query/angular-services/qw.collections.service.js";
-import {QwConstantsService} from "/_p/ui/query/angular-services/qw.constants.service.js";
+import {QwCollectionsService}   from "/_p/ui/query/angular-services/qw.collections.service.js";
+import {QwConstantsService}     from "/_p/ui/query/angular-services/qw.constants.service.js";
 import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
 import {QwValidateQueryService} from '/_p/ui/query/angular-services/qw.validate.query.service.js';
-import {QwQueryPlanService} from "/_p/ui/query/angular-services/qw.query.plan.service.js";
-import {$http} from '/_p/ui/query/angular-services/qw.http.js';
+import {QwQueryPlanService}     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
+import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
 
 import {QwDialogService} from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 
-import {MnPendingQueryKeeper, MnPools, MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import {MnPendingQueryKeeper, MnPools, MnPoolDefault, MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 import {MnAdminService} from "/ui/app/mn.admin.service.js";
 
 export {QwQueryService};
@@ -30,6 +30,7 @@ class QwQueryService {
       MnAdminService,
       MnPendingQueryKeeper,
       MnPermissions,
+      MnPoolDefault,
       MnPools,
       NgbModal,
       QwCollectionsService,
@@ -46,6 +47,7 @@ class QwQueryService {
     mnAdminService,
     mnPendingQueryKeeper,
     mnPermissions,
+    mnPoolDefault,
     mnPools,
     ngbModal,
     qwCollectionsService,
@@ -60,6 +62,7 @@ class QwQueryService {
         mnAdminService,
         mnPendingQueryKeeper,
         mnPermissions,
+        mnPoolDefault,
         mnPools,
         ngbModal,
         qwCollectionsService,
@@ -78,6 +81,7 @@ function getQwQueryService(
   mnAdmin,
   mnPendingQueryKeeper,
   mnPermissions,
+  mnPoolDefault,
   mnPools,
   ngbModal,
   qwCollectionsService,
@@ -91,6 +95,7 @@ function getQwQueryService(
   var qwQueryService = {};
   qwQueryService.validateQueryService = validateQueryService;
   qwQueryService.queryPlanService = qwQueryPlanService;
+  qwQueryService.compat = mnPoolDefault.export.compat;
 
   //
   // remember which tab is selected for output style: JSON, table, or tree
@@ -2380,6 +2385,7 @@ function getQwQueryService(
     if (!validateQueryService.valid())
       return;
 
+    var bucketsToInfer = [];
     // for those buckets that are valid for querying, add them to the list
     validateQueryService.validBuckets().forEach(bucketName => {
 
@@ -2405,10 +2411,19 @@ function getQwQueryService(
 
         // if the bucket is expanded, get the scopes and collections
         if (bucket.expanded) {
-          updateBucketMetadata(bucket);
+          if (qwQueryService.compat.atLeast70)
+            updateBucketMetadata(bucket);
+          else {
+            bucket.schema_error = "waiting for schema...";
+            bucketsToInfer.push({bucket: bucket});
+          }
         }
       }
     });
+
+    // for mixed clusters, infer bucket schemas directly
+    if (!qwQueryService.compat.atLeast70 && bucketsToInfer.length > 0)
+      getCollectionsSchemasBackground(bucketsToInfer,0);
 
     refreshAutoCompleteArray();
   }
@@ -2429,6 +2444,10 @@ function getQwQueryService(
 
   function updateBucketMetadata(bucket) {
     var bucketName = bucket.name;
+    // in mixed cluster mode, there are no scopes or collections
+    if (!qwQueryService.compat.atLast70 && bucket.schema.length == 0 && !bucket.schema_error)
+      getSchemaForBucket(bucket);
+
     // for the bucket, get the scopes and collections
     return qwCollectionsService.getScopesForBucket(bucketName).then(function (metadata) {
 
@@ -2641,6 +2660,8 @@ function getQwQueryService(
         //console.log("Done with schema for: " + bucket.id);
         //console.log("Schema status: " + response.status);
         //console.log("Schema data: " + JSON.stringify(response.data));
+
+        dest.schema_error = null;
 
         if (_.isArray(response.data.warnings) && response.data.warnings.length > 0)
           dest.schema_error = response.data.warnings[0].msg;

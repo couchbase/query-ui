@@ -1,17 +1,17 @@
 <div class="column">
-  <label class="controls margin-bottom-0">{{label}}&nbsp;<small>bucket.scope.collection</small></label>
+  <label class="controls margin-bottom-0">{{label}}&nbsp;<small *ngIf="compat.atLeast70">bucket.scope.collection</small></label>
   <div>
     <select (change)="bucketChanged($event)">
       <option *ngFor="let name of buckets" [selected]="name==selected_bucket" [disabled]="disabled">
         {{name}}
       </option>
     </select>
-    <select (change)="scopeChanged($event)">
+    <select (change)="scopeChanged($event)" *ngIf="compat.atLeast70">
       <option *ngFor="let name of scopes_subject | async" [selected]="name==selected_scope" [disabled]="disabled">
         {{name}}
       </option>
     </select>
-    <select (change)="collectionChanged($event)">
+    <select (change)="collectionChanged($event)"  *ngIf="compat.atLeast70">
       <option *ngFor="let name of collections_subject | async" [selected]="name==selected_collection" [disabled]="disabled">
         {{name}}
       </option>
