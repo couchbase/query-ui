@@ -27,7 +27,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],
-      inputs: ['label','initialSelection','disabled','callback'],
+      inputs: ['label','initialSelection','disabled','callback','allowEmpty'],
       outputs: ['onSelection']
     })
   ]}
@@ -106,8 +106,14 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
   bucketListChangedCallback(meta) {
     this.buckets = meta.buckets;
-    this.scopes = this.scopes;
+    this.scopes = meta.scopes;
     this.collections = meta.collections;
+
+    if (this.allowEmpty) {
+      this.buckets = Array.from(this.buckets);
+      this.buckets.unshift('');
+    }
+
     // if our previously selected bucket has been removed, reset
     if (this.selected_bucket && this.buckets.indexOf(this.selected_bucket) == -1)
       this.selected_bucket = "";
@@ -130,6 +136,11 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.buckets = meta.buckets;
     this.scopes = meta.scopes;
     this.collections = meta.collections;
+
+    if (this.allowEmpty) {
+      this.buckets = Array.from(this.buckets);
+      this.buckets.unshift('');
+    }
 
     this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
 
@@ -179,6 +190,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       this.selected_collection = null;
       this.collections = {};
       this.scopes = {};
+      this.notifyChange();
     } else {
       if (this.selected_bucket && this.compat.atLeast70)
         this.qwCollectionsService.refreshScopesAndCollectionsForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));

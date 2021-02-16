@@ -71,6 +71,7 @@
       <div class="formrow">
         <qw-collection-menu label="Destination"
                             [initialSelection]="ic.options"
+                            [allowEmpty]="true"
                             (onSelection)="ic.collectionMenuCallback($event)"
                             [disabled]="ic.options.importing">
         </qw-collection-menu>
