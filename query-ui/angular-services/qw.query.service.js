@@ -1998,9 +1998,11 @@ function getQwQueryService(
 
     //
     // let's run ADVISE on the query to see if there's a better way to do it
+    // but only if we're in EE mode
     //
 
-    if (!explainOnly && !queryIsExplain && !queryIsAdvise && !queryIsTransaction) {
+    if (!explainOnly && !queryIsExplain && !queryIsAdvise && !queryIsTransaction &&
+      mnPools.export.isEnterprise) {
       var advise_promise = runAdvise(queryText, newResult);
       if (advise_promise != null)
         promises.push(advise_promise);
