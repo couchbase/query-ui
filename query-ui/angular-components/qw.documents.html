@@ -22,19 +22,21 @@
   <form name="searchForm">
   <div [formGroup]="searchForm" class="controls resp-med">
 
-    <div class="column">
-      <qw-collection-menu label="Keyspace" [initialSelection]="dec.options" (onSelection)="dec.collectionMenuCallback($event)"></qw-collection-menu>
-    </div>
+      <qw-collection-menu
+         label="Keyspace"
+         [initialSelection]="dec.options"
+         (onSelection)="dec.collectionMenuCallback($event)">
+      </qw-collection-menu>
 
     <div class="column">
       <div>
-        <label class="inline">Limit</label>
+        <h5 class="inline">Limit&nbsp;</h5>
         <span
            class="fa-stack icon-info"
            ngbTooltip="How many documents to retrieve at once (max 200)."
            placement="auto"
            tooltip-append-to-body="true"
-           triggers="click:blur">
+           tooltip-trigger="mouseenter">
           <span class="icon fa-circle-thin fa-stack-2x"></span>
           <span class="icon fa-info fa-stack-1x"></span>
         </span>
@@ -48,15 +50,18 @@
          (submit)="dec.retrieveDocs()"
          formControlName="limit"
          [ngClass]="{'ng-invalid-number': searchForm.get('limit').invalid}"
-         >
+         class="fix-width-1">
     </div>
 
     <div class="column">
       <div>
-        <label class="inline">Offset</label>
-        <span class="fa-stack icon-info"
+        <h5 class="inline">Offset&nbsp;</h5>
+        <span
+           class="fa-stack icon-info"
            ngbTooltip="Start showing documents after this many in the entire set."
-           placement="top" tooltip-append-to-body="true" tooltip-trigger="mouseenter">
+           placement="top"
+           tooltip-append-to-body="true"
+           tooltip-trigger="mouseenter">
             <span class="icon fa-circle-thin fa-stack-2x"></span>
             <span class="icon fa-info fa-stack-1x"></span>
         </span>
@@ -69,15 +74,13 @@
          [attr.disabled]="(dec.options.show_id && dec.options.doc_id) || null"
          formControlName="offset"
          [ngClass]="{'ng-invalid-number': searchForm.get('offset').invalid}"
-         >
+         class="fix-width-1">
     </div>
 
     <div class="column flex-grow-1">
       <div class="row row-min">
         <span>
-          <label class="inline">
-            Document ID
-          </label>
+          <h5 class="inline">Document ID&nbsp;</h5>
           <span
              class="fa-stack icon-info"
              ngbTooltip="Find a specific document, specify a range of IDs, or leave blank to retrieve all or use a WHERE clause."
@@ -117,11 +120,10 @@
     </div>
 
     <div class="column flex-grow-2">
-      <label
-         class="inline"
+      <h5 class="inline"
          ng-disabled="!dec.can_use_n1ql() || (dec.options.doc_id || dec.options.doc_id_start || dec.options.doc_id_end)">
-        N1QL WHERE
-      </label>
+        N1QL WHERE&nbsp;
+      </h5>
       <span
          class="fa-stack icon-info"
          ngbTooltip="Show only documents that satisfy a N1QL WHERE clause such as meta().id = &quot;some_id&quot; and type = &quot;a_type&quot;"
@@ -164,7 +166,7 @@
         <span *ngIf="!dec.resultSize()">No </span>
        Results for&nbsp;</strong> <em>{{dec.options.current_query}}</em>
     </div>
-    <div class="row text-small resp-margin-sml">
+    <div class="row text-small margin-right-half resp-margin-sml nowrap">
       <label for="show_tables" class="toggle-control">
         <input (change)="dec.options.config_notify()"
            type="checkbox" id="show_tables"
