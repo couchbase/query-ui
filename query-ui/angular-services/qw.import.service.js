@@ -2,7 +2,7 @@ import {QwDialogService} from '/_p/ui/query/angular-directives/qw.dialog.service
 import {QwQueryService} from '/_p/ui/query/angular-services/qw.query.service.js';
 import {$http} from '/_p/ui/query/angular-services/qw.http.js';
 import _ from '/ui/web_modules/lodash.js';
-import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import {MnPermissions, MnAlertsService} from '/ui/app/ajs.upgraded.providers.js';
 
 export {QwImportService};
 
@@ -15,6 +15,7 @@ class QwImportService {
 
   static get parameters() {
     return [
+      MnAlertsService,
       MnPermissions,
       QwDialogService,
       QwQueryService,
@@ -23,11 +24,13 @@ class QwImportService {
   }
 
   constructor(
+    mnAlertsService,
     mnPermissions,
     qwDialogService,
     qwQueryService,
     $http) {
     Object.assign(this, getQwImportService(
+      mnAlertsService,
       mnPermissions,
       qwDialogService,
       qwQueryService,
@@ -39,6 +42,7 @@ class QwImportService {
 // so that they can continue to run even if the user navigates away to a different part of the UI
 
 function getQwImportService(
+  mnAlertsService,
   mnPermissions,
   qwDialogService,
   qwQueryService,
@@ -145,7 +149,9 @@ function getQwImportService(
 
       // can't import very big documents
       if (docText.length > maxDocSize) {
-        qwDialogService.showErrorDialog("Import Error at Document " + docNum, "GUI can't import documents " + maxDocSizeMB + "MiB or larger, use cbimport.", null, true);
+        qis.options.last_import_status = "Import Error at Document " + docNum + ", GUI can't import documents " +
+          maxDocSizeMB + "MiB or larger, use cbimport.";
+        mnAlertsService.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
         qis.options.importing = false;
         return;
       }
@@ -164,8 +170,8 @@ function getQwImportService(
             if (resp && resp.data && resp.data.errors) {
               if (resp.data.errors.length > 5) // avoid super long error messages
                 resp.data.errors.length = 5;
-              qwDialogService.showErrorDialog("Import Error", null, resp.data.errors, true);
-              qis.options.last_import_status = "Error importing documents.";
+              qis.options.last_import_status = "Error importing documents: " + JSON.stringify(resp.data.errors);
+              mnAlertsService.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
               //console.log(query.substr(0,250));
               qis.options.importing = false;
             } else {
@@ -177,7 +183,7 @@ function getQwImportService(
               // otherwise done with import
               else {
                 qis.options.importing = false;
-                qwDialogService.showInfoDialog("Import Complete", qis.options.last_import_status);
+                mnAlertsService.formatAndSetAlerts(qis.options.last_import_status,'success');
                 resetOptions();
               }
             }
@@ -192,11 +198,12 @@ function getQwImportService(
                 qis.options.last_import_status = "Error importing docs in range: " + firstDoc + "-" + docNum + ": " + JSON.stringify(result.data.errors[0].msg);
               else
                 qis.options.last_import_status = "Error importing docs in range: " + firstDoc + "-" + docNum + ": " + JSON.stringify(result.data.errors);
-              qwDialogService.showErrorDialog("Import Failed", qis.options.last_import_status, null, true);
             } else if (result && result.message)
-              qwDialogService.showErrorDialog("Import Failed, status: " + result.status, result.message, null, true);
+              qis.options.last_import_status = "status: " + result.status + ", " + result.message;
             else
-              qwDialogService.showErrorDialog("Import Failed", "Import failed with unknown status from server.", null, true);
+              qis.options.last_import_status = "unknown status from server.";
+
+            mnAlertsService.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
           });
         return;
       }
