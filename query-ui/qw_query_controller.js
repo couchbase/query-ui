@@ -998,6 +998,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     var np = dialogScope.options.named_parameters;
     dialogScope.options.positional_parameters = [];
     dialogScope.options.named_parameters = [];
+    dialogScope.isEnterprise = qc.isEnterprise();
 
     // the named & positional parameters are values, convert to JSON
     if (pp)

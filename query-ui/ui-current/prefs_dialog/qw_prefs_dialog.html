@@ -29,7 +29,7 @@
         <input id="for-auto-format" type="checkbox" ng-model="options.auto_format">
         <label for="for-auto-format" class="checkbox">Automatically format queries before executing</label>
       </div>
-      <div class="formrow" ng-if="mode != 'analytics'">
+      <div class="formrow" ng-if="mode != 'analytics' && isEnterprise">
         <input id="for-cbo" type="checkbox" ng-model="options.use_cbo">
         <label for="for-cbo" class="checkbox">Use Cost-Based Optimizer</label>
       </div>
