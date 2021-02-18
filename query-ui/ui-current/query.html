@@ -41,7 +41,7 @@
     <div class="wb-query-editor">
 <!-- Editor "header row" ----------------------------------------------------->
       <div class="wb-query-editor-header"  ng-click="qc.handleClick('editor')">
-        <h4>Query Editor</h4>
+        <h5>Query Editor</h5>
         <span class="wb-history-controls">
           <span
              title="View previous queries & results" ng-click="qc.prev()"
@@ -198,22 +198,23 @@
 
 <!-- query results ------------------------------------------------------------>
     <div  ng-click="qc.handleClick('results')" class="wb-results-header">
-      <h4>Query Results
-        <span
-           class="icon fa-copy"
+      <span class="row">
+        <h5 class="margin-right-half">Query Results</h5>
+        <a
            ng-click="qc.copyResultAsCSV()"
            title="Copy results in tab-separated format">
-        </span>
+          <span class="icon fa-copy"></span>
+        </a>
         <span
            ng-if="qc.lastResult().warnings"
            tooltip-trigger="mouseenter"
            tooltip-append-to-body="true"
            class="fa-warning icon force-orange-3 cursor-pointer"
-           uib-tooltip-html="{{qc.lastResult().warnings}}">
-        </span>
-        <span class="icon fa-search" ng-if="qc.isSelected(1)" ng-click="qc.aceSearchOutput()"></span>
-      </h4>
-
+           uib-tooltip-html="{{qc.lastResult().warnings}}"></span>
+        <a
+           ng-if="qc.isSelected(1)"
+           ng-click="qc.aceSearchOutput()"><span class="icon fa-search"></span></a>
+      </span>
       <span class="pills">
         <a ng-click="qc.selectTab(2)"
            ng-class="{selected: qc.isSelected(2)}">Table</a>
@@ -268,7 +269,7 @@
     <div ng-if="qc.qqs.bucket_errors" class="insights-sidebar-body">
       {{qc.qqs.bucket_errors}}
     </div>
-    <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body narrow-scrollbar">
+    <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body">
       <div class="row margin-bottom-half">
         <h5>Data Insights <small class="resp-hide-med" ng-if="qc.compat.atLeast70">buckets, scopes, collections</small></h5>
         <div class="insights-sidebar-expand" ng-click="qc.toggleAnalysisSize()">
@@ -279,7 +280,6 @@
 
       <section>
         <span ng-repeat="bucket in qc.buckets">
-          <!-- div bucket-display="bucket"></div-->
           <div bucket-collections-display="bucket" compat="qc.compat"></div>
         </span>
       </section>
@@ -289,7 +289,7 @@
         <button
            title="Refresh bucket insights"
            ng-click="qc.updateBuckets()"
-           class="outline"
+           class="outline tight"
            ng-disabled="qc.qqs.loadingBuckets">
           Refresh &nbsp;
           <span class="icon fa-refresh"></span>

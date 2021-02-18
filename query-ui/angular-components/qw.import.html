@@ -41,7 +41,7 @@
             file format details
           </a>
           <ng-template #fileFormatTipContent>
-            This import UI supports the following formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul>
+            Browser-based import supports these formats: <ul><li>comma-delimited (CSV)</li><li>tab-delimited (TSV)</li><li>JSON List - a JSON list, each element of which will be a separate imported document</li><li>JSON lines - one JSON document per line in the file</li></ul>
           </ng-template>
         </p>
       </div>
@@ -69,7 +69,7 @@
       </div>
 
       <div class="formrow">
-        <qw-collection-menu label="Destination"
+        <qw-collection-menu label="Keyspace"
                             [initialSelection]="ic.options"
                             [allowEmpty]="true"
                             (onSelection)="ic.collectionMenuCallback($event)"
