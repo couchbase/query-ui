@@ -164,7 +164,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
       '  <div ng-repeat="scope in bucket.scopeArray" class="insights-scope">' +
       '    <h6 ng-click="changeScopeExpanded(scope)" class="margin-bottom-quarter higher tight" ' +
       '        ng-class="{disclosure: bucket.scopeArray.length > 1, disclosed: bucket.scopeArray.length > 1 && scope.expanded}">' +
-      '       {{scope.id}} <span class="label lt-blue sup">scope</span>' +
+      '       {{scope.id}} ' +
       '    </h6>' +
       '    <div ng-if="scope.expanded || bucket.scopeArray.length == 1">' +
       '      <div ng-repeat="collection in getCollectionsForScope(bucket,scope)" class="insights-collection"' +
@@ -263,12 +263,12 @@ function getBucketDisplay(qwQueryService,qwConstantsService,$uibModal) {
       '      <div ng-click="flavor.Show = !flavor.Show" class="disclosure row" ng-class="{disclosed: flavor.Show}" ' +
       '      ng-hide="flavor.Summary" ng-show="flavor[\'%docs\']">' +
       '      <span>{{flavor.Flavor || "schema " + ($index+1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span><span>{{flavor[\'%docs\'] | number:1}}{{"%"}}</span></div>' +
-      '      <div ng-show="flavor.Show && flavor.hasFields !== true"><ul><h6>No fields found.</li></ul></div>' +
+      '      <div ng-show="flavor.Show && flavor.hasFields !== true"><ul>No fields found.</li></ul></div>' +
 
       '      <schema-display ng-if="!flavor.Summary && flavor.Show" schema="flavor" path=""></schema-display>' +
       '      </li>' +
 
-    '      <h6 ng-show="bucket.indexes.length > 0">' +
+    '      <div ng-show="bucket.indexes.length > 0">' +
       '        <div ng-click="indexes.Show = !indexes.Show" class="disclosure row text-smallish" ng-class="{disclosed: indexes.Show}">' +
       '          <span class="index-header">Indexes</span></div>' +
       '        <span class="text-smallsh indent-1-5" ng-show="indexes.Show" ng-repeat="index in bucket.indexes">' +
@@ -363,31 +363,31 @@ function getSchemaDisplay(MyRecursionHelper) {
     scope: { schema: '=schema', path:"=path"},
     template:
     '<div class="insights-sidebar-schema">' +
-      '  <h6 ng-repeat="(name,  field) in schema.properties">' +
+      '  <span ng-repeat="(name,  field) in schema.properties">' +
       '    <div ng-class="{\'indexed\': field.indexed}" ' +
       '     ng-attr-title="{{showSamples(field)}}"> {{name}} {{showFieldType(field)}}</div>' +
       '    <div ng-if="field.type==\'object\'">' +
       '      <schema-display schema="field" path="path + name + \'.\' "></schema-display></div>' +
       '    <div ng-if="field.type==\'array\' && field.items.length">' +
-      '      <div class="insights-sidebar-schema"><h6 class="items-top" ng-repeat="schema in field.items">item {{schema.type}}' +
-      '        <span ng-if="schema.$schema || schema.type == \'array\'">:<schema-display schema="schema" path="path + name + \'[]\' "></schema-display></h6></span>' +
+      '      <div class="insights-sidebar-schema"><span class="items-top" ng-repeat="schema in field.items">item {{schema.type}}' +
+      '        <span ng-if="schema.$schema || schema.type == \'array\'">:<schema-display schema="schema" path="path + name + \'[]\' "></schema-display></span></span>' +
       '      </div>' +
       '    </div>' +
       '    <div ng-if="field.type==\'array\' && field.items.$schema">' +
-      '      <div class="insights-sidebar-schema"><h6 class="flex-column items-top">{{name}} subtype:' +
-      '        <schema-display schema="field.items" path="path + name + \'[]\' "></schema-display></h6>' +
+      '      <div class="insights-sidebar-schema"><span class="flex-column items-top">{{name}} subtype:' +
+      '        <schema-display schema="field.items" path="path + name + \'[]\' "></schema-display></span>' +
       '      </div>' +
       '    </div>' +
       '    <div ng-if="field.type==\'array\' && field.items.subtype">' +
       '      <schema-display schema="field.items.subtype" path="path + name + \'[]\' "></schema-display>' +
       '    </div>' +
-      '  </h6>' +
-      '  <h6 ng-if="schema.truncated">too many fields to display, list truncated...</h6>' +
+      '  </span>' +
+      '  <span ng-if="schema.truncated">too many fields to display, list truncated...</span>' +
       // if we aren't a top level schema, and see an array type, put out the types of the items of the array
-    '  <h6 class="items-top" ng-if="!schema.hasOwnProperty(\'Flavor\')" ng-repeat="subschema in schema.items">' +
+    '  <span class="items-top" ng-if="!schema.hasOwnProperty(\'Flavor\')" ng-repeat="subschema in schema.items">' +
       '    item {{subschema.type}} <span ng-hide="subschema.type">{{subschema}}</span>' +
-      '       <span ng-if="subschema.$schema || subschema.type == \'array\'">:<schema-display schema="subschema" path="path + name + \'[]\' "></schema-display></h6></span>' +
-      '  </h6>' +
+      '       <span ng-if="subschema.$schema || subschema.type == \'array\'">:<schema-display schema="subschema" path="path + name + \'[]\' "></schema-display></span></span>' +
+      '  </span>' +
       //        '  <h6>done with list</h6>' +
     // top level bare types instead of objects
     //        '  <h6 ng-if="schema.hasOwnProperty(\'Flavor\')">' +

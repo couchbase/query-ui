@@ -87,8 +87,8 @@
          ng-model="qc.lastResult().query">
       </div>
 <!-- wrapper under query editor for button and stats ------------------------->
-      <div class="wb-query-editor-footer"  ng-click="qc.handleClick('results')">
-        <span class="wb-button-wrapper nowrap">
+      <div class="wb-query-editor-footer">
+        <span class="wb-button-wrapper nowrap" ng-click="qc.handleClick('results')">
           <button ng-click="qc.query({})" class="wb-button-execute">
             <div ng-if="!qc.lastResult().busy">Execute</div>
             <div ng-if="qc.lastResult().busy" class="icon-button">
@@ -116,7 +116,7 @@
             <div
                class="cbui-drawer-opener"
                title="show more actions"
-               ng-click="poolDefault.openDrawer = true">
+               ng-click="poolDefault.openDrawer = true; $event.stopPropagation();">
               |<span class="icon fa-chevron-right"></span>
             </div>
             <div class="nowrap">
@@ -142,7 +142,7 @@
             <div
                class="cbui-drawer-closer"
                title="hide this"
-               ng-click="poolDefault.openDrawer = false">
+               ng-click="poolDefault.openDrawer = false; $event.stopPropagation();">
               <span class="icon fa-times-circle padding-half"></span>
             </div>
           </div>
@@ -269,7 +269,7 @@
     <div ng-if="qc.qqs.bucket_errors" class="insights-sidebar-body">
       {{qc.qqs.bucket_errors}}
     </div>
-    <div ng-if="!qc.qqs.bucket_errors" class="insights-sidebar-body">
+    <span ng-if="!qc.qqs.bucket_errors">
       <div class="row margin-bottom-half">
         <h5>Data Insights <small class="resp-hide-med" ng-if="qc.compat.atLeast70">buckets, scopes, collections</small></h5>
         <div class="insights-sidebar-expand" ng-click="qc.toggleAnalysisSize()">
@@ -277,12 +277,13 @@
           <span ng-if="qc.analysisExpanded" class="icon fa-compress" title="contract"></span>
         </div>
       </div>
-
-      <section>
-        <span ng-repeat="bucket in qc.buckets">
-          <div bucket-collections-display="bucket" compat="qc.compat"></div>
-        </span>
-      </section>
+      <div class="insights-sidebar-body">
+        <section>
+          <span ng-repeat="bucket in qc.buckets">
+            <div bucket-collections-display="bucket" compat="qc.compat"></div>
+          </span>
+        </section>
+      <div>
 
 <!-- bucket insights refresh button ---------------------------------------- -->
       <div class="row flex-right fix-position-br wb-refresh-btn" ng-if="!qc.fullscreen">
@@ -295,6 +296,6 @@
           <span class="icon fa-refresh"></span>
         </button>
       </div>
-    </div>
+    </span>
   </div>
 </div>
