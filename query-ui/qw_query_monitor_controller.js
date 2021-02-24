@@ -62,8 +62,12 @@ function queryMonController ($http, $rootScope, $scope, $state, $uibModal, $time
     };
   });
 
-  let statsNames = ['@query.query_requests_250ms', '@query.query_requests_500ms',
-                    '@query.query_requests_1000ms', '@query.query_requests_5000ms'];
+  let statsNames = (mnPoolDefault.export.compat.atLeast70 ?
+    ['@query.n1ql_requests_250ms', '@query.n1ql_requests_500ms',
+      '@query.n1ql_requests_1000ms', '@query.n1ql_requests_5000ms'] :
+    ['@query.query_requests_250ms', '@query.query_requests_500ms',
+      '@query.query_requests_1000ms', '@query.query_requests_5000ms'])
+  ;
   statsNames =
     mnPoolDefault.export.compat.atLeast70 ? statsNames.map(mnStatsDesc.mapping65) : statsNames;
 
