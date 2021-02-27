@@ -1,6 +1,9 @@
 // n1ql-validator.js
 
-var parser = require("./n1ql").parser;
+//var parser = require("./n1ql").parser;
+import N1qlParser from './myN1qlListener.js';
+import * as fs from 'fs';
+import * as readline from 'readline';
 
 function queryArray() {
     var queries = [
@@ -152,7 +155,7 @@ function queryArray() {
         var query = queries[i];
         try {
             console.log("\n\nParsing: \n\n" + query + "\n");
-            var result = parser.parse(query);
+            var result = N1qlParser.parse(query);
             console.log("\nresult is: \n\n" + JSON.stringify(result,null,2));
         }
         catch (err) {
@@ -163,8 +166,8 @@ function queryArray() {
 }
 
 function queryFile() {
-    var lineReader = require('readline').createInterface({
-        input: require('fs').createReadStream('/Users/eben/src/jison/examples/queries.txt')
+    var lineReader = readline.createInterface({
+        input: fs.createReadStream('/Users/eben/src/jison/examples/queries.txt')
         //input: require('fs').createReadStream('/Users/eben/src/master/query-ui/query-ui/n1ql_parser/window_queries.n1ql')
     });
 
@@ -172,7 +175,7 @@ function queryFile() {
     lineReader.on('line', function (line) {
 
         try {
-            var result = parser.parse(line);
+            var result = N1qlParser.parse(line);
             //console.log("Parsed line " + ++lineNum + " ok.");
             //console.log("Result: " + JSON.stringify(result));
             //if (result && result[0])
