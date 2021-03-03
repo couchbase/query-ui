@@ -324,8 +324,8 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
       // file format
       switch (ic.options.selectedFormat) {
-      case ic.formats[0]: command += 'csv '; break;
-      case ic.formats[1]: command += "csv --field-separator '\\t' "; break;
+      case ic.formats[0]: command += 'csv --infer-types '; break;
+      case ic.formats[1]: command += "csv --field-separator '\\t' --infer-types "; break;
       case ic.formats[2]: command += 'json --format list '; break;  // JSON List
       case ic.formats[3]: command += 'json --format lines '; break; // JSON Lines
       }
@@ -345,11 +345,16 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       if (ic.options.selected_bucket && ic.options.selected_bucket.length)
         command += "-b '" + ic.options.selected_bucket + "' ";
 
+      // scope and collection?
+      if (ic.options.selected_scope && ic.options.selected_collection)
+        command += '--scope-collection-exp "' + ic.options.selected_scope +
+          '.' + ic.options.selected_collection + '" ';
+
       // key
       if (!ic.options.useKey)
-        command += '-g #UUID# ';
+        command += '-g "#UUID#" ';
       else
-        command += '-g %' + ic.options.selectedDocIDField + '% '
+        command += '-g %' + ic.options.selectedDocIDField + '% ';
       return(command);
     }
 
