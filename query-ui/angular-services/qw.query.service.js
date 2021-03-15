@@ -2320,8 +2320,9 @@ function getQwQueryService(
   // }
 
   function updateBuckets(event, data) {
-    qwCollectionsService.refreshBuckets();
-    validateQueryService.getBucketsAndNodes(updateBucketsCallback);
+    qwCollectionsService.refreshBuckets().then(() =>
+      validateQueryService.getBucketsAndNodes(updateBucketsCallback)
+    );
   }
 
   //
@@ -2391,9 +2392,10 @@ function getQwQueryService(
     // for those buckets that are valid for querying, add them to the list
     validateQueryService.validBuckets().forEach(bucketName => {
 
+      var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucketName);
       // if we don't know about this bucket, add it
-      if (!qwQueryService.buckets.find(bucket => bucket.id == bucketName)) {
-        var bucket = {
+      if (!bucket) {
+        bucket = {
           name: bucketName,
           id: bucketName,
           expanded: isExpanded(bucketName),
@@ -2410,15 +2412,14 @@ function getQwQueryService(
         if (!bucket.id.match(needsQuotes))
           addToken(bucket.id, "bucket");
         addToken('`' + bucket.id + '`', "bucket");
-
-        // if the bucket is expanded, get the scopes and collections
-        if (bucket.expanded) {
-          if (qwQueryService.compat.atLeast70)
-            updateBucketMetadata(bucket);
-          else {
-            bucket.schema_error = "waiting for schema...";
-            bucketsToInfer.push({bucket: bucket});
-          }
+      }
+      // if the bucket is expanded, get the scopes and collections
+      if (bucket.expanded) {
+        if (qwQueryService.compat.atLeast70)
+          updateBucketMetadata(bucket);
+        else {
+          bucket.schema_error = "waiting for schema...";
+          bucketsToInfer.push({bucket: bucket});
         }
       }
     });
@@ -2451,9 +2452,11 @@ function getQwQueryService(
       getSchemaForBucket(bucket);
 
     // for the bucket, get the scopes and collections
-    return qwCollectionsService.getScopesForBucket(bucketName).then(function (metadata) {
+    return qwCollectionsService.refreshScopesAndCollectionsForBucket(bucketName).then(function (metadata) {
 
     var scopes = metadata.scopes[bucketName];
+    bucket.scopes = {}; // reset scopes and collections to empty
+    bucket.collections = [];
     if (scopes) scopes.forEach(function (scopeName) {
       if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
         addToken(scopeName, "scope");
