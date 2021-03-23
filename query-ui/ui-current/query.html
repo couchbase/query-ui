@@ -103,10 +103,11 @@
                  class="outline tight">
                 Explain
               </button>
-              <button ng-if="qc.isEnterprise()"
-                      ng-disabled="qc.lastResult().busy"
-                      ng-click="qc.runAdviseOnLatest()"
-                      class="outline tight">
+              <button
+                 ng-if="qc.isEnterprise()"
+                 ng-disabled="qc.lastResult().busy"
+                 ng-click="qc.runAdviseOnLatest()"
+                 class="outline tight">
                  Advise
               </button>
           </div>
@@ -286,7 +287,7 @@
       <div>
 
 <!-- bucket insights refresh button ---------------------------------------- -->
-      <div class="row flex-right fix-position-br wb-refresh-btn" ng-if="!qc.fullscreen">
+      <div class="row fix-position-br wb-refresh-btn" ng-if="!qc.fullscreen">
         <button
            title="Refresh bucket insights"
            ng-click="qc.updateBuckets()"

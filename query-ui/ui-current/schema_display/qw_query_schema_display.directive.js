@@ -144,7 +144,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
     //templateUrl: 'template/bucket-display.tmpl',
     template:
       '<h5 class="row">' +
-      ' <div class="disclosure lower medium" ng-class="{disclosed: bucket.expanded}" ng-click="changeBucketExpanded(bucket)">{{bucket.id}}</div>' +
+      ' <div class="disclosure lower medium ellipsis" ng-class="{disclosed: bucket.expanded}" ng-click="changeBucketExpanded(bucket)">{{bucket.id}}</div>' +
       ' <small ng-if="bucket.collections.length > 0"> {{bucket.collections.length' + '}} collection<span ng-hide="bucket.collections.length == 1">s</span></small>' +
       '</h5>' +
       '<div ng-if="bucket.expanded" class="text-smaller margin-bottom-half">' +
@@ -162,7 +162,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
       '  </div>' +
       //   for each scope in the bucket...
       '  <div ng-repeat="scope in bucket.scopeArray" class="insights-scope">' +
-      '    <h6 ng-click="changeScopeExpanded(scope)" class="margin-bottom-quarter higher tight" ' +
+      '    <h6 ng-click="changeScopeExpanded(scope)" class="margin-bottom-quarter higher tight ellipsis" ' +
       '        ng-class="{disclosure: bucket.scopeArray.length > 1, disclosed: bucket.scopeArray.length > 1 && scope.expanded}">' +
       '       {{scope.id}} ' +
       '    </h6>' +
@@ -170,7 +170,7 @@ function getBucketCollectionsDisplay(qwQueryService,qwConstantsService,$uibModal
       '      <div ng-repeat="collection in getCollectionsForScope(bucket,scope)" class="insights-collection"' +
       '           ng-class="{\'margin-bottom-half\': collection.expanded}">' +
       '        <h6 ng-click="changeCollectionExpanded(bucket,scope,collection)" ' +
-      '            class="disclosure higher tight row" ng-class="{disclosed: collection.expanded}">{{collection.id}}' +
+      '            class="row"><div class="disclosure higher tight ellipsis" ng-class="{disclosed: collection.expanded}">{{collection.id}}</div>' +
       '        <small ng-if="collection.count != null">{{collection.count}} docs</small></h6>' +
       // if the collection is expanded, show its schema
       '        <div ng-if="collection.expanded" class="margin-bottom-half margin-left-1">' +
