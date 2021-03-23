@@ -219,8 +219,8 @@ function myCompare(a, b, sortField, meta) {
   var val1, val2;
 
   if (meta && meta.outerKey) {
-    val1 = a[meta.outerKey][sortField];
-    val2 = b[meta.outerKey][sortField];
+    val1 = a[meta.outerKey] ? a[meta.outerKey][sortField] : null;
+    val2 = b[meta.outerKey] ? b[meta.outerKey][sortField] : null;
   } else {
     val1 = a[sortField];
     val2 = b[sortField];
@@ -677,10 +677,10 @@ function makeHTMLTopLevel() {
       result += '<span class="doc-editor-cell" style="width: ' + 2 * columnWidthPx +
         'px;"><span '
       if (tdata[row].meta || tdata[row].xattrs)
-        result += 'class="cursor-pointer blue-1" title="{{getTooltip(' + row + ')}}" ' +
+        result += 'class="cursor-pointer" title="{{getTooltip(' + row + ')}}" ' +
           'placement="auto bottom" tooltip-is-open="showTT' + row + ' && !dec.hideAllTooltips" tooltip-entooltip-append-to-body="true" ' +
           'tooltip-trigger="none" (click)="showTT' + row + ' = !showTT' + row + '"';
-      result += '>' + mySanitize(tdata[row].id) + '</span></span>';
+      result += '><a (click)="dec.editDoc(' + row + ',true)">' + mySanitize(tdata[row].id) + '</a></span></span>';
 
       var binary = tdata[row].base64 ? tdata[row].base64.substring(0, 150) : "base64 not available";
       binary = mySanitize(JSON.stringify(binary));
