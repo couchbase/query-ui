@@ -5,12 +5,12 @@
         {{name}}
       </option>
     </select>
-    <select (change)="scopeChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70">
+    <select (change)="scopeChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70 && !pre70">
       <option *ngFor="let name of scopes_subject | async" [selected]="name==selected_scope" [disabled]="disabled">
         {{name}}
       </option>
     </select>
-    <select (change)="collectionChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70">
+    <select (change)="collectionChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70 && !pre70">
       <option *ngFor="let name of collections_subject | async" [selected]="name==selected_collection" [disabled]="disabled">
         {{name}}
       </option>

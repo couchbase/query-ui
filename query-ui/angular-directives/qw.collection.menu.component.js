@@ -27,7 +27,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],
-      inputs: ['label','initialSelection','disabled','callback','allowEmpty'],
+      inputs: ['label','initialSelection','disabled','callback','allowEmpty', 'proxy'],
       outputs: ['onSelection']
     })
   ]}
@@ -68,7 +68,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
         this.selected_collection = this.initialSelection.selected_collection;
       }
     }
-    this.qwCollectionsService.refreshBuckets().then(meta => this.bucketListChangedCallback(meta));
+    this.qwCollectionsService.refreshBuckets(this.proxy).then(meta => this.bucketListChangedCallback(meta));
   }
 
   ngAfterViewInit() {
@@ -86,7 +86,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
   notifyChange() {
     var allSelected = this.selected_bucket &&
-      (!this.compat.atLeast70 || (this.selected_scope && this.selected_collection));
+      (!this.compat.atLeast70 || this.pre70 || (this.selected_scope && this.selected_collection));
     var selection = {
       bucket: allSelected ? this.selected_bucket : null,
       scope: allSelected ? this.selected_scope : null,
@@ -108,6 +108,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.buckets = meta.buckets;
     this.scopes = meta.scopes;
     this.collections = meta.collections;
+    this.pre70 = meta.pre70;
 
     if (this.allowEmpty) {
       this.buckets = Array.from(this.buckets);
@@ -126,8 +127,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.update_scopes_collections_menu();
     this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
 
-    if (this.selected_bucket && this.compat.atLeast70)
-        this.qwCollectionsService.getScopesForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
+    if (this.selected_bucket && !this.pre70)
+      this.qwCollectionsService.getScopesForBucket(this.selected_bucket, this.proxy).then(meta => this.scopeListChangedCallback(meta));
     else
       this.notifyChange();
   }
@@ -192,8 +193,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       this.scopes = {};
       this.notifyChange();
     } else {
-      if (this.selected_bucket && this.compat.atLeast70)
-        this.qwCollectionsService.refreshScopesAndCollectionsForBucket(this.selected_bucket).then(meta => this.scopeListChangedCallback(meta));
+      if (this.selected_bucket && this.compat.atLeast70 && !this.pre70)
+        this.qwCollectionsService.refreshScopesAndCollectionsForBucket(this.selected_bucket, this.proxy).then(meta => this.scopeListChangedCallback(meta));
       else
         this.notifyChange();
     }

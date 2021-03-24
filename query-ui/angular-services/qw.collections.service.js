@@ -1,3 +1,12 @@
+//
+// qw.collections.service - this service provides easy access to the lists of buckets, scopes, and collections.
+//
+// For efficiency sake, it retrieves in a lazy fashion, only getting the scopes and collections for a bucket
+// when asked, then caching the values until asked to refresh.
+//
+// To support querying the metadat for remote clusters in analytics, the service can optionally accept a proxy
+// that provides REST API access to another couchbase cluster.
+
 import {$http}         from '/_p/ui/query/angular-services/qw.http.js';
 import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
 import _               from '/ui/web_modules/lodash.js';
@@ -35,20 +44,18 @@ function getQwCollectionsService(
   $http) {
 
   var qcs = {};
-  qcs.buckets = [];
-  qcs.buckets_ephemeral = {};
-  qcs.scopes = {}; // indexed by bucket name
-  qcs.collections = {};
-  qcs.errors = [];
   qcs.rbac = mnPermissions.export;
 
-  qcs.metadata = {
-    buckets: qcs.buckets,
-    buckets_ephemeral: qcs.buckets_ephemeral,
-    scopes: qcs.scopes,
-    collections: qcs.collections,
-    errors: qcs.errors
+  let local_metadata = {
+    buckets: [],
+    buckets_ephemeral: {},
+    scopes: {},
+    collections: {},
+    errors: []
   };
+
+  // map associating proxies with the metadata for that remote cluster
+  let remote_metadata = {};
 
   qcs.getBuckets = getBuckets;
   qcs.refreshBuckets = refreshBuckets;
@@ -56,42 +63,70 @@ function getQwCollectionsService(
   qcs.refreshScopesAndCollectionsForBucket = refreshScopesAndCollectionsForBucket;
 
   //
+  // the metadata we work with depends on whether we have a local cluster or a proxy to a remote cluster
+  //
+
+  function getMeta(proxy) {
+    if (!proxy)
+      return local_metadata;
+
+    if (!remote_metadata[proxy])
+      remote_metadata[proxy] = {
+        buckets: [],
+        buckets_ephemeral: {},
+        scopes: {},
+        collections: {},
+        errors: []
+      };
+
+    return remote_metadata[proxy];
+  }
+
+  //
   // get a list of buckets from the server via the REST API
   //
 
-  function refreshBuckets() {
-    qcs.errors.length = 0;
-    var url = "../pools/default/buckets/";
+  function refreshBuckets(proxy) {
+    var meta = getMeta(proxy);
+    meta.errors.length = 0;
+    var api = "/pools/default/buckets/";
+    var url = getApiUrl(api, proxy);
     var promise = $http.do({
       url: url,
       method: "GET"
     }).then(function success(resp) {
       if (resp && resp.status == 200 && resp.data) {
+        // empty out any prior bucket info
+        meta.buckets.length = 0;
+        Object.keys(meta.buckets_ephemeral).forEach(function(key) { delete meta.buckets_ephemeral[key]; });
         // get the bucket names
-        qcs.buckets.length = 0;
-        Object.keys(qcs.buckets_ephemeral).forEach(function(key) { delete qcs.buckets_ephemeral[key]; });
         for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
           //if (qcs.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
-          qcs.buckets.push(resp.data[i].name);
+          meta.buckets.push(resp.data[i].name);
 
           if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
-            qcs.buckets_ephemeral[resp.data[i].name] = true;
+            meta.buckets_ephemeral[resp.data[i].name] = true;
+
+          // see if any of the nodes for the bucket have a pre-7.0 version, meaning no collections
+          if (resp.data[i].nodes.some(element =>
+            parseInt(element.version && element.version.split(".")[0]) < 7))
+            meta.pre70 = true;
         }
       }
-      return(qcs.metadata);
+      return(meta);
     }, function error(resp) {
       var data = resp.data, status = resp.status;
-      qcs.buckets.length = 0;
+      meta.buckets.length = 0;
       var error = {status: resp.status, url: url};
       if (resp.error)
         if (_.isString(resp.error))
           error.message = resp.error;
         else
           Object.assign(error,resp.error);
-      qcs.errors.length = 0;
-      qcs.errors.push(error);
+      meta.errors.length = 0;
+      meta.errors.push(error);
       //console.log("Error getting buckets: " + JSON.stringify(resp));
-      return(qcs.metadata);
+      return(meta);
     });
 
     return (promise);
@@ -102,9 +137,11 @@ function getQwCollectionsService(
   // for any bucket we need to get the scopes and collections
   //
 
-  function refreshScopesAndCollectionsForBucket(bucket) {
-    qcs.errors.length = 0;
-    var url = "../pools/default/buckets/" + encodeURI(bucket) + "/scopes";
+  function refreshScopesAndCollectionsForBucket(bucket, proxy) {
+    var meta = getMeta(proxy);
+    meta.errors.length = 0;
+    var api = "/pools/default/buckets/" + encodeURI(bucket) + "/scopes";
+    var url = getApiUrl(api, proxy);
     // get the scopes and collections for the bucket from the REST API
     var promise = $http.do({
       url: url,
@@ -112,56 +149,65 @@ function getQwCollectionsService(
     }).then(function success(resp) {
       if (resp && resp.status == 200 && resp.data && _.isArray(resp.data.scopes)) {
         // get the scopes, and for each the collection names
-        if (!qcs.scopes[bucket])
-          qcs.scopes[bucket] = [];
-        if (!qcs.collections[bucket])
-          qcs.collections[bucket] = {}; // map indexed on scope name
+        if (!meta.scopes[bucket])
+          meta.scopes[bucket] = [];
+        if (!meta.collections[bucket])
+          meta.collections[bucket] = {}; // map indexed on scope name
 
-        qcs.scopes[bucket].length = 0; // make sure any old scopes are removed
+        meta.scopes[bucket].length = 0; // make sure any old scopes are removed
 
         resp.data.scopes.forEach(function (scope) {
-          qcs.scopes[bucket].push(scope.name);
-          qcs.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
+          meta.scopes[bucket].push(scope.name);
+          meta.collections[bucket][scope.name] = scope.collections.map(collection => collection.name).sort();
         });
 
       }
 
-      qcs.scopes[bucket] = qcs.scopes[bucket].sort();
-      return(qcs.metadata);
+      meta.scopes[bucket] = meta.scopes[bucket].sort();
+      return(meta);
     }, function error(resp) {
-      qcs.scopes[bucket] = [];
+      meta.scopes[bucket] = [];
       var error = {status: resp.status, url: url};
       if (resp.error)
         if (_.isString(resp.error))
           error.message = resp.error;
         else
           Object.assign(error,resp.error);
-      qcs.errors.length = 0;
-      qcs.errors.push(error);
+      meta.errors.length = 0;
+      meta.errors.push(error);
       //console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
-      return(qcs.metadata);
+      return(meta);
     });
 
     return (promise);
   }
 
-  function getBuckets() {
-    if (qcs.buckets.length == 0)
-      return(refreshBuckets());
+  function getBuckets(proxy) {
+    var meta = getMeta(proxy);
+    if (meta.buckets.length == 0)
+      return(refreshBuckets(proxy));
 
-    return (Promise.resolve(qcs.metadata));
+    return (Promise.resolve(meta));
   }
 
-  function getScopesForBucket(bucket) {
+  function getScopesForBucket(bucket, proxy) {
+    var meta = getMeta(proxy);
     // if we don't have any scopes, check and callback
-    if (!qcs.scopes[bucket] || !qcs.scopes[bucket].length) {
-      qcs.scopes[bucket] = [];
-      return(refreshScopesAndCollectionsForBucket(bucket));
+    if (!meta.scopes[bucket] || !meta.scopes[bucket].length) {
+      meta.scopes[bucket] = [];
+      return(refreshScopesAndCollectionsForBucket(bucket, proxy));
     }
 
-    return (Promise.resolve(qcs.metadata));
+    return (Promise.resolve(meta));
   };
 
+  function getApiUrl(api, proxy) {
+    if (proxy) {
+      return proxy + api;
+    } else {
+      return ".." + api;
+    }
+  }
   //
   // all done, return the service
   //
