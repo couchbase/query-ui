@@ -249,17 +249,16 @@
     </div>
     <div class="column wide vertical-divider text-center max-width-50 padding-0" ng-if="qc.validated.clusterStatsAllowed()">
       <div>
-        <span ng-repeat="chart in qmc.charts track by $index" class="statistics-tiny">
+        <span ng-repeat="chart in qmc.charts track by chart.id" class="statistics-tiny">
           <mn-statistics-chart
-           style="display:block;"
-           nvd3-options="{showLegend: false}"
-           zoom="minute"
-           rbac="rbac"
-           node="all"
-           ng-click="qmc.openDetailedChartDialog($index)"
-           config="chart">
+             zoom="minute"
+             stats-poller="qmc.mnAdminStatsPoller"
+             rbac="rbac"
+             node="all"
+             ng-click="qmc.openDetailedChartDialog($index)"
+             config="chart">
           </mn-statistics-chart>
-         </span>
+        </span>
       </div>
     </div>
     <div class="column wide vertical-divider text-center" ng-if="!qc.validated.clusterStatsAllowed()">
