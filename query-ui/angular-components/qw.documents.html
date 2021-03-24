@@ -21,12 +21,12 @@
 <!-- row of controls for the query ----------------------------------------- -->
   <form name="searchForm">
   <div [formGroup]="searchForm" class="controls resp-med">
-
-      <qw-collection-menu
-         label="Keyspace"
-         [initialSelection]="dec.options"
-         (onSelection)="dec.collectionMenuCallback($event)">
-      </qw-collection-menu>
+    <qw-collection-menu
+       class="column"
+       label="Keyspace"
+       [initialSelection]="dec.options"
+       (onSelection)="dec.collectionMenuCallback($event)">
+    </qw-collection-menu>
 
     <div class="column">
       <div>

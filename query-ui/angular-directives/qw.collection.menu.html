@@ -1,17 +1,16 @@
-<div class="margin-right-half">
-  <label class="controls margin-bottom-0">{{label}}&nbsp;<small *ngIf="compat.atLeast70">bucket.scope.collection</small></label>
-  <div>
-    <select (change)="bucketChanged($event)" class="margin-right-quarter">
+
+  <label class="margin-bottom-0">{{label}}&nbsp;<small *ngIf="compat.atLeast70">bucket.scope.collection</small></label>
+    <select (change)="bucketChanged($event)" class="fix-width-2 margin-right-quarter">
       <option *ngFor="let name of buckets" [selected]="name==selected_bucket" [disabled]="disabled">
         {{name}}
       </option>
     </select>
-    <select (change)="scopeChanged($event)" class="margin-right-quarter" *ngIf="compat.atLeast70">
+    <select (change)="scopeChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70">
       <option *ngFor="let name of scopes_subject | async" [selected]="name==selected_scope" [disabled]="disabled">
         {{name}}
       </option>
     </select>
-    <select (change)="collectionChanged($event)" class="margin-right-quarter" *ngIf="compat.atLeast70">
+    <select (change)="collectionChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70">
       <option *ngFor="let name of collections_subject | async" [selected]="name==selected_collection" [disabled]="disabled">
         {{name}}
       </option>
@@ -23,5 +22,3 @@
        class="fa-warning icon orange-3 cursor-pointer"
        [ngbTooltip]="errors">
     </span>
-  </div>
-</div>
