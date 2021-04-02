@@ -171,6 +171,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
     };
 
+    // MB-40706 - reset offset when WHERE clause changed
+    dec.where_changed = function() {
+      dec.searchForm.get('offset').setValue(0);
+    }
+
     //
     //
     //

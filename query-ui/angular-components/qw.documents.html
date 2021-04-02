@@ -137,6 +137,7 @@
       <input
          type="text"
          formControlName="where_clause"
+         (change)="dec.where_changed()"
          [attr.disabled]="(!dec.can_use_n1ql() || (dec.options.show_id && dec.options.doc_id) || (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end))) || null"
          class="width-12"
          placeholder="{{dec.has_indexes() ? 'optional...' : 'no indexes available...'}}">
