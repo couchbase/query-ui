@@ -52,8 +52,13 @@ class $http {
 
   configToOptions(config) {
    var options = {observe: 'response'};
-   if (config.headers)
-     options.headers = new HttpHeaders(config.headers);
+   if (config.headers) {
+     // can't pass options to HttpHeaders constructor, because it can't
+     // handle headers with numeric values
+     options.headers = new HttpHeaders();
+     Object.keys(config.headers).forEach(key =>
+       options.headers = options.headers.set(key,config.headers[key]));
+   }
 
    if (config.params)
      options.params = config.params;
