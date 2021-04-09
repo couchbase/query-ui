@@ -300,6 +300,9 @@ ul.wb-explain-tooltip-list li ul li {
   font-style: italic;
 }
 
+.break-word {
+  word-break: break-word;
+}
 /* need to be able to override parent style for warning icon */
 
 .force-orange-3 {
