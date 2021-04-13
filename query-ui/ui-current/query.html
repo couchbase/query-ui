@@ -61,7 +61,7 @@
              ng-disabled="!qc.hasNext()">
           </span>
         </span>
-        <span class="wb-use" ng-if="qc.compat.atLeast70">
+        <span class="query-context" ng-if="qc.compat.atLeast70">
           <select
              ng-model="qc.qqs.options.query_context_bucket"
              ng-change="qc.qqs.query_context_bucket_changed()"
