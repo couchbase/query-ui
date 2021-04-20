@@ -410,13 +410,15 @@ function getMetaData(object) {
   var maxWidth = 250;
   var topLevelKeys = {};
   var columnWidths = {};
+  var totalCount = 0;
   var totalWidth = 0;
   var hasNonObject = false;
   var hasOps = false; // are we looking at top keys with ops/sec?
   var unnamedWidth;
-  var rowWidths = [];
+  var rowCounts = [];
   var truncated = false; // did we have to leave out
-  for (var row = 0; row < object.length; row++)
+  for (var row = 0; row < object.length; row++) {
+    rowCounts[row] = 0;
     if (object[row] && object[row].data && object[row].id && object[row].meta && object[row].meta.type === "json") {
       if (object[row].ops)
         hasOps = true;
@@ -426,8 +428,9 @@ function getMetaData(object) {
       // and figure out how much space it needs
       if (_.isArray(data) || _.isString(data) || _.isNumber(data) || _.isBoolean(data)) {
         hasNonObject = true;
-        var width = getColumnWidth(data);
-        rowWidths[row] = width;
+        var area = getColumnArea(data);
+        var width = area.width;
+        rowCounts[row] += area.count;
         if (!unnamedWidth || width > unnamedWidth)
           unnamedWidth = width;
       }
@@ -436,12 +439,15 @@ function getMetaData(object) {
       else _.forEach(object[row].data, function (value, key) {
         topLevelKeys[key] = true;
         // see how much space this value requires, remember the max
-        var width = getColumnWidth(value);
-        rowWidths[row] = width;
+        var area = getColumnArea(value);
+        var width = area.width;
+        rowCounts[row] += area.count;
         if (!columnWidths[key] || width > columnWidths[key])
           columnWidths[key] = width;
       });
     }
+    totalCount += rowCounts[row];
+  }
 
   _.forIn(topLevelKeys, function (value, key) {
     totalWidth += columnWidths[key];
@@ -466,7 +472,8 @@ function getMetaData(object) {
 
   return ({
     topLevelKeys: topLevelKeys, columnWidths: columnWidths, totalWidth: totalWidth,
-    hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowWidths: rowWidths, truncated: truncated, hasOps: hasOps
+    hasNonObject: hasNonObject, unnamedWidth: unnamedWidth, rowCounts: rowCounts,
+    truncated: truncated, hasOps: hasOps, totalCount: totalCount
   });
 }
 
@@ -520,6 +527,7 @@ var columnWidthPx = 150;
 function makeHTMLTopLevel() {
   var result = '';
   var max_length = 200; // the old doc editor truncated the JSON at 200 chars, so we will also
+  var max_items = 1000; // maximum number of items we want to render at once
 
   // we expect an array of objects, which we turn into an HTML table.
 
@@ -529,6 +537,7 @@ function makeHTMLTopLevel() {
 
   var topLevelKeys = meta.topLevelKeys;
   var columnWidths = meta.columnWidths;
+  var tooManyItemsInResult = meta.totalCount > max_items;
 
   //
   // for each object in the array, output all the possible column values
@@ -539,6 +548,7 @@ function makeHTMLTopLevel() {
     if (tdata[row] && tdata[row].id && tdata[row].meta && tdata[row].meta.type === "json") {// they'd all better have these
       var docTooBig = tdata[row].docSize > 1024 * 1024;
       var docWayTooBig = tdata[row].docSize > 10 * 1024 * 1024;
+      var tooManyFieldsInDoc = meta.rowCounts[row] > 500;
       var docError = tdata[row].error;
       var formName = 'row' + row + 'Form';
       var pristineName = formName + '.pristine';
@@ -586,27 +596,27 @@ function makeHTMLTopLevel() {
       result += mySanitize(tdata[row].id);
 
       if (docWayTooBig)
-        result += ' <span class="icon fa-exclamation-triangle" ' +
+        result += ' <span class="icon fa-warning orange-3" ' +
           'title="\'Document is too large for editing in the browser: ' + Math.round(tdata[row].docSize * 10 / (1024 * 1024)) / 10 + 'MB.\'"' +
           'placement="right"><span class="icon fa-circle-thin fa-stack-2x"></span></span>';
       else if (docTooBig)
-        result += ' <span class="icon fa-exclamation-triangle" ' +
+        result += ' <span class="icon fa-warning orange-3" ' +
           'title="\'Document is ' + Math.round(tdata[row].docSize * 10 / (1024 * 1024)) / 10 + 'MB, editing will be slow.\'"' +
           'placement="right"></span>';
       else if (tdata[row].rawJSONError)
-        result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
+        result += ' <span class="icon fa-warning orange-3" *ngIf="dec.options.show_tables"' +
           'title="\'Error checking document for numbers too long to edit. Tabular editing not permitted. ' +
           tdata[row].rawJsonError + '\'"' +
           'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
       else if (tdata[row].rawJSON)
-        result += ' <span class="icon fa-exclamation-triangle" *ngIf="dec.options.show_tables"' +
+        result += ' <span class="icon fa-warning orange-3" *ngIf="dec.options.show_tables"' +
           'title="\'Document contains numbers too large for tabular editing, click doc id to edit as JSON .\'"' +
           'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter"></span>';
       result += '</a>';
       result += '</span>';
 
       // if we have unnamed items like arrays or primitives, they go in the next column
-      if (meta.hasNonObject) {
+      if (meta.hasNonObject && !tooManyFields) {
         result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width:' +
           meta.unnamedWidth * columnWidthPx + 'px">';
 
@@ -623,17 +633,26 @@ function makeHTMLTopLevel() {
       // now the field values, if we are showing tables, but only if we have a non-null document
 
       if (tdata[row].data || tdata[row].data === 0) {
-        Object.keys(meta.topLevelKeys).sort().forEach(function (key, index) {
-          var item = tdata[row].data[key];
-          var childSize = {width: 1};
-          var disabled = !!tdata[row].rawJSON || docTooBig || docError || key.indexOf('"') > -1;
-          var childHTML = (item || item === 0 || item === "" || item === false) ?
-            makeHTMLtable(item, '[' + row + '].data[\'' + mySanitizeQuotes(key) + '\']', childSize, disabled) : '&nbsp;';
-          result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
-            columnWidths[key] * columnWidthPx + 'px;">' + childHTML + '</span>';
-        });
+        if (tooManyItemsInResult)
+          result += ' <span class="icon fa-warning orange-3" *ngIf="dec.options.show_tables" ' +
+            'title="Too many fields in result set for field editing. Limit result size or click ID to edit document."' +
+            'placement="right"></span>';
+        else if (tooManyFieldsInDoc)
+            result += ' <span class="icon fa-warning orange-3" *ngIf="dec.options.show_tables" ' +
+              'title="Document too complex for field editing, click ID to edit in dialog instead."' +
+              'placement="right"></span>';
+        else
+          Object.keys(meta.topLevelKeys).sort().forEach(function (key, index) {
+            var item = tdata[row].data[key];
+            var childSize = {width: 1};
+            var disabled = !!tdata[row].rawJSON || docTooBig || docError || key.indexOf('"') > -1;
+            var childHTML = (item || item === 0 || item === "" || item === false) ?
+              makeHTMLtable(item, '[' + row + '].data[\'' + mySanitizeQuotes(key) + '\']', childSize, disabled) : '&nbsp;';
+            result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
+              columnWidths[key] * columnWidthPx + 'px;">' + childHTML + '</span>';
+          });
 
-        // otherwise, a truncated version of the JSON
+          // otherwise, a truncated version of the JSON
 
         var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
         if (json.length > max_length)
@@ -720,7 +739,7 @@ function getTooltip(row) {
 // This function recursively traverses a piece of data to figure out how many columns wide it
 // will need.
 
-function getColumnWidth(item) {
+function getColumnArea(item) {
   // arrays are complex - an array of primitives is a vertical list of values, but a mixed
   // array of objects and primitives is shown as a table, with an unnamed column for the
   // primitives
@@ -728,8 +747,11 @@ function getColumnWidth(item) {
     //console.log("Getting width for array: " + JSON.stringify(item));
     var namedWidth = 1;
     var unnamedWidth = 0;
+    var count = 0;
     for (var i = 0; i < item.length; i++) {
-      var elementWidth = getColumnWidth(item[i]);
+      var elementSize = getColumnArea(item[i]);
+      var elementWidth = elementSize.width;
+      count += elementSize.count;
 
       // is the item named (object) or unnamed (prim or array)
       if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i])) {
@@ -742,21 +764,27 @@ function getColumnWidth(item) {
     }
 
     //console.log("   got array width: " + namedWidth + unnamedWidth);
-    return (namedWidth + unnamedWidth);
+    return ({width: namedWidth + unnamedWidth, height: item.length, count: count});
   } else if (_.isPlainObject(item)) { // for objects we need to sum up columns for each field
     //console.log("Getting width for object: " + JSON.stringify(item));
     var totalWidth = 0;
+    var maxHeight = 0;
+    var count = 0;
     _.forIn(item, function (value, key) { // for each field
-      totalWidth += getColumnWidth(value);
+      var itemSize = getColumnArea(value);
+      count += itemSize.count;
+      totalWidth += itemSize.width;
+      if (itemSize.height > maxHeight)
+        maxHeight = itemSize.height;
     });
 
     if (totalWidth == 0)
       totalWidth = 1;
 
     //console.log("   got object width: " + totalWidth);
-    return (totalWidth);
+    return ({width: totalWidth, height: maxHeight + 1, count: count});
   } else // all primitive types just get 1 column wide.
-    return 1;
+    return {width: 1, height: 1, count: 1};
 }
 
 
@@ -869,7 +897,7 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
         return (false);
       // if the row is an array or primitive, compute the width for the unnamed column
       if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item)) {
-        var width = getColumnWidth(item);
+        var width = getColumnArea(item).width;
         if (!unnamedWidth || width > unnamedWidth)
           unnamedWidth = width;
       } else if (_.isPlainObject(item)) {
@@ -882,8 +910,8 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
           _.forIn(keys, function (b, key) {
             var value = item ? item[key] : null;
 
-            if (value && getColumnWidth(value) > columnWidths[key])
-              columnWidths[key] = getColumnWidth(value);
+            if (value && getColumnArea(value).width > columnWidths[key])
+              columnWidths[key] = getColumnArea(value).width;
           });
 
       }
