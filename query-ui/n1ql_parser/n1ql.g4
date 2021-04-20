@@ -25,7 +25,7 @@ NUM:           Int '.' Digit+ Exponent? | Int Exponent;
 BLOCK_COMMENT: '/*' .*? '*/';
 
 LINE_COMMENT:  '--' ~[\n\r]*;
-WHITESPACE:    [ \t\n\r\f]+ -> skip;
+WHITESPACE:    [ \t\n\r\f\u00a0]+ -> skip;
 DOT:           '.';
 PLUS:          '+';
 MINUS:         '-' | [mM][iI][nN][uU][sS];
@@ -89,7 +89,7 @@ DATASET:      [dD][aA][tT][aA][sS][eE][tT];
 DATASTORE:    [dD][aA][tT][aA][sS][tT][oO][rR][eE];
 DECLARE:      [dD][eE][cC][lL][aA][rR][eE];
 DECREMENT:    [dD][eE][cC][rR][eE][mM][eE][nN][tT];
-DELETE_:       [dD][eE][lL][eE][tT][eE];
+DELETE_:      [dD][eE][lL][eE][tT][eE];
 DERIVED:      [dD][eE][rR][iI][vV][eE][dD];
 DESC:         [dD][eE][sS][cC];
 DESCRIBE:     [dD][eE][sS][cC][rR][iI][bB][eE];

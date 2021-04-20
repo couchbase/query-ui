@@ -2,6 +2,11 @@
   "name": "goyaccParser",
   "version": "1.0.0",
   "type": "module",
+  "devDependencies": {
+    "webpack": "^5.33.2",
+    "webpack-cli": "^4.6.0"
+  },
   "dependencies": {
+    "antlr4": "^4.7.2"
   }
 }

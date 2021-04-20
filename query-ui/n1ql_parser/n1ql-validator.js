@@ -7,19 +7,17 @@ import * as readline from 'readline';
 
 function queryArray() {
     var queries = [
-      "select default:func('hotel') from `travel-sample`;",
-      "default:func('hotel')"
-      //"Update default set foo = 'bar'",
-      //"delete from default",
-      //"delete from default where foo = bar",
-      //"select count(*) from default; select max(foo) from bar"
-      /*
+        "select default:func('hotel') from `travel-sample`;",
+        "default:func('hotel')",
+        "Update default set foo = 'bar'",
+        "delete from default",
+        "delete from default where foo = bar",
+        "select count(*) from default; select max(foo) from bar",
         "MERGE INTO orders USING orders o USE KEYS ['subqexp_1235', 'subqexp_1236'] ON KEY id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
         "MERGE INTO orders USING (SELECT 's'||id  AS id FROM orders WHERE test_id = 'subqexp' ) o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id,'test_id':'subqexp'};",
         "MERGE INTO orders USING (SELECT 'se'||id  AS id, (SELECT RAW SUM(orderlines.price) FROM orders.orderlines)[0] AS total FROM orders WHERE test_id = 'subqexp') o ON KEY o.id WHEN NOT MATCHED THEN INSERT {o.id, o.total, 'test_id':'subqexp'};",
         "MERGE INTO orders USING [{'id':'c1235'},{'id':'c1236'}] o ON KEY id WHEN NOT MATCHED THEN INSERT {o.id, 'test_id':'subqexp'};",
-
-"SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.customerId = \"unknown\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10",
+        "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.customerId = \"unknown\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10",
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId = c.customerId OR p.purchaseId = \"purchase8992\" WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10 OFFSET 10",
 "SELECT c.firstName, c.lastName, c.customerId, p.purchaseId FROM customer c JOIN purchase p ON p.customerId IN [ c.customerId, \"unknown\" ] WHERE c.lastName = \"Champlin\" ORDER BY p.purchaseId LIMIT 10 OFFSET 20",
 "SELECT p.productId, pu.customerId FROM product p JOIN purchase pu ON ANY pd IN pu.lineItems satisfies p.productId = pd.product END WHERE ANY r IN p.reviewList satisfies r = \"review1636\" END ORDER BY pu.customerId LIMIT 5",
@@ -121,8 +119,9 @@ function queryArray() {
 "SELECT META(purchase).id purchase_id, META(product).id product_id FROM purchase LEFT JOIN product ON KEYS ARRAY s.product || \"_\" || purchase.test_id FOR s IN purchase.lineItems END where purchase.test_id = \"joins\" ORDER BY purchase_id, product_id limit 5",
         "SELECT META(purchase).id as purchase_id, meta(product).id as product_id, product.name as name FROM purchase UNNEST purchase.lineItems line LEFT JOIN product ON KEYS line.product || \"_\" || purchase.test_id where purchase.test_id = \"joins\" AND product.test_id = \"joins\" ORDER BY purchase_id, product_id, name limit 5 ",
 
-'SELECT DISTINCT route.destinationairport FROM `travel-sample` airport JOIN `travel-sample` route ON airport.faa = route.sourceairport AND route.type = "route" WHERE airport.type = "airport" AND airport.city = "San Francisco" AND airport.country = "United States";',
-'SELECT hotel.name hotel_name, landmark.name landmark_name, landmark.activity FROM `travel-sample` hotel JOIN `travel-sample` landmark ON hotel.city = landmark.city AND hotel.country = landmark.country AND landmark.type = "landmark" WHERE hotel.type = "hotel" AND hotel.title like "Yosemite%" AND array_length(hotel.public_likes) > 5;',
+        'SELECT DISTINCT route.destinationairport FROM `travel-sample` airport JOIN `travel-sample` route ON airport.faa = route.sourceairport AND route.type = "route" WHERE airport.type = "airport" AND airport.city = "San Francisco" AND airport.country = "United States";',
+
+        'SELECT hotel.name hotel_name, landmark.name landmark_name, landmark.activity FROM `travel-sample` hotel JOIN `travel-sample` landmark ON hotel.city = landmark.city AND hotel.country = landmark.country AND landmark.type = "landmark" WHERE hotel.type = "hotel" AND hotel.title like "Yosemite%" AND array_length(hotel.public_likes) > 5;',
 'SELECT count(*) FROM `travel-sample` airline JOIN `travel-sample` route ON route.airlineid = "airline_" || tostring(airline.id) AND route.type = "route" WHERE airline.type = "airline" AND airline.name = "United Airlines";',
 'SELECT DISTINCT airport.airportname FROM `travel-sample` route JOIN `travel-sample` airport ON airport.faa IN [ route.sourceairport, route.destinationairport ] AND airport.type = "airport" WHERE route.type = "route" AND route.airline = "F9" AND route.distance > 3000;',
 'SELECT count(*) FROM `travel-sample` airport JOIN `travel-sample` route ON (route.sourceairport = airport.faa OR route.destinationairport = airport.faa) AND route.type = "route" WHERE airport.type = "airport" AND airport.city = "Denver" AND airport.country = "United States";',
@@ -147,20 +146,20 @@ function queryArray() {
 'SELECT count(*) FROM `travel-sample` airline JOIN `travel-sample` route ON KEY route.airlineid FOR airline WHERE airline.type = "airline" AND route.type = "route" AND airline.name = "United Airlines";',
 'SELECT count(*) FROM `travel-sample` airline JOIN `travel-sample` route ON route.airlineid = meta(airline).id WHERE airline.type = "airline" AND route.type = "route" AND airline.name = "United Airlines";',
 'SELECT airline.name, ARRAY {"destination": r.destinationairport} FOR r in route END as destinations FROM `travel-sample` airline NEST `travel-sample` route ON airline.iata = route.airline AND route.type = "route" AND route.sourceairport = "SFO" WHERE airline.type = "airline" AND airline.country = "United States";',
-*/
     ];
 
 
     for (var i=0; i< queries.length; i++) {
         var query = queries[i];
         try {
-            console.log("\n\nParsing: \n\n" + query + "\n");
+            console.log("Parsing: " + query);
             var result = N1qlParser.parse(query);
-            console.log("\nresult is: \n\n" + JSON.stringify(result,null,2));
+            console.log("   " + JSON.stringify(result));
         }
         catch (err) {
             console.log("\n\nParse error for \n\n" + query + "\n\nis: " + err.message);
             console.log(err.stack);
+            process.exit(1);
         }
     }
 }
@@ -188,7 +187,15 @@ function queryFile() {
     });
 }
 
+function querySingle() {
+    //N1qlParser.parse("max(A + b.c.d[1].e)");
+    var result =
+      N1qlParser.parse('select * from `beer-sample` where foo = "bar"; select * from `travel-sample`');
+    //console.log(JSON.stringify(result));
+}
+
 console.log("Hello world, starting query parsing...");
 
-queryFile();
+//queryFile();
 //queryArray();
+querySingle();

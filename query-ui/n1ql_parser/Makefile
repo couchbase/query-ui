@@ -9,6 +9,15 @@
 
 all: javascript_n1ql
 
+foo:
+	cd n1qlParserPacked;	ls
+
+webpack_parser: javascript_n1ql
+	mkdir -p n1qlParserPacked/src
+	cp -r n1qlParser n1qlParserPacked/src
+	cp myN1qlListener.js index.js n1qlParserPacked/src
+	cd n1qlParserPacked; npm init -y; npm install webpack webpack-cli --save-dev; npm install antlr4
+
 javascript_n1ql: n1ql.g4
 	java -jar /usr/local/lib/antlr-4.9.1-complete.jar -Dlanguage=JavaScript -o n1qlParser n1ql.g4
 
