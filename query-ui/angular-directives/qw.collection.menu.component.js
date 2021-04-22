@@ -27,7 +27,14 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],
-      inputs: ['label','initialSelection','disabled','callback','allowEmpty', 'proxy'],
+      inputs: [
+        'label',             // text to show above the menu
+        'initialSelection',  // initial value to be selected
+        'disabled',          // indicates whether menus should be disabled
+        'callback',          // function to call whenever menus changed
+        'allowEmpty',        // allow empty selection (default initial state for Import)
+        'proxy'              // proxy to remote cluster to select remote collection
+      ],
       outputs: ['onSelection']
     })
   ]}

@@ -616,7 +616,7 @@ function makeHTMLTopLevel() {
       result += '</span>';
 
       // if we have unnamed items like arrays or primitives, they go in the next column
-      if (meta.hasNonObject && !tooManyFields) {
+      if (meta.hasNonObject && !tooManyFieldsInDoc) {
         result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width:' +
           meta.unnamedWidth * columnWidthPx + 'px">';
 
