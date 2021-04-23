@@ -5,9 +5,10 @@
 
 <div class="doc-editor" *ngIf="dec.docViewer()">
 
+
   <mn-element-cargo
      depot="actions"
-     *ngIf="dec.options.selected_bucket">
+     [hidden]="dec.options.selected_bucket == null">
     <div class="header-controls">
       <a (click)="dec.createBlankDoc()"
        [hidden]="!dec.can_add_document()">
@@ -18,7 +19,7 @@
 
 <qw-docs-subnav></qw-docs-subnav>
 
-<!-- row of controls for the query ----------------------------------------- -->
+  <!-- row of controls for the query ----------------------------------------- -->
   <form name="searchForm">
   <div [formGroup]="searchForm" class="controls resp-med">
     <qw-collection-menu
