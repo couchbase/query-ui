@@ -12,7 +12,8 @@ angular
   .factory('qwDocEditorService', getQwDocEditorService);
 
 function getQwDocEditorService(
-    $rootScope, $http, $uibModal, $uibModalStack, $timeout, $q, $stateParams, qwFixLongNumberService
+    $rootScope, $http, $uibModal, $uibModalStack, $timeout, $q, $stateParams,
+    qwFixLongNumberService, mnPoolDefault
     ) {
 
   var des = {};
@@ -57,10 +58,13 @@ function getQwDocEditorService(
   // retrieve a document by ID within a scope and a collection and show it in a dialog
   //
   function getAndShowDocumentWithinCollection(bucket,scope,collection,docId) {
-    var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(bucket) +
-          "/scopes/" + myEncodeURIComponent(scope) +
-          "/collections/" + myEncodeURIComponent(collection) +
-          "/docs/" + myEncodeURIComponent(docId);
+    var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(bucket);
+
+    if (mnPoolDefault.export.compat.atLeast70)
+      rest_url += "/scopes/" + myEncodeURIComponent(scope) +
+          "/collections/" + myEncodeURIComponent(collection);
+
+    rest_url += "/docs/" + myEncodeURIComponent(docId);
 
     $http({
       url: rest_url,
