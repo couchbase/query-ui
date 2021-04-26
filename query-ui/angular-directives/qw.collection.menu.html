@@ -1,20 +1,28 @@
 
   <label class="margin-bottom-0">{{label}}&nbsp;<small *ngIf="compat.atLeast70">bucket.scope.collection</small></label>
-    <select (change)="bucketChanged($event)" class="fix-width-2 margin-right-quarter">
-      <option *ngFor="let name of buckets" [selected]="name==selected_bucket" [disabled]="disabled">
-        {{name}}
-      </option>
-    </select>
-    <select (change)="scopeChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70 && !pre70">
-      <option *ngFor="let name of scopes_subject | async" [selected]="name==selected_scope" [disabled]="disabled">
-        {{name}}
-      </option>
-    </select>
-    <select (change)="collectionChanged($event)" class="fix-width-2 margin-right-quarter" *ngIf="compat.atLeast70 && !pre70">
-      <option *ngFor="let name of collections_subject | async" [selected]="name==selected_collection" [disabled]="disabled">
-        {{name}}
-      </option>
-    </select>
+    <mn-select
+       class="inline fix-width-2 margin-right-quarter"
+       mnFormControlName="bucketName"
+       [values]="buckets"
+       [group]="keyspaceForm"
+       hasSearch="true">
+    </mn-select>
+    <mn-select
+       *ngIf="compat.atLeast70 && !pre70"
+       class="inline fix-width-2 margin-right-quarter"
+       mnFormControlName="scopeName"
+       [values]="scopes_subject | async"
+       [group]="keyspaceForm"
+       hasSearch="true">
+    </mn-select>
+    <mn-select
+       *ngIf="compat.atLeast70 && !pre70"
+       class="inline fix-width-2 margin-right-quarter"
+       mnFormControlName="collectionName"
+       [values]="collections_subject | async"
+       [group]="keyspaceForm"
+       hasSearch="true">
+    </mn-select>
     <span
        *ngIf="errors"
        placement="auto"

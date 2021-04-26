@@ -3,6 +3,7 @@ import { NgbModule, NgbModalModule, NgbModalConfig }             from '/ui/web_m
 import { JitCompilerFactory }  from '/ui/web_modules/@angular/platform-browser-dynamic.js';
 import { FormsModule }         from '/ui/web_modules/@angular/forms.js';
 import { CommonModule }        from '/ui/web_modules/@angular/common.js';
+import { MnSelectModule } from '/ui/app/mn.select.module.js';
 
 import { NgxAceModule }        from '/ui/web_modules/@nowzoo/ngx-ace.js';
 
@@ -52,6 +53,7 @@ class QwDirectivesModule {
         CommonModule,
         NgbModalModule, // needed to show dialogs
         NgbModule, // for tooltips
+        MnSelectModule,
         NgxAceModule.forRoot(),
       ],
       exports: [
