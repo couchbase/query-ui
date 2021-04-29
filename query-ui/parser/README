@@ -1,3 +1,9 @@
+This directory contains parser-related work for the Couchbase UI.
+
+This work started with a Jison-based N1QL parser, which is found in the
+jison subdirectory. Manually created, it proved too much work to keep
+in sync with the server-side parser.
+
 Problem: the N1QL parser is written in goyacc, and is thus tied to golang.
 
 What if we want to parse N1QL in another language? My initial attempt
@@ -8,10 +14,10 @@ course.
 
 I created an antlr lexer for N1QL manually (automating that was too
 much work, but it should be easier to keep up to date). It is found in
-the file n1ql_lexer.g4.input.
+the file n1ql/n1ql_lexer.g4.input.
 
-Then I created an antlr parser for goyacc, which extracts all the
-grammar rules and outputs them as antlr rules, along with the N1QL
-lexer.
+Then I created an antlr parser for goyacc (in the goyacc subdirectory),
+which extracts all the grammar rules and outputs them as antlr rules,
+along with the N1QL lexer.
 
 

@@ -1,7 +1,7 @@
 import saveAs from "/ui/web_modules/file-saver.js";
 import _ from "/ui/web_modules/lodash.js";
 import ace from '/ui/libs/ace/ace-wrapper.js';
-import n1ql from '/_p/ui/query/n1ql_parser/n1ql.js';
+import N1qlParser from '/_p/ui/query/parser/n1ql/myN1qlListener.js';
 
 
 export default queryController;
@@ -869,21 +869,18 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
 
     // do a sanity check to warn users about dangerous queries
     var warningPromise = null;
-    // try {
-    //   var parseTrees = n1ql.parse(qc.lastResult().query);
-    //
-    //   if (_.isArray(parseTrees)) for (var i=0; i< parseTrees.length; i++) {
-    //     var tree = parseTrees[i];
-    //     var has_where = tree && tree.ops && (tree.ops.where || tree.ops.opt_where);
-    //     var has_use_keys = tree && tree.ops && (tree.ops.use_keys || tree.ops.opt_use_keys);
-    //     // individual tree should be object with 'type' at the top level. Look for 'type' = 'Update' or 'Delete'
-    //     if (tree && tree.type == 'Update' && !has_where && !has_use_keys)
-    //       warningPromise = showConfirmationDialog("Warning","Query contains UPDATE with no WHERE clause. Such a query would update all documents. Proceed anyway?");
-    //     else if (tree && tree.type == 'Delete' && !has_where && !has_use_keys)
-    //       warningPromise = showConfirmationDialog("Warning","Query contains DELETE with no WHERE clause. Such a query would delete all documents. Proceed anyway?");
-    //   }
-    // }
-    // catch (except) {console.log("Error parsing queries: " + except);}
+    try {
+      var parseResults = N1qlParser.parse(qc.lastResult().query);
+
+      if (_.isArray(parseResults)) for (var i=0; i< parseResults.length; i++) {
+        var result = parseResults[i];
+        if (result && (result.isUpdate || result.isDelete) && !result.has_where && !result.use_keys) {
+          warningPromise = showConfirmationDialog("Warning", "Query contains UPDATE/DELETE with no WHERE clause or USE KEYS. Such a query would affect all documents. Proceed anyway?");
+          break;
+        }
+      }
+    }
+    catch (except) {console.log("Error parsing queries: " + except);}
 
     // if there is a warning, make sure they want to proceed
     if (warningPromise)
@@ -947,7 +944,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
       // one generic warning for all unknown fields
       annotations.push(
         {row: 0,column: 0,
-         text: "Some fields not found (they may be misspelled):\n"+allFields,
+         text: "Some fields not found in inferred schema (they may be misspelled):\n"+allFields,
          type: "warning"});
 
       // for each line, for each problem field, find all matches and add an info annotation

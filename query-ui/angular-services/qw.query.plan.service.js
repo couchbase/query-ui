@@ -1,5 +1,6 @@
 import _ from "/ui/web_modules/lodash.js";
-import n1ql from "/_p/ui/query/n1ql_parser/n1ql.js";
+import n1ql from "/_p/ui/query/parser/jison/n1ql.js";
+import N1qlParser from '/_p/ui/query/parser/n1ql/myN1qlListener.js';
 
 export { QwQueryPlanService };
 
@@ -930,23 +931,11 @@ function getQwQueryPlanService() {
       if (plan.keys && plan.keys.length)
         // CreateIndex keys are un-parsed N1QL expressions, we need to parse
         for (var i = 0; i < plan.keys.length; i++) {
-          var parseTree = n1ql.parse(plan.keys[i].expr);
-
-          // parse tree has array of array of strings, we will build
-          if (parseTree && plan.keyspace) for (var p=0;p<parseTree.length; p++) {
-            for (var j=0; j<parseTree[p].pathsUsed.length; j++) {
-              if (parseTree[p].pathsUsed[j]) {
-                var field = plan.keyspace;
-                for (var k=0; k<parseTree[p].pathsUsed[j].length; k++) {
-                  field += "." + parseTree[p].pathsUsed[j][k];
-                }
-
-                lists.fields[field] = true;
-              }
-            }
-          }
+          var parseResults = N1qlParser.parse(plan.keys[i].expr);
+          parseResults.forEach(result =>
+            result.all_paths_used.forEach(field => lists.fields[field.join('.')] = true));
         }
-    }
+     }
 
     //
 
@@ -1009,38 +998,18 @@ function getQwQueryPlanService() {
   function getFieldsFromExpressionWithParser(expression,lists) {
 
     //console.log("Got expr: "+ expression);
+    var parseResults = N1qlParser.parse(expression);
+    parseResults.forEach(result =>
+      result.all_paths_used.forEach(path => {
+        // mark the bucket (or alias) as used
+        var first = path[0];
+        var first_alias = lists.aliases.find(alias => alias.as == first);
+        lists.buckets[first_alias || first] = true;
 
-    var parseTree = n1ql.parse(expression);
-
-    // parse tree has array of array of strings, we will build
-    if (parseTree) for (var p=0;p<parseTree.length; p++) {
-      if (parseTree[p].pathsUsed) for (var j=0; j<parseTree[p].pathsUsed.length; j++) {
-        //console.log("Got path p: " + p + ", j: " + j + ", " + JSON.stringify(parseTree[p].pathsUsed[j]));
-        if (parseTree[p].pathsUsed[j]) {
-          var field = "";
-          for (var k=0; k<parseTree[p].pathsUsed[j].length; k++) {
-            var pathElement = parseTree[p].pathsUsed[j][k];
-
-            // check for bucket aliases
-            if (k==0 && lists.aliases) for (var a=0; a<lists.aliases.length; a++)
-              if (lists.aliases[a].as === pathElement) {
-                pathElement = lists.aliases[a].keyspace;
-                break;
-              }
-
-            // first item in path should go into buckets
-            if (k==0)
-              lists.buckets[pathElement] = true;
-
-            field += ((k > 0 && pathElement !== "[]") ? "." : "") + pathElement;
-          }
-
-          //console.log("  Got field: " + field);
-          if (k > 1)
-            lists.fields[field] = true;
-        }
-      }
-    }
+        // mark the fully qualified path as a used field
+        lists.fields[path.join('.')] = true;
+      })
+    );
   }
 
   //

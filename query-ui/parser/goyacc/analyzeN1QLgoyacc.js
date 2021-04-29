@@ -69,7 +69,7 @@ class MyGoyaccListener extends goyaccListener {
 }
 
 function main() {
-  var n1ql = fs.readFileSync('../../../goproj/src/github.com/couchbase/query/parser/n1ql/n1ql.y').toString();
+  var n1ql = fs.readFileSync('../../../../goproj/src/github.com/couchbase/query/parser/n1ql/n1ql.y').toString();
   var n1ql_lexer_text = fs.readFileSync('./n1ql_lexer.g4.input');
   var chars = new antlr4.InputStream(n1ql);
   var lexer = new goyaccLexer(chars);

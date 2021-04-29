@@ -52,6 +52,8 @@ RBRACKET_ICASE:']i';
 SEMI:          ';';
 NOT_A_TOKEN:   '!';
 
+NAMESPACE_ID: [dD][eE][fF][aA][uU][lL][tT];
+
 ADVISE:       [aA][dD][vV][iI][sS][eE];
 ALL:          [aA][lL][lL];
 ALTER:        [aA][lL][tT][eE][rR];
@@ -269,7 +271,7 @@ NEXT_PARAM:    '?';
 input: stmt_body opt_trailer
 	| expr_input
 ;
-opt_trailer: 
+opt_trailer:
 	| opt_trailer SEMI
 ;
 stmt_body: advise
@@ -289,17 +291,17 @@ stmt: select_stmt
 ;
 advise: ADVISE opt_index stmt
 ;
-opt_index: 
+opt_index:
 	| INDEX
 ;
 explain: EXPLAIN stmt
 ;
 prepare: PREPARE opt_force opt_name stmt
 ;
-opt_force: 
+opt_force:
 	| FORCE
 ;
-opt_name: 
+opt_name:
 	| IDENT from_or_as
 	| STR from_or_as
 ;
@@ -308,18 +310,18 @@ from_or_as: FROM
 ;
 execute: EXECUTE expr execute_using
 ;
-execute_using: 
+execute_using:
 	| USING construction_expr
 ;
 infer: INFER opt_keyspace_collection simple_keyspace_ref opt_infer_using opt_infer_ustat_with
 ;
-opt_keyspace_collection: 
+opt_keyspace_collection:
 	| KEYSPACE
 	| COLLECTION
 ;
-opt_infer_using: 
+opt_infer_using:
 ;
-opt_infer_ustat_with: 
+opt_infer_ustat_with:
 	| infer_ustat_with
 ;
 infer_ustat_with: WITH expr
@@ -394,7 +396,7 @@ select_clause: SELECT projection
 projection: opt_quantifier projects
 	| opt_quantifier raw expr opt_as_alias
 ;
-opt_quantifier: 
+opt_quantifier:
 	| ALL
 	| DISTINCT
 ;
@@ -409,7 +411,7 @@ project: STAR
 	| expr DOT STAR
 	| expr opt_as_alias
 ;
-opt_as_alias: 
+opt_as_alias:
 	| as_alias
 ;
 as_alias: alias
@@ -417,7 +419,7 @@ as_alias: alias
 ;
 alias: IDENT
 ;
-opt_from: 
+opt_from:
 	| from
 ;
 from: FROM from_term
@@ -454,7 +456,7 @@ scope_name: IDENT
 ;
 keyspace_name: IDENT
 ;
-opt_use: 
+opt_use:
 	| USE use_options
 ;
 use_options: use_keys
@@ -472,7 +474,7 @@ use_index: INDEX LPAREN index_refs RPAREN
 join_hint: HASH LPAREN use_hash_option RPAREN
 	| NL
 ;
-opt_primary: 
+opt_primary:
 	| PRIMARY
 ;
 index_refs: index_ref
@@ -485,18 +487,18 @@ use_hash_option: BUILD
 ;
 opt_use_del_upd: opt_use
 ;
-opt_join_type: 
+opt_join_type:
 	| INNER
 	| LEFT opt_outer
 ;
-opt_outer: 
+opt_outer:
 	| OUTER
 ;
 on_keys: ON opt_primary KEYS expr
 ;
 on_key: ON opt_primary KEY expr
 ;
-opt_let: 
+opt_let:
 	| let_
 ;
 let_: LET_ bindings
@@ -506,7 +508,7 @@ bindings: binding
 ;
 binding: alias EQ expr
 ;
-opt_with: 
+opt_with:
 	| WITH with_list
 ;
 with_list: with_term
@@ -514,12 +516,12 @@ with_list: with_term
 ;
 with_term: alias AS paren_expr
 ;
-opt_where: 
+opt_where:
 	| where
 ;
 where: WHERE expr
 ;
-opt_group: 
+opt_group:
 	| group
 ;
 group: GROUP BY group_terms opt_letting opt_having
@@ -530,17 +532,17 @@ group_terms: group_term
 ;
 group_term: expr opt_as_alias
 ;
-opt_letting: 
+opt_letting:
 	| letting
 ;
 letting: LETTING bindings
 ;
-opt_having: 
+opt_having:
 	| having
 ;
 having: HAVING expr
 ;
-opt_order_by: 
+opt_order_by:
 	| order_by
 ;
 order_by: ORDER BY sort_terms
@@ -550,13 +552,13 @@ sort_terms: sort_term
 ;
 sort_term: expr opt_dir opt_order_nulls
 ;
-opt_dir: 
+opt_dir:
 	| dir
 ;
 dir: ASC
 	| DESC
 ;
-opt_order_nulls: 
+opt_order_nulls:
 	| nulls first_last
 ;
 first_last: FIRST
@@ -564,12 +566,12 @@ first_last: FIRST
 ;
 nulls: NULLS
 ;
-opt_limit: 
+opt_limit:
 	| limit
 ;
 limit: LIMIT expr
 ;
-opt_offset: 
+opt_offset:
 	| offset
 ;
 offset: OFFSET expr
@@ -584,7 +586,7 @@ simple_keyspace_ref: keyspace_name opt_as_alias
 keyspace_ref: simple_keyspace_ref
 	| param_expr opt_as_alias
 ;
-opt_values_header: 
+opt_values_header:
 	| LPAREN opt_primary KEY COMMA VALUE RPAREN
 	| LPAREN opt_primary KEY COMMA VALUE COMMA OPTIONS RPAREN
 ;
@@ -604,7 +606,7 @@ key_val_expr: LPAREN expr COMMA expr RPAREN
 ;
 key_val_options_expr: LPAREN expr COMMA expr COMMA expr RPAREN
 ;
-opt_returning: 
+opt_returning:
 	| returning
 ;
 returning: RETURNING returns_
@@ -642,7 +644,7 @@ set_term: path EQ expr opt_update_for
 ;
 function_meta_expr: function_name LPAREN opt_exprs RPAREN
 ;
-opt_update_for: 
+opt_update_for:
 	| update_for
 ;
 update_for: update_dimensions opt_when END
@@ -660,7 +662,7 @@ update_binding: variable IN expr
 ;
 variable: IDENT
 ;
-opt_when: 
+opt_when:
 	| WHEN expr
 ;
 unset: UNSET unset_terms
@@ -674,19 +676,19 @@ merge: MERGE INTO simple_keyspace_ref opt_use_merge USING simple_from_term ON op
 ;
 opt_use_merge: opt_use
 ;
-opt_key: 
+opt_key:
 	| key
 ;
-merge_actions: 
+merge_actions:
 	| WHEN MATCHED THEN UPDATE merge_update opt_merge_delete_insert
 	| WHEN MATCHED THEN DELETE_ merge_delete opt_merge_insert
 	| WHEN NOT MATCHED THEN INSERT merge_insert
 ;
-opt_merge_delete_insert: 
+opt_merge_delete_insert:
 	| WHEN MATCHED THEN DELETE_ merge_delete opt_merge_insert
 	| WHEN NOT MATCHED THEN INSERT merge_insert
 ;
-opt_merge_insert: 
+opt_merge_insert:
 	| WHEN NOT MATCHED THEN INSERT merge_insert
 ;
 merge_update: set opt_where
@@ -747,12 +749,12 @@ flush_or_truncate: FLUSH
 create_index: CREATE PRIMARY INDEX opt_primary_name ON named_keyspace_ref index_partition opt_index_using opt_index_with
 	| CREATE INDEX index_name ON named_keyspace_ref LPAREN index_terms RPAREN index_partition index_where opt_index_using opt_index_with
 ;
-opt_primary_name: 
+opt_primary_name:
 	| index_name
 ;
 index_name: IDENT
 ;
-opt_index_name: 
+opt_index_name:
 	| index_name
 ;
 named_keyspace_ref: simple_named_keyspace_ref
@@ -765,17 +767,17 @@ simple_named_keyspace_ref: keyspace_name
 named_scope_ref: namespace_name bucket_name DOT scope_name
 	| bucket_name DOT scope_name
 ;
-index_partition: 
+index_partition:
 	| PARTITION BY HASH LPAREN exprs RPAREN
 ;
-opt_index_using: 
+opt_index_using:
 	| index_using
 ;
 index_using: USING VIEW
 	| USING GSI
 	| USING FTS
 ;
-opt_index_with: 
+opt_index_with:
 	| index_with
 ;
 index_with: WITH expr
@@ -795,10 +797,10 @@ index_expr: expr
 all: ALL
 	| EACH
 ;
-index_where: 
+index_where:
 	| WHERE index_expr
 ;
-opt_ikattr: 
+opt_ikattr:
 	| ikattr
 	| ikattr ikattr
 ;
@@ -817,7 +819,7 @@ build_index: BUILD INDEX ON named_keyspace_ref LPAREN exprs RPAREN opt_index_usi
 ;
 create_function: CREATE opt_replace FUNCTION func_name LPAREN parm_list RPAREN func_body
 ;
-opt_replace: 
+opt_replace:
 	| OR REPLACE
 ;
 func_name: short_func_name
@@ -828,7 +830,7 @@ short_func_name: keyspace_name
 long_func_name: namespace_term keyspace_name
 	| namespace_term bucket_name DOT scope_name DOT keyspace_name
 ;
-parm_list: 
+parm_list:
 	| DOT DOT DOT
 	| parameter_terms
 ;
@@ -859,7 +861,7 @@ update_statistics: UPDATE STATISTICS opt_for named_keyspace_ref LPAREN update_st
 	| ANALYZE INDEX simple_named_keyspace_ref DOT index_name opt_index_using opt_infer_ustat_with
 	| ANALYZE INDEX index_name ON named_keyspace_ref opt_index_using opt_infer_ustat_with
 ;
-opt_for: 
+opt_for:
 	| FOR
 ;
 update_stat_terms: update_stat_term
@@ -960,7 +962,7 @@ construction_expr: object
 ;
 object: LBRACE opt_members RBRACE
 ;
-opt_members: 
+opt_members:
 	| members
 ;
 members: member
@@ -971,7 +973,7 @@ member: expr COLON expr
 ;
 array: LBRACKET opt_exprs RBRACKET
 ;
-opt_exprs: 
+opt_exprs:
 	| exprs
 ;
 exprs: expr
@@ -993,7 +995,7 @@ when_thens: WHEN expr THEN expr
 ;
 searched_case: when_thens opt_else
 ;
-opt_else: 
+opt_else:
 	| ELSE expr
 ;
 function_expr: NTH_VALUE LPAREN exprs RPAREN opt_from_first_last opt_nulls_treatment window_function_details
@@ -1042,7 +1044,7 @@ all_expr: all expr
 	| all DISTINCT expr
 	| DISTINCT expr
 ;
-opt_window_clause: 
+opt_window_clause:
 	| WINDOW window_list
 ;
 window_list: window_term
@@ -1052,20 +1054,20 @@ window_term: IDENT AS window_specification
 ;
 window_specification: LPAREN opt_window_name opt_window_partition opt_order_by opt_window_frame RPAREN
 ;
-opt_window_name: 
+opt_window_name:
 	| IDENT
 ;
-opt_window_partition: 
+opt_window_partition:
 	| PARTITION BY exprs
 ;
-opt_window_frame: 
+opt_window_frame:
 	| window_frame_modifier window_frame_extents opt_window_frame_exclusion
 ;
 window_frame_modifier: ROWS
 	| RANGE
 	| GROUPS
 ;
-opt_window_frame_exclusion: 
+opt_window_frame_exclusion:
 	| EXCLUDE NO OTHERS
 	| EXCLUDE CURRENT ROW
 	| EXCLUDE TIES
@@ -1082,22 +1084,22 @@ window_frame_extent: UNBOUNDED PRECEDING
 window_frame_valexpr_modifier: PRECEDING
 	| FOLLOWING
 ;
-opt_nulls_treatment: 
+opt_nulls_treatment:
 	| nulls_treatment
 ;
 nulls_treatment: RESPECT NULLS
 	| IGNORE NULLS
 ;
-opt_from_first_last: 
+opt_from_first_last:
 	| FROM first_last
 ;
 agg_quantifier: ALL
 	| DISTINCT
 ;
-opt_filter: 
+opt_filter:
 	| FILTER LPAREN where RPAREN
 ;
-opt_window_function: 
+opt_window_function:
 	| window_function_details
 ;
 window_function_details: OVER IDENT
@@ -1112,19 +1114,19 @@ rollback_transaction: ROLLBACK opt_transaction opt_savepoint
 start_or_begin: START
 	| BEGIN
 ;
-opt_transaction: 
+opt_transaction:
 	| transaction
 ;
 transaction: TRAN
 	| TRANSACTION
 	| WORK
 ;
-opt_savepoint: 
+opt_savepoint:
 	| TO SAVEPOINT savepoint_name
 ;
 savepoint_name: IDENT
 ;
-opt_isolation_level: 
+opt_isolation_level:
 	| isolation_level
 ;
 isolation_level: ISOLATION LEVEL isolation_val

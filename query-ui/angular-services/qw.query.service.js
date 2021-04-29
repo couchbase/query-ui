@@ -8,6 +8,8 @@ import {QwValidateQueryService} from '/_p/ui/query/angular-services/qw.validate.
 import {QwQueryPlanService}     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
 import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
 
+
+
 import {QwDialogService} from '/_p/ui/query/angular-directives/qw.dialog.service.js';
 
 import {MnPendingQueryKeeper, MnPools, MnPoolDefault, MnPermissions} from '/ui/app/ajs.upgraded.providers.js';

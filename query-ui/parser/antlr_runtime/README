@@ -1,0 +1,19 @@
+Our javascript N1QL parser relies on the Antlr4 runtime. The version
+installable via npm is not currently compatable with our runtime
+environment, because includes references to node.js libraries
+(specifically 'fs'). The downloadable runtime is in source code form,
+so it needs packaging to work.
+
+These steps rely on webpack v5.
+
+Here are the steps:
+
+1) Download the latest javascript runtime, e.g.:
+
+curl https://www.antlr.org/download/antlr-javascript-runtime-4.9.2.zip
+
+2) unzip it
+
+3) use webpack to package it using the webpack.config.js file here.
+
+4) add an "export" statement so we can import it.

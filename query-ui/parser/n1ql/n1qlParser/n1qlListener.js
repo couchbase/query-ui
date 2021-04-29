@@ -1,6 +1,6 @@
 // Generated from n1ql.g4 by ANTLR 4.9.1
 // jshint ignore: start
-import antlr4 from 'antlr4';
+import antlr4 from './antlr4.js';
 
 // This class defines a complete listener for a parse tree produced by n1qlParser.
 export default class n1qlListener extends antlr4.tree.ParseTreeListener {

@@ -190,8 +190,9 @@ function queryFile() {
 function querySingle() {
     //N1qlParser.parse("max(A + b.c.d[1].e)");
     var result =
-      N1qlParser.parse('select * from `beer-sample` where foo = "bar"; select * from `travel-sample`');
-    //console.log(JSON.stringify(result));
+      N1qlParser.parse('select * from `beer-sample` use keys "12345";');
+//    N1qlParser.parse('update `beer-sample` set foo = "bar" use keys "12345";');
+    console.log(JSON.stringify(result));
 }
 
 console.log("Hello world, starting query parsing...");
