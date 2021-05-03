@@ -80,18 +80,16 @@
       <div class="formrow">
         <label class="inline">Import With Document ID</label>
         <ng-template #docIdTipContent>
-          <body class="text-small">
             Every document stored in Couchbase requires a unique Document ID.
             For the ID, you can select an automatically generated UUID, or a
             field from the data. If you choose a field, it much have a distinct
             value for every document. Any duplicate ID values will cause later
             documents to overwrite earlier ones with the same ID value.
-          </body>
         </ng-template>
         <span
           class="fa-stack icon-info"
           [ngbTooltip]="docIdTipContent"
-          triggers="click:blur"
+          tooltip-trigger="mouseenter"
           placement="auto"
           tooltip-append-to-body="true">
           <span class="icon fa-circle-thin fa-stack-2x"></span>
