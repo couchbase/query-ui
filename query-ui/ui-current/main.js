@@ -1,6 +1,6 @@
 import angular from "/ui/web_modules/angular.js";
 import app from "/ui/app/app.js";
-import { mnLazyload } from "/ui/app/mn.app.imports.js";
+import { mnLoadNgModule, mnLazyload } from "/ui/app/mn.app.imports.js";
 import ace from '/ui/libs/ace/ace-wrapper.js';
 
 import { NgModule } from '/ui/web_modules/@angular/core.js';
@@ -78,15 +78,12 @@ class QueryUI {
           {
             name: "app.admin.docs.**",
             url: "/docs",
-            loadChildren: () =>
-              mnLazyload("/_p/ui/query/angular-components/qw.documents.module.js",
-                         "QwDocumentsModule")
+            lazyLoad: mnLoadNgModule("/_p/ui/query/angular-components/qw.documents.module.js",
+                                         "QwDocumentsModule")
           }, {
             name: "app.admin.query.**",
             url: "/query",
-            lazyLoad: ($transition$) =>
-              mnLazyload("/_p/ui/query/ui-current/query.js",
-                         "qwQuery", $transition$)
+            lazyLoad: mnLazyload("/_p/ui/query/ui-current/query.js", "qwQuery")
           },
           //   {
           //   name: "app.admin.hello_world.**",
