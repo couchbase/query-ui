@@ -7,7 +7,7 @@
     <div class="row flex-left">
       <span class="icon red-3 fa-warning fa-2x"></span>
       <p>
-        <span ng-if="error_detail">{{error_detail | limitTo: 300}}<br></span>
+        <span ng-if="error_detail">{{error_detail | limitTo: 800}}<br></span>
         <em ng-if="error_detail_array">
           <span ng-repeat="msg in error_detail_array | limitTo: 10">{{msg | limitTo: 300}}<br></span>
         </em>
