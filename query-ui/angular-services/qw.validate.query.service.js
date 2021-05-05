@@ -127,7 +127,12 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
     }
 
     // meanwhile issue a query to the local node get the list of buckets
-    var queryData = {statement: "select buckets.name from system:buckets;"};
+    var queryData;
+    if (mnPoolDefault.export.compat.atLeast70)
+      queryData = {statement: "select buckets.name from system:buckets;"};
+    else
+      queryData = {statement: "select keyspaces.name from system:keyspaces;"};
+
     $http.post("/_p/query/query/service", queryData)
       .then(function success(resp) {
           //var data = resp.data, status = resp.status;
