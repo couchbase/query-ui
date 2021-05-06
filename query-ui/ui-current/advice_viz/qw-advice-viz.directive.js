@@ -76,7 +76,7 @@ function getAdviceViz(qwQueryService) {
                     if (resp && resp.config && resp.config.data && resp.config.data.statement)
                       message_details.push(resp.config.data.statement);
                     if (resp && resp.data && resp.data.errors)
-                      message_details.push(resp.data.errors);
+                      resp.data.errors.forEach(error => message_details.push(error.msg));
 
                     qwQueryService.showErrorDialog(message,message_details);
                   });
