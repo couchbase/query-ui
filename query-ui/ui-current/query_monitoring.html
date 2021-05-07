@@ -68,7 +68,7 @@
         <div class="cbui-tablerow padding-left">
           <span
              class="cbui-table-cell flex-grow-3 cursor-pointer"
-             uib-tooltip-html="'{{result.statement}}'"
+             uib-tooltip="{{result.statement}}"
              tooltip-placement="auto top"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
@@ -141,7 +141,7 @@
         <div class="cbui-tablerow padding-left">
           <span
              class="cbui-table-cell flex-grow-3 cursor-pointer"
-             uib-tooltip-html="'{{result.statement}}'"
+             uib-tooltip="{{result.statement}}"
              tooltip-placement="auto top"
              tooltip-class="break-word">
             {{result.statement | limitTo: 160}}
@@ -154,7 +154,7 @@
           </span>
           <span
              class="cbui-table-cell cursor-pointer flex-grow-half"
-             uib-tooltip-html="'{{result.resultCount}}'"
+             uib-tooltip="{{result.resultCount}}"
              tooltip-placement="auto top"
              tooltip-class="break-word">
             {{result.resultCount}}
