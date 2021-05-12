@@ -96,56 +96,42 @@
               <span class="icon fa-spinner fa-spin fa-pulse"></span>
             </div>
           </button>
-          <div ng-if="!qc.compat.atLeast70" class="padding-left-half padding-right-half">
+          <div ng-if="!qc.compat.atLeast70" class="padding-left-1 padding-right-half">
               <button
                  ng-disabled="qc.lastResult().busy"
                  ng-click="qc.query({explainOnly: true})"
-                 class="outline tight">
+                 class="outline tight margin-0">
                 Explain
               </button>
               <button
                  ng-if="qc.isEnterprise()"
                  ng-disabled="qc.lastResult().busy"
                  ng-click="qc.runAdviseOnLatest()"
-                 class="outline tight">
-                 Advise
+                 class="outline tight margin-0">
+                Index Advisor
               </button>
           </div>
-          <div ng-if="qc.compat.atLeast70"
-             class="cbui-drawer"
-             ng-class="{open : poolDefault.openDrawer}">
-            <div
-               class="cbui-drawer-opener"
-               title="show more actions"
-               ng-click="poolDefault.openDrawer = true; $event.stopPropagation();">
-              |<span class="icon fa-chevron-right"></span>
-            </div>
-            <div class="nowrap">
-              <button
-                 ng-disabled="qc.lastResult().busy"
-                 ng-click="qc.query({explainOnly: true})"
-                 class="outline tight">
-                Explain
-              </button>
-              <button ng-if="qc.isEnterprise()"
-                 ng-disabled="qc.lastResult().busy"
-                 ng-click="qc.runAdviseOnLatest()"
-                 class="outline tight">
-                 Advise
-              </button>
-              <button ng-if="qc.isEnterprise()"
-                 ng-disabled="qc.lastResult().busy"
-                 ng-click="qc.query({txImplicit: true})"
-                 class="outline tight">
-                Run As Transaction
-              </button>
-            </div>
-            <div
-               class="cbui-drawer-closer"
-               title="hide this"
-               ng-click="poolDefault.openDrawer = false; $event.stopPropagation();">
-              <span class="icon fa-times-circle padding-half"></span>
-            </div>
+          <div ng-if="qc.compat.atLeast70" class="nowrap padding-left-1 padding-right-half">
+            <button ng-if="qc.isEnterprise()"
+               ng-disabled="qc.lastResult().busy"
+               ng-click="qc.query({txImplicit: true})"
+               class="outline tight margin-0">
+              Run as TX
+            </button>
+            <button ng-if="qc.isEnterprise()"
+               ng-disabled="qc.lastResult().busy"
+               ng-click="qc.runAdviseOnLatest()"
+               class="outline tight margin-0">
+              Index Advisor
+            </button>
+            <button
+               ng-disabled="qc.lastResult().busy"
+               ng-click="qc.query({explainOnly: true})"
+               class="outline tight margin-0">
+              Explain
+            </button>
+
+
           </div>
         </span>
 <!-- query execution summary stats -------------------------------------------->
@@ -158,23 +144,29 @@
              ng-class="{success: qc.status_success() || qc.lastResult().status == 'explain success', error: qc.status_fail()}">
             {{qc.lastResult().status}}
           </span>
-          <span class="nowrap" ng-hide="qc.lastResult().status == 'executing'">
+          <span class="nowrap grayblack-1" ng-hide="qc.lastResult().status == 'executing'">
             {{qc.lastResult().getLastRun()}}
           </span>
-          <span ng-if="qc.lastResult().elapsedTime" class="nowrap pipe">
-            elapsed: {{qc.lastResult().elapsedTime}}
+          <!--
+            <span ng-if="qc.lastResult().elapsedTime" class="nowrap pipe">
+              elapsed: {{qc.lastResult().elapsedTime}}
+            </span>
+            No one knows what this means anyhow
+          -->
+          <span ng-if="qc.lastResult().executionTime" class="nowrap pipe bold cursor-pointer"
+          ng-attr-title="Execution: {{qc.lastResult().executionTime}}, Elapsed: {{qc.lastResult().elapsedTime}}"
+          >
+            {{qc.lastResult().executionTime}}
           </span>
-          <span ng-if="qc.lastResult().executionTime" class="nowrap pipe">
-            execution: {{qc.lastResult().executionTime}}
+          <span ng-if="qc.lastResult().mutationCount" class="nowrap pipe bold cursor-pointer" title="Mutation Count">
+            {{qc.lastResult().mutationCount}} mutations
           </span>
-          <span ng-if="qc.lastResult().mutationCount" class="nowrap pipe">
-            mutations: {{qc.lastResult().mutationCount}}
+          <span ng-if="!qc.lastResult().mutationCount && qc.lastResult().resultCount" class="nowrap pipe bold cursor-pointer"
+          title="Result Count">
+            {{qc.lastResult().resultCount}} docs
           </span>
-          <span ng-if="!qc.lastResult().mutationCount && qc.lastResult().resultCount" class="nowrap pipe">
-            docs: {{qc.lastResult().resultCount}}
-          </span>
-          <span ng-if="qc.lastResult().resultSize" class="nowrap pipe">
-            size: {{qc.lastResult().resultSize}} bytes
+          <span ng-if="qc.lastResult().resultSize" class="nowrap pipe bold cursor-pointer" title="Result Size">
+            {{qc.lastResult().resultSize}} bytes
           </span>
         </div>
 <!-- format & full-screen controls ----------------------------------------- -->
@@ -200,7 +192,7 @@
 <!-- query results ------------------------------------------------------------>
     <div  ng-click="qc.handleClick('results')" class="wb-results-header">
       <span class="row">
-        <h5 class="margin-right-half">Query Results</h5>
+        <h5 class="margin-right-half">Results</h5>
         <a
            ng-click="qc.copyResultAsCSV()"
            title="Copy results in tab-separated format">
@@ -271,13 +263,18 @@
       {{qc.qqs.bucket_errors}}
     </div>
     <span ng-if="!qc.qqs.bucket_errors">
-      <div class="row margin-bottom-half">
-        <h5 class="ellipsis">Data Insights <small class="resp-hide-med" ng-if="qc.compat.atLeast70">buckets, scopes, collections</small></h5>
+      <div class="row">
+        <h5 class="ellipsis">
+          Explore Your Data
+        </h5>
         <div class="insights-sidebar-expand" ng-click="qc.toggleAnalysisSize()">
           <span ng-if="!qc.analysisExpanded" class="icon fa-expand" title="expand"></span>
           <span ng-if="qc.analysisExpanded" class="icon fa-compress" title="contract"></span>
         </div>
       </div>
+      <p class="resp-hide-med text-small margin-right-half" ng-if="qc.compat.atLeast70">
+        Common document types, field names, and sample values from your data - by bucket, scope, collection.
+      </p>
       <div class="insights-sidebar-body">
         <section>
           <span ng-repeat="bucket in qc.buckets">
