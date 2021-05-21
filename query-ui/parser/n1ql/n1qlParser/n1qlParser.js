@@ -1837,162 +1837,173 @@ const sharedContextCache = new antlr4.PredictionContextCache();
 
 export default class n1qlParser extends antlr4.Parser {
 
-    static grammarFileName = "n1ql.g4";
-    static literalNames = [ null, null, null, null, null, null, null, "'.'", 
-                            "'+'", null, "'*'", "'/'", "'%'", "'=='", "'='", 
-                            null, "'<'", "'<='", "'>'", "'>='", "'||'", 
-                            "'('", "')'", "'{'", "'}'", "','", "':'", "'['", 
-                            "']'", "']i'", "';'", "'!'", null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, null, null, 
-                            null, null, null, null, null, null, "'?'" ];
-    static symbolicNames = [ null, "STR", "INT", "NUM", "BLOCK_COMMENT", 
-                             "LINE_COMMENT", "WHITESPACE", "DOT", "PLUS", 
-                             "MINUS", "STAR", "DIV", "MOD", "DEQ", "EQ", 
-                             "NE", "LT", "LE", "GT", "GE", "CONCAT", "LPAREN", 
-                             "RPAREN", "LBRACE", "RBRACE", "COMMA", "COLON", 
-                             "LBRACKET", "RBRACKET", "RBRACKET_ICASE", "SEMI", 
-                             "NOT_A_TOKEN", "NAMESPACE_ID", "ADVISE", "ALL", 
-                             "ALTER", "ANALYZE", "AND", "ANY", "ARRAY", 
-                             "AS", "ASC", "AT", "BEGIN", "BETWEEN", "BINARY", 
-                             "BOOLEAN", "BREAK", "BUCKET", "BUILD", "BY", 
-                             "CALL", "CASE", "CAST", "CLUSTER", "COLLATE", 
-                             "COLLECTION", "COMMIT", "COMMITTED", "CONNECT", 
-                             "CONTINUE", "CORRELATED", "COVER", "CREATE", 
-                             "CURRENT", "DATABASE", "DATASET", "DATASTORE", 
-                             "DECLARE", "DECREMENT", "DELETE_", "DERIVED", 
-                             "DESC", "DESCRIBE", "DISTINCT", "DO", "DROP", 
-                             "EACH", "ELEMENT", "ELSE", "END", "EVERY", 
-                             "EXCEPT", "EXCLUDE", "EXECUTE", "EXISTS", "EXPLAIN", 
-                             "FALSE", "FETCH", "FILTER", "FIRST", "FLATTEN", 
-                             "FLUSH", "FOLLOWING", "FOR", "FORCE", "FROM", 
-                             "FTS", "FUNCTION", "GOLANG", "GRANT", "GROUP", 
-                             "GROUPS", "GSI", "HASH", "HAVING", "IF", "IGNORE", 
-                             "ILIKE", "IN", "INCLUDE", "INCREMENT", "INDEX", 
-                             "INFER", "INLINE", "INNER", "INSERT", "INTERSECT", 
-                             "INTO", "IS", "ISOLATION", "JAVASCRIPT", "JOIN", 
-                             "KEY", "KEYS", "KEYSPACE", "KNOWN", "LANGUAGE", 
-                             "LAST", "LEFT", "LET_", "LETTING", "LEVEL", 
-                             "LIKE", "LIMIT", "LSM", "MAP", "MAPPING", "MATCHED", 
-                             "MATERIALIZED", "MERGE", "MISSING", "NAMESPACE", 
-                             "NEST", "NL", "NO", "NOT", "NTH_VALUE", "NULL", 
-                             "NULLS", "NUMBER", "OBJECT", "OFFSET", "ON", 
-                             "OPTION", "OPTIONS", "OR", "ORDER", "OTHERS", 
-                             "OUTER", "OVER", "PARSE", "PARTITION", "PASSWORD", 
-                             "PATH", "POOL", "PRECEDING", "PREPARE", "PRIMARY", 
-                             "PRIVATE", "PRIVILEGE", "PROCEDURE", "PROBE", 
-                             "PUBLIC", "RANGE", "RAW", "READ", "REALM", 
-                             "REDUCE", "RENAME", "REPLACE", "RESPECT", "RETURN", 
-                             "RETURNING", "REVOKE", "RIGHT", "ROLE", "ROLLBACK", 
-                             "ROW", "ROWS", "SATISFIES", "SAVEPOINT", "SCHEMA", 
-                             "SCOPE", "SELECT", "SELF", "SET", "SHOW", "SOME", 
-                             "START", "STATISTICS", "STRING", "SYSTEM", 
-                             "THEN", "TIES", "TO", "TRAN", "TRANSACTION", 
-                             "TRIGGER", "TRUE", "TRUNCATE", "UNBOUNDED", 
-                             "UNDER", "UNION", "UNIQUE", "UNKNOWN", "UNNEST", 
-                             "UNSET", "UPDATE", "UPSERT", "USE", "USER", 
-                             "USING", "VALIDATE", "VALUE", "VALUED", "VALUES", 
-                             "VIA", "VIEW", "WHEN", "WHERE", "WHILE", "WINDOW", 
-                             "WITH", "WITHIN", "WORK", "XOR", "IDENT_ICASE", 
-                             "IDENT", "NAMED_PARAM", "POSITIONAL_PARAM", 
-                             "NEXT_PARAM" ];
-    static ruleNames = [ "input", "opt_trailer", "stmt_body", "stmt", "advise", 
-                         "opt_index", "explain", "prepare", "opt_force", 
-                         "opt_name", "from_or_as", "execute", "execute_using", 
-                         "infer", "opt_keyspace_collection", "opt_infer_using", 
-                         "opt_infer_ustat_with", "infer_ustat_with", "select_stmt", 
-                         "dml_stmt", "ddl_stmt", "role_stmt", "index_stmt", 
-                         "scope_stmt", "collection_stmt", "function_stmt", 
-                         "transaction_stmt", "fullselect", "select_terms", 
-                         "select_term", "subselect", "from_select", "select_from", 
-                         "select_clause", "projection", "opt_quantifier", 
-                         "raw", "projects", "project", "opt_as_alias", "as_alias", 
-                         "alias", "opt_from", "from", "from_term", "simple_from_term", 
-                         "unnest", "keyspace_term", "keyspace_path", "namespace_term", 
-                         "namespace_name", "bucket_name", "scope_name", 
-                         "keyspace_name", "opt_use", "use_options", "use_keys", 
-                         "use_index", "join_hint", "opt_primary", "index_refs", 
-                         "index_ref", "use_hash_option", "opt_use_del_upd", 
-                         "opt_join_type", "opt_outer", "on_keys", "on_key", 
-                         "opt_let", "let_", "bindings", "binding", "opt_with", 
-                         "with_list", "with_term", "opt_where", "where", 
-                         "opt_group", "group", "group_terms", "group_term", 
-                         "opt_letting", "letting", "opt_having", "having", 
-                         "opt_order_by", "order_by", "sort_terms", "sort_term", 
-                         "opt_dir", "dir", "opt_order_nulls", "first_last", 
-                         "nulls", "opt_limit", "limit", "opt_offset", "offset", 
-                         "insert", "simple_keyspace_ref", "keyspace_ref", 
-                         "opt_values_header", "key", "values_list", "values", 
-                         "next_values", "key_val_expr", "key_val_options_expr", 
-                         "opt_returning", "returning", "returns_", "key_expr_header", 
-                         "value_expr_header", "options_expr_header", "key_val_options_expr_header", 
-                         "upsert", "delete_", "update", "set", "set_terms", 
-                         "set_term", "function_meta_expr", "opt_update_for", 
-                         "update_for", "update_dimensions", "update_dimension", 
-                         "update_binding", "variable", "opt_when", "unset", 
-                         "unset_terms", "unset_term", "merge", "opt_use_merge", 
-                         "opt_key", "merge_actions", "opt_merge_delete_insert", 
-                         "opt_merge_insert", "merge_update", "merge_delete", 
-                         "merge_insert", "grant_role", "role_list", "role_name", 
-                         "keyspace_scope_list", "keyspace_scope", "user_list", 
-                         "user", "revoke_role", "create_scope", "drop_scope", 
-                         "create_collection", "drop_collection", "flush_collection", 
-                         "flush_or_truncate", "create_index", "opt_primary_name", 
-                         "index_name", "opt_index_name", "named_keyspace_ref", 
-                         "simple_named_keyspace_ref", "named_scope_ref", 
-                         "index_partition", "opt_index_using", "index_using", 
-                         "opt_index_with", "index_with", "index_terms", 
-                         "index_term", "index_term_expr", "index_expr", 
-                         "all", "index_where", "opt_ikattr", "ikattr", "drop_index", 
-                         "alter_index", "build_index", "create_function", 
-                         "opt_replace", "func_name", "short_func_name", 
-                         "long_func_name", "parm_list", "parameter_terms", 
-                         "func_body", "drop_function", "execute_function", 
-                         "update_statistics", "opt_for", "update_stat_terms", 
-                         "update_stat_term", "path", "expr", "valued", "c_expr", 
-                         "b_expr", "literal", "construction_expr", "object", 
-                         "opt_members", "members", "member", "array", "opt_exprs", 
-                         "exprs", "param_expr", "case_expr", "simple_or_searched_case", 
-                         "simple_case", "when_thens", "searched_case", "opt_else", 
-                         "function_expr", "function_name", "collection_expr", 
-                         "collection_cond", "coll_bindings", "coll_binding", 
-                         "satisfies", "collection_xform", "paren_expr", 
-                         "subquery_expr", "expr_input", "all_expr", "opt_window_clause", 
-                         "window_list", "window_term", "window_specification", 
-                         "opt_window_name", "opt_window_partition", "opt_window_frame", 
-                         "window_frame_modifier", "opt_window_frame_exclusion", 
-                         "window_frame_extents", "window_frame_extent", 
-                         "window_frame_valexpr_modifier", "opt_nulls_treatment", 
-                         "nulls_treatment", "opt_from_first_last", "agg_quantifier", 
-                         "opt_filter", "opt_window_function", "window_function_details", 
-                         "start_transaction", "commit_transaction", "rollback_transaction", 
-                         "start_or_begin", "opt_transaction", "transaction", 
-                         "opt_savepoint", "savepoint_name", "opt_isolation_level", 
-                         "isolation_level", "isolation_val", "set_transaction_isolation", 
-                         "savepoint" ];
+  static get grammarFileName() {
+    return "n1ql.g4";
+  }
+
+  static get literalNames() {
+    return [ null, null, null, null, null, null, null, "'.'",
+             "'+'", null, "'*'", "'/'", "'%'", "'=='", "'='",
+             null, "'<'", "'<='", "'>'", "'>='", "'||'",
+             "'('", "')'", "'{'", "'}'", "','", "':'", "'['",
+             "']'", "']i'", "';'", "'!'", null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, null, null,
+             null, null, null, null, null, null, "'?'" ];
+  }
+
+  static get symbolicNames() {
+    return [ null, "STR", "INT", "NUM", "BLOCK_COMMENT",
+             "LINE_COMMENT", "WHITESPACE", "DOT", "PLUS",
+             "MINUS", "STAR", "DIV", "MOD", "DEQ", "EQ",
+             "NE", "LT", "LE", "GT", "GE", "CONCAT", "LPAREN",
+             "RPAREN", "LBRACE", "RBRACE", "COMMA", "COLON",
+             "LBRACKET", "RBRACKET", "RBRACKET_ICASE", "SEMI",
+             "NOT_A_TOKEN", "NAMESPACE_ID", "ADVISE", "ALL",
+             "ALTER", "ANALYZE", "AND", "ANY", "ARRAY",
+             "AS", "ASC", "AT", "BEGIN", "BETWEEN", "BINARY",
+             "BOOLEAN", "BREAK", "BUCKET", "BUILD", "BY",
+             "CALL", "CASE", "CAST", "CLUSTER", "COLLATE",
+             "COLLECTION", "COMMIT", "COMMITTED", "CONNECT",
+             "CONTINUE", "CORRELATED", "COVER", "CREATE",
+             "CURRENT", "DATABASE", "DATASET", "DATASTORE",
+             "DECLARE", "DECREMENT", "DELETE_", "DERIVED",
+             "DESC", "DESCRIBE", "DISTINCT", "DO", "DROP",
+             "EACH", "ELEMENT", "ELSE", "END", "EVERY",
+             "EXCEPT", "EXCLUDE", "EXECUTE", "EXISTS", "EXPLAIN",
+             "FALSE", "FETCH", "FILTER", "FIRST", "FLATTEN",
+             "FLUSH", "FOLLOWING", "FOR", "FORCE", "FROM",
+             "FTS", "FUNCTION", "GOLANG", "GRANT", "GROUP",
+             "GROUPS", "GSI", "HASH", "HAVING", "IF", "IGNORE",
+             "ILIKE", "IN", "INCLUDE", "INCREMENT", "INDEX",
+             "INFER", "INLINE", "INNER", "INSERT", "INTERSECT",
+             "INTO", "IS", "ISOLATION", "JAVASCRIPT", "JOIN",
+             "KEY", "KEYS", "KEYSPACE", "KNOWN", "LANGUAGE",
+             "LAST", "LEFT", "LET_", "LETTING", "LEVEL",
+             "LIKE", "LIMIT", "LSM", "MAP", "MAPPING", "MATCHED",
+             "MATERIALIZED", "MERGE", "MISSING", "NAMESPACE",
+             "NEST", "NL", "NO", "NOT", "NTH_VALUE", "NULL",
+             "NULLS", "NUMBER", "OBJECT", "OFFSET", "ON",
+             "OPTION", "OPTIONS", "OR", "ORDER", "OTHERS",
+             "OUTER", "OVER", "PARSE", "PARTITION", "PASSWORD",
+             "PATH", "POOL", "PRECEDING", "PREPARE", "PRIMARY",
+             "PRIVATE", "PRIVILEGE", "PROCEDURE", "PROBE",
+             "PUBLIC", "RANGE", "RAW", "READ", "REALM",
+             "REDUCE", "RENAME", "REPLACE", "RESPECT", "RETURN",
+             "RETURNING", "REVOKE", "RIGHT", "ROLE", "ROLLBACK",
+             "ROW", "ROWS", "SATISFIES", "SAVEPOINT", "SCHEMA",
+             "SCOPE", "SELECT", "SELF", "SET", "SHOW", "SOME",
+             "START", "STATISTICS", "STRING", "SYSTEM",
+             "THEN", "TIES", "TO", "TRAN", "TRANSACTION",
+             "TRIGGER", "TRUE", "TRUNCATE", "UNBOUNDED",
+             "UNDER", "UNION", "UNIQUE", "UNKNOWN", "UNNEST",
+             "UNSET", "UPDATE", "UPSERT", "USE", "USER",
+             "USING", "VALIDATE", "VALUE", "VALUED", "VALUES",
+             "VIA", "VIEW", "WHEN", "WHERE", "WHILE", "WINDOW",
+             "WITH", "WITHIN", "WORK", "XOR", "IDENT_ICASE",
+             "IDENT", "NAMED_PARAM", "POSITIONAL_PARAM",
+             "NEXT_PARAM" ];
+  }
+
+  static get ruleNames() {
+    return [ "input", "opt_trailer", "stmt_body", "stmt", "advise",
+             "opt_index", "explain", "prepare", "opt_force",
+             "opt_name", "from_or_as", "execute", "execute_using",
+             "infer", "opt_keyspace_collection", "opt_infer_using",
+             "opt_infer_ustat_with", "infer_ustat_with", "select_stmt",
+             "dml_stmt", "ddl_stmt", "role_stmt", "index_stmt",
+             "scope_stmt", "collection_stmt", "function_stmt",
+             "transaction_stmt", "fullselect", "select_terms",
+             "select_term", "subselect", "from_select", "select_from",
+             "select_clause", "projection", "opt_quantifier",
+             "raw", "projects", "project", "opt_as_alias", "as_alias",
+             "alias", "opt_from", "from", "from_term", "simple_from_term",
+             "unnest", "keyspace_term", "keyspace_path", "namespace_term",
+             "namespace_name", "bucket_name", "scope_name",
+             "keyspace_name", "opt_use", "use_options", "use_keys",
+             "use_index", "join_hint", "opt_primary", "index_refs",
+             "index_ref", "use_hash_option", "opt_use_del_upd",
+             "opt_join_type", "opt_outer", "on_keys", "on_key",
+             "opt_let", "let_", "bindings", "binding", "opt_with",
+             "with_list", "with_term", "opt_where", "where",
+             "opt_group", "group", "group_terms", "group_term",
+             "opt_letting", "letting", "opt_having", "having",
+             "opt_order_by", "order_by", "sort_terms", "sort_term",
+             "opt_dir", "dir", "opt_order_nulls", "first_last",
+             "nulls", "opt_limit", "limit", "opt_offset", "offset",
+             "insert", "simple_keyspace_ref", "keyspace_ref",
+             "opt_values_header", "key", "values_list", "values",
+             "next_values", "key_val_expr", "key_val_options_expr",
+             "opt_returning", "returning", "returns_", "key_expr_header",
+             "value_expr_header", "options_expr_header", "key_val_options_expr_header",
+             "upsert", "delete_", "update", "set", "set_terms",
+             "set_term", "function_meta_expr", "opt_update_for",
+             "update_for", "update_dimensions", "update_dimension",
+             "update_binding", "variable", "opt_when", "unset",
+             "unset_terms", "unset_term", "merge", "opt_use_merge",
+             "opt_key", "merge_actions", "opt_merge_delete_insert",
+             "opt_merge_insert", "merge_update", "merge_delete",
+             "merge_insert", "grant_role", "role_list", "role_name",
+             "keyspace_scope_list", "keyspace_scope", "user_list",
+             "user", "revoke_role", "create_scope", "drop_scope",
+             "create_collection", "drop_collection", "flush_collection",
+             "flush_or_truncate", "create_index", "opt_primary_name",
+             "index_name", "opt_index_name", "named_keyspace_ref",
+             "simple_named_keyspace_ref", "named_scope_ref",
+             "index_partition", "opt_index_using", "index_using",
+             "opt_index_with", "index_with", "index_terms",
+             "index_term", "index_term_expr", "index_expr",
+             "all", "index_where", "opt_ikattr", "ikattr", "drop_index",
+             "alter_index", "build_index", "create_function",
+             "opt_replace", "func_name", "short_func_name",
+             "long_func_name", "parm_list", "parameter_terms",
+             "func_body", "drop_function", "execute_function",
+             "update_statistics", "opt_for", "update_stat_terms",
+             "update_stat_term", "path", "expr", "valued", "c_expr",
+             "b_expr", "literal", "construction_expr", "object",
+             "opt_members", "members", "member", "array", "opt_exprs",
+             "exprs", "param_expr", "case_expr", "simple_or_searched_case",
+             "simple_case", "when_thens", "searched_case", "opt_else",
+             "function_expr", "function_name", "collection_expr",
+             "collection_cond", "coll_bindings", "coll_binding",
+             "satisfies", "collection_xform", "paren_expr",
+             "subquery_expr", "expr_input", "all_expr", "opt_window_clause",
+             "window_list", "window_term", "window_specification",
+             "opt_window_name", "opt_window_partition", "opt_window_frame",
+             "window_frame_modifier", "opt_window_frame_exclusion",
+             "window_frame_extents", "window_frame_extent",
+             "window_frame_valexpr_modifier", "opt_nulls_treatment",
+             "nulls_treatment", "opt_from_first_last", "agg_quantifier",
+             "opt_filter", "opt_window_function", "window_function_details",
+             "start_transaction", "commit_transaction", "rollback_transaction",
+             "start_or_begin", "opt_transaction", "transaction",
+             "opt_savepoint", "savepoint_name", "opt_isolation_level",
+             "isolation_level", "isolation_val", "set_transaction_isolation",
+             "savepoint" ];
+  }
 
     constructor(input) {
         super(input);
@@ -2519,7 +2530,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                    throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 1)");
 	                }
 	                this.state = 522;
-	                this.match(n1qlParser.SEMI); 
+	                this.match(n1qlParser.SEMI);
 	            }
 	            this.state = 527;
 	            this._errHandler.sync(this);
@@ -3803,7 +3814,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                    this.select_term();
 	                    break;
 
-	                } 
+	                }
 	            }
 	            this.state = 719;
 	            this._errHandler.sync(this);
@@ -4180,7 +4191,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 768;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 769;
-	                this.project(); 
+	                this.project();
 	            }
 	            this.state = 774;
 	            this._errHandler.sync(this);
@@ -4593,7 +4604,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                    this.expr(0);
 	                    break;
 
-	                } 
+	                }
 	            }
 	            this.state = 867;
 	            this._errHandler.sync(this);
@@ -5175,7 +5186,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 954;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 955;
-	                this.index_ref(); 
+	                this.index_ref();
 	            }
 	            this.state = 960;
 	            this._errHandler.sync(this);
@@ -5511,7 +5522,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 999;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1000;
-	                this.binding(); 
+	                this.binding();
 	            }
 	            this.state = 1005;
 	            this._errHandler.sync(this);
@@ -5631,7 +5642,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1019;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1020;
-	                this.with_term(); 
+	                this.with_term();
 	            }
 	            this.state = 1025;
 	            this._errHandler.sync(this);
@@ -5854,7 +5865,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1054;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1055;
-	                this.group_term(); 
+	                this.group_term();
 	            }
 	            this.state = 1060;
 	            this._errHandler.sync(this);
@@ -6119,7 +6130,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1090;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1091;
-	                this.sort_term(); 
+	                this.sort_term();
 	            }
 	            this.state = 1096;
 	            this._errHandler.sync(this);
@@ -6733,7 +6744,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1196;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1197;
-	                this.next_values(); 
+	                this.next_values();
 	            }
 	            this.state = 1202;
 	            this._errHandler.sync(this);
@@ -7413,7 +7424,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1327;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1328;
-	                this.set_term(); 
+	                this.set_term();
 	            }
 	            this.state = 1333;
 	            this._errHandler.sync(this);
@@ -7613,7 +7624,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1365;
 	                this.match(n1qlParser.FOR);
 	                this.state = 1366;
-	                this.update_dimension(0); 
+	                this.update_dimension(0);
 	            }
 	            this.state = 1371;
 	            this._errHandler.sync(this);
@@ -7668,7 +7679,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1376;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1377;
-	                this.update_binding(); 
+	                this.update_binding();
 	            }
 	            this.state = 1382;
 	            this._errHandler.sync(this);
@@ -7881,7 +7892,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1419;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1420;
-	                this.unset_term(); 
+	                this.unset_term();
 	            }
 	            this.state = 1425;
 	            this._errHandler.sync(this);
@@ -8470,7 +8481,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1544;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1545;
-	                this.role_name(); 
+	                this.role_name();
 	            }
 	            this.state = 1550;
 	            this._errHandler.sync(this);
@@ -8556,7 +8567,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1557;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1558;
-	                this.keyspace_scope(); 
+	                this.keyspace_scope();
 	            }
 	            this.state = 1563;
 	            this._errHandler.sync(this);
@@ -8702,7 +8713,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1596;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1597;
-	                this.user(); 
+	                this.user();
 	            }
 	            this.state = 1602;
 	            this._errHandler.sync(this);
@@ -9523,7 +9534,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1746;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1747;
-	                this.index_term(); 
+	                this.index_term();
 	            }
 	            this.state = 1752;
 	            this._errHandler.sync(this);
@@ -10225,7 +10236,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 1879;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 1880;
-	                this.match(n1qlParser.IDENT); 
+	                this.match(n1qlParser.IDENT);
 	            }
 	            this.state = 1885;
 	            this._errHandler.sync(this);
@@ -10752,7 +10763,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 2051;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 2052;
-	                this.update_stat_term(); 
+	                this.update_stat_term();
 	            }
 	            this.state = 2057;
 	            this._errHandler.sync(this);
@@ -10900,7 +10911,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                    this.match(n1qlParser.RBRACKET);
 	                    break;
 
-	                } 
+	                }
 	            }
 	            this.state = 2090;
 	            this._errHandler.sync(this);
@@ -11524,7 +11535,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                    this.valued();
 	                    break;
 
-	                } 
+	                }
 	            }
 	            this.state = 2243;
 	            this._errHandler.sync(this);
@@ -11912,7 +11923,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                    this.match(n1qlParser.RBRACKET);
 	                    break;
 
-	                } 
+	                }
 	            }
 	            this.state = 2329;
 	            this._errHandler.sync(this);
@@ -12127,7 +12138,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 2348;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 2349;
-	                this.member(); 
+	                this.member();
 	            }
 	            this.state = 2354;
 	            this._errHandler.sync(this);
@@ -12317,7 +12328,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 2374;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 2375;
-	                this.expr(0); 
+	                this.expr(0);
 	            }
 	            this.state = 2380;
 	            this._errHandler.sync(this);
@@ -12534,7 +12545,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 2404;
 	                this.match(n1qlParser.THEN);
 	                this.state = 2405;
-	                this.expr(0); 
+	                this.expr(0);
 	            }
 	            this.state = 2411;
 	            this._errHandler.sync(this);
@@ -12922,7 +12933,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 2499;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 2500;
-	                this.coll_binding(); 
+	                this.coll_binding();
 	            }
 	            this.state = 2505;
 	            this._errHandler.sync(this);
@@ -13405,7 +13416,7 @@ export default class n1qlParser extends antlr4.Parser {
 	                this.state = 2602;
 	                this.match(n1qlParser.COMMA);
 	                this.state = 2603;
-	                this.window_term(); 
+	                this.window_term();
 	            }
 	            this.state = 2608;
 	            this._errHandler.sync(this);
@@ -16938,7 +16949,7 @@ class From_termContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_from_term;
     }
 
-	simple_from_term = function(i) {
+  simple_from_term(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -17177,7 +17188,7 @@ class Keyspace_pathContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Bucket_nameContext,0);
 	};
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -19262,7 +19273,7 @@ class Simple_keyspace_refContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Bucket_nameContext,0);
 	};
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -19364,7 +19375,7 @@ class Opt_values_headerContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.KEY, 0);
 	};
 
-	COMMA = function(i) {
+	COMMA(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -19595,7 +19606,7 @@ class Key_val_exprContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.LPAREN, 0);
 	};
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -19649,7 +19660,7 @@ class Key_val_options_exprContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.LPAREN, 0);
 	};
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -19660,7 +19671,7 @@ class Key_val_options_exprContext extends antlr4.ParserRuleContext {
 	    }
 	};
 
-	COMMA = function(i) {
+	COMMA(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -19945,7 +19956,7 @@ class Key_val_options_expr_headerContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Key_expr_headerContext,0);
 	};
 
-	COMMA = function(i) {
+	COMMA(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -20537,7 +20548,7 @@ class Update_bindingContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_update_binding;
     }
 
-	variable = function(i) {
+	variable(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -21481,7 +21492,7 @@ class Keyspace_scopeContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Bucket_nameContext,0);
 	};
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -21571,7 +21582,7 @@ class UserContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_user;
     }
 
-	IDENT = function(i) {
+	IDENT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -22131,7 +22142,7 @@ class Named_keyspace_refContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Bucket_nameContext,0);
 	};
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -22194,7 +22205,7 @@ class Simple_named_keyspace_refContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Bucket_nameContext,0);
 	};
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -22737,7 +22748,7 @@ class Opt_ikattrContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_opt_ikattr;
     }
 
-	ikattr = function(i) {
+	ikattr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -23207,7 +23218,7 @@ class Long_func_nameContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(Bucket_nameContext,0);
 	};
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -23254,7 +23265,7 @@ class Parm_listContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_parm_list;
     }
 
-	DOT = function(i) {
+	DOT(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -23372,7 +23383,7 @@ class Func_bodyContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.GOLANG, 0);
 	};
 
-	STR = function(i) {
+	STR(i) {
 		if(i===undefined) {
 			i = null;
 		}
@@ -23816,7 +23827,7 @@ class ExprContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.NOT, 0);
 	};
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -23935,7 +23946,7 @@ class ExprContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.BETWEEN, 0);
 	};
 
-	b_expr = function(i) {
+	b_expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -24127,7 +24138,7 @@ class B_exprContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(C_exprContext,0);
 	};
 
-	b_expr = function(i) {
+	b_expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -24178,7 +24189,7 @@ class B_exprContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.LBRACKET, 0);
 	};
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -24451,7 +24462,7 @@ class MemberContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_member;
     }
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -24790,7 +24801,7 @@ class When_thensContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.WHEN, 0);
 	};
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -25189,7 +25200,7 @@ class Coll_bindingContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_coll_binding;
     }
 
-	variable = function(i) {
+	variable(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -25290,7 +25301,7 @@ class Collection_xformContext extends antlr4.ParserRuleContext {
 	    return this.getToken(n1qlParser.ARRAY, 0);
 	};
 
-	expr = function(i) {
+	expr(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -25943,7 +25954,7 @@ class Window_frame_extentsContext extends antlr4.ParserRuleContext {
         this.ruleIndex = n1qlParser.RULE_window_frame_extents;
     }
 
-	window_frame_extent = function(i) {
+	window_frame_extent(i) {
 	    if(i===undefined) {
 	        i = null;
 	    }
@@ -26878,260 +26889,260 @@ class SavepointContext extends antlr4.ParserRuleContext {
 
 
 
-n1qlParser.InputContext = InputContext; 
-n1qlParser.Opt_trailerContext = Opt_trailerContext; 
-n1qlParser.Stmt_bodyContext = Stmt_bodyContext; 
-n1qlParser.StmtContext = StmtContext; 
-n1qlParser.AdviseContext = AdviseContext; 
-n1qlParser.Opt_indexContext = Opt_indexContext; 
-n1qlParser.ExplainContext = ExplainContext; 
-n1qlParser.PrepareContext = PrepareContext; 
-n1qlParser.Opt_forceContext = Opt_forceContext; 
-n1qlParser.Opt_nameContext = Opt_nameContext; 
-n1qlParser.From_or_asContext = From_or_asContext; 
-n1qlParser.ExecuteContext = ExecuteContext; 
-n1qlParser.Execute_usingContext = Execute_usingContext; 
-n1qlParser.InferContext = InferContext; 
-n1qlParser.Opt_keyspace_collectionContext = Opt_keyspace_collectionContext; 
-n1qlParser.Opt_infer_usingContext = Opt_infer_usingContext; 
-n1qlParser.Opt_infer_ustat_withContext = Opt_infer_ustat_withContext; 
-n1qlParser.Infer_ustat_withContext = Infer_ustat_withContext; 
-n1qlParser.Select_stmtContext = Select_stmtContext; 
-n1qlParser.Dml_stmtContext = Dml_stmtContext; 
-n1qlParser.Ddl_stmtContext = Ddl_stmtContext; 
-n1qlParser.Role_stmtContext = Role_stmtContext; 
-n1qlParser.Index_stmtContext = Index_stmtContext; 
-n1qlParser.Scope_stmtContext = Scope_stmtContext; 
-n1qlParser.Collection_stmtContext = Collection_stmtContext; 
-n1qlParser.Function_stmtContext = Function_stmtContext; 
-n1qlParser.Transaction_stmtContext = Transaction_stmtContext; 
-n1qlParser.FullselectContext = FullselectContext; 
-n1qlParser.Select_termsContext = Select_termsContext; 
-n1qlParser.Select_termContext = Select_termContext; 
-n1qlParser.SubselectContext = SubselectContext; 
-n1qlParser.From_selectContext = From_selectContext; 
-n1qlParser.Select_fromContext = Select_fromContext; 
-n1qlParser.Select_clauseContext = Select_clauseContext; 
-n1qlParser.ProjectionContext = ProjectionContext; 
-n1qlParser.Opt_quantifierContext = Opt_quantifierContext; 
-n1qlParser.RawContext = RawContext; 
-n1qlParser.ProjectsContext = ProjectsContext; 
-n1qlParser.ProjectContext = ProjectContext; 
-n1qlParser.Opt_as_aliasContext = Opt_as_aliasContext; 
-n1qlParser.As_aliasContext = As_aliasContext; 
-n1qlParser.AliasContext = AliasContext; 
-n1qlParser.Opt_fromContext = Opt_fromContext; 
-n1qlParser.FromContext = FromContext; 
-n1qlParser.From_termContext = From_termContext; 
-n1qlParser.Simple_from_termContext = Simple_from_termContext; 
-n1qlParser.UnnestContext = UnnestContext; 
-n1qlParser.Keyspace_termContext = Keyspace_termContext; 
-n1qlParser.Keyspace_pathContext = Keyspace_pathContext; 
-n1qlParser.Namespace_termContext = Namespace_termContext; 
-n1qlParser.Namespace_nameContext = Namespace_nameContext; 
-n1qlParser.Bucket_nameContext = Bucket_nameContext; 
-n1qlParser.Scope_nameContext = Scope_nameContext; 
-n1qlParser.Keyspace_nameContext = Keyspace_nameContext; 
-n1qlParser.Opt_useContext = Opt_useContext; 
-n1qlParser.Use_optionsContext = Use_optionsContext; 
-n1qlParser.Use_keysContext = Use_keysContext; 
-n1qlParser.Use_indexContext = Use_indexContext; 
-n1qlParser.Join_hintContext = Join_hintContext; 
-n1qlParser.Opt_primaryContext = Opt_primaryContext; 
-n1qlParser.Index_refsContext = Index_refsContext; 
-n1qlParser.Index_refContext = Index_refContext; 
-n1qlParser.Use_hash_optionContext = Use_hash_optionContext; 
-n1qlParser.Opt_use_del_updContext = Opt_use_del_updContext; 
-n1qlParser.Opt_join_typeContext = Opt_join_typeContext; 
-n1qlParser.Opt_outerContext = Opt_outerContext; 
-n1qlParser.On_keysContext = On_keysContext; 
-n1qlParser.On_keyContext = On_keyContext; 
-n1qlParser.Opt_letContext = Opt_letContext; 
-n1qlParser.Let_Context = Let_Context; 
-n1qlParser.BindingsContext = BindingsContext; 
-n1qlParser.BindingContext = BindingContext; 
-n1qlParser.Opt_withContext = Opt_withContext; 
-n1qlParser.With_listContext = With_listContext; 
-n1qlParser.With_termContext = With_termContext; 
-n1qlParser.Opt_whereContext = Opt_whereContext; 
-n1qlParser.WhereContext = WhereContext; 
-n1qlParser.Opt_groupContext = Opt_groupContext; 
-n1qlParser.GroupContext = GroupContext; 
-n1qlParser.Group_termsContext = Group_termsContext; 
-n1qlParser.Group_termContext = Group_termContext; 
-n1qlParser.Opt_lettingContext = Opt_lettingContext; 
-n1qlParser.LettingContext = LettingContext; 
-n1qlParser.Opt_havingContext = Opt_havingContext; 
-n1qlParser.HavingContext = HavingContext; 
-n1qlParser.Opt_order_byContext = Opt_order_byContext; 
-n1qlParser.Order_byContext = Order_byContext; 
-n1qlParser.Sort_termsContext = Sort_termsContext; 
-n1qlParser.Sort_termContext = Sort_termContext; 
-n1qlParser.Opt_dirContext = Opt_dirContext; 
-n1qlParser.DirContext = DirContext; 
-n1qlParser.Opt_order_nullsContext = Opt_order_nullsContext; 
-n1qlParser.First_lastContext = First_lastContext; 
-n1qlParser.NullsContext = NullsContext; 
-n1qlParser.Opt_limitContext = Opt_limitContext; 
-n1qlParser.LimitContext = LimitContext; 
-n1qlParser.Opt_offsetContext = Opt_offsetContext; 
-n1qlParser.OffsetContext = OffsetContext; 
-n1qlParser.InsertContext = InsertContext; 
-n1qlParser.Simple_keyspace_refContext = Simple_keyspace_refContext; 
-n1qlParser.Keyspace_refContext = Keyspace_refContext; 
-n1qlParser.Opt_values_headerContext = Opt_values_headerContext; 
-n1qlParser.KeyContext = KeyContext; 
-n1qlParser.Values_listContext = Values_listContext; 
-n1qlParser.ValuesContext = ValuesContext; 
-n1qlParser.Next_valuesContext = Next_valuesContext; 
-n1qlParser.Key_val_exprContext = Key_val_exprContext; 
-n1qlParser.Key_val_options_exprContext = Key_val_options_exprContext; 
-n1qlParser.Opt_returningContext = Opt_returningContext; 
-n1qlParser.ReturningContext = ReturningContext; 
-n1qlParser.Returns_Context = Returns_Context; 
-n1qlParser.Key_expr_headerContext = Key_expr_headerContext; 
-n1qlParser.Value_expr_headerContext = Value_expr_headerContext; 
-n1qlParser.Options_expr_headerContext = Options_expr_headerContext; 
-n1qlParser.Key_val_options_expr_headerContext = Key_val_options_expr_headerContext; 
-n1qlParser.UpsertContext = UpsertContext; 
-n1qlParser.Delete_Context = Delete_Context; 
-n1qlParser.UpdateContext = UpdateContext; 
-n1qlParser.SetContext = SetContext; 
-n1qlParser.Set_termsContext = Set_termsContext; 
-n1qlParser.Set_termContext = Set_termContext; 
-n1qlParser.Function_meta_exprContext = Function_meta_exprContext; 
-n1qlParser.Opt_update_forContext = Opt_update_forContext; 
-n1qlParser.Update_forContext = Update_forContext; 
-n1qlParser.Update_dimensionsContext = Update_dimensionsContext; 
-n1qlParser.Update_dimensionContext = Update_dimensionContext; 
-n1qlParser.Update_bindingContext = Update_bindingContext; 
-n1qlParser.VariableContext = VariableContext; 
-n1qlParser.Opt_whenContext = Opt_whenContext; 
-n1qlParser.UnsetContext = UnsetContext; 
-n1qlParser.Unset_termsContext = Unset_termsContext; 
-n1qlParser.Unset_termContext = Unset_termContext; 
-n1qlParser.MergeContext = MergeContext; 
-n1qlParser.Opt_use_mergeContext = Opt_use_mergeContext; 
-n1qlParser.Opt_keyContext = Opt_keyContext; 
-n1qlParser.Merge_actionsContext = Merge_actionsContext; 
-n1qlParser.Opt_merge_delete_insertContext = Opt_merge_delete_insertContext; 
-n1qlParser.Opt_merge_insertContext = Opt_merge_insertContext; 
-n1qlParser.Merge_updateContext = Merge_updateContext; 
-n1qlParser.Merge_deleteContext = Merge_deleteContext; 
-n1qlParser.Merge_insertContext = Merge_insertContext; 
-n1qlParser.Grant_roleContext = Grant_roleContext; 
-n1qlParser.Role_listContext = Role_listContext; 
-n1qlParser.Role_nameContext = Role_nameContext; 
-n1qlParser.Keyspace_scope_listContext = Keyspace_scope_listContext; 
-n1qlParser.Keyspace_scopeContext = Keyspace_scopeContext; 
-n1qlParser.User_listContext = User_listContext; 
-n1qlParser.UserContext = UserContext; 
-n1qlParser.Revoke_roleContext = Revoke_roleContext; 
-n1qlParser.Create_scopeContext = Create_scopeContext; 
-n1qlParser.Drop_scopeContext = Drop_scopeContext; 
-n1qlParser.Create_collectionContext = Create_collectionContext; 
-n1qlParser.Drop_collectionContext = Drop_collectionContext; 
-n1qlParser.Flush_collectionContext = Flush_collectionContext; 
-n1qlParser.Flush_or_truncateContext = Flush_or_truncateContext; 
-n1qlParser.Create_indexContext = Create_indexContext; 
-n1qlParser.Opt_primary_nameContext = Opt_primary_nameContext; 
-n1qlParser.Index_nameContext = Index_nameContext; 
-n1qlParser.Opt_index_nameContext = Opt_index_nameContext; 
-n1qlParser.Named_keyspace_refContext = Named_keyspace_refContext; 
-n1qlParser.Simple_named_keyspace_refContext = Simple_named_keyspace_refContext; 
-n1qlParser.Named_scope_refContext = Named_scope_refContext; 
-n1qlParser.Index_partitionContext = Index_partitionContext; 
-n1qlParser.Opt_index_usingContext = Opt_index_usingContext; 
-n1qlParser.Index_usingContext = Index_usingContext; 
-n1qlParser.Opt_index_withContext = Opt_index_withContext; 
-n1qlParser.Index_withContext = Index_withContext; 
-n1qlParser.Index_termsContext = Index_termsContext; 
-n1qlParser.Index_termContext = Index_termContext; 
-n1qlParser.Index_term_exprContext = Index_term_exprContext; 
-n1qlParser.Index_exprContext = Index_exprContext; 
-n1qlParser.AllContext = AllContext; 
-n1qlParser.Index_whereContext = Index_whereContext; 
-n1qlParser.Opt_ikattrContext = Opt_ikattrContext; 
-n1qlParser.IkattrContext = IkattrContext; 
-n1qlParser.Drop_indexContext = Drop_indexContext; 
-n1qlParser.Alter_indexContext = Alter_indexContext; 
-n1qlParser.Build_indexContext = Build_indexContext; 
-n1qlParser.Create_functionContext = Create_functionContext; 
-n1qlParser.Opt_replaceContext = Opt_replaceContext; 
-n1qlParser.Func_nameContext = Func_nameContext; 
-n1qlParser.Short_func_nameContext = Short_func_nameContext; 
-n1qlParser.Long_func_nameContext = Long_func_nameContext; 
-n1qlParser.Parm_listContext = Parm_listContext; 
-n1qlParser.Parameter_termsContext = Parameter_termsContext; 
-n1qlParser.Func_bodyContext = Func_bodyContext; 
-n1qlParser.Drop_functionContext = Drop_functionContext; 
-n1qlParser.Execute_functionContext = Execute_functionContext; 
-n1qlParser.Update_statisticsContext = Update_statisticsContext; 
-n1qlParser.Opt_forContext = Opt_forContext; 
-n1qlParser.Update_stat_termsContext = Update_stat_termsContext; 
-n1qlParser.Update_stat_termContext = Update_stat_termContext; 
-n1qlParser.PathContext = PathContext; 
-n1qlParser.ExprContext = ExprContext; 
-n1qlParser.ValuedContext = ValuedContext; 
-n1qlParser.C_exprContext = C_exprContext; 
-n1qlParser.B_exprContext = B_exprContext; 
-n1qlParser.LiteralContext = LiteralContext; 
-n1qlParser.Construction_exprContext = Construction_exprContext; 
-n1qlParser.ObjectContext = ObjectContext; 
-n1qlParser.Opt_membersContext = Opt_membersContext; 
-n1qlParser.MembersContext = MembersContext; 
-n1qlParser.MemberContext = MemberContext; 
-n1qlParser.ArrayContext = ArrayContext; 
-n1qlParser.Opt_exprsContext = Opt_exprsContext; 
-n1qlParser.ExprsContext = ExprsContext; 
-n1qlParser.Param_exprContext = Param_exprContext; 
-n1qlParser.Case_exprContext = Case_exprContext; 
-n1qlParser.Simple_or_searched_caseContext = Simple_or_searched_caseContext; 
-n1qlParser.Simple_caseContext = Simple_caseContext; 
-n1qlParser.When_thensContext = When_thensContext; 
-n1qlParser.Searched_caseContext = Searched_caseContext; 
-n1qlParser.Opt_elseContext = Opt_elseContext; 
-n1qlParser.Function_exprContext = Function_exprContext; 
-n1qlParser.Function_nameContext = Function_nameContext; 
-n1qlParser.Collection_exprContext = Collection_exprContext; 
-n1qlParser.Collection_condContext = Collection_condContext; 
-n1qlParser.Coll_bindingsContext = Coll_bindingsContext; 
-n1qlParser.Coll_bindingContext = Coll_bindingContext; 
-n1qlParser.SatisfiesContext = SatisfiesContext; 
-n1qlParser.Collection_xformContext = Collection_xformContext; 
-n1qlParser.Paren_exprContext = Paren_exprContext; 
-n1qlParser.Subquery_exprContext = Subquery_exprContext; 
-n1qlParser.Expr_inputContext = Expr_inputContext; 
-n1qlParser.All_exprContext = All_exprContext; 
-n1qlParser.Opt_window_clauseContext = Opt_window_clauseContext; 
-n1qlParser.Window_listContext = Window_listContext; 
-n1qlParser.Window_termContext = Window_termContext; 
-n1qlParser.Window_specificationContext = Window_specificationContext; 
-n1qlParser.Opt_window_nameContext = Opt_window_nameContext; 
-n1qlParser.Opt_window_partitionContext = Opt_window_partitionContext; 
-n1qlParser.Opt_window_frameContext = Opt_window_frameContext; 
-n1qlParser.Window_frame_modifierContext = Window_frame_modifierContext; 
-n1qlParser.Opt_window_frame_exclusionContext = Opt_window_frame_exclusionContext; 
-n1qlParser.Window_frame_extentsContext = Window_frame_extentsContext; 
-n1qlParser.Window_frame_extentContext = Window_frame_extentContext; 
-n1qlParser.Window_frame_valexpr_modifierContext = Window_frame_valexpr_modifierContext; 
-n1qlParser.Opt_nulls_treatmentContext = Opt_nulls_treatmentContext; 
-n1qlParser.Nulls_treatmentContext = Nulls_treatmentContext; 
-n1qlParser.Opt_from_first_lastContext = Opt_from_first_lastContext; 
-n1qlParser.Agg_quantifierContext = Agg_quantifierContext; 
-n1qlParser.Opt_filterContext = Opt_filterContext; 
-n1qlParser.Opt_window_functionContext = Opt_window_functionContext; 
-n1qlParser.Window_function_detailsContext = Window_function_detailsContext; 
-n1qlParser.Start_transactionContext = Start_transactionContext; 
-n1qlParser.Commit_transactionContext = Commit_transactionContext; 
-n1qlParser.Rollback_transactionContext = Rollback_transactionContext; 
-n1qlParser.Start_or_beginContext = Start_or_beginContext; 
-n1qlParser.Opt_transactionContext = Opt_transactionContext; 
-n1qlParser.TransactionContext = TransactionContext; 
-n1qlParser.Opt_savepointContext = Opt_savepointContext; 
-n1qlParser.Savepoint_nameContext = Savepoint_nameContext; 
-n1qlParser.Opt_isolation_levelContext = Opt_isolation_levelContext; 
-n1qlParser.Isolation_levelContext = Isolation_levelContext; 
-n1qlParser.Isolation_valContext = Isolation_valContext; 
-n1qlParser.Set_transaction_isolationContext = Set_transaction_isolationContext; 
-n1qlParser.SavepointContext = SavepointContext; 
+n1qlParser.InputContext = InputContext;
+n1qlParser.Opt_trailerContext = Opt_trailerContext;
+n1qlParser.Stmt_bodyContext = Stmt_bodyContext;
+n1qlParser.StmtContext = StmtContext;
+n1qlParser.AdviseContext = AdviseContext;
+n1qlParser.Opt_indexContext = Opt_indexContext;
+n1qlParser.ExplainContext = ExplainContext;
+n1qlParser.PrepareContext = PrepareContext;
+n1qlParser.Opt_forceContext = Opt_forceContext;
+n1qlParser.Opt_nameContext = Opt_nameContext;
+n1qlParser.From_or_asContext = From_or_asContext;
+n1qlParser.ExecuteContext = ExecuteContext;
+n1qlParser.Execute_usingContext = Execute_usingContext;
+n1qlParser.InferContext = InferContext;
+n1qlParser.Opt_keyspace_collectionContext = Opt_keyspace_collectionContext;
+n1qlParser.Opt_infer_usingContext = Opt_infer_usingContext;
+n1qlParser.Opt_infer_ustat_withContext = Opt_infer_ustat_withContext;
+n1qlParser.Infer_ustat_withContext = Infer_ustat_withContext;
+n1qlParser.Select_stmtContext = Select_stmtContext;
+n1qlParser.Dml_stmtContext = Dml_stmtContext;
+n1qlParser.Ddl_stmtContext = Ddl_stmtContext;
+n1qlParser.Role_stmtContext = Role_stmtContext;
+n1qlParser.Index_stmtContext = Index_stmtContext;
+n1qlParser.Scope_stmtContext = Scope_stmtContext;
+n1qlParser.Collection_stmtContext = Collection_stmtContext;
+n1qlParser.Function_stmtContext = Function_stmtContext;
+n1qlParser.Transaction_stmtContext = Transaction_stmtContext;
+n1qlParser.FullselectContext = FullselectContext;
+n1qlParser.Select_termsContext = Select_termsContext;
+n1qlParser.Select_termContext = Select_termContext;
+n1qlParser.SubselectContext = SubselectContext;
+n1qlParser.From_selectContext = From_selectContext;
+n1qlParser.Select_fromContext = Select_fromContext;
+n1qlParser.Select_clauseContext = Select_clauseContext;
+n1qlParser.ProjectionContext = ProjectionContext;
+n1qlParser.Opt_quantifierContext = Opt_quantifierContext;
+n1qlParser.RawContext = RawContext;
+n1qlParser.ProjectsContext = ProjectsContext;
+n1qlParser.ProjectContext = ProjectContext;
+n1qlParser.Opt_as_aliasContext = Opt_as_aliasContext;
+n1qlParser.As_aliasContext = As_aliasContext;
+n1qlParser.AliasContext = AliasContext;
+n1qlParser.Opt_fromContext = Opt_fromContext;
+n1qlParser.FromContext = FromContext;
+n1qlParser.From_termContext = From_termContext;
+n1qlParser.Simple_from_termContext = Simple_from_termContext;
+n1qlParser.UnnestContext = UnnestContext;
+n1qlParser.Keyspace_termContext = Keyspace_termContext;
+n1qlParser.Keyspace_pathContext = Keyspace_pathContext;
+n1qlParser.Namespace_termContext = Namespace_termContext;
+n1qlParser.Namespace_nameContext = Namespace_nameContext;
+n1qlParser.Bucket_nameContext = Bucket_nameContext;
+n1qlParser.Scope_nameContext = Scope_nameContext;
+n1qlParser.Keyspace_nameContext = Keyspace_nameContext;
+n1qlParser.Opt_useContext = Opt_useContext;
+n1qlParser.Use_optionsContext = Use_optionsContext;
+n1qlParser.Use_keysContext = Use_keysContext;
+n1qlParser.Use_indexContext = Use_indexContext;
+n1qlParser.Join_hintContext = Join_hintContext;
+n1qlParser.Opt_primaryContext = Opt_primaryContext;
+n1qlParser.Index_refsContext = Index_refsContext;
+n1qlParser.Index_refContext = Index_refContext;
+n1qlParser.Use_hash_optionContext = Use_hash_optionContext;
+n1qlParser.Opt_use_del_updContext = Opt_use_del_updContext;
+n1qlParser.Opt_join_typeContext = Opt_join_typeContext;
+n1qlParser.Opt_outerContext = Opt_outerContext;
+n1qlParser.On_keysContext = On_keysContext;
+n1qlParser.On_keyContext = On_keyContext;
+n1qlParser.Opt_letContext = Opt_letContext;
+n1qlParser.Let_Context = Let_Context;
+n1qlParser.BindingsContext = BindingsContext;
+n1qlParser.BindingContext = BindingContext;
+n1qlParser.Opt_withContext = Opt_withContext;
+n1qlParser.With_listContext = With_listContext;
+n1qlParser.With_termContext = With_termContext;
+n1qlParser.Opt_whereContext = Opt_whereContext;
+n1qlParser.WhereContext = WhereContext;
+n1qlParser.Opt_groupContext = Opt_groupContext;
+n1qlParser.GroupContext = GroupContext;
+n1qlParser.Group_termsContext = Group_termsContext;
+n1qlParser.Group_termContext = Group_termContext;
+n1qlParser.Opt_lettingContext = Opt_lettingContext;
+n1qlParser.LettingContext = LettingContext;
+n1qlParser.Opt_havingContext = Opt_havingContext;
+n1qlParser.HavingContext = HavingContext;
+n1qlParser.Opt_order_byContext = Opt_order_byContext;
+n1qlParser.Order_byContext = Order_byContext;
+n1qlParser.Sort_termsContext = Sort_termsContext;
+n1qlParser.Sort_termContext = Sort_termContext;
+n1qlParser.Opt_dirContext = Opt_dirContext;
+n1qlParser.DirContext = DirContext;
+n1qlParser.Opt_order_nullsContext = Opt_order_nullsContext;
+n1qlParser.First_lastContext = First_lastContext;
+n1qlParser.NullsContext = NullsContext;
+n1qlParser.Opt_limitContext = Opt_limitContext;
+n1qlParser.LimitContext = LimitContext;
+n1qlParser.Opt_offsetContext = Opt_offsetContext;
+n1qlParser.OffsetContext = OffsetContext;
+n1qlParser.InsertContext = InsertContext;
+n1qlParser.Simple_keyspace_refContext = Simple_keyspace_refContext;
+n1qlParser.Keyspace_refContext = Keyspace_refContext;
+n1qlParser.Opt_values_headerContext = Opt_values_headerContext;
+n1qlParser.KeyContext = KeyContext;
+n1qlParser.Values_listContext = Values_listContext;
+n1qlParser.ValuesContext = ValuesContext;
+n1qlParser.Next_valuesContext = Next_valuesContext;
+n1qlParser.Key_val_exprContext = Key_val_exprContext;
+n1qlParser.Key_val_options_exprContext = Key_val_options_exprContext;
+n1qlParser.Opt_returningContext = Opt_returningContext;
+n1qlParser.ReturningContext = ReturningContext;
+n1qlParser.Returns_Context = Returns_Context;
+n1qlParser.Key_expr_headerContext = Key_expr_headerContext;
+n1qlParser.Value_expr_headerContext = Value_expr_headerContext;
+n1qlParser.Options_expr_headerContext = Options_expr_headerContext;
+n1qlParser.Key_val_options_expr_headerContext = Key_val_options_expr_headerContext;
+n1qlParser.UpsertContext = UpsertContext;
+n1qlParser.Delete_Context = Delete_Context;
+n1qlParser.UpdateContext = UpdateContext;
+n1qlParser.SetContext = SetContext;
+n1qlParser.Set_termsContext = Set_termsContext;
+n1qlParser.Set_termContext = Set_termContext;
+n1qlParser.Function_meta_exprContext = Function_meta_exprContext;
+n1qlParser.Opt_update_forContext = Opt_update_forContext;
+n1qlParser.Update_forContext = Update_forContext;
+n1qlParser.Update_dimensionsContext = Update_dimensionsContext;
+n1qlParser.Update_dimensionContext = Update_dimensionContext;
+n1qlParser.Update_bindingContext = Update_bindingContext;
+n1qlParser.VariableContext = VariableContext;
+n1qlParser.Opt_whenContext = Opt_whenContext;
+n1qlParser.UnsetContext = UnsetContext;
+n1qlParser.Unset_termsContext = Unset_termsContext;
+n1qlParser.Unset_termContext = Unset_termContext;
+n1qlParser.MergeContext = MergeContext;
+n1qlParser.Opt_use_mergeContext = Opt_use_mergeContext;
+n1qlParser.Opt_keyContext = Opt_keyContext;
+n1qlParser.Merge_actionsContext = Merge_actionsContext;
+n1qlParser.Opt_merge_delete_insertContext = Opt_merge_delete_insertContext;
+n1qlParser.Opt_merge_insertContext = Opt_merge_insertContext;
+n1qlParser.Merge_updateContext = Merge_updateContext;
+n1qlParser.Merge_deleteContext = Merge_deleteContext;
+n1qlParser.Merge_insertContext = Merge_insertContext;
+n1qlParser.Grant_roleContext = Grant_roleContext;
+n1qlParser.Role_listContext = Role_listContext;
+n1qlParser.Role_nameContext = Role_nameContext;
+n1qlParser.Keyspace_scope_listContext = Keyspace_scope_listContext;
+n1qlParser.Keyspace_scopeContext = Keyspace_scopeContext;
+n1qlParser.User_listContext = User_listContext;
+n1qlParser.UserContext = UserContext;
+n1qlParser.Revoke_roleContext = Revoke_roleContext;
+n1qlParser.Create_scopeContext = Create_scopeContext;
+n1qlParser.Drop_scopeContext = Drop_scopeContext;
+n1qlParser.Create_collectionContext = Create_collectionContext;
+n1qlParser.Drop_collectionContext = Drop_collectionContext;
+n1qlParser.Flush_collectionContext = Flush_collectionContext;
+n1qlParser.Flush_or_truncateContext = Flush_or_truncateContext;
+n1qlParser.Create_indexContext = Create_indexContext;
+n1qlParser.Opt_primary_nameContext = Opt_primary_nameContext;
+n1qlParser.Index_nameContext = Index_nameContext;
+n1qlParser.Opt_index_nameContext = Opt_index_nameContext;
+n1qlParser.Named_keyspace_refContext = Named_keyspace_refContext;
+n1qlParser.Simple_named_keyspace_refContext = Simple_named_keyspace_refContext;
+n1qlParser.Named_scope_refContext = Named_scope_refContext;
+n1qlParser.Index_partitionContext = Index_partitionContext;
+n1qlParser.Opt_index_usingContext = Opt_index_usingContext;
+n1qlParser.Index_usingContext = Index_usingContext;
+n1qlParser.Opt_index_withContext = Opt_index_withContext;
+n1qlParser.Index_withContext = Index_withContext;
+n1qlParser.Index_termsContext = Index_termsContext;
+n1qlParser.Index_termContext = Index_termContext;
+n1qlParser.Index_term_exprContext = Index_term_exprContext;
+n1qlParser.Index_exprContext = Index_exprContext;
+n1qlParser.AllContext = AllContext;
+n1qlParser.Index_whereContext = Index_whereContext;
+n1qlParser.Opt_ikattrContext = Opt_ikattrContext;
+n1qlParser.IkattrContext = IkattrContext;
+n1qlParser.Drop_indexContext = Drop_indexContext;
+n1qlParser.Alter_indexContext = Alter_indexContext;
+n1qlParser.Build_indexContext = Build_indexContext;
+n1qlParser.Create_functionContext = Create_functionContext;
+n1qlParser.Opt_replaceContext = Opt_replaceContext;
+n1qlParser.Func_nameContext = Func_nameContext;
+n1qlParser.Short_func_nameContext = Short_func_nameContext;
+n1qlParser.Long_func_nameContext = Long_func_nameContext;
+n1qlParser.Parm_listContext = Parm_listContext;
+n1qlParser.Parameter_termsContext = Parameter_termsContext;
+n1qlParser.Func_bodyContext = Func_bodyContext;
+n1qlParser.Drop_functionContext = Drop_functionContext;
+n1qlParser.Execute_functionContext = Execute_functionContext;
+n1qlParser.Update_statisticsContext = Update_statisticsContext;
+n1qlParser.Opt_forContext = Opt_forContext;
+n1qlParser.Update_stat_termsContext = Update_stat_termsContext;
+n1qlParser.Update_stat_termContext = Update_stat_termContext;
+n1qlParser.PathContext = PathContext;
+n1qlParser.ExprContext = ExprContext;
+n1qlParser.ValuedContext = ValuedContext;
+n1qlParser.C_exprContext = C_exprContext;
+n1qlParser.B_exprContext = B_exprContext;
+n1qlParser.LiteralContext = LiteralContext;
+n1qlParser.Construction_exprContext = Construction_exprContext;
+n1qlParser.ObjectContext = ObjectContext;
+n1qlParser.Opt_membersContext = Opt_membersContext;
+n1qlParser.MembersContext = MembersContext;
+n1qlParser.MemberContext = MemberContext;
+n1qlParser.ArrayContext = ArrayContext;
+n1qlParser.Opt_exprsContext = Opt_exprsContext;
+n1qlParser.ExprsContext = ExprsContext;
+n1qlParser.Param_exprContext = Param_exprContext;
+n1qlParser.Case_exprContext = Case_exprContext;
+n1qlParser.Simple_or_searched_caseContext = Simple_or_searched_caseContext;
+n1qlParser.Simple_caseContext = Simple_caseContext;
+n1qlParser.When_thensContext = When_thensContext;
+n1qlParser.Searched_caseContext = Searched_caseContext;
+n1qlParser.Opt_elseContext = Opt_elseContext;
+n1qlParser.Function_exprContext = Function_exprContext;
+n1qlParser.Function_nameContext = Function_nameContext;
+n1qlParser.Collection_exprContext = Collection_exprContext;
+n1qlParser.Collection_condContext = Collection_condContext;
+n1qlParser.Coll_bindingsContext = Coll_bindingsContext;
+n1qlParser.Coll_bindingContext = Coll_bindingContext;
+n1qlParser.SatisfiesContext = SatisfiesContext;
+n1qlParser.Collection_xformContext = Collection_xformContext;
+n1qlParser.Paren_exprContext = Paren_exprContext;
+n1qlParser.Subquery_exprContext = Subquery_exprContext;
+n1qlParser.Expr_inputContext = Expr_inputContext;
+n1qlParser.All_exprContext = All_exprContext;
+n1qlParser.Opt_window_clauseContext = Opt_window_clauseContext;
+n1qlParser.Window_listContext = Window_listContext;
+n1qlParser.Window_termContext = Window_termContext;
+n1qlParser.Window_specificationContext = Window_specificationContext;
+n1qlParser.Opt_window_nameContext = Opt_window_nameContext;
+n1qlParser.Opt_window_partitionContext = Opt_window_partitionContext;
+n1qlParser.Opt_window_frameContext = Opt_window_frameContext;
+n1qlParser.Window_frame_modifierContext = Window_frame_modifierContext;
+n1qlParser.Opt_window_frame_exclusionContext = Opt_window_frame_exclusionContext;
+n1qlParser.Window_frame_extentsContext = Window_frame_extentsContext;
+n1qlParser.Window_frame_extentContext = Window_frame_extentContext;
+n1qlParser.Window_frame_valexpr_modifierContext = Window_frame_valexpr_modifierContext;
+n1qlParser.Opt_nulls_treatmentContext = Opt_nulls_treatmentContext;
+n1qlParser.Nulls_treatmentContext = Nulls_treatmentContext;
+n1qlParser.Opt_from_first_lastContext = Opt_from_first_lastContext;
+n1qlParser.Agg_quantifierContext = Agg_quantifierContext;
+n1qlParser.Opt_filterContext = Opt_filterContext;
+n1qlParser.Opt_window_functionContext = Opt_window_functionContext;
+n1qlParser.Window_function_detailsContext = Window_function_detailsContext;
+n1qlParser.Start_transactionContext = Start_transactionContext;
+n1qlParser.Commit_transactionContext = Commit_transactionContext;
+n1qlParser.Rollback_transactionContext = Rollback_transactionContext;
+n1qlParser.Start_or_beginContext = Start_or_beginContext;
+n1qlParser.Opt_transactionContext = Opt_transactionContext;
+n1qlParser.TransactionContext = TransactionContext;
+n1qlParser.Opt_savepointContext = Opt_savepointContext;
+n1qlParser.Savepoint_nameContext = Savepoint_nameContext;
+n1qlParser.Opt_isolation_levelContext = Opt_isolation_levelContext;
+n1qlParser.Isolation_levelContext = Isolation_levelContext;
+n1qlParser.Isolation_valContext = Isolation_valContext;
+n1qlParser.Set_transaction_isolationContext = Set_transaction_isolationContext;
+n1qlParser.SavepointContext = SavepointContext;
