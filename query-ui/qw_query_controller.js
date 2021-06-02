@@ -3,6 +3,7 @@ import _ from "/ui/web_modules/lodash.js";
 import ace from '/ui/libs/ace/ace-wrapper.js';
 import N1qlParser from '/_p/ui/query/parser/n1ql/myN1qlListener.js';
 
+import { BehaviorSubject }              from '/ui/web_modules/rxjs.js';
 
 export default queryController;
 
@@ -36,6 +37,8 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   qc.emptyQuery = function() {return(qwQueryService.getResult().query.length == 0);}
   qc.emptyResult = qwQueryService.emptyResult;
   qc.hasRecommendedIndex = qwQueryService.hasRecommendedIndex;
+
+  qc.result_subject = new BehaviorSubject();
 
   qc.rbac = mnPermissions.export;
   qc.queryPermitted = function() {
@@ -975,6 +978,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     qc.setUserInterest('results');
     updateEditorSizes();
     focusOnInput();
+    qc.result_subject.next(qc.lastResult().data);
   }
 
   //

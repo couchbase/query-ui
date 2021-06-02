@@ -6,11 +6,14 @@ import ace from '/ui/libs/ace/ace-wrapper.js';
 import { NgModule } from '/ui/web_modules/@angular/core.js';
 import { UIRouterUpgradeModule } from '/ui/web_modules/@uirouter/angular-hybrid.js';
 
-import { QwCollectionMenu }       from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
 import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
+import { QwJsonCsvService }       from "/_p/ui/query/angular-services/qw.json.csv.service.js";
+
+import { QwCollectionMenu }       from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
 import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
 import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
 import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
+import { QwJsonChart }            from "/_p/ui/query/angular-directives/qw.json.chart.component.js";
 import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
 import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
 import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
@@ -108,6 +111,7 @@ class QueryUI {
         QwConstantsService,
         QwDialogService,
         QwFixLongNumberService,
+        QwJsonCsvService,
         QwQueryService,
         QwQueryPlanService,
         QwValidateQueryService,
@@ -115,7 +119,7 @@ class QueryUI {
 
       ],
       entryComponents: [
-        QwCollectionMenu
+        QwCollectionMenu,
       ]
     })
   ]}

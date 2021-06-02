@@ -1,0 +1,91 @@
+<div style="height: 100%">
+  <!-- Error messages are JSON, but not an array -->
+  <div *ngIf="!isArray()" class="padding-1 text-small">
+    No data to chart. First execute a query.
+  </div>
+
+  <!-- query results should be an array -->
+  <div *ngIf="isArray()" style="height: 100%">
+    <div class="row text-small">
+      <div class="row flex-left padding-half padding-left-1">
+        <span>
+          <h6>Chart Type</h6>
+          <select
+             [(ngModel)]="chartType"
+             theme="selectize"
+             class="cbui-select margin-right-1"
+             (change)="createChart()">
+            <option value="xy">X-Y</option>
+            <option value="bar">Bar</option>
+            <option value="donut">Donut</option>
+            <option value="pie">Pie</option>
+            <option value="scatter">Scatter-Gather</option>
+            <option value="line">Line</option>
+            <option value="area">Area</option>
+            <option value="connscatter">Connected Scatter</option>
+          </select>
+        </span>
+
+<!-- menu for field1 -->
+
+        <span>
+          <h6>{{get_field1_label()}}</h6>
+          <select
+             [(ngModel)]="field1"
+             theme="selectize"
+             class="cbui-select margin-right-1"
+             (change)="createChart()">
+            <option
+               [attr.title]="ten_sample_values(i)"
+               class="ui-select-choices"
+               *ngFor="let field of fields(); let i=index"
+               [value]="i"
+               [disabled]="field_invalid_for_chart_type(i,1)">
+              {{field}} - {{get_types(i)}}
+            </option>
+          </select>
+        </span>
+
+<!-- menu for field2 -->
+        <span>
+          <h6>{{get_field2_label()}}</h6>
+          <select
+             [(ngModel)]="field2"
+             theme="selectize"
+             class="cbui-select margin-right-1"
+             (change)="createChart()">
+            <option
+               [attr.title]="ten_sample_values(i)"
+               class="ui-select-choices"
+               *ngFor="let field of fields(); let i=index"
+               [value]="i"
+               [disabled]="field_invalid_for_chart_type(i,2)">
+              {{field}} - {{get_types(i)}}
+            </option>
+          </select>
+        </span>
+
+<!-- menu for field3 -->
+      <span *ngIf="chartType == 'scatter'">
+        <h6>{{get_field3_label()}}</h6>
+        <select
+           [(ngModel)]="field3"
+           theme="selectize"
+           class="cbui-select"
+           (change)="createChart()">
+          <option
+             [attr.title]="ten_sample_values(i)"
+             class="ui-select-choices"
+             *ngFor="let field of fields(); let i=index"
+             [value]="i"
+             [disabled]="field_invalid_for_chart_type(i,3)">
+            {{field}} - {{get_types(i)}}
+          </option>
+        </select>
+      </span>
+      </div>
+      <p class="margin-0 margin-right-1">Displaying: {{data.length}} documents</p>
+    </div>
+    <div class="chart-d3-wrapper" style="height: calc(100% - 60px)"></div>
+  </div>
+</div>

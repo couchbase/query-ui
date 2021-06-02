@@ -3,11 +3,12 @@ import { NgbModule, NgbModalModule, NgbModalConfig }             from '/ui/web_m
 import { JitCompilerFactory }  from '/ui/web_modules/@angular/platform-browser-dynamic.js';
 import { FormsModule }         from '/ui/web_modules/@angular/forms.js';
 import { CommonModule }        from '/ui/web_modules/@angular/common.js';
-import { MnSelectModule } from '/ui/app/mn.select.module.js';
+import { MnSelectModule }      from '/ui/app/mn.select.module.js';
 
 import { NgxAceModule }        from '/ui/web_modules/@nowzoo/ngx-ace.js';
 
 import { QwJsonDataTable }     from "./qw.json.datatable.directive.js";
+import { QwJsonChart }         from "./qw.json.chart.component.js";
 import { QwJsonTree }          from "./qw.json.tree.directive.js";
 import { QwJsonTableEditor2 }  from "./qw.json.table.editor.directive.js";
 import { QwExplainViz }        from "./qw.explain.viz.component.js";
@@ -34,6 +35,7 @@ class QwDirectivesModule {
         QwErrorDialog,
         QwExplainViz,
         QwInputDialog,
+        QwJsonChart,
         QwJsonDataTable,
         QwJsonTableEditor2,
         QwJsonTableEditorDirective,
@@ -45,6 +47,7 @@ class QwDirectivesModule {
         QwDocEditorDialog,
         QwErrorDialog,
         QwInputDialog,
+        QwJsonChart,
         QwNoticeDialog,
         QwJsonTableEditor2,
         ],
@@ -61,6 +64,7 @@ class QwDirectivesModule {
         QwDocEditorDialog,
         QwErrorDialog,
         QwExplainViz,
+        QwJsonChart,
         QwJsonDataTable,
         QwJsonTableEditor2,
         QwJsonTableEditorDirective,

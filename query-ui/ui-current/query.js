@@ -14,10 +14,11 @@ import mnHelper                 from "/ui/app/components/mn_helper.js";
 import mnPoolDefault            from "/ui/app/components/mn_pool_default.js";
 import mnServersService         from "/ui/app/mn_admin/mn_servers_service.js";
 import mnStatisticsNewService   from "/ui/app/mn_admin/mn_statistics_service.js";
-import mnStatisticsChart        from "/ui/app/mn_admin/mn_statistics_chart_directive.js"
+import mnStatisticsChart        from "/ui/app/mn_admin/mn_statistics_chart_directive.js";
 
 import { QwQueryService }       from "/_p/ui/query/angular-services/qw.query.service.js";
 import { QwCollectionMenu }     from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
+import { QwJsonChart }          from "/_p/ui/query/angular-directives/qw.json.chart.component.js";
 
 import qwConstantsService       from "/_p/ui/query/qw_constants_service.js";
 import qwJsonCsvService         from "/_p/ui/query/qw_json_csv_service.js";
@@ -82,6 +83,7 @@ angular
   .directive('bucketCollectionsDisplay', getBucketCollectionsDisplay)
   .directive('schemaDisplay', getSchemaDisplay)
   .directive('qwCollectionMenu', downgradeComponent({component: QwCollectionMenu}))
+  .directive('qwJsonChart', downgradeComponent({component: QwJsonChart}))
   .factory('qwQueryService', downgradeInjectable(QwQueryService))
   .config(function($stateProvider, $transitionsProvider) {
 
