@@ -12,11 +12,7 @@
     </div>
   </div>
   <div class="panel-footer">
-    <a
-       (click)="activeModal.dismiss('cancel')"
-       href="">
-      Cancel
-    </a>
+    <a (click)="activeModal.dismiss('cancel')">Cancel</a>
     <button
        type="submit" [disabled]="!input_value"
        (click)="input_value && activeModal.close(input_value)">Save</button>

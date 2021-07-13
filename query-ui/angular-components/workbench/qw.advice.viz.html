@@ -1,0 +1,58 @@
+<div>
+  <p *ngIf="error" class="warning">{{error}}</p>
+  <!-- button
+     *ngIf="!error && !advice"
+     (click)="update_advice()"
+     class="outline">Get Advice for Current Query
+  </button -->
+
+  <div *ngIf="!error">
+    <div *ngFor="let element of advice; let $index = index" class="margin-bottom-1">
+      <div *ngIf="element.current_indexes.length > 0">
+        <h5>Index<span *ngIf="element.current_indexes.length > 1">es</span> Currently Used</h5>
+        <p class="margin-bottom-0 indent-1"
+           *ngFor="let curIdx of element.current_indexes"
+           class="margin-bottom-half">
+          {{curIdx.index_statement}}
+          <em class="text-smaller" *ngIf="curIdx.index_status == 'THIS IS THE BEST INDEX WE CAN RECOMMEND'">
+            <span class="icon fa-check success"></span> optimal index
+          </em>
+        </p>
+        <br>
+      </div>
+
+      <div
+         *ngIf="has_covered(element)">
+        <h5>Covering Index Recommendations</h5>
+        <div class="margin-bottom-1">
+          <p class="margin-bottom-0 indent-1" *ngFor="let stmt of get_covered_indexes(element);">{{stmt}}</p>
+        </div>
+        <button class="outline" (click)="create_option('covering_indexes',$index)">
+          Create & Build Covering Index<span *ngIf="get_covered_indexes(element).length > 1">es</span>
+        </button>
+        <br><br>
+      </div>
+
+      <div
+         *ngIf="get_regular_indexes(element).length > 0">
+        <h5>Index Recommendations</h5>
+        <div class="margin-bottom-1">
+          <p class="margin-bottom-0 indent-1" *ngFor="let stmt of get_regular_indexes(element)">{{stmt}}</p>
+        </div>
+        <button class="outline" (click)="create_option('indexes',$index)">
+          Create & Build Index<span *ngIf="get_regular_indexes(element).length > 1">es</span>
+        </button>
+      </div>
+      <div
+         *ngIf="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && element.current_indexes.length > 0"
+         class="success">
+        Existing indexes are sufficient.
+      </div>
+      <div
+         *ngIf="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && !element.current_indexes.length"
+         class="success">
+        {{element.recommended_indexes}}
+      </div>
+    </div>
+  </div>
+</div>

@@ -10,22 +10,15 @@ import { NgxAceModule } from '/ui/web_modules/@nowzoo/ngx-ace.js';
 
 
 let collectionsState = {
-  url: '/hello_world',
-  name: "app.admin.hello_world",
+  url: '/hello_world',           // endpoint for this UI
+  name: "app.admin.hello_world", // ui router address
   data: {
-//    permissions: "cluster.bucket['.'].collections.read", // restricted by permissions?
-    title: "Hello World",  // appears in breadcrumbs in title bar
-    compat: "atLeast70"    // Cheshire Cat
-  },
-  params: { // can parameters be sent via the URL?
-//    collectionsBucket: {
-//      type: 'string',
-//      dynamic: true
-//    }
+    title: "Hello World",        // appears in breadcrumbs in title bar
+    compat: "atLeast70"          // Cheshire Cat
   },
   views: {
     "main@app.admin": {
-      component: HelloWorldComponent
+      component: HelloWorldComponent // what component to show
     }
   }
 };
@@ -38,10 +31,10 @@ class HelloWorldModule {
       entryComponents: [
         HelloWorldComponent,
       ],
-      declarations: [
+      declarations: [ // what components are declared in this?
         HelloWorldComponent,
       ],
-      imports: [
+      imports: [     // what imports do we need in this module?
         CommonModule,
         MnElementCraneModule,
         UIRouterModule.forChild({ states: [collectionsState] }),
@@ -49,7 +42,7 @@ class HelloWorldModule {
         FormsModule,
         NgxAceModule.forRoot(),
       ],
-      providers: [
+      providers: [   // put any services we need in this list
       ]
     })
   ]}

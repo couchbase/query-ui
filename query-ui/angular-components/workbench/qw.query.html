@@ -1,0 +1,306 @@
+<qw-workbench-subnav></qw-workbench-subnav>
+
+<div [hidden]="qc.queryPermitted()">
+  Insufficient permissions to run queries. User must have at least Data Reader and Query Select on
+  one or more collections.
+</div>
+
+<div
+   [hidden]="!qc.validated.valid() || !qc.queryPermitted()"
+   class="wb-wrapper">
+
+  <mn-element-cargo depot="actions" *ngIf="qc.validated.valid()">
+    <div class="header-controls">
+      <a
+         *ngIf="qc.showOptions"
+         (click)="qc.options()">
+        <span class="icon fa-cog fa-lg"></span>
+      </a>
+      <a
+         id="loadQueryButton"
+         (click)="qc.do_import()"
+         class="outline resp-hide-sml"
+         onchange="console.log('changed files')">
+        IMPORT
+      </a>
+      <a
+         (click)="qc.unified_save()"
+         class="resp-hide-sml">
+        EXPORT
+      </a>
+    </div>
+  </mn-element-cargo>
+
+  <!-- wrapper for query editor and results ------------------------------------>
+  <div mn-spinner="queryInProgress" class="wb-main-wrapper width-9 resp-small">
+    <!-- query editor header, main editor area, and results footer --------------->
+    <div class="wb-query-editor">
+      <!-- Editor "header row" ----------------------------------------------------->
+      <div class="wb-query-editor-header"  (click)="qc.handleClick('editor')">
+        <h5>Query Editor</h5>
+        <span class="wb-history-controls">
+          <span
+             title="View previous queries & results" (click)="qc.prev()"
+             class="icon angle-icon left"
+             [attr.disabled]="!qc.hasPrev() || null">
+          </span>
+          <span class="wb-history-controls-inner">
+            <a (click)="qc.historyMenu()">history</a>
+            ({{qc.getCurrentIndex()}})
+          </span>
+          <span
+             title="View subsequent queries & results"
+             (click)="qc.next()"
+             class="icon angle-icon right"
+             [attr.disabled]="!qc.hasNext() || null">
+          </span>
+        </span>
+        <span class="query-context" *ngIf="qc.compat.atLeast70">
+          <select
+             [(ngModel)]="qc.qqs.options.query_context_bucket"
+             (change)="qc.qqs.query_context_bucket_changed()"
+             appendToBody="true"
+             ngbTooltip="Set a default bucket and scope to use for your queries, so you may write queries with only the collection name."
+          >
+            <option value>query context</option>
+            <option *ngFor="let bucket of qc.getContextBuckets()">{{bucket}}</option>
+          </select>
+          <select
+             *ngIf="qc.qqs.options.query_context_bucket"
+             [(ngModel)]="qc.qqs.options.query_context_scope">
+            <option *ngFor="let name of qc.getContextScopes()">{{name}}</option>
+          </select>
+        </span>
+      </div>
+
+      <!-- Ace editor -------------------------------------------------------------->
+      <ngx-ace (click)="qc.handleClick('editor')" class="wb-ace-editor" (ready)="qc.aceInputLoaded($event)"
+               [(ngModel)]="qc.lastResult().query">
+      </ngx-ace>
+      <!-- wrapper under query editor for button and stats ------------------------->
+      <div class="wb-query-editor-footer">
+        <span class="wb-button-wrapper nowrap" (click)="qc.handleClick('results')">
+          <button (click)="qc.query({})" class="wb-button-execute">
+            <div *ngIf="!qc.lastResult().busy">Execute</div>
+            <div *ngIf="qc.lastResult().busy" class="icon-button">
+              Cancel
+              <span class="icon fa-spinner fa-spin fa-pulse"></span>
+            </div>
+          </button>
+          <div *ngIf="!qc.compat.atLeast70" class="padding-left-1 padding-right-half">
+              <button
+                 [disabled]="qc.lastResult().busy"
+                 (click)="qc.query({explainOnly: true})"
+                 class="outline tight margin-0">
+                Explain
+              </button>
+              <button
+                 *ngIf="qc.isEnterprise()"
+                 [disabled]="qc.lastResult().busy"
+                 (click)="qc.runAdviseOnLatest()"
+                 class="outline tight margin-0">
+                Index Advisor
+              </button>
+          </div>
+          <div *ngIf="qc.compat.atLeast70" class="nowrap padding-left-1 padding-right-half">
+            <button *ngIf="qc.isEnterprise()"
+                    [disabled]="qc.lastResult().busy"
+                    (click)="qc.query({txImplicit: true})"
+                    class="outline tight margin-0">
+              Run as TX
+            </button>
+            <button *ngIf="qc.isEnterprise()"
+                    [disabled]="qc.lastResult().busy"
+                    (click)="qc.runAdviseOnLatest()"
+                    class="outline tight margin-0">
+              Index Advisor
+            </button>
+            <button
+               [disabled]="qc.lastResult().busy"
+               (click)="qc.query({explainOnly: true})"
+               class="outline tight margin-0">
+              Explain
+            </button>
+
+
+          </div>
+        </span>
+        <!-- query execution summary stats -------------------------------------------->
+        <div class="wb-result-summary">
+         <span class="wb-result-summary" *ngIf="!qc.isEnterprise()">
+            <a href="https://index-advisor.couchbase.com/indexadvisor" target="_blank">External Query Advisor</a>&nbsp;&nbsp;&nbsp;&nbsp;
+          </span>
+          <span
+             class="nowrap wb-result-status padding-right-half"
+             [ngClass]="{success: qc.status_success() || qc.lastResult().status == 'explain success', error: qc.status_fail()}">
+            {{qc.lastResult().status}}
+          </span>
+          <span class="nowrap grayblack-1" [hidden]="qc.lastResult().status == 'executing'">
+            {{qc.lastResult().getLastRun()}}
+          </span>
+          <!--
+            <span *ngIf="qc.lastResult().elapsedTime" class="nowrap pipe">
+              elapsed: {{qc.lastResult().elapsedTime}}
+            </span>
+            No one knows what this means anyhow
+          -->
+          <span *ngIf="qc.lastResult().executionTime" class="nowrap pipe bold cursor-pointer"
+                [attr.title]="'Execution: ' + qc.lastResult().executionTime + ', Elapsed: ' + qc.lastResult().elapsedTime"
+          >
+            {{qc.lastResult().executionTime}}
+          </span>
+          <span *ngIf="qc.lastResult().mutationCount" class="nowrap pipe bold cursor-pointer" title="Mutation Count">
+            {{qc.lastResult().mutationCount}} mutations
+          </span>
+          <span *ngIf="!qc.lastResult().mutationCount && qc.lastResult().resultCount" class="nowrap pipe bold cursor-pointer"
+                title="Result Count">
+            {{qc.lastResult().resultCount}} docs
+          </span>
+          <span *ngIf="qc.lastResult().resultSize" class="nowrap pipe bold cursor-pointer" title="Result Size">
+            {{qc.lastResult().resultSize}} bytes
+          </span>
+        </div>
+        <!-- format & full-screen controls ----------------------------------------- -->
+        <div class="nowrap" style="padding: 0 0 .25rem 0;">
+          <span
+             [attr.disabled]="qc.lastResult().busy"
+             (click)="$event.stopPropagation(); qc.format(); qc.handleClick('editor');"
+             class="wb-format resp-hide-sml nowrap">
+            <span class="icon fa-align-right"></span>
+            format
+          </span>
+          <span
+             class="wb-fullscreen resp-hide-sml"
+             (click)="qc.toggleFullscreen()">
+            <span *ngIf="!qc.fullscreen" class="icon fa-expand" title="expand"></span>
+            <span *ngIf="qc.fullscreen" class="icon fa-compress" title="contract"></span>
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- query results ------------------------------------------------------------>
+    <div  (click)="qc.handleClick('results')" class="wb-results-header">
+      <span class="row">
+        <h5 class="margin-right-half">Results</h5>
+        <a
+           (click)="qc.copyResultAsCSV()"
+           title="Copy results in tab-separated format">
+          <span class="icon fa-copy"></span>
+        </a>
+        <span
+           *ngIf="qc.lastResult().warnings"
+           class="fa-warning icon force-orange-3 cursor-pointer"
+           appendToBody="true"
+           [ngbTooltip]="qc.lastResult().warnings"></span>
+        <a
+           *ngIf="qc.isSelected(1)"
+           (click)="qc.aceSearchOutput()"><span class="icon fa-search"></span></a>
+      </span>
+      <span class="pills">
+        <a (click)="qc.selectTab(2)"
+           [ngClass]="{selected: qc.isSelected(2)}">Table</a>
+        <a (click)="qc.selectTab(1)"
+           [ngClass]="{selected: qc.isSelected(1)}">JSON</a>
+        <a (click)="qc.selectTab(3)"
+           [ngClass]="{selected: qc.isSelected(3)}"
+           class="resp-hide-med">Chart</a>
+        <a (click)="qc.selectTab(4)"
+           [ngClass]="{selected: qc.isSelected(4)}">Plan</a>
+        <a (click)="qc.selectTab(5)"
+           [ngClass]="{selected: qc.isSelected(5)}"
+           class="resp-hide-med">Plan Text</a>
+        <a (click)="qc.selectTab(6)" *ngIf="qc.isEnterprise()"
+           [ngClass]="{selected: qc.isSelected(6)}">Advice
+             <span *ngIf="qc.hasRecommendedIndex(qc.lastResult())">*</span>
+         </a>
+      </span>
+    </div>
+
+    <div class="wb-results-wrapper" (click)="qc.handleClick('results')">
+      <div class="wb-results-show-anyway" *ngIf="!qc.showBigDatasets && qc.dataTooBig()">
+        <div [innerHtml]="qc.getBigDataMessage()"> </div>
+        <a (click)="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span class="icon fa-angle-right"></span></a>
+      </div>
+
+      <ngx-ace class="wb-results-json"
+               *ngIf="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
+               (ready)="qc.aceOutputLoaded($event)" [(ngModel)]="qc.lastResult().result">
+      </ngx-ace>
+
+      <div class="wb-results-table"
+           *ngIf="qc.isSelected(2) && qc.lastResult().data">
+        <qw-json-data-table-comp [subject]="qc.result_subject"></qw-json-data-table-comp>
+      </div>
+
+      <div class="wb-results-chart" *ngIf="qc.isSelected(3)">
+        <qw-json-chart [subject]="qc.result_subject"></qw-json-chart>
+      </div>
+
+      <!-- [data]="qc.lastResult().data" -->
+
+      <div class="wb-results-explain" *ngIf="qc.isSelected(4) && qc.lastResult().explainResult">
+        <qw-explain-viz [subject]="qc.result_subject"></qw-explain-viz>
+      </div>
+
+      <ngx-ace class="wb-results-explain-text" *ngIf="qc.isSelected(5)"
+               (ready)="qc.acePlanLoaded($event)"
+               [(ngModel)]="qc.lastResult().explainResultText">
+      </ngx-ace>
+
+      <div class="wb-results-advice" style="overflow:auto" *ngIf="qc.isSelected(6)">
+           <qw-advice-viz [subject]="qc.result_subject">
+           </qw-advice-viz>
+      </div>
+    </div>
+  </div>
+
+  <!-- data insights sidebar ------------------------------------------------ -->
+  <div class="insights-sidebar width-3 resp-hide-sml">
+    <div *ngIf="qc.qqs.bucket_errors" class="insights-sidebar-body">
+      {{qc.qqs.bucket_errors}}
+    </div>
+    <span *ngIf="!qc.qqs.bucket_errors">
+      <div class="row">
+        <h5 class="ellipsis">
+          Explore Your Data
+        </h5>
+        <div class="insights-sidebar-expand" (click)="qc.toggleAnalysisSize()">
+          <span *ngIf="!qc.analysisExpanded" class="icon fa-expand" title="expand"></span>
+          <span *ngIf="qc.analysisExpanded" class="icon fa-compress" title="contract"></span>
+        </div>
+      </div>
+      <p class="resp-hide-med text-small margin-right-half" *ngIf="qc.compat.atLeast70">
+        Common document types, field names, and sample values from your data - by bucket, scope, collection.
+      </p>
+      <div class="insights-sidebar-body">
+        <section>
+          <span *ngFor="let abucket of qc.buckets">
+            <qw-bucket-display [bucket]="abucket"></qw-bucket-display>
+          </span>
+        </section>
+      </div>
+
+<!-- bucket insights refresh button ---------------------------------------- -->
+      <div class="row fix-position-br wb-refresh-btn" *ngIf="!qc.fullscreen">
+        <button
+           title="Refresh bucket insights"
+           (click)="qc.updateBuckets()"
+           class="outline tight"
+           [disabled]="qc.qqs.loadingBuckets">
+          Refresh &nbsp;
+          <span class="icon fa-refresh"></span>
+        </button>
+      </div>
+    </span>
+  </div>
+
+  <input
+     type="file"
+     id="loadQuery"
+     name="files"
+     style="display:none"
+     accept=".txt,.json">
+
+</div>

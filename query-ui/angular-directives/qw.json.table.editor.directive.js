@@ -653,7 +653,7 @@ function makeHTMLTopLevel() {
           });
 
           // otherwise, a truncated version of the JSON
-
+        //console.log("Column width: " + columnWidthPx);
         var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
         if (json.length > max_length)
           json = json.substring(0, max_length) + '...';

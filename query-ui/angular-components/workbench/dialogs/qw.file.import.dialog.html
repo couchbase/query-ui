@@ -1,0 +1,37 @@
+<div class="dialog-med">
+  <div class="panel-header">
+    <h2>Import Query / History</h2>
+  </div>
+
+  <form class="forms">
+  <div class="panel-content">
+    <div class="formrow checkbox-list">
+      <label>Choose Import</label>
+      <div
+         *ngFor="let choice of file_options; let $index = index">
+        <input
+           type="radio"
+           name="response"
+           value="{{$index}}"
+           id="for-{{$index}}"
+           [(ngModel)]="selected.item"
+           (checked)="$index==0">
+        <label
+           for="for-{{$index}}"
+           class="checkbox">
+          {{choice.label}} &nbsp;
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <a (click)="activeModal.dismiss('cancel')">Cancel</a>
+    <button
+       type="submit"
+       (click)="activeModal.close('ok')">
+      <span>Next</span>
+    </button>
+  </div>
+  </form>
+</div>

@@ -17,8 +17,7 @@ import { QwJsonChart }            from "../angular-directives/qw.json.chart.comp
 import { QwQueryService }         from "../angular-services/qw.query.service.js";
 import { QwQueryPlanService }     from "../angular-services/qw.query.plan.service.js";
 import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
-import { QwHttp }                  from '../angular-services/qw.http.js';
-
+import { QwHttp }                 from '../angular-services/qw.http.js';
 import { QwDirectivesModule }     from "../angular-directives/qw.directives.module.js";
 
 angular
@@ -28,7 +27,6 @@ angular
     mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!write" ); // needed for Import
     mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read" ); // needed for Documents
     mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute" );
-
 
     ace.config.set('basePath','/ui/libs/ace');
 
@@ -42,12 +40,13 @@ angular
       index: 0
     });
 
+    // Angular8 Workbench
     mnPluggableUiRegistryProvider.registerConfig({
       name: 'Query',
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
-      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].n1ql.select.execute",
+      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read",
       index: 1
     });
 
@@ -81,14 +80,15 @@ class QueryUI {
           {
             name: "app.admin.docs.**",
             url: "/docs",
-            lazyLoad: mnLoadNgModule(() => import("../angular-components/qw.documents.module.js"),
+            lazyLoad: mnLoadNgModule(() => import("../angular-components/documents/qw.documents.module.js"),
                                      "QwDocumentsModule")
           }, {
             name: "app.admin.query.**",
             url: "/query",
-            lazyLoad: mnLazyload(() => import("./query.js"), "qwQuery")
+            lazyLoad: mnLoadNgModule(() => import("../angular-components/workbench/qw.workbench.module.js"),
+              "QwWorkbenchModule")
           },
-          //   {
+            //   {
           //   name: "app.admin.hello_world.**",
           //   url: "/hello_world",
           //   loadChildren: () => {
@@ -116,7 +116,6 @@ class QueryUI {
         QwQueryPlanService,
         QwValidateQueryService,
         QwHttp,
-
       ],
       entryComponents: [
         QwCollectionMenu,

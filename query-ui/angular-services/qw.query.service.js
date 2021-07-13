@@ -1,18 +1,20 @@
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import _ from 'lodash';
+import {NgbModal}               from '@ng-bootstrap/ng-bootstrap';
 
 import {QwCollectionsService}   from "./qw.collections.service.js";
 import {QwConstantsService}     from "./qw.constants.service.js";
 import {QwFixLongNumberService} from "./qw.fix.long.number.service.js";
 import {QwValidateQueryService} from './qw.validate.query.service.js';
 import {QwQueryPlanService}     from "./qw.query.plan.service.js";
-import {QwHttp}                  from './qw.http.js';
+import {QwHttp}                 from './qw.http.js';
 
 import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
 
-import {MnPendingQueryKeeper, MnPools, MnPoolDefault, MnPermissions} from 'ajs.upgraded.providers';
-import {MnAdminService} from "mn.admin.service";
+import {MnPendingQueryKeeper,
+  MnPools,
+  MnPoolDefault, MnPermissions} from 'ajs.upgraded.providers';
+import {MnAdminService}         from "mn.admin.service";
 
+import _                        from 'lodash';
 export {QwQueryService};
 
 var queryServiceCore = null;
@@ -247,6 +249,10 @@ function getQwQueryService(
   };
 
   qwQueryService.updateQueryMonitoring = updateQueryMonitoring;
+  qwQueryService.runMonitoringQuery = runMonitoringQuery;
+  qwQueryService.processMonitoringQueryResults = processMonitoringQueryResults;
+  qwQueryService.getQueryServiceStats = getQueryServiceStats;
+  qwQueryService.getQueryStats = getQueryStats;
 
   // for the front-end, distinguish error status and good statuses
 
@@ -1196,6 +1202,23 @@ function getQwQueryService(
       return (qwHttp(request));
   }
 
+  //
+  // query utility for new HttpClient with observables
+  //
+
+  function executeQueryUtilNew(queryText, is_user_query) {
+    var request = buildQueryRequest(queryText, is_user_query);
+
+    if (!request)
+      return Observable.of({errors: "Query too long"});
+
+    else return qwHttp.do_request(request);
+  }
+
+  //
+  //
+  //
+
   function logWorkbenchError(errorText) {
     if (qwHttp.do)
       qwHttp.do({
@@ -2080,7 +2103,8 @@ function getQwQueryService(
     query.data = {status: query.result};
     query.warnings = null;
     qwQueryService.selectTab(6);
-    runAdvise(getCurrentResult().query, getCurrentResult()).then(
+    return runAdvise(getCurrentResult().query, getCurrentResult())
+    .then(
       function success(resp) {
         if (query.advice == initialAdvice)
           query.data = {adviseResult: resp};
@@ -2105,6 +2129,7 @@ function getQwQueryService(
         query.status = "advise error";
         finishQuery(query);
       });
+
   };
 
   function runAdvise(queryText, queryResult) {
@@ -2226,34 +2251,101 @@ function getQwQueryService(
   }
 
   //
-  // manage metadata, including buckets, fields, and field descriptions
+  // Query Monitoring Functions
   //
 
-  function updateQueryMonitoring(category) {
-
+  function getMonitoringQuery(category) {
     var query1 = "select active_requests.*, meta().plan from system:active_requests";
     var query2 = "select completed_requests.*, meta().plan from system:completed_requests";
     var query3 = "select prepareds.* from system:prepareds";
-    var query = "foo";
 
     switch (category) {
-      case 1:
-        query = query1;
-        break;
-      case 2:
-        query = query2;
-        break;
-      case 3:
-        query = query3;
-        break;
-      default:
-        return;
+      case 1: return query1;
+      case 2: return query2;
+      case 3: return query3;
+    }
+    return null;
+  }
+
+  // new style monitoring query using HttpClient
+  function runMonitoringQuery() {
+    var query = getMonitoringQuery(qwQueryService.getMonitoringSelectedTab());
+    return(executeQueryUtilNew(query,false));
+  }
+
+  function processMonitoringQueryResults(response) {
+    if (!response || response.status != 200)
+      return;
+
+    var data = JSON.parse(response.body);
+    var status = response.status;
+    var headers = response.headers;
+    var config = response.config;
+    var result = [];
+
+    if (data.status == "success") {
+      result = data.results;
+
+      // we need to reformat the duration values coming back
+      // since they are in the most useless format ever.
+
+      for (var i = 0; i < result.length; i++) if (result[i].elapsedTime) {
+        result[i].elapsedTime = qwQueryPlanService.convertTimeToNormalizedString(result[i].elapsedTime);
+      }
+    } else {
+      result = [data.errors];
     }
 
+    switch (qwQueryService.getMonitoringSelectedTab()) {
+      case 1:
+        qwQueryService.monitoring.active_requests = result;
+        qwQueryService.monitoring.active_updated = new Date();
+        break;
+      case 2:
+        qwQueryService.monitoring.completed_requests = result;
+        qwQueryService.monitoring.completed_updated = new Date();
+        break;
+      case 3:
+        qwQueryService.monitoring.prepareds = result;
+        qwQueryService.monitoring.prepareds_updated = new Date();
+        break;
+    }
+  }
+
+  // get stats from the query service displayed on the monitoring page
+  function getQueryServiceStats() {
+    return qwHttp.do_request({
+      url: "../_p/query/admin/vitals",
+      method: "GET"
+    });
+  }
+
+  // get stats from ns_server about queries, for display on the monitoring page
+  function getQueryStats() {
+    // which stats to retrieve?
+    const statData = [
+      {"step":60,"timeWindow":60,"start":-60,"metric":[{"label":"name","value":"n1ql_requests_250ms"}],"nodesAggregation":"sum","applyFunctions":["increase"]},
+      {"step":60,"timeWindow":60,"start":-60,"metric":[{"label":"name","value":"n1ql_requests_500ms"}],"nodesAggregation":"sum","applyFunctions":["increase"]},
+      {"step":60,"timeWindow":60,"start":-60,"metric":[{"label":"name","value":"n1ql_requests_1000ms"}],"nodesAggregation":"sum","applyFunctions":["increase"]},
+      {"step":60,"timeWindow":60,"start":-60,"metric":[{"label":"name","value":"n1ql_requests_5000ms"}],"nodesAggregation":"sum","applyFunctions":["increase"]},
+      //{"step":10,"timeWindow":360,"start":-10,"metric":[{"label":"name","value":"n1ql_requests"}],"applyFunctions":["irate"],"alignTimestamps":true},
+      {"step":10,"timeWindow":360,"start":-10,"metric":[{"label":"name","value":"n1ql_avg_req_time"}],"alignTimestamps":true},
+      {"step":10,"timeWindow":360,"start":-10,"metric":[{"label":"name","value":"n1ql_avg_svc_time"}],"alignTimestamps":true}
+    ];
+
+    return qwHttp.do_request( {
+      url: "../pools/default/stats/range",
+      method: "POST",
+      data: statData
+    });
+  }
+
+  // old style monitoring query using qwHttp/promises
+  function updateQueryMonitoring() {
+    var query = getMonitoringQuery(qwQueryService.getMonitoringSelectedTab());
     var result = [];
 
     //console.log("Got query: " + query);
-
 //      var config = {headers: {'Content-Type':'application/json','ns-server-proxy-timeout':20000}};
     // console.log("Running monitoring cat: " + category + ", query: " + payload.statement);
 
@@ -2277,7 +2369,7 @@ function getQwQueryService(
             result = [data.errors];
           }
 
-          switch (category) {
+          switch (qwQueryService.getMonitoringSelectedTab()) {
             case 1:
               qwQueryService.monitoring.active_requests = result;
               qwQueryService.monitoring.active_updated = new Date();

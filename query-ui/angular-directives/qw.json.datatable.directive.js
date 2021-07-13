@@ -17,15 +17,66 @@
  */
 
 import { ViewEncapsulation,
-         ChangeDetectionStrategy,
-         Directive,
-         ElementRef,
-         Renderer2 } from '@angular/core';
+  ChangeDetectionStrategy,
+  Component,
+  Directive,
+  ElementRef,
+  Renderer2 }                       from '@angular/core';
 import { MnLifeCycleHooksToStream } from 'mn.core';
 
-import _ from "lodash";
+import _                            from "lodash";
 
-export { QwJsonDataTable };
+export { QwJsonDataTable, QwJsonDataTableComp };
+
+class QwJsonDataTableComp extends MnLifeCycleHooksToStream {
+  static get annotations() { return [
+    new Component({
+      selector: "qw-json-data-table-comp",
+      template: "<div></div>",
+      inputs: [
+        "data", // either an array of data or an observable wrapping the data
+        "subject",
+      ],
+
+    })
+  ]}
+
+  static get parameters() { return [ElementRef, Renderer2] }
+
+  constructor(element, renderer) {
+    super();
+    this.element = element;
+    this.renderer = renderer;
+  }
+
+  ngOnInit() {
+    //console.log("Directive ngOnInit, input: " + this.qwJsonDataTable);
+  }
+
+  ngAfterViewInit() {
+    //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
+    // is it observable?
+    if (this.data)
+      createTable(this.data,this.element.nativeElement, this.renderer);
+    else if (this.subject)
+      this.subscription = this.subject.subscribe(val => this.handleNewData(val));
+  }
+
+  ngOnDestroy() {
+    this.subscription && this.subscription.unsubscribe();
+  }
+
+  handleNewData(queryResult) {
+    // get rid of any existing table
+    while (this.element.nativeElement.firstChild)
+      this.element.nativeElement.removeChild(this.element.nativeElement.firstChild);
+    // create table for the new data
+    if (queryResult && queryResult.data) {
+      this.data = queryResult.data;
+      createTable(this.data,this.element.nativeElement, this.renderer);
+    }
+  }
+}
 
 class QwJsonDataTable extends MnLifeCycleHooksToStream {
   static get annotations() { return [
@@ -42,22 +93,22 @@ class QwJsonDataTable extends MnLifeCycleHooksToStream {
     })
   ]}
 
-    static get parameters() { return [ElementRef, Renderer2] }
+  static get parameters() { return [ElementRef, Renderer2] }
 
-    constructor(element, renderer) {
-      super();
-      this.element = element;
-      this.renderer = renderer;
-    }
+  constructor(element, renderer) {
+    super();
+    this.element = element;
+    this.renderer = renderer;
+  }
 
-    ngOnInit() {
-      //console.log("Directive ngOnInit, input: " + this.qwJsonDataTable);
-    }
+  ngOnInit() {
+    //console.log("Directive ngOnInit, input: " + this.qwJsonDataTable);
+  }
 
-    ngAfterViewInit() {
-      //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
-      createTable(this.qwJsonDataTable2,this.element.nativeElement, this.renderer);
-    }
+  ngAfterViewInit() {
+    //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
+    createTable(this.qwJsonDataTable2,this.element.nativeElement, this.renderer);
+  }
 }
 
 

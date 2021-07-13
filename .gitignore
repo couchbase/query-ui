@@ -1,5 +1,7 @@
-.project
-.settings
-*~
-
+logs/*
+!.gitkeep
+node_modules/
+app/lib/
+tmp
 .DS_Store
+.idea

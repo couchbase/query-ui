@@ -1,9 +1,10 @@
 <div class="wb-results-explain">
   <p *ngIf="dataIsString" class="text-small margin-left-half">{{ data }}</p>
   <p *ngIf="dataIsArray" class="text-small margin-left-half">Graphical plans are not supported for multiple query sequences. Try the plan text view.</p>
-  <p *ngIf="data['No data to display'] || data.errors" class="text-small margin-left-half">{{ data }}</p>
+  <p *ngIf="(!data || (data && data['No data to display']))" class="text-small margin-left-half">Hit enter to run query</p>
+  <p *ngIf="(data && data.errors)" class="text-small margin-left-half">{{ data.errors }}</p>
 
-  <div *ngIf="data.analysis">
+  <div *ngIf="data && data.analysis">
     <div class="row wb-explain-summary">
 
       <div *ngIf="data.mode == 'analytics'" class="column">
@@ -11,7 +12,7 @@
       </div>
 
       <div class="column">
-        <b>Indexes</b><br> 
+        <b>Indexes</b><br>
         <em *ngFor="let i of data.analysis.indexes" class="cbui-plan-expensive">{{ i }}&nbsp;&nbsp;</em>
       </div>
 
@@ -26,14 +27,14 @@
       </div>
 
       <div class="column row flex-grow-half flex-right">
-        <span (click)="leftRight()" class="icon fa-caret-square-o-left wb-explain-plan-orient"  [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(1)}" title="change plan direction"></span> 
-        <span (click)="rightLeft()" class="icon fa-caret-square-o-right wb-explain-plan-orient" [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(3)}" title="change plan direction"></span> 
-        <span (click)="bottomTop()" class="icon fa-caret-square-o-down wb-explain-plan-orient"  [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(4)}" title="change plan direction"></span> 
+        <span (click)="leftRight()" class="icon fa-caret-square-o-left wb-explain-plan-orient"  [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(1)}" title="change plan direction"></span>
+        <span (click)="rightLeft()" class="icon fa-caret-square-o-right wb-explain-plan-orient" [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(3)}" title="change plan direction"></span>
+        <span (click)="bottomTop()" class="icon fa-caret-square-o-down wb-explain-plan-orient"  [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(4)}" title="change plan direction"></span>
         <span (click)="topDown()" class="icon fa-caret-square-o-up wb-explain-plan-orient" [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(2)}" title="change plan direction"></span>
       </div>
 
       <div class="column row flex-right">
-        <span (click)="zoomIn()"  class="icon fa-search-minus wb-explain-plan-zoom" title="zoom out - or use scroll wheel"></span> 
+        <span (click)="zoomIn()"  class="icon fa-search-minus wb-explain-plan-zoom" title="zoom out - or use scroll wheel"></span>
         <span (click)="zoomOut()" class="icon fa-search-plus wb-explain-plan-zoom" title="zoom in - or use scroll wheel"></span>
       </div>
 

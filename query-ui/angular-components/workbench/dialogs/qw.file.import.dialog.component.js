@@ -3,16 +3,16 @@ import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
 
-export { QwInputDialog };
+export { QwFileImportDialog };
 
-class QwInputDialog extends MnLifeCycleHooksToStream {
+class QwFileImportDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "/_p/ui/query/angular-directives/dialogs/qw.input.dialog.html",
+      templateUrl: "/_p/ui/query/angular-components/workbench/dialogs/qw.file.import.dialog.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
-      inputs: ["header_message", "body_message", "input_value"],
+      inputs: [],
       encapsulation: ViewEncapsulation.None,
     })
   ]}
@@ -30,9 +30,6 @@ class QwInputDialog extends MnLifeCycleHooksToStream {
     super();
 
     this.activeModal = activeModal;
-
-    if (!this.input_value)
-      this.input_value = '';
   }
 
 }

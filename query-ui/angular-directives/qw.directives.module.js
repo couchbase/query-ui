@@ -1,18 +1,25 @@
-import { NgModule, COMPILER_OPTIONS, CompilerFactory, Compiler } from '@angular/core';
-import { NgbModule, NgbModalModule, NgbModalConfig }             from '@ng-bootstrap/ng-bootstrap';
+import { NgModule,
+  COMPILER_OPTIONS,
+  CompilerFactory,
+  Compiler }                   from '@angular/core';
+import { NgbModule,
+  NgbModalModule,
+  NgbModalConfig }             from '@ng-bootstrap/ng-bootstrap';
 import { JitCompilerFactory }  from '@angular/platform-browser-dynamic';
 import { FormsModule }         from '@angular/forms';
 import { CommonModule }        from '@angular/common';
 import { MnSelectModule }      from 'mn.select.module';
-
 import { NgxAceModule }        from 'ace/@nowzoo/ngx-ace';
 
-import { QwJsonDataTable }     from "./qw.json.datatable.directive.js";
+import { QwBucketDisplay }     from "./qw.bucket.display.directive.js";
+import { QwCollectionMenu }    from "./qw.collection.menu.component.js"
+import { QwExplainViz }        from "./qw.explain.viz.component.js";
+import { QwJsonDataTable,
+  QwJsonDataTableComp }        from "./qw.json.datatable.directive.js";
 import { QwJsonChart }         from "./qw.json.chart.component.js";
 import { QwJsonTree }          from "./qw.json.tree.directive.js";
 import { QwJsonTableEditor2 }  from "./qw.json.table.editor.directive.js";
-import { QwExplainViz }        from "./qw.explain.viz.component.js";
-import { QwCollectionMenu }    from "./qw.collection.menu.component.js"
+import { QwSchemaDisplay }     from "./qw.schema.display.directive.js";
 
 import { QwDialogService }     from "./qw.dialog.service.js";
 import { QwDocEditorDialog }   from "./dialogs/qw.doc.editor.dialog.component.js";
@@ -20,16 +27,13 @@ import { QwErrorDialog }       from "./dialogs/qw.error.dialog.component.js";
 import { QwInputDialog }       from "./dialogs/qw.input.dialog.component.js";
 import { QwNoticeDialog }      from "./dialogs/qw.notice.dialog.component.js";
 
-// angularJS wrapped directives
-import { QwJsonTableEditorDirective } from "./qw.wrapped.directives.js";
-
-
 export { QwDirectivesModule };
 
 class QwDirectivesModule {
   static get annotations() { return [
     new NgModule({
       declarations: [
+        QwBucketDisplay,
         QwDocEditorDialog,
         QwCollectionMenu,
         QwErrorDialog,
@@ -37,10 +41,11 @@ class QwDirectivesModule {
         QwInputDialog,
         QwJsonChart,
         QwJsonDataTable,
+        QwJsonDataTableComp,
         QwJsonTableEditor2,
-        QwJsonTableEditorDirective,
         QwJsonTree,
         QwNoticeDialog,
+        QwSchemaDisplay,
       ],
       bootstrap: [ // need to include dialog components here
         QwCollectionMenu,
@@ -48,6 +53,7 @@ class QwDirectivesModule {
         QwErrorDialog,
         QwInputDialog,
         QwJsonChart,
+        QwJsonDataTableComp,
         QwNoticeDialog,
         QwJsonTableEditor2,
         ],
@@ -60,21 +66,20 @@ class QwDirectivesModule {
         NgxAceModule.forRoot(),
       ],
       exports: [
+        QwBucketDisplay,
         QwCollectionMenu,
         QwDocEditorDialog,
         QwErrorDialog,
         QwExplainViz,
         QwJsonChart,
         QwJsonDataTable,
+        QwJsonDataTableComp,
         QwJsonTableEditor2,
-        QwJsonTableEditorDirective,
         QwJsonTree,
         QwNoticeDialog,
+        QwSchemaDisplay,
       ],
       entryComponents: {
-//        QwDocEditorDialog,
-//        QwErrorDialog,
-//        QwJsonTableEditor2,
       },
       providers: [
         QwDialogService,

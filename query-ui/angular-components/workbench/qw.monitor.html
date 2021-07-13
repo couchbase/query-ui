@@ -1,0 +1,305 @@
+<qw-workbench-subnav></qw-workbench-subnav>
+
+<div>
+  <div class="row margin-bottom-half">
+    <!-- top row w/ title/time/pill selectors -->
+    <div class="row">
+      <h4 class="inline">
+        <span *ngIf="qmc.isSelected(1)">Active Queries</span>
+        <span *ngIf="qmc.isSelected(2)">Slowest Completed Queries</span>
+        <span *ngIf="qmc.isSelected(3)">Prepared Queries</span>
+        <small>
+          {{qmc.updatedTime()}}
+          <span *ngIf="qmc.get_update_flag()" class="loading"></span>
+          <span *ngIf="!qmc.get_update_flag()" class="loading-placeholder"></span>
+        </small>
+      </h4>
+      <button class="light indent-1"
+              (click)="qmc.toggle_update()">
+        <span *ngIf="qmc.get_update_flag()" class="icon fa-pause"></span>
+        <span *ngIf="!qmc.get_update_flag()" class="icon fa-play"></span>
+        &nbsp;{{qmc.get_toggle_label()}}
+      </button>
+    </div>
+
+    <div class="pills text-right">
+      <a (click)="qmc.selectTab(1)" [ngClass]="{selected: qmc.isSelected(1)}">Active</a>
+      <a (click)="qmc.selectTab(2)" [ngClass]="{selected: qmc.isSelected(2)}">Completed</a>
+      <a (click)="qmc.selectTab(3)" [ngClass]="{selected: qmc.isSelected(3)}">Prepared</a>
+    </div>
+  </div>
+
+  <!--  Insufficient permissions ************************************  -->
+  <div id="not_permitted" *ngIf="!qmc.validated.monitoringAllowed()">
+    Insufficient permissions to perform query monitoring.
+  </div>
+
+  <div class="padding-bottom-6" id="monitoring_tables" *ngIf="qmc.validated.monitoringAllowed()">
+
+    <!-- ACTIVE QUERIES TABLE  ************************************  -->
+    <div class="qm-table-active cbui-table" *ngIf="qmc.isSelected(1)">
+      <!-- table wrapper -->
+      <div class="cbui-table-header padding-left">
+        <!-- table header row, no <section> wrapper -->
+        <span class="cbui-table-cell flex-grow-3" (click)="qmc.update_active_sort('statement')">query
+          <span *ngIf="qmc.show_up_caret_active('statement')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_active('statement')" class="icon fa-caret-down"></span>
+        </span> <span class="cbui-table-cell" (click)="qmc.update_active_sort('node')">node
+          <span *ngIf="qmc.show_up_caret_active('node')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_active('node')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_active_sort('elapsedTime')">duration
+          <span *ngIf="qmc.show_up_caret_active('elapsedTime')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_active('elapsedTime')" class="icon fa-caret-down"></span>
+        </span> <span class="cbui-table-cell flex-grow-2" (click)="qmc.update_active_sort('requestId')">request ID
+          <span *ngIf="qmc.show_up_caret_active('requestId')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_active('requestId')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_active_sort('state')">state
+          <span *ngIf="qmc.show_up_caret_active('state')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_active('state')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_active_sort('users')">user
+          <span *ngIf="qmc.show_up_caret_active('users')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_active('users')" class="icon fa-caret-down"></span>
+        </span> <span class="cbui-table-cell flex-grow-1-5"></span>
+      </div>
+
+      <section
+         *ngFor="let result of qmc.get_active_requests()">
+        <div class="cbui-tablerow padding-left">
+          <span
+             class="cbui-table-cell flex-grow-3 cursor-pointer"
+             ngbTooltip="{{result.statement}}"
+             placement="auto"
+             tooltip-append-to-body="true"
+             tooltip-class="break-word">
+            {{result.statement}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.node}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.elapsedTime}}
+          </span>
+          <span class="cbui-table-cell flex-grow-2 wrap">
+            {{result.requestId}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.state}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.users}}
+          </span>
+          <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
+            <a *ngIf="result.plan" (click)="qmc.showPlan(result.statement,result.plan)">Plan&nbsp;</a>
+            <a uiSref="app.admin.query.workbench"
+               uiSrefActive="selected"
+               [uiParams]="{ query: result.statement }"
+               class="nowrap">
+              Edit
+            </a>
+            <a class="margin-left-half nowrap" (click)="qmc.cancelQueryById(result.requestId)">
+              {{qmc.getCancelLabel(result.requestId)}}
+            </a>
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <!-- COMPLETED TABLE  ***************************************************  -->
+
+    <div class="qm-table-completed cbui-table" *ngIf="qmc.isSelected(2)">
+      <div class="cbui-table-header padding-left">
+        <span class="cbui-table-cell flex-grow-3" (click)="qmc.update_completed_sort('statement')">query
+            <span *ngIf="qmc.show_up_caret_completed('statement')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('statement')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_completed_sort('node')">node
+            <span *ngIf="qmc.show_up_caret_completed('node')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('node')" class="icon fa-caret-down"></span>
+          </span>
+        <span class="cbui-table-cell" (click)="qmc.update_completed_sort('elapsedTime')">duration
+            <span *ngIf="qmc.show_up_caret_completed('elapsedTime')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('elapsedTime')" class="icon fa-caret-down"></span>
+          </span>
+        <span class="cbui-table-cell flex-grow-half" (click)="qmc.update_completed_sort('resultCount')"># results
+            <span *ngIf="qmc.show_up_caret_completed('resultCount')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('resultCount')" class="icon fa-caret-down"></span>
+          </span>
+        <span class="cbui-table-cell flex-grow-half" (click)="qmc.update_completed_sort('state')">state
+            <span *ngIf="qmc.show_up_caret_completed('state')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('state')" class="icon fa-caret-down"></span>
+          </span>
+        <span class="cbui-table-cell" (click)="qmc.update_completed_sort('requestTime')">run at
+            <span *ngIf="qmc.show_up_caret_completed('requestTime')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('requestTime')" class="icon fa-caret-down"></span>
+          </span>
+        <span class="cbui-table-cell" (click)="qmc.update_completed_sort('users')">user
+            <span *ngIf="qmc.show_up_caret_completed('users')" class="icon fa-caret-up"></span>
+            <span *ngIf="qmc.show_down_caret_completed('users')" class="icon fa-caret-down"></span>
+          </span>
+        <span class="cbui-table-cell flex-grow-half"></span>
+      </div>
+
+      <section *ngFor="let result of qmc.get_completed_requests()">
+        <div class="cbui-tablerow padding-left">
+          <span
+             class="cbui-table-cell flex-grow-3 cursor-pointer"
+             ngbTooltip="{{result.statement}}"
+             placement="auto"
+             tooltip-class="break-word">
+            <!-- {{result.statement | limitTo: 160}} -->
+            {{result.statement}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.node}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.elapsedTime}}
+          </span>
+          <span
+             class="cbui-table-cell cursor-pointer flex-grow-half"
+             ngbTooltip="{{result.resultCount}}"
+             placement="auto"
+             tooltip-class="break-word">
+            {{result.resultCount}}
+          </span>
+          <span [ngClass]="result.errorCount ? 'orange-3 cbui-table-cell' : 'cbui-table-cell'" class="flex-grow-half">
+            {{result.state}}
+            <span *ngIf="result.errorCount" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
+                  class="fa-warning icon orange-3 cursor-pointer" ngbTooltip="{{result.errors}}"></span>
+          </span>
+          <span class="cbui-table-cell cursor-pointer"
+                ngbTooltip="{{result.requestTime}}"
+                placement="auto top"
+                tooltip-append-to-body="true"
+                tooltip-class="break-word">
+            {{result.requestTime | date:"HH:mm:ss d MMM, y"}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.users}}
+          </span>
+          <span class="cbui-table-cell text-right flex-grow-half">
+            <a *ngIf="result.plan" (click)="qmc.showPlan(result.statement,result.plan)">plan&nbsp;</a>
+            <a uiSref="app.admin.query.workbench"
+               uiSrefActive="selected"
+               [uiParams]="{ query: result.statement }"
+               class="nowrap">
+              edit
+            </a>
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <!-- PREPARED TABLE  *****************************************************  -->
+
+    <div class="qm-table-prepared cbui-table" *ngIf="qmc.isSelected(3)">
+      <div class="cbui-table-header padding-left">
+        <span  class="cbui-table-cell flex-grow-3 wrap" (click)="qmc.update_prepared_sort('statement')">query
+          <span *ngIf="qmc.show_up_caret_prepared('statement')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_prepared('statement')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_prepared_sort('node')">node
+          <span *ngIf="qmc.show_up_caret_prepared('node')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_prepared('node')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_prepared_sort('avgElapsedTime')">avg elapsed
+          <span *ngIf="qmc.show_up_caret_prepared('avgElapsedTime')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_prepared('avgElapsedTime')" class="icon fa-caret-down"></span>
+        </span>
+        <span class="cbui-table-cell" (click)="qmc.update_prepared_sort('uses')">times used
+          <span *ngIf="qmc.show_up_caret_prepared('uses')" class="icon fa-caret-up"></span>
+          <span *ngIf="qmc.show_down_caret_prepared('uses')" class="icon fa-caret-down"></span>
+        </span>
+      </div>
+
+      <section *ngFor="let result of qmc.get_prepared_requests()">
+        <div class="cbui-tablerow padding-left">
+          <span
+             class="cbui-table-cell flex-grow-3 cursor-pointer"
+             ngbTooltip="{{result.statement}}"
+             placement="auto"
+             tooltip-append-to-body="true"
+             tooltip-class="break-word">
+            {{result.statement}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.node}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.avgElapsedTime}}
+          </span>
+          <span class="cbui-table-cell">
+            {{result.uses}}
+          </span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Query Service-Level Stats --------------------------------------------- -->
+  <div>
+
+    <footer *ngIf="qmc.validated.monitoringAllowed()" class="footer-querymonitor">
+      <div class="column vertical-divider margin-0" *ngIf="qmc.validated.clusterStatsAllowed()">
+        <span class="width-6">Queries &gt; 250ms - last min</span>
+        <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_requests_250ms'] | number:'1.0' }}</span>
+        <br>
+        <span class="width-6">Queries &gt; 500ms - last min</span>
+        <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_requests_500ms'] | number:'1.0'}} </span>
+        <br>
+        <span class="width-6">Queries &gt; 1000ms - last min</span>
+        <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_requests_1000ms'] | number:'1.0'}}</span>
+        <br>
+        <span class="width-6">Queries &gt; 5000ms - last min</span>
+        <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_requests_5000ms'] | number:'1.0'}}</span>
+        <br>
+      </div>
+      <div class="column vertical-divider margin-left-1" *ngIf="qmc.validated.clusterStatsAllowed()">
+          <br>
+          <span class="width-6">Query Request Time - last min</span>
+          <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_avg_req_time'] | number:'1.0'}} </span>
+          <br>
+          <span class="width-6">Query Execution Time - last min</span>
+          <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_avg_svc_time'] | number:'1.0'}}</span>
+          <br>
+          <br>
+
+          <!-- <span *ngFor="let chart of qmc.charts track by chart.id" class="statistics-tiny"> -->
+        <!-- span *ngFor="let chart of qmc.charts" class="statistics-tiny">
+          Chart goes here
+          <mn-statistics-chart
+             zoom="minute"
+             stats-poller="qmc.mnAdminStatsPoller"
+             rbac="rbac"
+             node="all"
+             (click)="qmc.openDetailedChartDialog($index)"
+             config="chart">
+          </mn-statistics-chart>
+        </span-->
+      </div>
+      <div class="column wide vertical-divider text-center" *ngIf="!qmc.validated.clusterStatsAllowed()">
+        <div>memory utilization (this node): {{qmc.getVital("memory_util") | number:'1.0'}}%</div>
+        <br>
+        <br>
+        <br>
+        <br>
+      </div>
+      <div class="column">
+        <span class="width-6">N1QL Request Rate - last min</span>
+        <span class="text-right width-6">{{qmc.getVital("request.per.sec.1min") | number:'1.1-1'}}/sec</span>
+        <br>
+        <span class="width-6">N1QL Request Rate - last 5 min</span>
+        <span class="text-right width-6">{{qmc.getVital("request.per.sec.5min") | number:'1.1-1'}}/sec</span>
+        <br>
+        <span class="width-6">N1QL Request Rate - last 15 min</span>
+        <span class="text-right width-6">{{qmc.getVital("request.per.sec.15min") | number:'1.1-1'}}/sec</span>
+        <br>
+        <span class="width-6">Query Request Time</span>
+        <span class="text-right width-6">{{qmc.getVital("request_time.mean") | number:'1.1-1'}} secs</span>
+      </div>
+    </footer>
+  </div>
+</div>

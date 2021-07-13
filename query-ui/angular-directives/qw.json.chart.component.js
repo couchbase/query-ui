@@ -1,7 +1,6 @@
 /**
- * Angular directive that creates user-specified charts for the given data
+ * Angular Component that creates user-specified charts for the given data
  */
-/* global _, angular */
 
 import saveAs from "file-saver";
 
@@ -12,43 +11,32 @@ import {
   Directive,
   ElementRef,
   NgModule,
-  Renderer2 } from '@angular/core';
+  Renderer2 }                       from '@angular/core';
 import { MnLifeCycleHooksToStream } from 'mn.core';
-
-import { CommonModule }             from '@angular/common';
 
 import { QwJsonCsvService }         from '../angular-services/qw.json.csv.service.js';
 
-import _                                      from 'lodash';
+import _                            from 'lodash';
 
 import {min as d3Min, max as d3Max, group as d3Group,extent as d3Extent,
-sum as d3Sum,
-merge as d3Merge}           from "d3-array";
+  sum as d3Sum, merge as d3Merge}   from "d3-array";
 import {axisBottom as d3AxisBottom,
-  axisLeft as d3AxisLeft }                    from "d3-axis";
+  axisLeft as d3AxisLeft }          from "d3-axis";
 import {select as d3Select, event as d3Event,
-selectAll as d3SelectAll} from "d3-selection";
-import {linkVertical as d3LinkVertical,
-  linkHorizontal as d3LinkHorizontal,
-line as d3Line,
-area as d3Area,
-pie as d3Pie,
-arc as d3Arc}         from "d3-shape";
+  selectAll as d3SelectAll}         from "d3-selection";
+import {line as d3Line, area as d3Area,
+  pie as d3Pie, arc as d3Arc}       from "d3-shape";
 import {scaleLinear as d3ScaleLinear,
   scaleOrdinal as d3ScaleOrdinal,
-scaleBand as d3ScaleBand,
-scaleTime as d3ScaleTime}         from "d3-scale";
+  scaleBand as d3ScaleBand,
+  scaleTime as d3ScaleTime}         from "d3-scale";
 import {schemeTableau10 as d3SchemeTableau10} from "d3-scale-chromatic";
 import {mouse as d3Mouse}                     from "d3-selection";
-import {transition as d3Transition}           from "d3-transition";
 import {timeParse as d3TimeParse,
   timeFormat as d3TimeFormat}           from "d3-time-format";
 
-import {interpolate as d3Interpolate}         from "d3-interpolate";
-import {cluster as d3Cluster, tree as d3Tree} from "d3-hierarchy";
 import {zoom as d3Zoom,
   zoomIdentity as d3ZoomIdentity}             from "d3-zoom";
-import {hierarchy as d3Hierarchy}             from "d3-hierarchy";
 import { fromEvent }                          from 'rxjs';
 
 export { QwJsonChart };
@@ -59,7 +47,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-json-chart",
-      templateUrl: "../_p/ui/query/angular-directives/qw.json.chart.template.html",
+      templateUrl: new URL("./qw.json.chart.template.html", import.meta.url).pathname,
       styleUrls: ["../_p/ui/query/angular-directives/qw.json.chart.css"],
       inputs: [
         "subject"
@@ -92,7 +80,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe();
+    this.subscription && this.subscription.unsubscribe();
     this.resizeSubscription.unsubscribe();
   }
 
@@ -109,7 +97,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   //
 
   handleNewData(result) {
-    this.data = result.data;
+    this.data = result && result.data;
     this.result = result;
     this.getStateFromQueryResult(); // if they are going through history, there may be new fields;
 

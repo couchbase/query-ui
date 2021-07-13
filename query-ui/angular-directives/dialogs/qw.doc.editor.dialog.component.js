@@ -1,11 +1,7 @@
-import {MnLifeCycleHooksToStream} from 'mn.core';
-import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {MnLifeCycleHooksToStream}     from 'mn.core';
+import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
-import { CommonModule }        from '@angular/common';
-
-import {FormControl, FormGroup} from '@angular/forms';
-
-import _ from "lodash";
+import { CommonModule }               from '@angular/common';
 
 export { QwDocEditorDialog };
 

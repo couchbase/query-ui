@@ -1,0 +1,44 @@
+<div class="dialog-med">
+  <div class="panel-header">
+    <h2>Export Query / Data / History</h2>
+  </div>
+
+  <form class="forms">
+  <div class="panel-content">
+    <div class="formrow checkbox-list">
+      <label>Choose Export</label>
+      <div
+         *ngFor="let choice of file_options; let $index = index">
+        <input
+           type="radio"
+           name="response"
+           value="{{$index}}"
+           id="for-{{$index}}"
+           [(ngModel)]="selected.item"
+           [checked]="$index==0">
+        <label
+           for="for-{{$index}}"
+           class="checkbox">
+          {{choice.label}} &nbsp;
+        </label>
+      </div>
+    </div>
+    <div class="formrow">
+      <label>Filename</label>
+      <span  class="input-append items-center">
+        <input type="text" name="file_name" [(ngModel)]="file.name">
+        <small>&nbsp; .{{file_options[selected.item].kind}}</small>
+      </span>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <a (click)="activeModal.dismiss('cancel')">Cancel</a>
+    <button
+       type="submit"
+       (click)="activeModal.close('ok')">
+      <span>Save</span>
+    </button>
+  </div>
+  </form>
+</div>

@@ -1,0 +1,36 @@
+<div class="insights-sidebar-schema margin-left-half">
+   <span *ngFor="let field of schema.properties | keyvalue">
+      <div [ngClass]="{'indexed': field.value.indexed}"
+           [attr.title]="showSamples(field.value)"> {{field.key}} {{showFieldType(field.value)}}</div>
+      <div *ngIf="field.value.type=='object'">
+        <qw-schema-display [schema]="field.value" [path]="path + field.key + '.' "></qw-schema-display></div>
+      <div *ngIf="field.value.type=='array' && field.value.items.length">
+        <div class="insights-sidebar-schema">
+          <span class="items-top" *ngFor="let schema of field.value.items">item {{schema.type}}
+            <span *ngIf="schema.$schema || schema.type == 'array'">
+              :<qw-schema-display schema="schema" path="path + field.key + '[]' "></qw-schema-display>
+            </span>
+          </span>
+        </div>
+      </div>
+      <div *ngIf="field.value.type=='array' && field.value.items.$schema">
+        <div class="insights-sidebar-schema"><span class="flex-column items-top">{{field.key}} subtype:
+          <qw-schema-display [schema]="field.value.items" [path]="path + field.key + '[]' "></qw-schema-display></span>
+        </div>
+      </div>
+      <div *ngIf="field.value.type=='array' && field.value.items.subtype">
+        <qw-schema-display [schema]="field.value.items.subtype" [path]="path + field.key + '[]' "></qw-schema-display>
+      </div>
+    </span>
+  <span *ngIf="schema.truncated">too many fields to display, list truncated...</span>
+  <!-- if we aren't a top level schema, and see an array type, put out the types of the items of the array -->
+  <span *ngIf="!schema.hasOwnProperty('Flavor')">
+    <span class="items-top" *ngFor="let subschema of schema.items">
+      item {{subschema.type}}
+      <span [hidden]="subschema.type">{{subschema}}</span>
+      <span *ngIf="subschema.$schema || subschema.type == 'array'">
+        :<qw-schema-display schema="subschema" path="path + field.key + '[]' "></qw-schema-display>
+      </span>
+    </span>
+  </span>
+</div>

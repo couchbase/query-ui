@@ -9,60 +9,58 @@ import { ViewEncapsulation,
          Component,
          ElementRef,
          NgModule,
-         Renderer2 } from '@angular/core';
-import { MnLifeCycleHooksToStream } from 'mn.core';
+         Renderer2 }                        from '@angular/core';
+import { MnLifeCycleHooksToStream }         from 'mn.core';
 
-import { CommonModule } from '@angular/common';
+import { CommonModule }                     from '@angular/common';
 
-import _ from "lodash";
+import _                                    from "lodash";
 
-import {select as d3Select, event as d3Event} from "d3-selection";
+import {select as d3Select,
+  event as d3Event}                         from "d3-selection";
 import {linkVertical as d3LinkVertical,
         linkHorizontal as d3LinkHorizontal} from "d3-shape";
 
-import {transition as d3Transition} from "d3-transition";
-import {interpolate as d3Interpolate} from "d3-interpolate";
-import {cluster as d3Cluster, tree as d3Tree} from "d3-hierarchy";
-import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "d3-zoom";
-import {hierarchy as d3Hierarchy} from "d3-hierarchy";
+import {tree as d3Tree}                     from "d3-hierarchy";
+import {zoom as d3Zoom,
+  zoomIdentity as d3ZoomIdentity}           from "d3-zoom";
+import {hierarchy as d3Hierarchy}           from "d3-hierarchy";
 
+import { QwQueryService }                   from "../angular-services/qw.query.service.js";
 
 export { QwExplainViz };
 
 class QwExplainViz extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
-      selector: "[qwExplainViz]",
+      selector: "qw-explain-viz",
       templateUrl: "../_p/ui/query/angular-directives/qw.explain.viz.template.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],
       inputs: [
-        "qwExplainViz"
+        "data",         // for use with a single query plan
+        "subject"  // for use with an observable containing a query result
         ],
-        changeDetection: ChangeDetectionStrategy.OnPush
+        //changeDetection: ChangeDetectionStrategy.OnPush
     })
     ]}
 
-  static get parameters() { return [ElementRef, Renderer2] }
+  static get parameters() { return [
+    ElementRef,
+    Renderer2,
+    QwQueryService,
+  ] }
 
-  constructor(element, renderer) {
+  constructor(element, renderer, qwQueryService) {
     super();
     this.element = element;
     this.renderer = renderer;
+    queryService = qwQueryService;
   }
 
   ngOnInit() {
     //console.log("Directive ngOnInit, input: " + this.qwExplainViz);
-    this.data = this.qwExplainViz;
-    this.dataIsString = _.isString(this.data);
-    this.dataIsArray = _.isArray(this.data);
-    if (_.isPlainObject(this.data.analysis.indexes))
-      this.data.analysis.indexes = Object.keys(this.data.analysis.indexes);
-    if (_.isPlainObject(this.data.analysis.buckets))
-      this.data.analysis.buckets = Object.keys(this.data.analysis.buckets);
-    if (_.isPlainObject(this.data.analysis.fields))
-      this.data.analysis.fields = Object.keys(this.data.analysis.fields);
     this.topDown = topDown;
     this.leftRight = leftRight;
     this.bottomTop = bottomTop;
@@ -78,26 +76,59 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
     //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
     outerElement = this.element.nativeElement.querySelector('.wb-results-explain');
     wrapperElement = this.element.nativeElement.querySelector('.wb-explain-d3-wrapper');
-    simpleTree = makeSimpleTreeFromPlanNodes(this.data.plan_nodes,null,"null");
-    makeTree(this.element.nativeElement);
+
+    // when used in the workbench, we get an observable tied to the current
+    // query result
+    if (this.subject)
+      this.subscription = this.subject.subscribe(val => this.handleNewData(val));
+    // when used in a dialog box, we just get the query plan
+    else if (this.data)
+      this.handleNewData({explainResult: this.data});
+  }
+
+  ngOnDestroy() {
+    this.subscription && this.subscription.unsubscribe();
+  }
+
+  handleNewData(queryResult) {
+    if (!queryResult) {
+      clearContent();
+      return;
+    }
+
+    this.data = queryResult.explainResult;
+    this.dataIsArray = _.isArray(this.data);
+    this.dataIsString = _.isString(this.data);
+    if (this.data && this.data.analysis) {
+      if (_.isPlainObject(this.data.analysis.indexes))
+        this.data.analysis.indexes = Object.keys(this.data.analysis.indexes);
+      if (_.isPlainObject(this.data.analysis.buckets))
+        this.data.analysis.buckets = Object.keys(this.data.analysis.buckets);
+      if (_.isPlainObject(this.data.analysis.fields))
+        this.data.analysis.fields = Object.keys(this.data.analysis.fields);
+
+      simpleTree = makeSimpleTreeFromPlanNodes(this.data.plan_nodes,null,"null");
+
+      makeTree(this.element.nativeElement);
+    }
+    else
+      clearContent(); // nothing to show
   }
 }
+
+
 
 //
 // global so we can rebuild the tree when necessary
 //
 
-var queryService = {
-    query_plan_options: {
-      orientation: orientLR
-    }
-};
+var queryService;
 var outerElement;
 var wrapperElement;
 var simpleTree; // underlying data
 
 function makeTree(element) {
-
+  clearContent();
   makeD3TreeFromSimpleTree(simpleTree,element);
 }
 
@@ -115,8 +146,13 @@ function bottomTop() {changeOrient(orientBT);}
 function leftRight() {changeOrient(orientLR);}
 function rightLeft() {changeOrient(orientRL);}
 
+function clearContent() {
+  var svg2 = wrapperElement.querySelector('svg');
+  if (svg2)
+    svg2.remove();
+}
+
 function changeOrient(newOrient) {
-  wrapperElement.empty();
   queryService.query_plan_options.orientation = newOrient;
   makeTree();
 }

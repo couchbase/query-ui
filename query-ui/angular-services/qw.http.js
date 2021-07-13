@@ -20,6 +20,21 @@ class QwHttp {
     this.http = http;
   }
 
+  // for transition to using RXJS, unpack the HttpRequest and send it
+  // using HttpClient, returning an observable
+  do_request(config) {
+    switch (config.method) {
+      case 'GET':
+        return(this.http.get(config.url,this.configToOptions(config)));
+      case 'POST':
+        return(this.http.post(config.url,config.data,this.configToOptions(config)));
+      case 'PUT':
+        return(this.http.put(config.url,config.data,this.configToOptions(config)));
+      case 'DELETE':
+        return(this.http.delete(config.url,this.configToOptions(config)));
+    }
+  }
+
   //simulate old $http from angular 1.x
   do(config) {
 

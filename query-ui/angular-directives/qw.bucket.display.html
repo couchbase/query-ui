@@ -1,0 +1,76 @@
+<h5 class="row">
+  <div class="disclosure lower medium ellipsis" [ngClass]="{disclosed: bucket.expanded}"
+       (click)="changeBucketExpanded(bucket)">{{bucket.id}}
+  </div>
+  <small *ngIf="bucket.collections.length > 0"> {{bucket.collections.length}} collection<span
+     [hidden]="bucket.collections.length == 1">s</span></small>
+</h5>
+<div *ngIf="bucket.expanded" class="text-smaller margin-bottom-half">
+
+  <!--   for mixed clusters, a bucket will have its own schema, otherwise it will be at the collection level -->
+
+  <div *ngIf="!compat.atLeast70">
+    <div *ngIf="bucket.schema_error">{{bucket.schema_error}}</div>
+    <span *ngFor="let flavor of bucket.schema">
+      <div (click)="flavor.Show = !flavor.Show" class="disclosure tight row" [ngClass]="{disclosed: flavor.Show}"
+           [hidden]="flavor.Summary" [hidden]="!flavor['%docs']">
+        <span>{{flavor.Flavor || "schema " + ($index + 1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span>
+        <span>{{flavor['%docs'] | number:'1.0-1'}}{{"%"}}</span></div>
+      <div [hidden]="!flavor.Show || flavor.hasFields !== true"><ul><li>No fields found.</li></ul></div>
+          <qw-schema-display *ngIf="!flavor.Summary && flavor.Show" schema="flavor" path=""></qw-schema-display>
+    </span>
+  </div>
+
+  <!--   for each scope in the bucket... -->
+
+  <div *ngFor="let scope of bucket.scopeArray" class="insights-scope">
+    <h6 (click)="changeScopeExpanded(scope)" class="margin-bottom-quarter higher tight ellipsis"
+        [ngClass]="{disclosure: bucket.scopeArray.length > 1, disclosed: bucket.scopeArray.length > 1 && scope.expanded}">
+      {{scope.id}}
+    </h6>
+    <div *ngIf="scope.expanded || bucket.scopeArray.length == 1">
+      <div *ngFor="let collection of getCollectionsForScope(bucket,scope)" class="insights-collection"
+           [ngClass]="{'margin-bottom-half': collection.expanded}">
+        <h6 (click)="changeCollectionExpanded(bucket,scope,collection)"
+            class="row">
+          <div class="disclosure higher tight ellipsis" [ngClass]="{disclosed: collection.expanded}">{{collection.id}}
+          </div>
+          <small *ngIf="collection.count != null">{{collection.count}} docs</small></h6>
+
+        <!-- if the collection is expanded, show its schema -->
+
+        <div *ngIf="collection.expanded" class="margin-bottom-half margin-left-1">
+          <!-- error -->
+          <span class="warning" *ngIf="collection.schema_error"
+                title="{{collection.schema_error}}">{{collection.schema_error}}</span>
+          <!--   for each flavor in the schema... -->
+          <span *ngFor="let flavor of collection.schema; let i = index">
+          <div (click)="flavor.Show = !flavor.Show" class="disclosure tight row"
+               [ngClass]="{disclosed: flavor.Show}"
+               [hidden]="flavor.Summary || !flavor['%docs']">
+            <span>{{flavor.Flavor || "schema " + (i + 1)}} {{flavor.type == "binary" ? "(binary)" : ""}}</span>
+            <span>{{flavor['%docs'] | number:'1.0-1'}}{{"%"}}</span>
+          </div>
+          <div *ngIf="flavor.Show && flavor.hasFields !== true"><ul><li>No fields found.</li></ul></div>
+
+          <qw-schema-display *ngIf="!flavor.Summary && flavor.Show" [schema]="flavor" path=""></qw-schema-display>
+        </span>
+
+          <!-- indexes for collection -->
+          <span [hidden]="collection.indexes.length == 0">
+          <div (click)="toggleShowIndexes(collection)" class="disclosure tight row"
+               [ngClass]="{disclosed: collection.ShowIndexes === true}">
+            <span class="index-header">Indexes</span></div>
+          <span class="indent-1-5" [hidden]="!collection.ShowIndexes" *ngFor="let index of collection.indexes">
+            <span [ngClass]="{warning: index.state != 'online'}"
+                  [attr.title]="index.state != 'online' ? 'Index not built yet' : ''">
+               {{index.name}} <span *ngIf="index.index_key.length > 0">on {{index.index_key}}</span>
+               <span *ngIf="index.condition"> where {{index.condition}}</span>
+            </span><br>
+          </span>
+        </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
