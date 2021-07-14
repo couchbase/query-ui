@@ -107,8 +107,10 @@ function getQwCollectionsService(
           if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
             meta.buckets_ephemeral[resp.data[i].name] = true;
 
-          // see if any of the nodes for the bucket have a pre-7.0 version, meaning no collections
-          if (resp.data[i].nodes.some(element =>
+          // if we are proxied to a remote cluster (to select remote data for analytics), we need to check
+          // if any of the nodes for the bucket have a pre-7.0 version, meaning no collections. Otherwise
+          // we rely on poolsDefault.export.compat
+          if (proxy && resp.data[i].nodes.some(element =>
             parseInt(element.version && element.version.split(".")[0]) < 7))
             meta.pre70 = true;
         }
