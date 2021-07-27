@@ -3,6 +3,9 @@ import { QwDocEditorDialog } from './dialogs/qw.doc.editor.dialog.component.js';
 import { QwErrorDialog }     from './dialogs/qw.error.dialog.component.js';
 import { QwInputDialog }     from './dialogs/qw.input.dialog.component.js';
 import { QwNoticeDialog }    from './dialogs/qw.notice.dialog.component.js';
+import { MnPoolDefault }     from '/ui/app/ajs.upgraded.providers.js';
+import { $http }             from '/_p/ui/query/angular-services/qw.http.js';
+import js_beautify                                       from "/ui/web_modules/js-beautify.js";
 
 export { QwDialogService };
 
@@ -13,12 +16,16 @@ class QwDialogService {
   ]}
 
   static get parameters() { return [
+    MnPoolDefault,
     NgbModal,
     NgbModalConfig,
+    $http,
   ]}
 
-  constructor(modalService, ngbModalConfig) {
+  constructor(mnPoolDefault, modalService, ngbModalConfig, $http) {
     this.modalService = modalService;
+    this.compat = mnPoolDefault.export.compat;
+    this.$http = $http;
     ngbModalConfig.backdrop = "static";
   }
 
@@ -57,12 +64,14 @@ class QwDialogService {
   }
 
   //
-  // this shows the document editor dialog, with parameters for:
+  // this shows the document editor dialog, assuming that you already have the contents of document.
+  // if you need to retrieve the document, see the next function.
   //   readonly - can the user edit the document?
   //   header - the message at the top of the dialog
   //   doc_id - the document id
   //   doc_json - json for the document
   //   doc_meta - metadata and xattrs
+  //   new_doc - whether to show an editable document ID field
   //
   // if user clicks 'ok' to save the document, the first function from the promise
   // is called with the new document text as the argument.
@@ -82,6 +91,69 @@ class QwDialogService {
     this.dialogRef.componentInstance.doc_meta = doc_meta;
     this.dialogRef.componentInstance.new_doc = new_doc;
     return(this.dialogRef.result);
+  }
+
+
+  //
+  // Retrieve a document by id for viewing and possibly editing in the editor dialog. This is
+  // for showing documents from the free-text search results list, and also for editing the sample
+  // document in the Views UI.
+  //  readonly - can the user edit or not?
+  //  header - message for the top of the dialog
+  //  bucket - name of bucket
+  //  scope - name of scope, ignored if we are pre-7.0 mixed cluster
+  //  collection - name of collection, ignored if we are pre-7.0 mixed cluster
+  //  docId - id to retrieve the document
+  //
+  getAndShowDocument(readonly,header,bucket,scope,collection,docId) {
+    var rest_url = "../pools/default/buckets/" + myEncodeURIComponent(bucket);
+
+    if (this.compat.atLeast70)
+      rest_url += "/scopes/" + myEncodeURIComponent(scope) +
+          "/collections/" + myEncodeURIComponent(collection);
+
+    rest_url += "/docs/" + myEncodeURIComponent(docId);
+    var This = this;
+
+    return this.$http.get(rest_url)
+    .then(
+        function success(resp) {
+          if (resp && resp.status == 200 && resp.data) {
+
+            var docInfo = resp.data;
+            var docId = docInfo.meta.id;
+
+            // did we get a json doc back? if so, and if the doc is editable, handle any changes
+            if (docInfo && docInfo.json && docInfo.meta) {
+              var promise = This.showDocEditorDialog(readonly,header,docId,js_beautify(docInfo.json,{"indent_size": 2}),
+                                                     JSON.stringify(docInfo.meta,null,2),false);
+              if (readonly)    // no editing
+                return(promise);
+
+              return promise.then(
+                function close(result) { // used clicked o.k, save document
+                  return(This.$http.post(rest_url,{flags: 0x02000006, value: result.json}));
+                },
+                function dismiss(result) {
+                  return Promise.resolve("dialog closed, no changes");
+                }
+              );
+              }
+            }
+
+            // maybe a single binary doc? can't edit it then
+            else if (docInfo && docInfo.meta && (docInfo.base64 === "" || docInfo.base64))
+              return(This.showDocEditorDialog(true,header,docId,atob(docInfo.base64),docInfo.meta,false));
+
+            // shouldn't get here
+            return(Promise.reject("Can't show doc editor."));
+        },
+      function error(resp) {
+        var error_message = "Error " + resp.status + " retrieving document: " + docId;
+        if (resp.statusText)
+          error_message += " - " + resp.statusText;
+        return(Promise.reject(error_message));
+      });
   }
 
 
@@ -128,6 +200,14 @@ class QwDialogService {
 
 }
 
-// angular
-//   .module('app', [])
-//   .factory('qwDialogService', downgradeInjectable(QwDialogService));
+  //
+  // the default encodeURIComponent doesn't encode "." or "..", even though can mess up an URL.
+  //
+
+  function myEncodeURIComponent(name) {
+    if (name) switch (name) {
+      case ".": return("%2E");
+      case "..": return("%2E%2E");
+      default: return(encodeURIComponent(name));
+    }
+  }
