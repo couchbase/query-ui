@@ -453,27 +453,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
 
-// Set the gradient
-    svg.append("linearGradient")
-        .attr("id", "line-gradient")
-        .attr("gradientUnits", "userSpaceOnUse")
-        .attr("x1", d3Min(values[1]))
-        .attr("y1", scale_y(d3Min(values[2])))
-        .attr("x2", d3Min(values[1]))
-        .attr("y2", scale_y(d3Max(values[2])))
-        .selectAll("stop")
-        .data([
-          {offset: "0%", color: "blue"},
-          {offset: "100%", color: "red"}
-        ])
-        .enter().append("stop")
-        .attr("offset", function(d) { return d.offset; })
-        .attr("stop-color", function(d) { return d.color; });
-
     svg.append('path')
         .datum(values[0])
         .attr("fill","none")
-        .attr("stroke", "url(#line-gradient)")
+        .attr("stroke", "#669ee0")
         .attr("stroke-width", 2)
         .attr("d", d3Line()
         .x(d=>scale_x(d.x))
@@ -516,29 +499,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
 
-
-// Set the gradient
-    svg.append("linearGradient")
-        .attr("id", "line-gradient")
-        .attr("gradientUnits", "userSpaceOnUse")
-        .attr("x1", d3Min(values[1]))
-        .attr("y1", scale_y(d3Min(values[2])))
-        .attr("x2", d3Min(values[1]))
-        .attr("y2", scale_y(d3Max(values[2])))
-        .selectAll("stop")
-        .data([
-          {offset: "0%", color: "blue"},
-          {offset: "100%", color: "red"}
-        ])
-        .enter().append("stop")
-        .attr("offset", function(d) { return d.offset; })
-        .attr("stop-color", function(d) { return d.color; });
-
-
     svg.append('path')
         .datum(values[0])
-        .attr("fill","url(#line-gradient)")
-        .attr("stroke", "url(#line-gradient)")
+        .attr("fill","#669ee0")
+        .attr("stroke", "#669ee0")
         .attr("stroke-width", 2)
         .attr("d", d3Area()
             .x(d=>scale_x(d.x))
