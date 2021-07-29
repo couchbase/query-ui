@@ -35,8 +35,7 @@ import {scaleLinear as d3ScaleLinear,
   scaleOrdinal as d3ScaleOrdinal,
 scaleBand as d3ScaleBand,
 scaleTime as d3ScaleTime}         from "/ui/web_modules/d3-scale.js";
-import {schemeDark2 as d3SchemeDark2,
-  interpolateSpectral as d3InterpolateSpectral} from "/ui/web_modules/d3-scale-chromatic.js";
+import {schemeTableau10 as d3SchemeTableau10} from "/ui/web_modules/d3-scale-chromatic.js";
 import {transition as d3Transition}           from "/ui/web_modules/d3-transition.js";
 import {timeParse as d3TimeParse}           from "/ui/web_modules/d3-time-format.js";
 
@@ -435,7 +434,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     var color = d3ScaleOrdinal()
         .domain(values[3])
-        .range(d3SchemeDark2);
+        .range(d3SchemeTableau10);
 
     svg
         .selectAll('dot')
@@ -598,7 +597,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     var color = d3ScaleOrdinal()
         .domain(values[0])
-        .range(d3SchemeDark2);
+        .range(d3SchemeTableau10);
 
     // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
     var radius = (Math.min(this.canvas_width, this.canvas_height) - this.margin)/2;
