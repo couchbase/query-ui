@@ -343,6 +343,11 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       }
     });
 
+    // before returning data sort data.x for line and area charts
+    if (this.chartType == "line" || this.chartType == "area") {
+      data.sort((firstItem, secondItem) => firstItem.x - secondItem.x);
+    }
+
     if (numFields == 3) {
       return [data, data_x, data_y, data_group];
     } else {
