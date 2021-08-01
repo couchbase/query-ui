@@ -365,13 +365,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
       svg.append("g")
           .attr("transform","translate(0," + (this.canvas_height-40) + ")")
-          .call(d3AxisBottom(scale_x))
-          .append("text")
-          .attr("x",this.canvas_width/2)
-          .attr("y",80)
-          .attr("text-anchor", "end")
-          .attr("stroke","black")
-          .text(this.fields()[this.field1]);
+          .call(d3AxisBottom(scale_x));
     }
 
     if (this.chartType == "bar") {
