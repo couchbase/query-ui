@@ -373,7 +373,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           .domain(d3Extent(values[0], function (d) {
             return d.x;
           }))
-          .range([this.margin, this.canvas_width - this.margin]);
+          .range([this.margin, this.canvas_width - this.margin])
+          .nice();
 
       var tickFormat = "%Y-%m-%d";
       if (this.flat_data_types[this.field1].datetime == true) {
@@ -409,7 +410,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     } else {
       // axes/scale functions from data to screen pixels
       var scale_x = d3ScaleLinear().domain([d3Min(values[1]),d3Max(values[1])])
-          .range([this.margin,this.canvas_width-this.margin]);
+          .range([this.margin,this.canvas_width-this.margin])
+          .nice();
 
        svg.append("g")
            .attr("transform","translate(0," + (this.canvas_height-40) + ")")
@@ -420,7 +422,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createYAxis(values) {
     var scale_y = d3ScaleLinear().domain([d3Min(values[2]),d3Max(values[2])])
-        .range([this.canvas_height-this.margin,this.margin]);
+        .range([this.canvas_height-this.margin,this.margin])
+        .nice();
 
     svg.append("g")
       .attr("transform","translate(40, 0)")
