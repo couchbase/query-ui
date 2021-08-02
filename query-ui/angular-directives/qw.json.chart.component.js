@@ -415,7 +415,12 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
        svg.append("g")
            .attr("transform","translate(0," + (this.canvas_height-40) + ")")
-           .call(d3AxisBottom(scale_x));
+           .call(d3AxisBottom(scale_x))
+           .selectAll("text")
+           .attr("transform", "translate(0,10)rotate(-90)")
+           .attr("dy","0.3em")
+           .attr("y","0")
+           .style("text-anchor", "end");
     }
     return scale_x;
   }
@@ -465,9 +470,27 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cx", d => scale_x(d.x))
         .attr("cy", d => scale_y(d.y))
         .style("fill", d => color(d.z));
-        //.on("mouseover",highlight);
 
-    }
+    var legend = svg.selectAll(".legend")
+        .data(values[3].slice().reverse())
+        .enter()
+        .append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", this.canvas_width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .attr("x", this.canvas_width+5)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "left")
+        .text(function(d) { return d; });
+  }
 
   createLineChart() {
     var values = this.flattenData(2);
