@@ -37,7 +37,8 @@ scaleBand as d3ScaleBand,
 scaleTime as d3ScaleTime}         from "/ui/web_modules/d3-scale.js";
 import {schemeTableau10 as d3SchemeTableau10} from "/ui/web_modules/d3-scale-chromatic.js";
 import {transition as d3Transition}           from "/ui/web_modules/d3-transition.js";
-import {timeParse as d3TimeParse}           from "/ui/web_modules/d3-time-format.js";
+import {timeParse as d3TimeParse,
+  timeFormat as d3TimeFormat}           from "/ui/web_modules/d3-time-format.js";
 
 import {interpolate as d3Interpolate}         from "/ui/web_modules/d3-interpolate.js";
 import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy.js";
@@ -301,10 +302,13 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       if (_.isNull(obj[Field1]) == false && _.isNull(obj[Field2]) == false) {
 
         var tval = obj[Field1];
-        if (dateTimeEx.exec(tval))
-          tval = parseDateTime(tval);
-        else if (dateEx.exec(tval))
-          tval = parseDate(tval);
+
+        if (this.chartType != "bar" && this.chartType != "gbar") {
+          if (dateTimeEx.exec(tval))
+            tval = parseDateTime(tval);
+          else if (dateEx.exec(tval))
+            tval = parseDate(tval);
+        }
 
         if (numFields == 3) {
 
@@ -360,7 +364,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     // For date time types
     // lets start with line, area and connected scatter charts for this.
 
-    if (this.flat_data_types[this.field1].date == true) {
+    if ((this.flat_data_types[this.field1].date == true ||
+        this.flat_data_types[this.field1].datetime == true) &&
+        this.chartType!= "bar" &&
+        this.chartType!= "gbar") {
 
       var scale_x = d3ScaleTime()
           .domain(d3Extent(values[0], function (d) {
@@ -368,12 +375,22 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           }))
           .range([this.margin, this.canvas_width - this.margin]);
 
+      var tickFormat = "%Y-%m-%d";
+      if (this.flat_data_types[this.field1].datetime == true) {
+        tickFormat = "%Y-%m-%dT%H:%M:%S";
+      }
+
       svg.append("g")
           .attr("transform","translate(0," + (this.canvas_height-40) + ")")
-          .call(d3AxisBottom(scale_x));
-    }
+          .call(d3AxisBottom(scale_x).tickFormat(d3TimeFormat(tickFormat)))
+          .selectAll("text")
+          .attr("transform", "translate(0,10)rotate(-90)")
+          .attr("dy","0.3em")
+          .attr("y","0")
+          .style("text-anchor", "end");
 
-    if (this.chartType == "bar") {
+
+    } else if (this.chartType == "bar") {
       // axes/scale functions from data to screen pixels
       var scale_x = d3ScaleBand()
           .domain(values[1])
@@ -446,6 +463,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cy", d => scale_y(d.y))
         .style("fill", d => color(d.z));
         //.on("mouseover",highlight);
+
     }
 
   createLineChart() {
