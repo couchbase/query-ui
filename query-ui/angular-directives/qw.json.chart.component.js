@@ -344,7 +344,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     });
 
     // before returning data sort data.x for line and area charts
-    if (this.chartType == "line" || this.chartType == "area") {
+    if (this.chartType == "line" || this.chartType == "area" || this.chartType == "connscatter") {
       data.sort((firstItem, secondItem) => firstItem.x - secondItem.x);
     }
 
