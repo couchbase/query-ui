@@ -384,8 +384,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           .attr("transform","translate(0," + (this.canvas_height-40) + ")")
           .call(d3AxisBottom(scale_x))
           .selectAll("text")
-          .attr("transform", "translate(-10,10)rotate(-90)")
-          .style("font-size", function() {if (scale_x.bandwidth() > 20) { return 20;} else {return scale_x.bandwidth();}})
+          .attr("transform", "translate(0,10)rotate(-90)")
+          .attr("dy","0.3em")
+          .attr("y","0")
+          .style("font-size", function() { if (scale_x.bandwidth() > 20) { return 20;} else {return scale_x.bandwidth();}})
           .style("text-anchor", "end");
     } else {
       // axes/scale functions from data to screen pixels
