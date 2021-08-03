@@ -22,7 +22,8 @@ import { QwJsonCsvService }         from '/_p/ui/query/angular-services/qw.json.
 import _                                      from '/ui/web_modules/lodash.js';
 
 import {min as d3Min, max as d3Max, group as d3Group,extent as d3Extent,
-sum as d3Sum}           from "/ui/web_modules/d3-array.js";
+sum as d3Sum,
+merge as d3Merge}           from "/ui/web_modules/d3-array.js";
 import {axisBottom as d3AxisBottom,
   axisLeft as d3AxisLeft }                    from "/ui/web_modules/d3-axis.js";
 import {select as d3Select, event as d3Event,
@@ -90,7 +91,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     this.qwJsonCsvService = qwJsonCsvService;
     this.field1 = '';
     this.field2 = '';
+    this.field2_list = '';
     this.field3 = '';
+    this.field4 = '';
     this.chartType = 'xy';
   }
 
@@ -260,6 +263,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "connscatter": this.createConnScatterChart(); break;
       case "donut": this.createPieChart(true); break;
       case "pie": this.createPieChart(false); break;
+      case "gbar": this.createGroupedBarChart(); break;
     }
 
     // center the drawing area
@@ -290,7 +294,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         data_x = [],
         data_y = [];
 
-    if (numFields === 3) {
+    if (numFields === 3 && this.chartType == "scatter") {
       var Field3 = this.field3,
           data_group = [];
     }
@@ -312,17 +316,17 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
             tval = parseDate(tval);
         }
 
-        if (numFields == 3) {
+        if (numFields === 3 && this.chartType == "scatter") {
+            // This is for scatter charts
+            if (_.isNull(obj[Field3]) == false) {
+              // Populate data thats not null only.
+              data.push({x: tval, y: obj[Field2], z: obj[Field3]});
 
-          if (_.isNull(obj[Field3]) == false) {
-            // Populate data thats not null only.
-            data.push({x: tval, y: obj[Field2], z: obj[Field3]});
-
-            // Distinct values to Gather by
-            if (data_group.indexOf(obj[Field3]) == -1) {
-              data_group.push(obj[Field3]);
+              // Distinct values to Gather by
+              if (data_group.indexOf(obj[Field3]) == -1) {
+                data_group.push(obj[Field3]);
+              }
             }
-          }
           data_x.push(tval);
           data_y.push(obj[Field2]);
         } else {
@@ -339,13 +343,22 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
               data_x.push(tval);
               data_y.push(obj[Field2]);
             }
+          } else if (this.chartType == "gbar" ){
+            // grouped bar charts with multiple values
+            var tempObj = {x: tval};
+            for (let i = 0; i < this.field2_list.length; i++) {
+                tempObj["v"+i] = obj[this.field2_list[i]];
+            }
+             data.push(tempObj);
+             data_x.push(tval);
+             data_y.push(obj[this.field2_list[0]]);
+
           } else {
             data.push({x: tval, y: obj[Field2]});
             data_x.push(tval);
             data_y.push(obj[Field2]);
           }
         }
-
       }
     });
 
@@ -392,18 +405,19 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           .attr("y","0")
           .style("text-anchor", "end");
 
-
-    } else if (this.chartType == "bar") {
+    } else if (this.chartType == "bar"|| this.chartType == "gbar") {
       // axes/scale functions from data to screen pixels
       var scale_x = d3ScaleBand()
           .domain(values[1])
           .range([this.margin,this.canvas_width-this.margin])
-          .padding(0.2);
+          .padding(0.2)
+          .round(true) ;
 
       svg.append("g")
           .attr("transform","translate(0," + (this.canvas_height-40) + ")")
           .call(d3AxisBottom(scale_x))
           .selectAll("text")
+
           .attr("transform", "translate(0,10)rotate(-90)")
           .attr("dy","0.3em")
           .attr("y","0")
@@ -428,7 +442,26 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createYAxis(values) {
-    var scale_y = d3ScaleLinear().domain([d3Min(values[2]),d3Max(values[2])])
+    var min = d3Min(values[2]),
+        max = d3Max(values[2]);
+    if (this.chartType == "gbar") {
+      var data = values[0];
+      var tempmin = min,
+      tempmax = max;
+
+      for (let i = 0; i < this.field2_list.length; i++) {
+        tempmin = hasMin(data,"v"+i)["v"+i]
+        if (min > tempmin) {
+          min = tempmin;
+        }
+        tempmax = hasMax(data,"v"+i)["v"+i];
+        if (max < tempmax) {
+          max = tempmax;
+        }
+      }
+
+    }
+    var scale_y = d3ScaleLinear().domain([min,max])
         .range([this.canvas_height-this.margin,this.margin])
         .nice();
 
@@ -578,6 +611,79 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .style("fill", "#669ee0")
   }
 
+  createGroupedBarChart() {
+    var values = this.flattenData(4);
+
+    var scale_x = this.createXAxis(values),
+        scale_y = this.createYAxis(values);
+
+    // Another scale for the subgroups position
+    // If we are adding a + sign we need to make sure this is redone. 
+    var subgroups = [];
+
+    for (let i = 0; i < this.field2_list.length; i++) {
+      subgroups.push(this.fields()[this.field2_list[i]]);
+    }
+
+    var scale_subgroup = d3ScaleBand()
+        .domain(subgroups)
+        .range([this.margin, scale_x.bandwidth()])
+        .padding(0.05)
+        .round(true);
+
+
+    values[0].forEach(function(d) {
+      d.subs = subgroups.map(function(name,index)
+      {
+          return {key: name, value: d["v"+index]};
+         });
+    });
+
+    var color = d3ScaleOrdinal()
+        .domain(subgroups)
+        .range(d3SchemeTableau10);
+
+    // Show all the Bars
+    var h = (this.canvas_height - 40);
+    var state = svg.selectAll("myGbar")
+        .data(values[0])
+        .enter()
+        .append("g")
+        .attr("transform", function (d) {
+          return "translate(" + scale_x(d.x) + ",0)";
+        });
+
+        state.selectAll("rect")
+        .data(function (d) {return d.subs;})
+        .enter()
+        .append("rect")
+        .attr("x", d => scale_subgroup(d.key))
+        .attr("y", d => scale_y(d.value))
+        .attr("width", scale_subgroup.bandwidth())
+        .attr("height", function (d) {return h - scale_y(d.value);})
+        .style("fill", function (d) {return color(d.key);});
+
+    var legend = svg.selectAll(".legend")
+        .data(subgroups.slice().reverse())
+        .enter()
+        .append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", this.canvas_width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .attr("x", this.canvas_width - 24)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function(d) { return d; });
+
+  }
 
   createPieChart(donut) {
     var values = this.flattenData(2);
@@ -690,6 +796,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           var o=   outerArc.centroid(d)
           var percent = (d.endAngle -d.startAngle)/(2*Math.PI)*100
           if(percent<3){
+            o[1]
             pos[1] += i*15
           }
           return [label.centroid(d),[o[0],pos[1]] , pos];
@@ -773,6 +880,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         return("X-Axis");
 
       case "bar":
+      case "gbar":
       case "donut":
       case "pie":
         return("Label");
@@ -794,17 +902,17 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "donut":
       case "pie":
         return("Value");
+      case "gbar":
+        return("Values")
     }
-
     return(null);
   }
 
   get_field3_label() {
     switch (this.chartType) {
       case "scatter":
-        return("Gather");
+        return("Color");
     }
-
     return(null);
   }
 
@@ -839,6 +947,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         break;
 
       case "bar":
+      case "gbar":
       case "donut":
       case "pie":
         if (entry > 1) // Label can be anything
@@ -871,4 +980,29 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     svg.attr("transform", d3Event.transform);
   }
 
+}
+
+// find min and max values from list
+function hasMin(array,attrib) {
+  const checker = (o, i) => typeof(o) === 'object' && o[i]
+  return (array.length && array.reduce(function(prev, curr){
+    const prevOk = checker(prev, attrib);
+    const currOk = checker(curr, attrib);
+    if (!prevOk && !currOk) return {};
+    if (!prevOk) return curr;
+    if (!currOk) return prev;
+    return prev[attrib] < curr[attrib] ? prev : curr;
+  })) || null;
+}
+
+function hasMax(array, attrib) {
+  const checker = (o, i) => typeof(o) === 'object' && o[i]
+  return (array.length && array.reduce(function(prev, curr){
+    const prevOk = checker(prev, attrib);
+    const currOk = checker(curr, attrib);
+    if (!prevOk && !currOk) return {};
+    if (!prevOk) return curr;
+    if (!currOk) return prev;
+    return prev[attrib] > curr[attrib] ? prev : curr;
+  })) || null;
 }

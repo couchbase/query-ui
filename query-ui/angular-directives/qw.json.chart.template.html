@@ -23,6 +23,7 @@
             <option value="line">Line</option>
             <option value="area">Area</option>
             <option value="connscatter">Connected Scatter</option>
+              <option value="gbar">Grouped Bar chart</option>
           </select>
         </span>
 
@@ -46,13 +47,32 @@
           </select>
         </span>
 
-<!-- menu for field2 -->
-        <span>
+<!-- menu for field2 for everything but grouped bars -->
+        <span *ngIf="chartType != 'gbar'">
           <h6>{{get_field2_label()}}</h6>
           <select
              [(ngModel)]="field2"
              theme="selectize"
              class="cbui-select margin-right-1 margin-bottom-half"
+             (change)="createChart()">
+            <option
+               [attr.title]="ten_sample_values(i)"
+               class="ui-select-choices"
+               *ngFor="let field of fields(); let i=index"
+               [value]="i"
+               [disabled]="field_invalid_for_chart_type(i,2)">
+              {{field}} - {{get_types(i)}}
+            </option>
+          </select>
+        </span>
+
+<!-- special menu for field2 for everything but grouped bars -->
+        <span *ngIf="chartType == 'gbar'">
+          <h6>Values</h6>
+          <select multiple
+             [(ngModel)]="field2_list"
+             theme="selectize"
+             class="cbui-select margin-right-1"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -88,7 +108,10 @@
 
       <!-- download -->
       <a (click)="saveChart()" class="icon fa-download margin-1" title="Download chart as SVG"></a>
-    </div>
+
+      <p class="margin-0 margin-right-1">{{data.length}} documents</p>
+      </div>
+      <br>
+
     <div class="chart-d3-wrapper" style="height: calc(100% - 60px)"></div>
-  </div>
 </div>
