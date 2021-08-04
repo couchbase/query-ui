@@ -138,15 +138,19 @@ class QwDialogService {
                   return Promise.resolve("dialog closed, no changes");
                 }
               );
-              }
             }
 
             // maybe a single binary doc? can't edit it then
-            else if (docInfo && docInfo.meta && (docInfo.base64 === "" || docInfo.base64))
-              return(This.showDocEditorDialog(true,header,docId,atob(docInfo.base64),docInfo.meta,false));
+            else if (docInfo && docInfo.meta && (docInfo.base64 === "" || docInfo.base64)) {
+              // make sure always returns a resolved promise, since they can't make changes
+              var promise = This.showDocEditorDialog(true,"read-only binary doc",docId,JSON.stringify(atob(docInfo.base64)),
+                                                     docInfo.meta,false);
+              return promise.then(() => Promise.resolve("done"),() => Promise.resolve("dialog closed, no changes"));
+            }
+          }
 
-            // shouldn't get here
-            return(Promise.reject("Can't show doc editor."));
+          // shouldn't get here
+          return(Promise.reject("Can't show doc editor."));
         },
       function error(resp) {
         var error_message = "Error " + resp.status + " retrieving document: " + docId;
