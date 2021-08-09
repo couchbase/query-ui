@@ -82,9 +82,13 @@
             {{field}} - {{get_types(i)}}
           </option>
         </select>
-      </span>
+        </span>
+
+        
       </div>
-      <p class="margin-0 margin-right-1">Displaying: {{data.length}} documents</p>
+      <p class="margin-0 margin-right-1">{{data.length}} documents</p>
+      <!-- download -->
+      <span (click)="saveChart()" class="icon fa-share-square margin-right-1" title="Download Chart as SVG"></span>
     </div>
     <div class="chart-d3-wrapper" style="height: calc(100% - 60px)"></div>
   </div>

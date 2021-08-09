@@ -3,6 +3,8 @@
  */
 /* global _, angular */
 
+import saveAs from "/ui/web_modules/file-saver.js";
+
 import {
   ViewEncapsulation,
   ChangeDetectionStrategy,
@@ -846,6 +848,25 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     return(retval);
   }
 
+  saveChart() {
+
+      var svgHeader = '<?xml version="1.0" encoding="utf-8" standalone="no"?>' +
+          '<svg width="' + this.canvas_width + '" height="' + this.canvas_height +
+          '" viewBox="0 0 ' + (this.canvas_width + this.margin) + ' ' +
+          (this.canvas_height + this.margin) + '" zoomAndPan="disable" ' +
+          'xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink">';
+
+    var html = svgHeader + svg
+        .attr("title", "svg_title")
+        .attr("version", 1.1)
+        .attr("xmlns", "http://www.w3.org/2000/svg")
+        .node().parentNode.innerHTML + '</svg>';
+    
+    var file = new Blob([html],{type: "image/svg+xml", name: "chart.svg"});
+
+    saveAs(file,file.name);
+  }
+               
   zoom() {
     svg.attr("transform", d3Event.transform);
   }
