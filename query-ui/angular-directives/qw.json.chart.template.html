@@ -6,14 +6,14 @@
 
   <!-- query results should be an array -->
   <div *ngIf="isArray()" style="height: 100%">
-    <div class="row text-small">
-      <div class="row flex-left padding-half padding-left-1">
+    <div class="row text-small items-top">
+      <div class="row flex-wrap flex-left padding-half padding-left-1">
         <span>
           <h6>Chart Type</h6>
           <select
              [(ngModel)]="chartType"
              theme="selectize"
-             class="cbui-select margin-right-1"
+             class="cbui-select margin-right-1 margin-bottom-half"
              (change)="createChart()">
             <option value="xy">X-Y</option>
             <option value="bar">Bar</option>
@@ -33,7 +33,7 @@
           <select
              [(ngModel)]="field1"
              theme="selectize"
-             class="cbui-select margin-right-1"
+             class="cbui-select margin-right-1 margin-bottom-half"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -52,7 +52,7 @@
           <select
              [(ngModel)]="field2"
              theme="selectize"
-             class="cbui-select margin-right-1"
+             class="cbui-select margin-right-1 margin-bottom-half"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -71,7 +71,7 @@
         <select
            [(ngModel)]="field3"
            theme="selectize"
-           class="cbui-select"
+           class="cbui-select margin-right-1 margin-bottom-half"
            (change)="createChart()">
           <option
              [attr.title]="ten_sample_values(i)"
@@ -83,12 +83,11 @@
           </option>
         </select>
         </span>
-
-        
+        <div>{{data.length}} documents</div>
       </div>
-      <p class="margin-0 margin-right-1">{{data.length}} documents</p>
+
       <!-- download -->
-      <span (click)="saveChart()" class="icon fa-share-square margin-right-1" title="Download Chart as SVG"></span>
+      <a (click)="saveChart()" class="icon fa-download margin-1" title="Download chart as SVG"></a>
     </div>
     <div class="chart-d3-wrapper" style="height: calc(100% - 60px)"></div>
   </div>
