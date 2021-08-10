@@ -374,6 +374,24 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     }
   }
 
+  newMin(min) {
+    if (min > 0) {
+      min = min * 0.95;
+    } else {
+      min = min * 1.05;
+    }
+    return min;
+  }
+
+  newMax(max) {
+    if (max < 0) {
+      max = max * 0.95;
+    } else {
+      max = max * 1.05;
+    }
+    return max;
+  }
+
   // X-axis plot and label
   createXAxis(values){
     // For date time types
@@ -425,7 +443,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           .style("text-anchor", "end");
     } else {
       // axes/scale functions from data to screen pixels
-      var scale_x = d3ScaleLinear().domain([d3Min(values[1]),d3Max(values[1])])
+      var min = this.newMin(d3Min(values[1])),
+          max = this.newMax(d3Max(values[1]));
+
+      var scale_x = d3ScaleLinear().domain([min,max])
           .range([this.margin,this.canvas_width-this.margin])
           .nice();
 
@@ -459,8 +480,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           max = tempmax;
         }
       }
-
     }
+    min = this.newMin(min);
+    max = this.newMax(max);
+    
     var scale_y = d3ScaleLinear().domain([min,max])
         .range([this.canvas_height-this.margin,this.margin])
         .nice();
