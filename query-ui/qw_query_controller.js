@@ -1490,6 +1490,12 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     });
 
     //
+    // let the chart window know about the current results (if any)
+    //
+
+    qc.result_subject.next(qc.lastResult().data);
+    
+    //
     // now let's make sure the window is the right size
     //
 

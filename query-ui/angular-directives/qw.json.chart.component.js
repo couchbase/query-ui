@@ -131,9 +131,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         if (_.isString(field))
           if (field.startsWith("\"["))
             this.flat_data_types[index].array = true;
-          else if (isDateTime(field))
+          else if (isDateTime(doc[index]))
             this.flat_data_types[index].datetime = true;
-          else if (isDate(field))
+          else if (isDate(doc[index]))
             this.flat_data_types[index].date = true;
           else
             this.flat_data_types[index].string = true;
@@ -207,6 +207,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createChart() {
+    // need data to work with
+    if (!this.flat_data || !this.flat_data.length)
+      return;
+    
     // if we don't have a valid field specified to chart, pick something
     if (!this.field1 || this.field_invalid_for_chart_type(this.field1,1)) {
       this.field1 = 0;
@@ -939,7 +943,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   // is a given field invalid for the selected chart type and entry?
 
   field_invalid_for_chart_type(field,entry) {
-    var type_obj = this.flat_data_types[field];
+    var type_obj = this.flat_data_types && this.flat_data_types[field];
     if (!type_obj)
       return(true);
     var type_count = Object.keys(type_obj).length;
