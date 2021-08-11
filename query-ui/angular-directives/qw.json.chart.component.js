@@ -54,15 +54,6 @@ export { QwJsonChart };
 
 var svg; // needs to be global for certain callback functions
 
-//
-// regex for detecting dates and date/time
-// we'll only support ISO 8601, since there are too many other formats
-//
-
-const dateEx = /\d\d\d\d-\d\d-\d\d/;
-const dateTimeEx = /\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d/;
-const parseDate = d3TimeParse("%Y-%m-%d");
-const parseDateTime = d3TimeParse("%Y-%m-%dT%H:%M:%S");
 
 class QwJsonChart extends MnLifeCycleHooksToStream {
   static get annotations() { return [
@@ -140,15 +131,14 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         if (_.isString(field))
           if (field.startsWith("\"["))
             this.flat_data_types[index].array = true;
-          else if (dateTimeEx.exec(field))
+          else if (isDateTime(field))
             this.flat_data_types[index].datetime = true;
-          else if (dateEx.exec(field))
+          else if (isDate(field))
             this.flat_data_types[index].date = true;
           else
             this.flat_data_types[index].string = true;
         if (_.isNumber(field)) this.flat_data_types[index].number = true;
         if (_.isBoolean(field)) this.flat_data_types[index].bool = true;
-        if (_.isDate(field)) this.flat_data_types[index].date = true;
       }));
     }
 
@@ -310,9 +300,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         var tval = obj[Field1];
 
         if (this.chartType != "bar" && this.chartType != "gbar") {
-          if (dateTimeEx.exec(tval))
+          if (isDateTime(tval))
             tval = parseDateTime(tval);
-          else if (dateEx.exec(tval))
+          else if (isDate(tval))
             tval = parseDate(tval);
         }
 
@@ -397,8 +387,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     // For date time types
     // lets start with line, area and connected scatter charts for this.
 
-    if ((this.flat_data_types[this.field1].date == true ||
-        this.flat_data_types[this.field1].datetime == true) &&
+    if ((this.flat_data_types[this.field1].datetime ||
+         this.flat_data_types[this.field1].date) &&
         this.chartType!= "bar" &&
         this.chartType!= "gbar") {
 
@@ -998,11 +988,54 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     saveAs(file,file.name);
   }
-               
+
   zoom() {
     svg.attr("transform", d3Event.transform);
   }
 
+}
+
+// convenience functions for detecting dates
+// need to recognize a variety of formats, variants of ISO 8601
+//
+// regexes for detecting dates and date/time, plus matching d3 time parsers.
+// these are arranged from longest to shortest, as we will try to parse from first to
+// last, and we don't want to think it's a date-only if it also has time, for example.
+//
+
+const dateTimeFormats = [
+  {r: /^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d)/, p: d3TimeParse("%Y-%m-%dT%H:%M:%S.%L")},
+  {r: /^(\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d\d\d)/, p: d3TimeParse("%Y-%m-%dT%H:%M:%S.%L")},
+  {r: /^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/,         p: d3TimeParse("%Y-%m-%d %H:%M:%S")},
+  {r: /^(\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d)/,         p: d3TimeParse("%Y-%m-%dT%H:%M:%S")},
+];
+
+const dateFormats = [
+  {r: /^(\d\d\d\d-\d\d-\d\d)/,                        p: d3TimeParse("%Y-%m-%d")}
+];
+
+function isDateTime(dateString) {
+  return(dateTimeFormats.some((element) => element.r.exec(dateString))); // match any regex in format list?
+}
+
+function isDate(dateString) {
+  return(dateFormats.some((element) => element.r.exec(dateString))); // match any regex in format list?
+}
+
+function parseDateTime(dateString) {
+  for (var i=0; i < dateTimeFormats.length; i++) {
+    var match = dateTimeFormats[i].r.exec(dateString);
+    if (match) return(dateTimeFormats[i].p(match[0])); // parse only match, ignore extra text
+  }
+  return(null);
+}
+
+function parseDate(dateString) {
+  for (var i=0; i < dateFormats.length; i++) {
+    var match = dateFormats[i].r.exec(dateString);
+    if (match) return(dateFormats[i].p(match[0])); // parse only match, ignore extra text
+  }
+  return(null);
 }
 
 // find min and max values from list
