@@ -289,12 +289,14 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   function nextResult() {
     qc.showBigDatasets = false;
     qwQueryService.nextResult();
+    qc.result_subject.next(qc.lastResult().data);
     $timeout(swapEditorFocus,10);
   }
 
   function prevResult() {
     qc.showBigDatasets = false;
     qwQueryService.prevResult();
+    qc.result_subject.next(qc.lastResult().data);
     $timeout(swapEditorFocus,10);
   }
 

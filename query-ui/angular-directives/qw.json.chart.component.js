@@ -234,6 +234,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     this.saveStateToQueryResult();
 
+    // remove any existing charts
+    this.initSVG();
+
     if (this.chartType == "scatter" && !this.field3) {
       this.chartError ="Field 3 is needed to gather the data by color";
       return;
@@ -244,8 +247,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       this.chartError = "Fill all fields to plot Charts";
       return;
     }
-    // remove any existing charts
-    this.initSVG();
 
     // create the specified chart type
     switch (this.chartType) {
