@@ -837,10 +837,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .style("fill", color);
 
     legend.append("text")
-        .attr("x", this.canvas_width - 24)
+        .attr("x", this.canvas_width + 2)
         .attr("y", 9)
         .attr("dy", ".35em")
-        .style("text-anchor", "end")
+        .style("text-anchor", "begin")
         .text(function(d) { return d; });
 
   }
