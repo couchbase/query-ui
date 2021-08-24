@@ -223,12 +223,10 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   //
 
   function dataTooBig() {
-    switch (qwQueryService.outputTab) {
-    case 1: return(qc.lastResult().resultSize / qc.maxAceSize) > 1.1;
-      //case 2: return(qc.lastResult.resultSize / qc.maxTableSize) > 1.1;
-    case 3: return(qc.lastResult().resultSize / qc.maxTreeSize) > 1.1;
-    }
-
+    if (qwQueryService.isSelected(1))
+      return(qc.lastResult().resultSize / qc.maxAceSize) > 1.1;
+    else
+      return(false);       
   }
 
   //

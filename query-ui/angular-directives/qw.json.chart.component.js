@@ -512,6 +512,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cx", d => scale_x(d.x))
         .attr("cy", d => scale_y(d.y))
         .style("fill", "#669ee0")
+        .style("opacity", "0.75")
         .on("mouseover", showTooltip)
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
@@ -1118,38 +1119,51 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
   
   // is a given field invalid for the selected chart type and entry?
-
+  //
+  
   field_invalid_for_chart_type(field,entry) {
     var type_obj = this.flat_data_types && this.flat_data_types[field];
     if (!type_obj)
       return(true);
     var type_count = Object.keys(type_obj).length;
-    var is_number = ((type_obj.number || type_obj.date || type_obj.datetime) && type_count == 1);
+    var is_number = (type_obj.number && type_count == 1);
+    var is_number_date = ((type_obj.number || type_obj.date || type_obj.datetime) && type_count == 1);
     var retval = false;
 
     switch (this.chartType) {
-      // some charts require only numeric values
+      //  X-Y, Line, Area, Scatter-Gather: X axis can be number/date, Y must be number, label can be any
       case "xy":
       case "scatter":
       case "line":
       case "area":
       case "connscatter":
-        if (entry < 3)
-          retval = !is_number; // invalid if not number
-        else
-          retval = false; // any type for gather
+        switch (entry) {
+        case 1: return(!is_number_date); // x axis date or number
+        case 2: return(!is_number);      // y axis must be number
+        case 3: return(false);           // no type invalid for color
+        }
         break;
 
+      // Bar, Grouped Bar: Label (X axis) can be any, Values (Y axes) must be number
+      // same for Pie & Donut
       case "bar":
       case "gbar":
       case "donut":
       case "pie":
-        if (entry > 1) // Label can be anything
-          retval = !is_number;
+        switch (entry) {
+        case 1: return(false); // no type invalid for x-axis label
+        case 2:
+        default: return(!is_number);          
+        }
+      break;
     }
 
     return(retval);
   }
+
+  //
+  // put the contents of the SVG in a wrapper for download
+  //
 
   saveChart() {
 
