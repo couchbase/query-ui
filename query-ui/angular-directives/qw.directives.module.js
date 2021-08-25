@@ -5,7 +5,7 @@ import { FormsModule }         from '/ui/web_modules/@angular/forms.js';
 import { CommonModule }        from '/ui/web_modules/@angular/common.js';
 import { MnSelectModule }      from '/ui/app/mn.select.module.js';
 
-import { NgxAceModule }        from '/ui/web_modules/@nowzoo/ngx-ace.js';
+import { NgxAceModule }        from '/ui/libs/ace/@nowzoo/ngx-ace.js';
 
 import { QwJsonDataTable }     from "./qw.json.datatable.directive.js";
 import { QwJsonChart }         from "./qw.json.chart.component.js";

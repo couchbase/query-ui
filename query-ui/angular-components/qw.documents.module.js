@@ -23,7 +23,7 @@ import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.p
 import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
 import { $http }                  from '/_p/ui/query/angular-services/qw.http.js';
 
-import { NgxAceModule } from '/ui/web_modules/@nowzoo/ngx-ace.js';
+import { NgxAceModule } from '/ui/libs/ace/@nowzoo/ngx-ace.js';
 
 
 let documentsStates = [
