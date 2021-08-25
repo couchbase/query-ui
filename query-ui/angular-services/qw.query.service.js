@@ -274,8 +274,6 @@ function getQwQueryService(
     scan_consistency: "not_bounded",
     positional_parameters: [],
     named_parameters: [],
-    query_context_bucket: "",
-    query_context_scope: "",
     expanded: {},
     query_timeout: 600,
     transaction_timeout: 120,
@@ -299,8 +297,6 @@ function getQwQueryService(
       scan_consistency: qwQueryService.options.scan_consistency,
       positional_parameters: qwQueryService.options.positional_parameters.slice(0),
       named_parameters: qwQueryService.options.named_parameters.slice(0),
-      query_context_bucket: qwQueryService.options.query_context_bucket,
-      query_context_scope: qwQueryService.options.query_context_scope,
       expanded: qwQueryService.options.expanded,
       query_timeout: qwQueryService.options.query_timeout,
       transaction_timeout: qwQueryService.options.transaction_timeout,
@@ -339,7 +335,8 @@ function getQwQueryService(
   //
 
   function QueryResult(status, elapsedTime, executionTime, resultCount, resultSize, result,
-                       data, query, requestID, explainResult, mutationCount, warnings, sortCount, lastRun, advice) {
+                       data, query, requestID, explainResult, mutationCount, warnings, sortCount, lastRun, advice,
+                       query_context_bucket, query_context_scope, chart_options) {
     this.status = status;
     this.resultCount = resultCount;
     this.mutationCount = mutationCount;
@@ -347,6 +344,8 @@ function getQwQueryService(
     this.result = result;
     this.data = data;
     this.query = query;
+    this.query_context_bucket = query_context_bucket;
+    this.query_context_scope = query_context_scope;
     this.requestID = requestID;
     this.explainResult = explainResult;
     if (explainResult)
@@ -364,6 +363,9 @@ function getQwQueryService(
 
     // query advice
     this.advice = advice
+
+    // chart config, if any
+    this.chart_options = chart_options;
   };
 
   // elapsed and execution time come back with ridiculous amounts of
@@ -385,8 +387,10 @@ function getQwQueryService(
 
   QueryResult.prototype.clone = function () {
     return new QueryResult(this.status, this.elapsedTime, this.executionTime, this.resultCount,
-      this.resultSize, this.result, this.data, this.query, this.requestID, this.explainResult,
-      this.mutationCount, this.warnings, this.sortCount, this.lastRun, this.advice);
+                           this.resultSize, this.result, this.data, this.query, this.requestID,
+                           this.explainResult, this.mutationCount, this.warnings, this.sortCount,
+                           this.lastRun, this.advice, this.query_context_bucket, this.query_context_scope,
+                           this.chart_options);
   };
 
   QueryResult.prototype.status_success = function () {
@@ -400,6 +404,10 @@ function getQwQueryService(
       this.status == 'stopped' ||
       this.status == 'explain error');
   };
+
+  QueryResult.prototype.set_chart_options = function(new_options) {
+    this.chart_options = new_options;
+  }
 
   QueryResult.prototype.set_query = function(new_query) {
     this.query = new_query;
@@ -418,13 +426,16 @@ function getQwQueryService(
 
   QueryResult.prototype.clone_for_storage = function () {
     var res = new QueryResult(this.status, '', '', this.resultCount,
-      '',
-      un_run_query_text,
-      un_run_query_data,
-      this.query,
-      '',
-      un_run_query_data,
-      this.mutationCount, this.warnings, this.sortCount, this.lastRun);
+                              '',
+                              un_run_query_text,
+                              un_run_query_data,
+                              this.query,
+                              '',
+                              un_run_query_data,
+                              this.mutationCount, this.warnings, this.sortCount, this.lastRun,
+                              '',
+                              this.query_context_bucket, this.query_context_scope, this.chart_options
+                             );
 
     res.explainResultText = un_run_query_text;
 
@@ -456,6 +467,9 @@ function getQwQueryService(
       this.lastRun = other.lastRun;
     this.status = other.status;
     this.advice = other.advice;
+    this.query_context_bucket = other.query_context_bucket;
+    this.query_context_scope = other.query_context_scope;
+    this.chart_options = other.chart_options;
   };
 
   //
@@ -629,10 +643,6 @@ function getQwQueryService(
       // backward compatibility: some options were missing in prior versions
       //
 
-      if (!qwQueryService.options.query_context_bucket)
-        qwQueryService.options.query_context_bucket = "";
-      if (!qwQueryService.options.query_context_scope)
-        qwQueryService.options.query_context_scope = "";
       if (!qwQueryService.options.expanded)
         qwQueryService.options.expanded = {};
       if (savedState.doc_editor_options) {
@@ -947,7 +957,11 @@ function getQwQueryService(
 
     // if the end query has been run, and is unedited, create a blank query
     else if (canCreateBlankQuery()) {
+      var query_context_bucket = getCurrentResult().query_context_bucket;
+      var query_context_scope = getCurrentResult().query_context_scope;
       addNewQueryAtEndOfHistory();
+      getCurrentResult().query_context_bucket = query_context_bucket;
+      getCurrentResult().query_context_scope = query_context_scope;
     }
   }
 
@@ -1197,7 +1211,7 @@ function getQwQueryService(
       });
   }
 
-  function buildQueryRequest(queryText, is_user_query, queryOptions, txId, txImplicit) {
+  function buildQueryRequest(queryText, is_user_query, queryOptions, txId, txImplicit, queryResult) {
 
     //console.log("Building query: " + queryText);
     //
@@ -1231,16 +1245,16 @@ function getQwQueryService(
         for (var i = 0; i < queryOptions.named_parameters.length; i++)
           queryData[queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
 
-      //console.log("Running query: " + JSON.stringify(queryData));
-      if (queryOptions.query_context_bucket)
-        queryData.query_context = 'default:' + queryOptions.query_context_bucket +
-          (queryOptions.query_context_scope ? ('.' + queryOptions.query_context_scope) + '' : '');
-      //console.log("Got query context: " + queryData.query_context);
-
       if (is_user_query) {
         queryData.use_cbo = queryOptions.use_cbo;
         queryData.txtimeout = JSON.stringify(queryOptions.transaction_timeout) + "s";
       }
+    }
+
+    if (queryResult && queryResult.query_context_bucket) {
+        queryData.query_context = 'default:' + queryResult.query_context_bucket +
+          (queryResult.query_context_scope ? ('.' + queryResult.query_context_scope) + '' : '');
+        //console.log("Got query context: " + queryData.query_context);
     }
 
     // if the user might want to cancel it, give it an ID
@@ -1360,9 +1374,14 @@ function getQwQueryService(
 
     // clear any previous results, remember when we started
     var queryText = getCurrentResult().query;
+    var query_context_bucket = query.query_context_bucket;
+    var query_context_scope = query.query_context_scope;
+
     var newResult = getCurrentResult();
     newResult.copyIn(executingQueryTemplate);
     newResult.query = queryText;
+    newResult.query_context_bucket = query_context_bucket;
+    newResult.query_context_scope = query_context_scope;
     newResult.savedQuery = queryText;
     newResult.lastRun = new Date();
 
@@ -1563,9 +1582,15 @@ function getQwQueryService(
     var promises = []; // we may run explain only, or explain + actual  query
     //console.log("Running query: " + queryText);
 
+    // remember the query context
+    var query_context_bucket = newResult.query_context_bucket;
+    var query_context_scope = newResult.query_context_scope;
+
     // make sure the result is marked as executing
     newResult.copyIn(executingQueryTemplate);
     newResult.query = queryText;
+    newResult.query_context_bucket = query_context_bucket;
+    newResult.query_context_scope = query_context_scope;
     newResult.busy = true;
     newResult.savedQuery = queryText;
     newResult.lastRun = new Date();
@@ -1615,7 +1640,7 @@ function getQwQueryService(
     if (!queryIsExplain && !queryIsTransaction && !queryIsAdvise &&
       (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
 
-      var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options);
+      var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options, null, null, newResult);
       if (!explain_request) {
         newResult.result = '{"status": "query failed"}';
         newResult.data = {status: "Query Failed."};
@@ -1753,7 +1778,7 @@ function getQwQueryService(
 
     if ((queryIsExplain && explainOnly) || !explainOnly) {
 
-      var request = buildQueryRequest(queryText, true, qwQueryService.options, txId, txImplicit);
+      var request = buildQueryRequest(queryText, true, qwQueryService.options, txId, txImplicit, newResult);
       newResult.client_context_id = request.data.client_context_id;
       //console.log("Got client context id: " + newResult.client_context_id);
 
@@ -2088,7 +2113,7 @@ function getQwQueryService(
     var queryIsAdvisable = /^\s*select|merge|update|delete/gi.test(queryText);
 
     if (queryIsAdvisable && !multipleQueries(queryText)) {
-      var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options);
+      var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options, null, null, queryResult);
       // log errors but ignore them
       if (!advise_request) {
         console.log("Couldn't build Advise query. ");

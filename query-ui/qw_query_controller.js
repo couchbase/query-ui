@@ -287,14 +287,14 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   function nextResult() {
     qc.showBigDatasets = false;
     qwQueryService.nextResult();
-    qc.result_subject.next(qc.lastResult().data);
+    qc.result_subject.next(qc.lastResult());
     $timeout(swapEditorFocus,10);
   }
 
   function prevResult() {
     qc.showBigDatasets = false;
     qwQueryService.prevResult();
-    qc.result_subject.next(qc.lastResult().data);
+    qc.result_subject.next(qc.lastResult());
     $timeout(swapEditorFocus,10);
   }
 
@@ -978,7 +978,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     qc.setUserInterest('results');
     updateEditorSizes();
     focusOnInput();
-    qc.result_subject.next(qc.lastResult().data);
+    qc.result_subject.next(qc.lastResult());
   }
 
   //
@@ -1403,12 +1403,12 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
   function getContextScopes() {
     var scopes = [];
 
-    if (qc.qqs.options.query_context_bucket) {
-      var bucket = qc.buckets.find(b => b.name == qc.qqs.options.query_context_bucket);
+    if (qc.lastResult().query_context_bucket) {
+      var bucket = qc.buckets.find(b => b.name == qc.lastResult().query_context_bucket);
       if (bucket) {
         bucket.scopeArray.forEach(scope => scopes.push(scope.id));
-        if ((!qc.qqs.options.query_context_scope || scopes.indexOf(qc.qqs.options.query_context_scope) < 0) && scopes.length > 0)
-          qc.qqs.options.query_context_scope = scopes[0];
+        if ((!qc.lastResult().query_context_scope || scopes.indexOf(qc.lastResult().query_context_scope) < 0) && scopes.length > 0)
+          qc.lastResult().query_context_scope = scopes[0];
       }
     }
     return scopes;
@@ -1493,7 +1493,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     // let the chart window know about the current results (if any)
     //
 
-    qc.result_subject.next(qc.lastResult().data);
+    qc.result_subject.next(qc.lastResult());
     
     //
     // now let's make sure the window is the right size

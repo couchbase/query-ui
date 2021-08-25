@@ -63,8 +63,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       templateUrl: "../_p/ui/query/angular-directives/qw.json.chart.template.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.json.chart.css"],
       inputs: [
-        "subject",
-        "result"
+        "subject"
         ],
       //changeDetection: ChangeDetectionStrategy.OnPush
     })
@@ -111,9 +110,11 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   // handle a new data set
   //
 
-  handleNewData(val) {
-    this.data = val;
-
+  handleNewData(result) {
+    this.data = result.data;
+    this.result = result;
+    this.getStateFromQueryResult(); // if they are going through history, there may be new fields;
+    
     // flatten data
     this.flat_data = this.qwJsonCsvService.convertDocArrayToDataArray(this.data);
 
@@ -152,6 +153,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     if (this.result && this.result.chart_options) {
       this.field1 = this.result.chart_options.field1;
       this.field2 = this.result.chart_options.field2;
+      this.field2_list = this.result.chart_options.field2_list;
       this.field3 = this.result.chart_options.field3;
       this.chartType = this.result.chart_options.chartType;
     }
@@ -159,12 +161,15 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   saveStateToQueryResult() {
     if (this.result) {
-      if (!this.result.chart_options)
-        this.result.chart_options = {};
-      this.result.chart_options.field1 = this.field1;
-      this.result.chart_options.field2 = this.field2;
-      this.result.chart_options.field3 = this.field3;
-      this.result.chart_options.chartType = this.chartType;
+      this.result.set_chart_options(
+        {
+        field1: this.field1,
+        field2: this.field2,
+        field2_list: this.field2_list,
+        field3: this.field3,
+        chartType: this.chartType,
+        }
+      );
     }
   }
 
@@ -281,37 +286,43 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   // Flatten input data into d3 readable format
   // Here we also type check the data
-  flattenData(numFields) {
+  flattenData (numFields) {
     // make sure the user selected fields
 
     var Field1 = this.field1,
         Field2 = this.field2,
+        Field3 = this.field3,
+        Field2_list = this.field2_list,
         data = [],
         data_x = [],
-        data_y = [];
+        data_y = [],
+        data_group = [];
 
-    if (numFields === 3 && this.chartType == "scatter") {
-      var Field3 = this.field3,
-          data_group = [];
-    }
+    // need data to work
+    if (!this.flat_data || this.flat_data.length <= 1)
+      return [data, data_x, data_y, data_group];
+
+    // some charts use every piece of data (x-y, line, etc), others aggregate (pie, donut, bar)
+    var aggregation_chart = ["pie","donut","bar","gbar"].indexOf(this.chartType) > -1;
 
     // flatten the data into a data object with x and y values
     // Into data_x for x-axis
     // Into data_y for y-axis
     // possibly into data_z for grouping variables
     // Foreach - hard to break for errors so use a try catch block
-    if (this.flat_data) this.flat_data.slice(1).forEach(obj => {
+    var values = this.flat_data.slice(1);
+    
+    if (!aggregation_chart) values.forEach(obj => {
       if (_.isNull(obj[Field1]) == false && _.isNull(obj[Field2]) == false) {
 
         var tval = obj[Field1];
 
-        if (this.chartType != "bar" && this.chartType != "gbar") {
-          if (isDateTime(tval))
-            tval = parseDateTime(tval);
-          else if (isDate(tval))
-            tval = parseDate(tval);
-        }
+        if (isDateTime(tval))
+          tval = parseDateTime(tval);
+        else if (isDate(tval))
+          tval = parseDate(tval);
 
+        // scatter charts with color
         if (numFields === 3 && this.chartType == "scatter") {
             // This is for scatter charts
             if (_.isNull(obj[Field3]) == false) {
@@ -325,38 +336,54 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
             }
           data_x.push(tval);
           data_y.push(obj[Field2]);
-        } else {
-          if (this.chartType == "pie" || this.chartType == "bar" || this.chartType == "donut") {
-            // Distinct values only. consolidate tval
-            var index = data_x.indexOf(obj[Field1]);
-            if (index != -1) {
-              // ALready exists
-              // Add to existing value
-              data_y[index] = data_y[index] + obj[Field2];
-              data[index].y = data_y[index];
-            } else {
-              data.push({x: tval, y: obj[Field2]});
-              data_x.push(tval);
-              data_y.push(obj[Field2]);
-            }
-          } else if (this.chartType == "gbar" ){
-            // grouped bar charts with multiple values
-            var tempObj = {x: tval};
-            for (let i = 0; i < this.field2_list.length; i++) {
-                tempObj["v"+i] = obj[this.field2_list[i]];
-            }
-             data.push(tempObj);
-             data_x.push(tval);
-             data_y.push(obj[this.field2_list[0]]);
-
-          } else {
+        }
+        // regular scatter charts
+        else {
             data.push({x: tval, y: obj[Field2]});
             data_x.push(tval);
             data_y.push(obj[Field2]);
-          }
         }
       }
     });
+
+    // for aggregation charts, need to sum up value fields for each label
+    else {
+      var x_values = _.uniq(values.map(row => row[Field1])).sort();
+      var y_values;
+
+      if (this.chartType != "gbar") 
+        y_values = x_values.map(val => 0); // start with zero for each x value
+      else
+        y_values = x_values.map(val => {return { x: val}});
+
+      values.forEach(row => {
+        var index = x_values.indexOf(row[Field1]);
+        if (index >= 0) {
+          // for everything but grouped bar, we want one summed value for each distinct x
+          if (this.chartType != "gbar") 
+            y_values[index] += row[Field2];
+          // otherwise, need to iterate over each each selected group field
+          else {
+            if (_.isArray(Field2_list)) Field2_list.forEach((field,findex) => {
+              y_values[index]["v" + findex] = (y_values[index]["v" + findex] || 0) + row[field];
+            });
+          }
+        }
+       });
+
+      data_x = x_values;
+      for (var i=0;i<x_values.length;i++)
+        if (this.chartType != "gbar") {
+          data.push({x:x_values[i],y:y_values[i]});
+          data_y.push(y_values[i]);
+        }
+        else {
+          var val = {x:x_values[i]};
+          Object.assign(val,y_values[i]);
+          data.push(val);
+          data_y.push(y_values[i].v0);
+        }
+   }
 
     // before returning data sort data.x for line and area charts
     if (this.chartType == "line" || this.chartType == "area" || this.chartType == "connscatter") {
@@ -492,6 +519,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createXYChart() {
     var values = this.flattenData(2);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -538,6 +566,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createScatterChart() {
     var values = this.flattenData(3);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -606,6 +635,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createLineChart() {
     var values = this.flattenData(2);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -623,6 +653,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createConnScatterChart() {
     var values = this.flattenData(2);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -680,6 +711,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createAreaChart() {
     var values = this.flattenData(2);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -698,6 +730,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createBarChart() {
     var values = this.flattenData(2);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -746,6 +779,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createGroupedBarChart() {
     var values = this.flattenData(4);
+    this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
@@ -848,6 +882,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   createPieChart(donut) {
     var values = this.flattenData(2);
+    this.value_count = values[0].length;
+
     var width = this.canvas_width,
         margin = this.margin -100;
 
@@ -1022,7 +1058,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   // when the UI needs a list of fields for the current data result
   fields() {
-    return this.flat_data[0] || [];
+    if (!this.flat_data || !this.flat_data[0])
+      return [];
+    return this.flat_data[0];
   }
 
   // is our current result an array (of docs) or possibly an error message

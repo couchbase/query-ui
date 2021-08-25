@@ -63,7 +63,7 @@
         </span>
         <span class="query-context" ng-if="qc.compat.atLeast70">
           <select
-             ng-model="qc.qqs.options.query_context_bucket"
+             ng-model="qc.lastResult().query_context_bucket"
              ng-change="qc.qqs.query_context_bucket_changed()"
              uib-tooltip-html="'Set a default bucket and scope to use for your queries, so you may write queries with only the collection name.'"
              tooltip-placement="auto top"
@@ -73,8 +73,8 @@
             <option ng-repeat="bucket in qc.getContextBuckets()">{{bucket}}</option>
           </select>
           <select
-             ng-if="qc.qqs.options.query_context_bucket"
-             ng-model="qc.qqs.options.query_context_scope">
+             ng-if="qc.lastResult().query_context_bucket"
+             ng-model="qc.lastResult().query_context_scope">
             <option ng-repeat="name in qc.getContextScopes()">{{name}}</option>
           </select>
         </span>
@@ -241,7 +241,7 @@
         qw-json-data-table="qc.lastResult().data"></div>
 
       <div class="wb-results-chart" ng-if="qc.isSelected(3)">
-        <qw-json-chart [subject]="qc.result_subject" [result]="qc.lastResult()" ></qw-json-chart>
+        <qw-json-chart [subject]="qc.result_subject"></qw-json-chart>
       </div>
 
       <!-- [data]="qc.lastResult().data" -->

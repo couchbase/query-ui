@@ -106,7 +106,7 @@
           </option>
         </select>
         </span>
-        <div>{{data.length}} documents</div>
+        <div><span *ngIf="value_count > -1">{{value_count}} / </span>{{data.length}} documents</div>
       </div>
 
 <!-- download -->
