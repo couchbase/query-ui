@@ -53,8 +53,7 @@ import { fromEvent }                          from '/ui/web_modules/rxjs.js';
 
 export { QwJsonChart };
 
-var svg; // needs to be global for certain callback functions
-
+var svg, tooltip, wrapperElement; // needs to be global for certain callback functions
 
 class QwJsonChart extends MnLifeCycleHooksToStream {
   static get annotations() { return [
@@ -180,12 +179,12 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       svg2.remove();
 
     //
-    this.wrapperElement = this.element.nativeElement.querySelector('.chart-d3-wrapper');
+    wrapperElement = this.element.nativeElement.querySelector('.chart-d3-wrapper');
     this.d3Wrapper = d3Select('.chart-d3-wrapper');
     this.margin = 40;
-    if (this.wrapperElement) {
-      this.canvas_width = this.wrapperElement.clientWidth - (this.margin*2);
-      this.canvas_height = this.wrapperElement.clientHeight - (this.margin*2);
+    if (wrapperElement) {
+      this.canvas_width = wrapperElement.clientWidth - (this.margin*2);
+      this.canvas_height = wrapperElement.clientHeight - (this.margin*2);
     }
 
     // create the svg area for drawing the chart
@@ -197,6 +196,13 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       .attr("id","svg_g")
     ;
 
+    // need a tooltip as well
+    if (!tooltip)
+      tooltip = d3Select('.chart-d3-wrapper')
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+    
     // set up zooming
     this.zoomer = d3Zoom()
       .scaleExtent([0.1, 2.5])
@@ -242,11 +248,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     // remove any existing charts
     this.initSVG();
-
-    if (this.chartType == "scatter" && !this.field3) {
-      this.chartError ="Field 3 is needed to gather the data by color";
-      return;
-    }
 
     if (this.field1 == null || this.field2 == null ||
       this.field1 >= this.flat_data[0].length || this.field2 >= this.flat_data[0].length) {
@@ -462,7 +463,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           .attr("transform", "translate(0,10)rotate(-90)")
           .attr("dy","0.3em")
           .attr("y","0")
-          .style("font-size", function() { if (scale_x.bandwidth() > 20) { return 20;} else {return scale_x.bandwidth();}})
+          .style("font-size", function() { if (scale_x.bandwidth() > 20) { return "20px";} else {return scale_x.bandwidth() + "px";}})
           .style("text-anchor", "end");
     } else {
       // axes/scale functions from data to screen pixels
@@ -526,12 +527,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     var This = this; // for use in callbacks
 
-    // Define the div for the tooltip
-    var tooltip = d3Select('.chart-d3-wrapper')
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
     svg
         .selectAll('dot')
         .data(values[0])
@@ -541,27 +536,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cy", d => scale_y(d.y))
         .style("fill", "#669ee0")
         .style("opacity", "0.75")
-        .on("mouseover", showTooltip)
+        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y)}))
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
 
-    function showTooltip(d) {
-      tooltip.transition()
-        .duration(200)
-        .style("opacity", .9);
-      tooltip.html('x: ' + d.x + "<br/>y: "  +d.y);
-    }
-
-    function moveTooltip(d) {
-      var loc = d3Mouse(This.wrapperElement);
-      tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
-    }
-
-    function hideTooltip(d) {
-      tooltip.transition()
-        .duration(500)
-        .style("opacity", 0);
-    }
   }
 
   createScatterChart() {
@@ -576,11 +554,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .range(d3SchemeTableau10);
 
     var This = this; // for use in callbacks
-    // Define the div for the tooltip
-    var tooltip = d3Select('.chart-d3-wrapper')
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
 
     svg
         .selectAll('dot')
@@ -590,27 +563,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cx", d => scale_x(d.x))
         .attr("cy", d => scale_y(d.y))
         .style("fill", d => color(d.z))
-        .on("mouseover", showTooltip)
+        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y+ "<br/>Gather: "  +d.z)}))
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
-
-    function showTooltip(d) {
-      tooltip.transition()
-          .duration(200)
-          .style("opacity", .9);
-      tooltip.html('x: ' + d.x + "<br/>y: "  +d.y+ "<br/>Gather: "  +d.z);
-    }
-
-    function moveTooltip(d) {
-      var loc = d3Mouse(This.wrapperElement);
-      tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
-    }
-
-    function hideTooltip(d) {
-      tooltip.transition()
-          .duration(500)
-          .style("opacity", 0);
-    }
 
     var legend = svg.selectAll(".legend")
         .data(values[3].slice().reverse())
@@ -670,11 +625,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         );
 
     var This = this; // for use in callbacks
-    // Define the div for the tooltip
-    var tooltip = d3Select('.chart-d3-wrapper')
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
 
     // Draw the dot
     svg
@@ -685,30 +635,12 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cx", d => scale_x(d.x))
         .attr("cy", d => scale_y(d.y))
         .style("fill", "#669ee0")
-        .on("mouseover", showTooltip)
+        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y)}))
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
 
-    function showTooltip(d) {
-      tooltip.transition()
-          .duration(200)
-          .style("opacity", .9);
-      tooltip.html('x: ' + d.x + "<br/>y: "  +d.y);
-    }
-
-    function moveTooltip(d) {
-      var loc = d3Mouse(This.wrapperElement);
-      tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
-    }
-
-    function hideTooltip(d) {
-      tooltip.transition()
-          .duration(500)
-          .style("opacity", 0);
-    }
-
   }
-
+  
   createAreaChart() {
     var values = this.flattenData(2);
     this.value_count = values[0].length;
@@ -736,11 +668,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         scale_y = this.createYAxis(values);
 
     var This = this; // for use in callbacks
-    // Define the div for the tooltip
-    var tooltip = d3Select('.chart-d3-wrapper')
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
 
     // Bars
     var h = (this.canvas_height-this.margin)
@@ -754,29 +681,11 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("height", function(d) {return h - scale_y(d.y); })
         .attr("class", "querychartsBars")
         .style("fill", "#669ee0")
-        .on("mouseover", showTooltip)
+        .on("mouseover", createShowTooltipFn(d => {return('Label: ' + d.x + "<br/>Value: "  +d.y)}))
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
-
-    function showTooltip(d) {
-      tooltip.transition()
-          .duration(200)
-          .style("opacity", .9);
-      tooltip.html('Label: ' + d.x + "<br/>Value: "  +d.y);
-    }
-
-    function moveTooltip(d) {
-      var loc = d3Mouse(This.wrapperElement);
-      tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
-    }
-
-    function hideTooltip(d) {
-      tooltip.transition()
-          .duration(500)
-          .style("opacity", 0);
-    }
   }
-
+  
   createGroupedBarChart() {
     var values = this.flattenData(4);
     this.value_count = values[0].length;
@@ -810,11 +719,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .range(d3SchemeTableau10);
 
     var This = this; // for use in callbacks
-    // Define the div for the tooltip
-    var tooltip = d3Select('.chart-d3-wrapper')
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
 
     // Show all the Bars
     var h = (this.canvas_height - this.margin);
@@ -835,9 +739,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("width", scale_subgroup.bandwidth())
         .attr("height", function (d) {return h - scale_y(d.value);})
         .style("fill", function (d) {return color(d.key);})
-            .on("mouseover", showTooltip)
-            .on("mousemove", moveTooltip)
-            .on("mouseout", hideTooltip);
+        .on("mouseover", showTooltip)
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip);
 
     function showTooltip(d) {
       tooltip.transition()
@@ -845,17 +749,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           .style("opacity", .9);
       tooltip.html("Label: "+
           d3Select(this.parentNode).datum().x+"<br/>"+d.key + ": "  +d.value);
-    }
-
-    function moveTooltip(d) {
-      var loc = d3Mouse(This.wrapperElement);
-      tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
-    }
-
-    function hideTooltip(d) {
-      tooltip.transition()
-          .duration(500)
-          .style("opacity", 0);
     }
 
     var legend = svg.selectAll(".legend")
@@ -919,10 +812,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     var This = this; // for use in callbacks
     // Define the div for the tooltip
-    var tooltip = d3Select('.chart-d3-wrapper')
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
 
     // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
     var radius = (Math.min(this.canvas_width, this.canvas_height) - this.margin)/2;
@@ -970,27 +859,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("stroke", "white")
         .style("stroke-width", "2px")
         .style("opacity", 0.7)
-         .on("mouseover", showTooltip)
-         .on("mousemove", moveTooltip)
-         .on("mouseout", hideTooltip);
-
-    function showTooltip(d) {
-      tooltip.transition()
-          .duration(200)
-          .style("opacity", .9);
-      tooltip.html('Label: ' + d.data.x + "<br/>Value: "  +d.data.y);
-    }
-
-    function moveTooltip(d) {
-      var loc = d3Mouse(This.wrapperElement);
-      tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
-    }
-
-    function hideTooltip(d) {
-      tooltip.transition()
-          .duration(500)
-          .style("opacity", 0);
-    }
+        .on("mouseover", createShowTooltipFn(d => {return('Label: ' + d.data.x + "<br/>Value: "  +d.data.y)}))
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip);
 
     var textOffset = 10;
     var lab = arc.append("text")
@@ -1294,4 +1165,23 @@ function hasMax(array, attrib) {
     if (!currOk) return prev;
     return prev[attrib] > curr[attrib] ? prev : curr;
   })) || null;
+}
+
+function moveTooltip(d) {
+  var loc = d3Mouse(wrapperElement);
+  if (tooltip)
+    tooltip.style("top", loc[1] + 'px').style("left", loc[0] + 'px');
+}
+
+function hideTooltip(d) {
+  if (tooltip) tooltip.transition()
+    .duration(500)
+    .style("opacity", 0);
+}
+
+function createShowTooltipFn(htmlCreator) {
+  return function(d) {
+    tooltip.transition().duration(200).style("opacity", .9);
+    tooltip.html(htmlCreator(d));
+  }
 }
