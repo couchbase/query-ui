@@ -13,17 +13,19 @@
           <select
              [(ngModel)]="chartType"
              theme="selectize"
-             class="cbui-select margin-right-1 margin-bottom-half"
+             class="cbui-select margin-right-1 margin-bottom-half text-smaller"
              (change)="createChart()">
-            <option value="xy">X-Y</option>
-            <option value="bar">Bar</option>
-            <option value="donut">Donut</option>
-            <option value="pie">Pie</option>
-            <option value="scatter">Scatter-Gather</option>
+            <!--option value="xy">X-Y</option-->
+            <option value="scatter">X-Y</option>
+            <option value="connscatter">Connected Points</option>
             <option value="line">Line</option>
             <option value="area">Area</option>
-            <option value="connscatter">Connected Scatter</option>
+            <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
+            <option value="bar">Bar</option>
             <option value="gbar">Grouped Bar</option>
+            <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
+            <option value="pie">Pie</option>
+            <option value="donut">Donut</option>
           </select>
         </span>
 
@@ -34,7 +36,7 @@
           <select
              [(ngModel)]="field1"
              theme="selectize"
-             class="cbui-select margin-right-1 margin-bottom-half"
+             class="cbui-select margin-right-1 margin-bottom-half text-smaller"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -53,7 +55,7 @@
           <select
              [(ngModel)]="field2"
              theme="selectize"
-             class="cbui-select margin-right-1 margin-bottom-half"
+             class="cbui-select margin-right-1 margin-bottom-half text-smaller"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -68,11 +70,11 @@
 
 <!-- special menu for field2 for everything but grouped bars -->
         <div *ngIf="chartType == 'gbar'" style="align-self: start;" class="margin-right-1">
-          <h6>Values <small>ctrl/cmd/shift + click to multi-select</small></h6>
+          <h6>Values <small>shift + click to multi-select</small></h6>
           <select
              [(ngModel)]="field2_list"
              theme="selectize"
-             class="cbui-select "
+             class="cbui-select text-smaller"
              (change)="createChart()"
              multiple
              style="position: absolute;width: fit-content;">
@@ -94,8 +96,10 @@
         <select
            [(ngModel)]="field3"
            theme="selectize"
-           class="cbui-select margin-right-1 margin-bottom-half"
+           class="cbui-select margin-right-1 margin-bottom-half  text-smaller"
            (change)="createChart()">
+          <option [value]="-1">none</option>
+          <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
           <option
              [attr.title]="ten_sample_values(i)"
              class="ui-select-choices"

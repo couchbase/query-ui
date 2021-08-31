@@ -82,9 +82,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     this.field1 = '';
     this.field2 = '';
     this.field2_list = '';
-    this.field3 = '';
-    this.field4 = '';
-    this.chartType = 'xy';
+    this.field3 = '-1';
+    this.chartType = 'scatter';
   }
 
   ngOnInit() {
@@ -236,11 +235,13 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         this.field2++;
     }
 
-    if (this.chartType == "scatter") {
+    if (this.chartType == "scatter" && this.field3 >= 0) {
       if (!this.field3 || this.field_invalid_for_chart_type(this.field3,3)) {
         this.field3 = 0;
         while (this.field_invalid_for_chart_type(this.field3,3) && this.field3 < this.flat_data[0].length)
           this.field3++;
+        if (this.field_invalid_for_chart_type(this.field3,3))
+          this.field3 = -1; // no available field
       }
     }
 
@@ -324,7 +325,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           tval = parseDate(tval);
 
         // scatter charts with color
-        if (numFields === 3 && this.chartType == "scatter") {
+        if (Field3 >= 0 && numFields === 3 && this.chartType == "scatter") {
             // This is for scatter charts
             if (_.isNull(obj[Field3]) == false) {
               // Populate data thats not null only.
