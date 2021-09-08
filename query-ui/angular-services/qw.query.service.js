@@ -2461,7 +2461,7 @@ function getQwQueryService(
   //
 
   function query_context_bucket_changed() {
-    var bucket = qwQueryService.buckets.find(bucket => bucket.id == qwQueryService.options.query_context_bucket);
+    var bucket = qwQueryService.buckets.find(bucket => bucket.id == qwQueryService.getCurrentResult().query_context_bucket);
     if (bucket)
       updateBucketMetadata(bucket);
   }
