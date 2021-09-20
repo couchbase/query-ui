@@ -1,5 +1,5 @@
-import { Injectable } from "/ui/web_modules/@angular/core.js";
-import _ from '/ui/web_modules/lodash.js';
+import { Injectable } from "@angular/core";
+import _ from 'lodash';
 
 export { QwJsonCsvService };
 

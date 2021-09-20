@@ -1,31 +1,31 @@
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
+import angular from "angular";
+import _ from "lodash";
 
-import uiRouter                 from "/ui/web_modules/@uirouter/angularjs.js";
-import uiBootstrap              from "/ui/web_modules/angular-ui-bootstrap.js";
+import uiRouter                 from "@uirouter/angularjs";
+import uiBootstrap              from "angular-ui-bootstrap";
 
-import uiAce                    from "/ui/libs/ui-ace.js";
-import ngClipboard              from "/ui/libs/ngclipboard.js";
+import uiAce                    from "ui-ace";
+import ngClipboard              from "ngclipboard";
 
-import mnJquery                 from "/ui/app/components/mn_jquery.js";
-import mnPermissions            from "/ui/app/components/mn_permissions.js";
-import mnPoll                   from "/ui/app/components/mn_poll.js";
-import mnHelper                 from "/ui/app/components/mn_helper.js";
-import mnPoolDefault            from "/ui/app/components/mn_pool_default.js";
-import mnServersService         from "/ui/app/mn_admin/mn_servers_service.js";
-import mnStatisticsNewService   from "/ui/app/mn_admin/mn_statistics_service.js";
-import mnStatisticsChart        from "/ui/app/mn_admin/mn_statistics_chart_directive.js";
+import mnJquery                 from "components/mn_jquery";
+import mnPermissions            from "components/mn_permissions";
+import mnPoll                   from "components/mn_poll";
+import mnHelper                 from "components/mn_helper";
+import mnPoolDefault            from "components/mn_pool_default";
+import mnServersService         from "mn_admin/mn_servers_service";
+import mnStatisticsNewService   from "mn_admin/mn_statistics_service";
+import mnStatisticsChart        from "mn_admin/mn_statistics_chart_directive";
 
-import { QwQueryService }       from "/_p/ui/query/angular-services/qw.query.service.js";
-import { QwCollectionMenu }     from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
-import { QwJsonChart }          from "/_p/ui/query/angular-directives/qw.json.chart.component.js";
+import { QwQueryService }       from "../angular-services/qw.query.service.js";
+import { QwCollectionMenu }     from "../angular-directives/qw.collection.menu.component.js";
+import { QwJsonChart }          from "../angular-directives/qw.json.chart.component.js";
 
-import qwConstantsService       from "/_p/ui/query/qw_constants_service.js";
-import qwJsonCsvService         from "/_p/ui/query/qw_json_csv_service.js";
-import queryController          from "/_p/ui/query/qw_query_controller.js";
-import qwQueryMonitorController from "/_p/ui/query/qw_query_monitor_controller.js";
+import qwConstantsService       from "../qw_constants_service.js";
+import qwJsonCsvService         from "../qw_json_csv_service.js";
+import queryController          from "../qw_query_controller.js";
+import qwQueryMonitorController from "../qw_query_monitor_controller.js";
 
-import qwLongPress       from "/_p/ui/query/long_press/qw-long-press.directive.js";
+import qwLongPress       from "../long_press/qw-long-press.directive.js";
 import qwJsonTree        from "./data_display/qw-json-tree.directive.js";
 import qwJsonDatatable   from "./data_display/qw-json-datatable.directive.js";
 import qwJsonTableEditor from "./data_display/qw-json-table-editor.directive.js";
@@ -34,15 +34,15 @@ import qwExplainVizD3    from "./query_plan_viz/qw-explain-viz-d3.directive.js";
 import qwAdviceViz       from "./advice_viz/qw-advice-viz.directive.js";
 import qwValidJson       from "./json-validator/qw-json-validator.directive.js";
 
-import {downgradeInjectable} from '/ui/web_modules/@angular/upgrade/static.js';
-import {downgradeComponent}  from "/ui/web_modules/@angular/upgrade/static.js";
+import {downgradeInjectable} from '@angular/upgrade/static';
+import {downgradeComponent}  from "@angular/upgrade/static";
 
 import {
   getRecursionHelper,
   getBucketDisplay,
   getBucketCollectionsDisplay,
   getSchemaDisplay
-} from "/_p/ui/query/ui-current/schema_display/qw_query_schema_display.directive.js";
+} from "./schema_display/qw_query_schema_display.directive.js";
 
 export default 'qwQuery';
 
@@ -130,5 +130,3 @@ angular
     });
 
   });
-
-

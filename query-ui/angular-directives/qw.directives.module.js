@@ -1,11 +1,11 @@
-import { NgModule, COMPILER_OPTIONS, CompilerFactory, Compiler } from '/ui/web_modules/@angular/core.js';
-import { NgbModule, NgbModalModule, NgbModalConfig }             from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
-import { JitCompilerFactory }  from '/ui/web_modules/@angular/platform-browser-dynamic.js';
-import { FormsModule }         from '/ui/web_modules/@angular/forms.js';
-import { CommonModule }        from '/ui/web_modules/@angular/common.js';
-import { MnSelectModule }      from '/ui/app/mn.select.module.js';
+import { NgModule, COMPILER_OPTIONS, CompilerFactory, Compiler } from '@angular/core';
+import { NgbModule, NgbModalModule, NgbModalConfig }             from '@ng-bootstrap/ng-bootstrap';
+import { JitCompilerFactory }  from '@angular/platform-browser-dynamic';
+import { FormsModule }         from '@angular/forms';
+import { CommonModule }        from '@angular/common';
+import { MnSelectModule }      from 'mn.select.module';
 
-import { NgxAceModule }        from '/ui/libs/ace/@nowzoo/ngx-ace.js';
+import { NgxAceModule }        from 'ace/@nowzoo/ngx-ace';
 
 import { QwJsonDataTable }     from "./qw.json.datatable.directive.js";
 import { QwJsonChart }         from "./qw.json.chart.component.js";

@@ -1,9 +1,9 @@
 // we can only work if we have a query node. This service checks for
 // a query node a reports back whether it is present.
 
-import {Injectable} from "/ui/web_modules/@angular/core.js";
-import {MnPermissions, MnPools, MnPoolDefault} from '/ui/app/ajs.upgraded.providers.js';
-import {$http} from '/_p/ui/query/angular-services/qw.http.js';
+import {Injectable} from "@angular/core";
+import {MnPermissions, MnPools, MnPoolDefault} from 'ajs.upgraded.providers';
+import {$http} from './qw.http.js';
 
 export {QwValidateQueryService};
 

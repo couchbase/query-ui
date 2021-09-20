@@ -1,4 +1,4 @@
-import { Injectable } from "/ui/web_modules/@angular/core.js";
+import { Injectable } from "@angular/core";
 
 export { QwFixLongNumberService };
 
@@ -47,7 +47,7 @@ function getQwFixLongNumberService() {
   var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[:\s\[,](\-?[0-9]+(?:\.[0-9]+)?[eE]\+?[0-9]{3,})[,\s\]}]/ig;
 
   // see if there is at least one overly large float in the JSON string
-  // we search for something that looks like a floating point number, and then 
+  // we search for something that looks like a floating point number, and then
   // parse it using "Number()". If the number is too big, it parses to Infinity.
   function hasLongFloat(rawBytes) {
     matchNonQuotedBigFloats.lastIndex = 0;
@@ -60,7 +60,7 @@ function getQwFixLongNumberService() {
         hasLongFloats = true;
         break;
       }
-        
+
       matchArray = matchNonQuotedBigFloats.exec(rawBytes);
     }
     return hasLongFloats;

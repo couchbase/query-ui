@@ -1,5 +1,5 @@
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
+import angular from "angular";
+import _ from "lodash";
 
 export default 'qwFixLongNumberService';
 
@@ -38,7 +38,7 @@ function getQwFixLongNumberService() {
   var matchNonQuotedBigFloats = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[:\s\[,](\-?[0-9]+(?:\.[0-9]+)?[eE]\+?[0-9]{3,})[,\s\]}]/ig;
 
   // see if there is at least one overly large float in the JSON string
-  // we search for something that looks like a floating point number, and then 
+  // we search for something that looks like a floating point number, and then
   // parse it using "Number()". If the number is too big, it parses to Infinity.
   function hasLongFloat(rawBytes) {
     matchNonQuotedBigFloats.lastIndex = 0;

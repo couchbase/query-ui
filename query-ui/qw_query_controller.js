@@ -1,9 +1,9 @@
-import saveAs from "/ui/web_modules/file-saver.js";
-import _ from "/ui/web_modules/lodash.js";
-import ace from '/ui/libs/ace/ace-wrapper.js';
-import N1qlParser from '/_p/ui/query/parser/n1ql/myN1qlListener.js';
+import saveAs from "file-saver";
+import _ from "lodash";
+import ace from 'ace/ace-wrapper';
+import N1qlParser from './parser/n1ql/myN1qlListener.js';
 
-import { BehaviorSubject }              from '/ui/web_modules/rxjs.js';
+import { BehaviorSubject }              from 'rxjs';
 
 export default queryController;
 
@@ -226,7 +226,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     if (qwQueryService.isSelected(1))
       return(qc.lastResult().resultSize / qc.maxAceSize) > 1.1;
     else
-      return(false);       
+      return(false);
   }
 
   //
@@ -1494,7 +1494,7 @@ function queryController($rootScope, $stateParams, $uibModal, $timeout, qwQueryS
     //
 
     qc.result_subject.next(qc.lastResult());
-    
+
     //
     // now let's make sure the window is the right size
     //

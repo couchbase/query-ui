@@ -33,14 +33,14 @@ import {
   ViewContainerRef,
   ViewChild,
   ViewEncapsulation
-} from '/ui/web_modules/@angular/core.js';
+} from '@angular/core';
 
-import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
+import {MnPermissions} from 'ajs.upgraded.providers';
 
-import {FormsModule} from '/ui/web_modules/@angular/forms.js';
-import {MnLifeCycleHooksToStream} from '/ui/app/mn.core.js';
-import {CommonModule} from '/ui/web_modules/@angular/common.js';
-import _ from "/ui/web_modules/lodash.js";
+import {FormsModule} from '@angular/forms';
+import {MnLifeCycleHooksToStream} from 'mn.core';
+import {CommonModule} from '@angular/common';
+import _ from "lodash";
 
 export {QwJsonTableEditor2};
 

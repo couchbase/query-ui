@@ -1,9 +1,9 @@
-import _ from "/ui/web_modules/lodash.js";
-import js_beautify from "/ui/web_modules/js-beautify.js";
-import angular from "/ui/web_modules/angular.js";
+import _ from "lodash";
+import js_beautify from "js-beautify";
+import angular from "angular";
 import qwFixLongNumberService from "./qw_fix_long_number_service.js";
-import uiAce from "/ui/libs/ui-ace.js";
-import ace from '/ui/libs/ace/ace-wrapper.js';
+import uiAce from "ui-ace";
+import ace from 'ace/ace-wrapper';
 
 export default 'qwDocEditorService';
 

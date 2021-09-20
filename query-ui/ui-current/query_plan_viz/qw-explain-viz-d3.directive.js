@@ -4,18 +4,18 @@
  */
 /* global _, angular */
 
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
+import angular from "angular";
+import _ from "lodash";
 
-import {select as d3Select, event as d3Event} from "/ui/web_modules/d3-selection.js";
+import {select as d3Select, event as d3Event} from "d3-selection";
 import {linkVertical as d3LinkVertical,
-        linkHorizontal as d3LinkHorizontal} from "/ui/web_modules/d3-shape.js";
+        linkHorizontal as d3LinkHorizontal} from "d3-shape";
 
-import {transition as d3Transition} from "/ui/web_modules/d3-transition.js";
-import {interpolate as d3Interpolate} from "/ui/web_modules/d3-interpolate.js";
-import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy.js";
-import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "/ui/web_modules/d3-zoom.js";
-import {hierarchy as d3Hierarchy} from "/ui/web_modules/d3-hierarchy.js";
+import {transition as d3Transition} from "d3-transition";
+import {interpolate as d3Interpolate} from "d3-interpolate";
+import {cluster as d3Cluster, tree as d3Tree} from "d3-hierarchy";
+import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "d3-zoom";
+import {hierarchy as d3Hierarchy} from "d3-hierarchy";
 
 
 export default "qwExplainVizD3";

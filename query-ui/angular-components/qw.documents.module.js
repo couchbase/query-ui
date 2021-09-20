@@ -1,11 +1,11 @@
-import { NgModule }               from '/ui/web_modules/@angular/core.js';
-import { UIRouterModule }         from "/ui/web_modules/@uirouter/angular.js";
-import { MnElementCraneModule }   from '/ui/app/mn.element.crane.js';
-import { FormsModule }            from '/ui/web_modules/@angular/forms.js';
-import { CommonModule }           from '/ui/web_modules/@angular/common.js';
-import { ReactiveFormsModule }    from '/ui/web_modules/@angular/forms.js';
+import { NgModule }               from '@angular/core';
+import { UIRouterModule }         from "@uirouter/angular";
+import { MnElementCraneModule }   from 'mn.element.crane';
+import { FormsModule }            from '@angular/forms';
+import { CommonModule }           from '@angular/common';
+import { ReactiveFormsModule }    from '@angular/forms';
 
-import { NgbModule }              from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
+import { NgbModule }              from '@ng-bootstrap/ng-bootstrap';
 
 import { QwDocumentsComponent }   from './qw.documents.component.js';
 import { QwImportComponent }      from './qw.import.component.js';
@@ -13,17 +13,17 @@ import { QwDocsSubNavComponent } from './qw.documents.subnav.js';
 
 import { QwDirectivesModule }     from "../angular-directives/qw.directives.module.js";
 
-import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
-import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
-import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
-import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import { QwImportService }        from '/_p/ui/query/angular-services/qw.import.service.js';
-import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
-import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
-import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import { $http }                  from '/_p/ui/query/angular-services/qw.http.js';
+import { QwCollectionsService }   from "../angular-services/qw.collections.service.js";
+import { QwConstantsService }     from "../angular-services/qw.constants.service.js";
+import { QwDialogService }        from "../angular-directives/qw.dialog.service.js";
+import { QwFixLongNumberService } from "../angular-services/qw.fix.long.number.service.js";
+import { QwImportService }        from '../angular-services/qw.import.service.js';
+import { QwQueryService }         from "../angular-services/qw.query.service.js";
+import { QwQueryPlanService }     from "../angular-services/qw.query.plan.service.js";
+import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
+import { $http }                  from '../angular-services/qw.http.js';
 
-import { NgxAceModule } from '/ui/libs/ace/@nowzoo/ngx-ace.js';
+import { NgxAceModule } from 'ace/@nowzoo/ngx-ace';
 
 
 let documentsStates = [

@@ -3,7 +3,7 @@
  */
 /* global _, angular */
 
-import saveAs from "/ui/web_modules/file-saver.js";
+import saveAs from "file-saver";
 
 import {
   ViewEncapsulation,
@@ -12,44 +12,44 @@ import {
   Directive,
   ElementRef,
   NgModule,
-  Renderer2 } from '/ui/web_modules/@angular/core.js';
-import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
+  Renderer2 } from '@angular/core';
+import { MnLifeCycleHooksToStream } from 'mn.core';
 
-import { CommonModule }             from '/ui/web_modules/@angular/common.js';
+import { CommonModule }             from '@angular/common';
 
-import { QwJsonCsvService }         from '/_p/ui/query/angular-services/qw.json.csv.service.js';
+import { QwJsonCsvService }         from '../angular-services/qw.json.csv.service.js';
 
-import _                                      from '/ui/web_modules/lodash.js';
+import _                                      from 'lodash';
 
 import {min as d3Min, max as d3Max, group as d3Group,extent as d3Extent,
 sum as d3Sum,
-merge as d3Merge}           from "/ui/web_modules/d3-array.js";
+merge as d3Merge}           from "d3-array";
 import {axisBottom as d3AxisBottom,
-  axisLeft as d3AxisLeft }                    from "/ui/web_modules/d3-axis.js";
+  axisLeft as d3AxisLeft }                    from "d3-axis";
 import {select as d3Select, event as d3Event,
-selectAll as d3SelectAll} from "/ui/web_modules/d3-selection.js";
+selectAll as d3SelectAll} from "d3-selection";
 import {linkVertical as d3LinkVertical,
   linkHorizontal as d3LinkHorizontal,
 line as d3Line,
 area as d3Area,
 pie as d3Pie,
-arc as d3Arc}         from "/ui/web_modules/d3-shape.js";
+arc as d3Arc}         from "d3-shape";
 import {scaleLinear as d3ScaleLinear,
   scaleOrdinal as d3ScaleOrdinal,
 scaleBand as d3ScaleBand,
-scaleTime as d3ScaleTime}         from "/ui/web_modules/d3-scale.js";
-import {schemeTableau10 as d3SchemeTableau10} from "/ui/web_modules/d3-scale-chromatic.js";
-import {mouse as d3Mouse}                     from "/ui/web_modules/d3-selection.js";
-import {transition as d3Transition}           from "/ui/web_modules/d3-transition.js";
+scaleTime as d3ScaleTime}         from "d3-scale";
+import {schemeTableau10 as d3SchemeTableau10} from "d3-scale-chromatic";
+import {mouse as d3Mouse}                     from "d3-selection";
+import {transition as d3Transition}           from "d3-transition";
 import {timeParse as d3TimeParse,
-  timeFormat as d3TimeFormat}           from "/ui/web_modules/d3-time-format.js";
+  timeFormat as d3TimeFormat}           from "d3-time-format";
 
-import {interpolate as d3Interpolate}         from "/ui/web_modules/d3-interpolate.js";
-import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy.js";
+import {interpolate as d3Interpolate}         from "d3-interpolate";
+import {cluster as d3Cluster, tree as d3Tree} from "d3-hierarchy";
 import {zoom as d3Zoom,
-  zoomIdentity as d3ZoomIdentity}             from "/ui/web_modules/d3-zoom.js";
-import {hierarchy as d3Hierarchy}             from "/ui/web_modules/d3-hierarchy.js";
-import { fromEvent }                          from '/ui/web_modules/rxjs.js';
+  zoomIdentity as d3ZoomIdentity}             from "d3-zoom";
+import {hierarchy as d3Hierarchy}             from "d3-hierarchy";
+import { fromEvent }                          from 'rxjs';
 
 export { QwJsonChart };
 
@@ -112,7 +112,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     this.data = result.data;
     this.result = result;
     this.getStateFromQueryResult(); // if they are going through history, there may be new fields;
-    
+
     // flatten data
     this.flat_data = this.qwJsonCsvService.convertDocArrayToDataArray(this.data);
 
@@ -201,7 +201,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
-    
+
     // set up zooming
     this.zoomer = d3Zoom()
       .scaleExtent([0.1, 2.5])
@@ -221,14 +221,14 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     // need data to work with
     if (!this.flat_data || !this.flat_data.length)
       return;
-    
+
     // if we don't have a valid field specified to chart, pick something
     if (!this.field1 || this.field_invalid_for_chart_type(this.field1,1)) {
       this.field1 = 0;
       while (this.field_invalid_for_chart_type(this.field1,1) && this.field1 < this.flat_data[0].length)
         this.field1++;
     }
-    
+
     if (!this.field2 || this.field_invalid_for_chart_type(this.field2,2)) {
       this.field2 = 0;
       while ((this.field_invalid_for_chart_type(this.field2,2) || this.field2 == this.field1) && this.field2 < this.flat_data[0].length)
@@ -313,7 +313,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     // possibly into data_z for grouping variables
     // Foreach - hard to break for errors so use a try catch block
     var values = this.flat_data.slice(1);
-    
+
     if (!aggregation_chart) values.forEach(obj => {
       if (_.isNull(obj[Field1]) == false && _.isNull(obj[Field2]) == false) {
 
@@ -353,7 +353,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       var x_values = _.uniq(values.map(row => row[Field1])).sort();
       var y_values;
 
-      if (this.chartType != "gbar") 
+      if (this.chartType != "gbar")
         y_values = x_values.map(val => 0); // start with zero for each x value
       else
         y_values = x_values.map(val => {return { x: val}});
@@ -362,7 +362,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         var index = x_values.indexOf(row[Field1]);
         if (index >= 0) {
           // for everything but grouped bar, we want one summed value for each distinct x
-          if (this.chartType != "gbar") 
+          if (this.chartType != "gbar")
             y_values[index] += row[Field2];
           // otherwise, need to iterate over each each selected group field
           else {
@@ -508,7 +508,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     }
     min = this.newMin(min);
     max = this.newMax(max);
-    
+
     var scale_y = d3ScaleLinear().domain([min,max])
         .range([this.canvas_height-this.margin,this.margin])
         .nice();
@@ -641,7 +641,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .on("mouseout", hideTooltip);
 
   }
-  
+
   createAreaChart() {
     var values = this.flattenData(2);
     this.value_count = values[0].length;
@@ -686,7 +686,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
   }
-  
+
   createGroupedBarChart() {
     var values = this.flattenData(4);
     this.value_count = values[0].length;
@@ -695,7 +695,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         scale_y = this.createYAxis(values);
 
     // Another scale for the subgroups position
-    // If we are adding a + sign we need to make sure this is redone. 
+    // If we are adding a + sign we need to make sure this is redone.
     var subgroups = [];
 
     for (let i = 0; i < this.field2_list.length; i++) {
@@ -822,7 +822,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .value(function (d) {return d.y;})
 
     var rad = donut ? radius/2 : 0;
-    
+
     var path = d3Arc()
         .innerRadius(rad)         // This is the size of the donut hole
         .outerRadius(radius-10)
@@ -1027,10 +1027,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     var type_count = Object.keys(type_obj).length;
     return(type_obj.string && type_count == 1);
   }
-  
+
   // is a given field invalid for the selected chart type and entry?
   //
-  
+
   field_invalid_for_chart_type(field,entry) {
     var type_obj = this.flat_data_types && this.flat_data_types[field];
     if (!type_obj)
@@ -1063,7 +1063,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         switch (entry) {
         case 1: return(false); // no type invalid for x-axis label
         case 2:
-        default: return(!is_number);          
+        default: return(!is_number);
         }
       break;
     }
@@ -1088,7 +1088,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("version", 1.1)
         .attr("xmlns", "http://www.w3.org/2000/svg")
         .node().parentNode.innerHTML + '</svg>';
-    
+
     var file = new Blob([html],{type: "image/svg+xml", name: "chart.svg"});
 
     saveAs(file,file.name);

@@ -9,13 +9,13 @@ import { ViewEncapsulation,
   ElementRef,
   EventEmitter,
   NgModule,
-  Renderer2 } from '/ui/web_modules/@angular/core.js';
-import { MnLifeCycleHooksToStream }                    from '/ui/app/mn.core.js';
-import { MnPoolDefault }                               from '/ui/app/ajs.upgraded.providers.js';
-import { CommonModule }                                from '/ui/web_modules/@angular/common.js';
-import { Subject, pipe }                               from '/ui/web_modules/rxjs.js';
-import { takeUntil, distinctUntilChanged, pluck, filter } from '/ui/web_modules/rxjs/operators.js';
-import { FormControl, FormGroup }                      from '/ui/web_modules/@angular/forms.js';
+  Renderer2 } from '@angular/core';
+import { MnLifeCycleHooksToStream }                    from 'mn.core';
+import { MnPoolDefault }                               from 'ajs.upgraded.providers';
+import { CommonModule }                                from '@angular/common';
+import { Subject, pipe }                               from 'rxjs';
+import { takeUntil, distinctUntilChanged, pluck, filter } from 'rxjs/operators';
+import { FormControl, FormGroup }                      from '@angular/forms';
 
 import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
 

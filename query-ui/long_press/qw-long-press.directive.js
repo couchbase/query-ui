@@ -8,7 +8,7 @@
  * is colled.
  */
 /* global _, angular */
-import angular from "/ui/web_modules/angular.js";
+import angular from "angular";
 export default "qwLongPress";
 
 angular.module('qwLongPress', []).directive('qwLongPress', function ($timeout) {

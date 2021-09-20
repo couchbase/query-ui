@@ -1,4 +1,4 @@
-import { Injectable } from "/ui/web_modules/@angular/core.js";
+import { Injectable } from "@angular/core";
 
 export { QwConstantsService };
 

@@ -1,25 +1,25 @@
-import angular from "/ui/web_modules/angular.js";
-import app from "/ui/app/app.js";
-import { mnLoadNgModule, mnLazyload } from "/ui/app/mn.app.imports.js";
-import ace from '/ui/libs/ace/ace-wrapper.js';
+import angular from "angular";
+import app from "app";
+import { mnLoadNgModule, mnLazyload } from "mn.app.imports";
+import ace from 'ace/ace-wrapper';
 
-import { NgModule } from '/ui/web_modules/@angular/core.js';
-import { UIRouterUpgradeModule } from '/ui/web_modules/@uirouter/angular-hybrid.js';
+import { NgModule } from '@angular/core';
+import { UIRouterUpgradeModule } from '@uirouter/angular-hybrid';
 
-import { QwCollectionsService }   from "/_p/ui/query/angular-services/qw.collections.service.js";
-import { QwJsonCsvService }       from "/_p/ui/query/angular-services/qw.json.csv.service.js";
+import { QwCollectionsService }   from "../angular-services/qw.collections.service.js";
+import { QwJsonCsvService }       from "../angular-services/qw.json.csv.service.js";
 
-import { QwCollectionMenu }       from "/_p/ui/query/angular-directives/qw.collection.menu.component.js";
-import { QwConstantsService }     from "/_p/ui/query/angular-services/qw.constants.service.js";
-import { QwDialogService }        from "/_p/ui/query/angular-directives/qw.dialog.service.js";
-import { QwFixLongNumberService } from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import { QwJsonChart }            from "/_p/ui/query/angular-directives/qw.json.chart.component.js";
-import { QwQueryService }         from "/_p/ui/query/angular-services/qw.query.service.js";
-import { QwQueryPlanService }     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
-import { QwValidateQueryService } from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import { $http }                  from '/_p/ui/query/angular-services/qw.http.js';
+import { QwCollectionMenu }       from "../angular-directives/qw.collection.menu.component.js";
+import { QwConstantsService }     from "../angular-services/qw.constants.service.js";
+import { QwDialogService }        from "../angular-directives/qw.dialog.service.js";
+import { QwFixLongNumberService } from "../angular-services/qw.fix.long.number.service.js";
+import { QwJsonChart }            from "../angular-directives/qw.json.chart.component.js";
+import { QwQueryService }         from "../angular-services/qw.query.service.js";
+import { QwQueryPlanService }     from "../angular-services/qw.query.plan.service.js";
+import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
+import { $http }                  from '../angular-services/qw.http.js';
 
-import { QwDirectivesModule }     from "/_p/ui/query/angular-directives/qw.directives.module.js";
+import { QwDirectivesModule }     from "../angular-directives/qw.directives.module.js";
 
 angular
   .module(app)
@@ -81,12 +81,12 @@ class QueryUI {
           {
             name: "app.admin.docs.**",
             url: "/docs",
-            lazyLoad: mnLoadNgModule("/_p/ui/query/angular-components/qw.documents.module.js",
-                                         "QwDocumentsModule")
+            lazyLoad: mnLoadNgModule(() => import("../angular-components/qw.documents.module.js"),
+                                     "QwDocumentsModule")
           }, {
             name: "app.admin.query.**",
             url: "/query",
-            lazyLoad: mnLazyload("/_p/ui/query/ui-current/query.js", "qwQuery")
+            lazyLoad: mnLazyload(() => import("./query.js"), "qwQuery")
           },
           //   {
           //   name: "app.admin.hello_world.**",

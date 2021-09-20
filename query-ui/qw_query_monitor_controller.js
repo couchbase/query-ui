@@ -1,5 +1,5 @@
-import {is} from '/ui/web_modules/ramda.js';
-import mnStatsDesc from "/ui/app/mn_admin/mn_statistics_description.js";
+import {is} from 'ramda';
+import mnStatsDesc from "mn_admin/mn_statistics_description";
 
 export default queryMonController;
 

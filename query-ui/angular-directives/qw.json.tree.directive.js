@@ -16,10 +16,10 @@ import { ViewEncapsulation,
          ChangeDetectionStrategy,
          Directive,
          ElementRef,
-         Renderer2 } from '/ui/web_modules/@angular/core.js';
-import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
+         Renderer2 } from '@angular/core';
+import { MnLifeCycleHooksToStream } from 'mn.core';
 
-import _ from "/ui/web_modules/lodash.js";
+import _ from "lodash";
 
 export { QwJsonTree };
 

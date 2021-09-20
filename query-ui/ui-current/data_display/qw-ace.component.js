@@ -3,9 +3,9 @@
  */
 /* global _, angular */
 
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-import uiAce from "/ui/libs/ui-ace.js";
+import angular from "angular";
+import _ from "lodash";
+import uiAce from "ui-ace";
 
 export default "qwAceModule";
 

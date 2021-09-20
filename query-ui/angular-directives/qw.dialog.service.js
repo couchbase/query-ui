@@ -1,11 +1,11 @@
-import { NgbModal, NgbModalConfig }          from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
+import { NgbModal, NgbModalConfig }          from '@ng-bootstrap/ng-bootstrap';
 import { QwDocEditorDialog } from './dialogs/qw.doc.editor.dialog.component.js';
 import { QwErrorDialog }     from './dialogs/qw.error.dialog.component.js';
 import { QwInputDialog }     from './dialogs/qw.input.dialog.component.js';
 import { QwNoticeDialog }    from './dialogs/qw.notice.dialog.component.js';
-import { MnPoolDefault }     from '/ui/app/ajs.upgraded.providers.js';
-import { $http }             from '/_p/ui/query/angular-services/qw.http.js';
-import js_beautify                                       from "/ui/web_modules/js-beautify.js";
+import { MnPoolDefault }     from 'ajs.upgraded.providers';
+import { $http }             from '../angular-services/qw.http.js';
+import js_beautify                                       from "js-beautify";
 
 export { QwDialogService };
 

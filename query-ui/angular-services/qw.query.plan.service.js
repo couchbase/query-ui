@@ -1,5 +1,5 @@
-import _ from "/ui/web_modules/lodash.js";
-import N1qlParser from '/_p/ui/query/parser/n1ql/myN1qlListener.js';
+import _ from "lodash";
+import N1qlParser from '../parser/n1ql/myN1qlListener.js';
 
 export { QwQueryPlanService };
 

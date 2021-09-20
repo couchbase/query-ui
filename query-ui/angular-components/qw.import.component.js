@@ -1,14 +1,14 @@
-import _                              from "/ui/web_modules/lodash.js";
-import {MnLifeCycleHooksToStream}     from '/ui/app/mn.core.js';
-import {Component, ViewEncapsulation, ChangeDetectorRef} from '/ui/web_modules/@angular/core.js';
+import _                              from "lodash";
+import {MnLifeCycleHooksToStream}     from 'mn.core';
+import {Component, ViewEncapsulation, ChangeDetectorRef} from '@angular/core';
 
 import { QwImportService }         from '../angular-services/qw.import.service.js';
-import { QwDialogService }         from '/_p/ui/query/angular-directives/qw.dialog.service.js';
+import { QwDialogService }         from '../angular-directives/qw.dialog.service.js';
 import { QwValidateQueryService }  from '../angular-services/qw.validate.query.service.js';
-import {FormControl, FormGroup}    from '/ui/web_modules/@angular/forms.js';
-import {MnPermissions, MnPoolDefault } from '/ui/app/ajs.upgraded.providers.js';
+import {FormControl, FormGroup}    from '@angular/forms';
+import {MnPermissions, MnPoolDefault } from '../../../../ui/app/ajs.upgraded.providers.js';
 
-import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "/ui/web_modules/d3-dsv.js";
+import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "d3-dsv";
 
 export {QwImportComponent};
 

@@ -5,8 +5,8 @@
  */
 /* global _, angular */
 
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
+import angular from "angular";
+import _ from "lodash";
 
 export {getRecursionHelper, getBucketDisplay, getBucketCollectionsDisplay, getSchemaDisplay};
 

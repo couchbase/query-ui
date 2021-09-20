@@ -1,4 +1,4 @@
-import { Component } from '/ui/web_modules/@angular/core.js';
+import { Component } from '@angular/core';
 
 class QwDocsSubNavComponent {
   static get annotations() {

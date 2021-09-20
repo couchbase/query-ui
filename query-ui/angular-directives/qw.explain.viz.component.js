@@ -9,22 +9,22 @@ import { ViewEncapsulation,
          Component,
          ElementRef,
          NgModule,
-         Renderer2 } from '/ui/web_modules/@angular/core.js';
-import { MnLifeCycleHooksToStream } from '/ui/app/mn.core.js';
+         Renderer2 } from '@angular/core';
+import { MnLifeCycleHooksToStream } from 'mn.core';
 
-import { CommonModule } from '/ui/web_modules/@angular/common.js';
+import { CommonModule } from '@angular/common';
 
-import _ from "/ui/web_modules/lodash.js";
+import _ from "lodash";
 
-import {select as d3Select, event as d3Event} from "/ui/web_modules/d3-selection.js";
+import {select as d3Select, event as d3Event} from "d3-selection";
 import {linkVertical as d3LinkVertical,
-        linkHorizontal as d3LinkHorizontal} from "/ui/web_modules/d3-shape.js";
+        linkHorizontal as d3LinkHorizontal} from "d3-shape";
 
-import {transition as d3Transition} from "/ui/web_modules/d3-transition.js";
-import {interpolate as d3Interpolate} from "/ui/web_modules/d3-interpolate.js";
-import {cluster as d3Cluster, tree as d3Tree} from "/ui/web_modules/d3-hierarchy.js";
-import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "/ui/web_modules/d3-zoom.js";
-import {hierarchy as d3Hierarchy} from "/ui/web_modules/d3-hierarchy.js";
+import {transition as d3Transition} from "d3-transition";
+import {interpolate as d3Interpolate} from "d3-interpolate";
+import {cluster as d3Cluster, tree as d3Tree} from "d3-hierarchy";
+import {zoom as d3Zoom, zoomIdentity as d3ZoomIdentity} from "d3-zoom";
+import {hierarchy as d3Hierarchy} from "d3-hierarchy";
 
 
 export { QwExplainViz };

@@ -1,8 +1,8 @@
-import {QwDialogService} from '/_p/ui/query/angular-directives/qw.dialog.service.js';
-import {QwQueryService} from '/_p/ui/query/angular-services/qw.query.service.js';
-import {$http} from '/_p/ui/query/angular-services/qw.http.js';
-import _ from '/ui/web_modules/lodash.js';
-import {MnPermissions, MnAlertsService} from '/ui/app/ajs.upgraded.providers.js';
+import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
+import {QwQueryService} from './qw.query.service.js';
+import {$http} from './qw.http.js';
+import _ from 'lodash';
+import {MnPermissions, MnAlertsService} from 'ajs.upgraded.providers';
 
 export {QwImportService};
 

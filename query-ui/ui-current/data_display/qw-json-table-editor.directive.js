@@ -15,9 +15,9 @@
  */
 /* global _, angular */
 
-import angular from "/ui/web_modules/angular.js";
-import _ from "/ui/web_modules/lodash.js";
-import mnPermissions from "/ui/app/components/mn_permissions.js";
+import angular from "angular";
+import _ from "lodash";
+import mnPermissions from "components/mn_permissions";
 
 export default "qwJsonTableEditorModule";
 
@@ -985,4 +985,3 @@ function getSortingFunction(startSortColumn,scope,compile,timeout) {
 
     return(result);
   };
-

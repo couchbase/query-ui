@@ -1,8 +1,8 @@
-import {Directive, ElementRef, Injector} from '/ui/web_modules/@angular/core.js';
-import {UpgradeComponent} from '/ui/web_modules/@angular/upgrade/static.js';
+import {Directive, ElementRef, Injector} from '@angular/core';
+import {UpgradeComponent} from '@angular/upgrade/static';
 
-import qwJsonTableEditorModule from "/_p/ui/query/ui-current/data_display/qw-json-table-editor.directive.js";
-import qwAceModule             from "/_p/ui/query/ui-current/data_display/qw-ace.component.js";
+import qwJsonTableEditorModule from "../ui-current/data_display/qw-json-table-editor.directive.js";
+import qwAceModule             from "../ui-current/data_display/qw-ace.component.js";
 
 export { QwJsonTableEditorDirective, UIAceDirective };
 

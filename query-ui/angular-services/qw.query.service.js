@@ -1,17 +1,17 @@
-import {NgbModal} from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
-import _ from '/ui/web_modules/lodash.js';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import _ from 'lodash';
 
-import {QwCollectionsService}   from "/_p/ui/query/angular-services/qw.collections.service.js";
-import {QwConstantsService}     from "/_p/ui/query/angular-services/qw.constants.service.js";
-import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import {QwValidateQueryService} from '/_p/ui/query/angular-services/qw.validate.query.service.js';
-import {QwQueryPlanService}     from "/_p/ui/query/angular-services/qw.query.plan.service.js";
-import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
+import {QwCollectionsService}   from "./qw.collections.service.js";
+import {QwConstantsService}     from "./qw.constants.service.js";
+import {QwFixLongNumberService} from "./qw.fix.long.number.service.js";
+import {QwValidateQueryService} from './qw.validate.query.service.js';
+import {QwQueryPlanService}     from "./qw.query.plan.service.js";
+import {$http}                  from './qw.http.js';
 
-import {QwDialogService}        from '/_p/ui/query/angular-directives/qw.dialog.service.js';
+import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
 
-import {MnPendingQueryKeeper, MnPools, MnPoolDefault, MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
-import {MnAdminService} from "/ui/app/mn.admin.service.js";
+import {MnPendingQueryKeeper, MnPools, MnPoolDefault, MnPermissions} from 'ajs.upgraded.providers';
+import {MnAdminService} from "mn.admin.service";
 
 export {QwQueryService};
 

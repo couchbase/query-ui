@@ -1,9 +1,9 @@
-import angular from "/ui/web_modules/angular.js";
+import angular from "angular";
 
-import { Injectable } from '/ui/web_modules/@angular/core.js';
-import { HttpClient, HttpHeaders } from '/ui/web_modules/@angular/common/http.js';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import _ from "/ui/web_modules/lodash.js";
+import _ from "lodash";
 
 export { $http };
 
@@ -119,4 +119,3 @@ class $http {
   }
 
 }
-

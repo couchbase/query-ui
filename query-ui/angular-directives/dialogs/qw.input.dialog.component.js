@@ -1,11 +1,11 @@
-import {MnLifeCycleHooksToStream} from '/ui/app/mn.core.js';
-import {NgbActiveModal} from '/ui/web_modules/@ng-bootstrap/ng-bootstrap.js';
-import {Component, ViewEncapsulation} from '/ui/web_modules/@angular/core.js';
-import { CommonModule }        from '/ui/web_modules/@angular/common.js';
+import {MnLifeCycleHooksToStream} from 'mn.core';
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {Component, ViewEncapsulation} from '@angular/core';
+import { CommonModule }        from '@angular/common';
 
-import {FormControl, FormGroup} from '/ui/web_modules/@angular/forms.js';
+import {FormControl, FormGroup} from '@angular/forms';
 
-import _ from "/ui/web_modules/lodash.js";
+import _ from "lodash";
 
 export { QwInputDialog };
 

@@ -1,20 +1,20 @@
-import {MnLifeCycleHooksToStream} from '/ui/app/mn.core.js';
+import {MnLifeCycleHooksToStream} from 'mn.core';
 
-import {Component, ChangeDetectorRef, ViewEncapsulation} from '/ui/web_modules/@angular/core.js';
-import {FormControl, FormGroup}                          from '/ui/web_modules/@angular/forms.js';
-import {UIRouter}                                        from '/ui/web_modules/@uirouter/angular.js';
-import js_beautify                                       from "/ui/web_modules/js-beautify.js";
-import _                                                 from "/ui/web_modules/lodash.js";
+import {Component, ChangeDetectorRef, ViewEncapsulation} from '@angular/core';
+import {FormControl, FormGroup}                          from '@angular/forms';
+import {UIRouter}                                        from '@uirouter/angular';
+import js_beautify                                       from "js-beautify";
+import _                                                 from "lodash";
 
-import {MnPermissions, MnPoolDefault}                    from '/ui/app/ajs.upgraded.providers.js';
+import {MnPermissions, MnPoolDefault}                    from 'ajs.upgraded.providers';
 
-import { Subject } from '/ui/web_modules/rxjs.js';
+import { Subject } from 'rxjs';
 
 import {QwCollectionsService}   from '../angular-services/qw.collections.service.js';
-import {QwFixLongNumberService} from "/_p/ui/query/angular-services/qw.fix.long.number.service.js";
-import {QwQueryService}         from "/_p/ui/query/angular-services/qw.query.service.js";
-import {QwValidateQueryService} from "/_p/ui/query/angular-services/qw.validate.query.service.js";
-import {$http}                  from '/_p/ui/query/angular-services/qw.http.js';
+import {QwFixLongNumberService} from "../angular-services/qw.fix.long.number.service.js";
+import {QwQueryService}         from "../angular-services/qw.query.service.js";
+import {QwValidateQueryService} from "../angular-services/qw.validate.query.service.js";
+import {$http}                  from '../angular-services/qw.http.js';
 
 import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
 

@@ -7,9 +7,9 @@
 // To support querying the metadat for remote clusters in analytics, the service can optionally accept a proxy
 // that provides REST API access to another couchbase cluster.
 
-import {$http}         from '/_p/ui/query/angular-services/qw.http.js';
-import {MnPermissions} from '/ui/app/ajs.upgraded.providers.js';
-import _               from '/ui/web_modules/lodash.js';
+import {$http}         from './qw.http.js';
+import {MnPermissions} from 'ajs.upgraded.providers';
+import _               from 'lodash';
 
 export {QwCollectionsService};
 
