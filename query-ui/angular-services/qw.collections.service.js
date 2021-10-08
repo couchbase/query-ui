@@ -7,7 +7,7 @@
 // To support querying the metadat for remote clusters in analytics, the service can optionally accept a proxy
 // that provides REST API access to another couchbase cluster.
 
-import {$http}         from './qw.http.js';
+import {QwHttp}         from './qw.http.js';
 import {MnPermissions} from 'ajs.upgraded.providers';
 import _               from 'lodash';
 
@@ -23,16 +23,16 @@ class QwCollectionsService {
   static get parameters() {
     return [
       MnPermissions,
-      $http,
+      QwHttp,
     ]
   }
 
   constructor(
     mnPermissions,
-    $http) {
+    qwHttp) {
     Object.assign(this, getQwCollectionsService(
       mnPermissions,
-      $http));
+      qwHttp));
   }
 }
 
@@ -41,7 +41,7 @@ class QwCollectionsService {
 
 function getQwCollectionsService(
   mnPermissions,
-  $http) {
+  qwHttp) {
 
   var qcs = {};
   qcs.rbac = mnPermissions.export;
@@ -91,7 +91,7 @@ function getQwCollectionsService(
     meta.errors.length = 0;
     var api = "/pools/default/buckets/";
     var url = getApiUrl(api, proxy);
-    var promise = $http.do({
+    var promise = qwHttp.do({
       url: url,
       method: "GET"
     }).then(function success(resp) {
@@ -145,7 +145,7 @@ function getQwCollectionsService(
     var api = "/pools/default/buckets/" + encodeURI(bucket) + "/scopes";
     var url = getApiUrl(api, proxy);
     // get the scopes and collections for the bucket from the REST API
-    var promise = $http.do({
+    var promise = qwHttp.do({
       url: url,
       method: "GET"
     }).then(function success(resp) {

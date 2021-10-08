@@ -5,9 +5,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import _ from "lodash";
 
-export { $http };
+export { QwHttp };
 
-class $http {
+class QwHttp {
   static get annotations() { return [
     new Injectable()
   ]}

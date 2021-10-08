@@ -6,7 +6,7 @@ import {QwConstantsService}     from "./qw.constants.service.js";
 import {QwFixLongNumberService} from "./qw.fix.long.number.service.js";
 import {QwValidateQueryService} from './qw.validate.query.service.js';
 import {QwQueryPlanService}     from "./qw.query.plan.service.js";
-import {$http}                  from './qw.http.js';
+import {QwHttp}                  from './qw.http.js';
 
 import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
 
@@ -26,7 +26,7 @@ class QwQueryService {
 
   static get parameters() {
     return [
-      $http,
+      QwHttp,
       MnAdminService,
       MnPendingQueryKeeper,
       MnPermissions,
@@ -43,7 +43,7 @@ class QwQueryService {
   }
 
   constructor(
-    $http,
+    qwHttp,
     mnAdminService,
     mnPendingQueryKeeper,
     mnPermissions,
@@ -71,7 +71,7 @@ class QwQueryService {
         qwFixLongNumberService,
         qwQueryPlanService,
         validateQueryService,
-        $http);
+        qwHttp);
 
     Object.assign(this, queryServiceCore);
   }
@@ -90,7 +90,7 @@ function getQwQueryService(
   qwFixLongNumberService,
   qwQueryPlanService,
   validateQueryService,
-  $http) {
+  qwHttp) {
 
   var qwQueryService = {};
   qwQueryService.validateQueryService = validateQueryService;
@@ -1161,7 +1161,7 @@ function getQwQueryService(
   }
 
   //
-  // we run queries many places, the following function calls $http to run
+  // we run queries many places, the following function calls qwHttp to run
   // the query, and returns the promise so the caller can handle success/failure callbacks.
   // queryText - the query to run
   // is_user_query - with user queries, we need to
@@ -1175,7 +1175,7 @@ function getQwQueryService(
     var request = buildQueryRequest(queryText, is_user_query);
 
     // if the request can't be built because the query is too big, return a dummy
-    // promise that resolves immediately. This needs to follow the angular $http
+    // promise that resolves immediately. This needs to follow the angular qwHttp
     // promise, which supports .success and .error as well as .then
 
     if (!request) {
@@ -1190,21 +1190,21 @@ function getQwQueryService(
       return (dummy);
     }
 
-    if ($http.do)
-      return ($http.do(request));
+    if (qwHttp.do)
+      return (qwHttp.do(request));
     else
-      return ($http(request));
+      return (qwHttp(request));
   }
 
   function logWorkbenchError(errorText) {
-    if ($http.do)
-      $http.do({
+    if (qwHttp.do)
+      qwHttp.do({
         url: "/logClientError",
         method: "POST",
         data: errorText,
       });
     else
-      $http({
+      qwHttp({
         url: "/logClientError",
         method: "POST",
         data: errorText,
@@ -1652,10 +1652,10 @@ function getQwQueryService(
         finishQuery(newResult);
         return (Promise.reject("building query failed"));
       }
-      if ($http.do)
-        explain_promise = $http.do(explain_request);
+      if (qwHttp.do)
+        explain_promise = qwHttp.do(explain_request);
       else
-        explain_promise = $http(explain_request);
+        explain_promise = qwHttp(explain_request);
 
       explain_promise
         .then(function success(resp) {
@@ -1721,7 +1721,7 @@ function getQwQueryService(
               }
             }
           },
-          /* error response from $http */
+          /* error response from qwHttp */
           function error(resp) {
             var data = resp.data, status = resp.status;
             //console.log("Explain error Data: " + JSON.stringify(data));
@@ -1794,10 +1794,10 @@ function getQwQueryService(
       }
       var query_promise;
 
-      if ($http.do)
-        query_promise = $http.do(request);
+      if (qwHttp.do)
+        query_promise = qwHttp.do(request);
       else
-        query_promise = $http(request);
+        query_promise = qwHttp(request);
 
       //console.log("Running request:" + JSON.stringify(request,null,2));
       // SUCCESS!
@@ -1932,7 +1932,7 @@ function getQwQueryService(
 
 
           },
-          /* error response from $http */
+          /* error response from qwHttp */
           function error(resp) {
             var data = resp.data, status = resp.status;
             //console.log("Error for query: " + queryText);
@@ -2121,10 +2121,10 @@ function getQwQueryService(
       }
       var advise_promise;
 
-      if ($http.do)
-        advise_promise = $http.do(advise_request);
+      if (qwHttp.do)
+        advise_promise = qwHttp.do(advise_request);
       else
-        advise_promise = $http(advise_request);
+        advise_promise = qwHttp(advise_request);
 
       advise_promise
         .then(function success(resp) {
@@ -2158,7 +2158,7 @@ function getQwQueryService(
               queryResult.advice = "Unknown response from server.";
             }
           },
-          /* error response from $http, log error but otherwise ignore */
+          /* error response from qwHttp, log error but otherwise ignore */
           function error(resp) {
             var data = resp.data, status = resp.status;
             //console.log("Advise error Data: " + JSON.stringify(data));

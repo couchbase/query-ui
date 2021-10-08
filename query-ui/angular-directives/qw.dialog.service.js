@@ -4,7 +4,7 @@ import { QwErrorDialog }     from './dialogs/qw.error.dialog.component.js';
 import { QwInputDialog }     from './dialogs/qw.input.dialog.component.js';
 import { QwNoticeDialog }    from './dialogs/qw.notice.dialog.component.js';
 import { MnPoolDefault }     from 'ajs.upgraded.providers';
-import { $http }             from '../angular-services/qw.http.js';
+import { QwHttp }             from '../angular-services/qw.http.js';
 import js_beautify                                       from "js-beautify";
 
 export { QwDialogService };
@@ -19,13 +19,13 @@ class QwDialogService {
     MnPoolDefault,
     NgbModal,
     NgbModalConfig,
-    $http,
+    QwHttp,
   ]}
 
-  constructor(mnPoolDefault, modalService, ngbModalConfig, $http) {
+  constructor(mnPoolDefault, modalService, ngbModalConfig, qwHttp) {
     this.modalService = modalService;
     this.compat = mnPoolDefault.export.compat;
-    this.$http = $http;
+    this.qwHttp = qwHttp;
     ngbModalConfig.backdrop = "static";
   }
 
@@ -115,7 +115,7 @@ class QwDialogService {
     rest_url += "/docs/" + myEncodeURIComponent(docId);
     var This = this;
 
-    return this.$http.get(rest_url)
+    return this.qwHttp.get(rest_url)
     .then(
         function success(resp) {
           if (resp && resp.status == 200 && resp.data) {
@@ -132,7 +132,7 @@ class QwDialogService {
 
               return promise.then(
                 function close(result) { // used clicked o.k, save document
-                  return(This.$http.post(rest_url,{flags: 0x02000006, value: result.json}));
+                  return(This.qwHttp.post(rest_url,{flags: 0x02000006, value: result.json}));
                 },
                 function dismiss(result) {
                   return Promise.resolve("dialog closed, no changes");

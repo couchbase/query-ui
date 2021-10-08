@@ -17,7 +17,7 @@ import { QwJsonChart }            from "../angular-directives/qw.json.chart.comp
 import { QwQueryService }         from "../angular-services/qw.query.service.js";
 import { QwQueryPlanService }     from "../angular-services/qw.query.plan.service.js";
 import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
-import { $http }                  from '../angular-services/qw.http.js';
+import { QwHttp }                  from '../angular-services/qw.http.js';
 
 import { QwDirectivesModule }     from "../angular-directives/qw.directives.module.js";
 
@@ -115,7 +115,7 @@ class QueryUI {
         QwQueryService,
         QwQueryPlanService,
         QwValidateQueryService,
-        $http,
+        QwHttp,
 
       ],
       entryComponents: [

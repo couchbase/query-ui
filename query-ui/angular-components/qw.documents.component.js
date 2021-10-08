@@ -14,7 +14,7 @@ import {QwCollectionsService}   from '../angular-services/qw.collections.service
 import {QwFixLongNumberService} from "../angular-services/qw.fix.long.number.service.js";
 import {QwQueryService}         from "../angular-services/qw.query.service.js";
 import {QwValidateQueryService} from "../angular-services/qw.validate.query.service.js";
-import {$http}                  from '../angular-services/qw.http.js';
+import {QwHttp}                  from '../angular-services/qw.http.js';
 
 import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
 
@@ -43,7 +43,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       QwQueryService,
       QwValidateQueryService,
       UIRouter,
-      $http
+      QwHttp
     ];
   }
 
@@ -91,7 +91,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     qwQueryService,
     validateQueryService,
     uiRouter,
-    $http) {
+    qwHttp) {
     super();
 
     var dec = {};
@@ -473,7 +473,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       var Url = get_base_url() +
         "/docs/" + myEncodeURIComponent(dec.options.current_result[row].id);
 
-      return $http.delete(Url, {method: "DELETE", url: Url});
+      return qwHttp.delete(Url, {method: "DELETE", url: Url});
     }
 
     //
@@ -598,14 +598,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // with newKey, we need to check if the document exists first by that key
 
       if (newKey) {
-        return $http.do({
+        return qwHttp.do({
           method: "GET",
           url: Url
         }).then(function success(resp) {
             return (Promise.reject({data: "Can't save document, key '" + newKey + "' already exists."}));
           },
           function fail(resp) {
-            return $http.do({
+            return qwHttp.do({
               method: "POST",
               url: Url,
               data: {
@@ -617,7 +617,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
 
       // otherwise just save the doc using the REST api
-      else return $http.do({
+      else return qwHttp.do({
         method: "POST",
         url: Url,
         data: {
@@ -862,7 +862,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           "/docs/" + myEncodeURIComponent(idArray[i]);
         //console.log("  url: " + rest_url);
 
-        promiseArray.push($http.do({
+        promiseArray.push(qwHttp.do({
           url: rest_url,
           method: "GET"
         }).then(getDocReturnHandler(i, sizeWarning, idArray),
@@ -1047,7 +1047,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (!dec.options.show_id && dec.options.doc_id_end)
         rest_url += "&endkey=%22" + myEncodeURIComponent(dec.options.doc_id_end) + '%22';
 
-      $http.do({
+      qwHttp.do({
         url: rest_url,
         method: "GET"
       }).then(function success(resp) {
@@ -1184,7 +1184,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // we have all the buckets, now get the indexes from the REST API, and
       // record whether each collection has a primary or secondary index
       //
-      var promise = $http.do({
+      var promise = qwHttp.do({
         url: "../indexStatus",
         method: "GET"
       }).then(function success(resp) {

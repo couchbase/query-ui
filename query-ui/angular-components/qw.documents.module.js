@@ -21,7 +21,7 @@ import { QwImportService }        from '../angular-services/qw.import.service.js
 import { QwQueryService }         from "../angular-services/qw.query.service.js";
 import { QwQueryPlanService }     from "../angular-services/qw.query.plan.service.js";
 import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
-import { $http }                  from '../angular-services/qw.http.js';
+import { QwHttp }                  from '../angular-services/qw.http.js';
 
 import { NgxAceModule } from 'ace/@nowzoo/ngx-ace';
 
@@ -113,7 +113,7 @@ class QwDocumentsModule {
         QwQueryService,
         QwQueryPlanService,
         QwValidateQueryService,
-        $http
+        QwHttp
       ],
     })
   ]}

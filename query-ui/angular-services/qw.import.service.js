@@ -1,6 +1,6 @@
 import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
 import {QwQueryService} from './qw.query.service.js';
-import {$http} from './qw.http.js';
+import {QwHttp} from './qw.http.js';
 import _ from 'lodash';
 import {MnPermissions, MnAlertsService} from 'ajs.upgraded.providers';
 
@@ -19,7 +19,7 @@ class QwImportService {
       MnPermissions,
       QwDialogService,
       QwQueryService,
-      $http,
+      QwHttp,
     ]
   }
 
@@ -28,13 +28,13 @@ class QwImportService {
     mnPermissions,
     qwDialogService,
     qwQueryService,
-    $http) {
+    qwHttp) {
     Object.assign(this, getQwImportService(
       mnAlertsService,
       mnPermissions,
       qwDialogService,
       qwQueryService,
-      $http));
+      qwHttp));
   }
 }
 
@@ -46,7 +46,7 @@ function getQwImportService(
   mnPermissions,
   qwDialogService,
   qwQueryService,
-  $http) {
+  qwHttp) {
 
   var qis = {};
 

@@ -3,7 +3,7 @@
 
 import {Injectable} from "@angular/core";
 import {MnPermissions, MnPools, MnPoolDefault} from 'ajs.upgraded.providers';
-import {$http} from './qw.http.js';
+import {QwHttp} from './qw.http.js';
 
 export {QwValidateQueryService};
 
@@ -20,17 +20,17 @@ class QwValidateQueryService {
       MnPools,
       MnPermissions,
       MnPoolDefault,
-      $http
+      QwHttp
     ]
   }
 
-  constructor(mnPools, mnPermissions, mnPoolDefault, $http) {
-    Object.assign(this, getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http));
+  constructor(mnPools, mnPermissions, mnPoolDefault, qwHttp) {
+    Object.assign(this, getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp));
   }
 }
 
 
-function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
+function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp) {
   mnPools.get().then(function () {
     _isEnterprise = mnPools.export.isEnterprise;
   });
@@ -133,7 +133,7 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, $http) {
     else
       queryData = {statement: "select keyspaces.name from system:keyspaces;"};
 
-    $http.post("/_p/query/query/service", queryData)
+    qwHttp.post("/_p/query/query/service", queryData)
       .then(function success(resp) {
           //var data = resp.data, status = resp.status;
           //console.log("Got bucket list data: " + JSON.stringify(resp).substring(0,10) + " with callbacks: " + _callbackList.length);
