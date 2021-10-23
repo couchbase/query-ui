@@ -2,7 +2,7 @@ import {QwDialogService} from '../angular-directives/qw.dialog.service.js';
 import {QwQueryService} from './qw.query.service.js';
 import {QwHttp} from './qw.http.js';
 import _ from 'lodash';
-import {MnPermissions, MnAlertsService} from 'ajs.upgraded.providers';
+import {MnPermissions, MnAlerts} from 'ajs.upgraded.providers';
 
 export {QwImportService};
 
@@ -15,7 +15,7 @@ class QwImportService {
 
   static get parameters() {
     return [
-      MnAlertsService,
+      MnAlerts,
       MnPermissions,
       QwDialogService,
       QwQueryService,
@@ -24,13 +24,13 @@ class QwImportService {
   }
 
   constructor(
-    mnAlertsService,
+    mnAlerts,
     mnPermissions,
     qwDialogService,
     qwQueryService,
     qwHttp) {
     Object.assign(this, getQwImportService(
-      mnAlertsService,
+      mnAlerts,
       mnPermissions,
       qwDialogService,
       qwQueryService,
@@ -42,7 +42,7 @@ class QwImportService {
 // so that they can continue to run even if the user navigates away to a different part of the UI
 
 function getQwImportService(
-  mnAlertsService,
+  mnAlerts,
   mnPermissions,
   qwDialogService,
   qwQueryService,
@@ -151,7 +151,7 @@ function getQwImportService(
       if (docText.length > maxDocSize) {
         qis.options.last_import_status = "Import Error at Document " + docNum + ", GUI can't import documents " +
           maxDocSizeMB + "MiB or larger, use cbimport.";
-        mnAlertsService.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
+        mnAlerts.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
         qis.options.importing = false;
         return;
       }
@@ -171,7 +171,7 @@ function getQwImportService(
               if (resp.data.errors.length > 5) // avoid super long error messages
                 resp.data.errors.length = 5;
               qis.options.last_import_status = "Error importing documents: " + JSON.stringify(resp.data.errors);
-              mnAlertsService.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
+              mnAlerts.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
               //console.log(query.substr(0,250));
               qis.options.importing = false;
             } else {
@@ -183,7 +183,7 @@ function getQwImportService(
               // otherwise done with import
               else {
                 qis.options.importing = false;
-                mnAlertsService.formatAndSetAlerts(qis.options.last_import_status,'success');
+                mnAlerts.formatAndSetAlerts(qis.options.last_import_status,'success');
                 resetOptions();
               }
             }
@@ -203,7 +203,7 @@ function getQwImportService(
             else
               qis.options.last_import_status = "unknown status from server.";
 
-            mnAlertsService.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
+            mnAlerts.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,'error');
           });
         return;
       }
