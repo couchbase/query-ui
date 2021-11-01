@@ -796,7 +796,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     // programatically open up the JSON results search dialog
     //
 
-    var config = require("ace/config" );
+    var config = ace.require("ace/config" );
     function aceSearchOutput() {
       config.loadModule("ace/ext/cb-searchbox",
         function(e) {e.Search(qc.outputEditor)});
