@@ -2106,15 +2106,17 @@ function getQwQueryService(
     return runAdvise(getCurrentResult().query, getCurrentResult())
     .then(
       function success(resp) {
-        if (query.advice == initialAdvice)
+        if (query.advice == initialAdvice) {
           query.data = {adviseResult: resp};
+          query.advice = resp;
+        }
         else
           query.data = {adviseResult: query.advice};
 
         query.result = JSON.stringify(query.data, null, 2);
 
         if (_.isString(query.advice))
-          query.status = "error";
+          query.status = "advise error";
         else
           query.status = "success";
 
@@ -2124,7 +2126,7 @@ function getQwQueryService(
         query.advice = 'Error generating query advice';
         if (resp.data && resp.data.errors)
           query.advice += ": " + JSON.stringify(resp.data.errors);
-        query.result = "Error getting advice."
+        query.result = query.advice;
         query.data = {adviseResult: query.result};
         query.status = "advise error";
         finishQuery(query);
@@ -2135,7 +2137,7 @@ function getQwQueryService(
   function runAdvise(queryText, queryResult) {
     queryResult.lastRun = new Date();
 
-    var queryIsAdvisable = /^\s*select|merge|update|delete/gi.test(queryText);
+    var queryIsAdvisable = /^\s*(select|merge|update|delete)/gi.test(queryText);
 
     if (queryIsAdvisable && !multipleQueries(queryText)) {
       var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options, null, null, queryResult);
@@ -2151,7 +2153,7 @@ function getQwQueryService(
       else
         advise_promise = qwHttp(advise_request);
 
-      advise_promise
+      return advise_promise
         .then(function success(resp) {
             var data = resp.data, status = resp.status;
             //
@@ -2196,10 +2198,8 @@ function getQwQueryService(
                 queryResult.advice += ", " + err.msg;
               });
 
-            return (Promise.resolve()); // don't want to short circuit resolution of other promises
+            return (Promise.resolve('advise failed')); // don't want to short circuit resolution of other promises
           });
-
-      return advise_promise;
     }
 
     return (Promise.resolve("Query is not advisable"));
