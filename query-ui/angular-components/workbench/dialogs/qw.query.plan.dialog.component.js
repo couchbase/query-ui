@@ -5,7 +5,7 @@ import { CommonModule }               from '@angular/common';
 
 import { QwQueryPlanService }         from '../../../angular-services/qw.query.plan.service.js';
 
-import _                              from "/ui/web_modules/lodash.js";
+import _                              from "lodash";
 
 export { QwQueryPlanDialog };
 

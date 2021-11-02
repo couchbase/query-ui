@@ -1,4 +1,4 @@
-import ace                            from 'ace';
+import ace                            from 'ace/ace';
 import _                              from 'lodash';
 import {MnLifeCycleHooksToStream}     from 'mn.core';
 import {Component,
