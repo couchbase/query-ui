@@ -129,7 +129,7 @@ class QwDialogService {
               var promise = This.showDocEditorDialog(readonly,header,docId,js_beautify(docInfo.json,{"indent_size": 2}),
                                                      JSON.stringify(docInfo.meta,null,2),false);
               if (readonly)    // no editing
-                return(promise);
+                return(promise.then(()=>Promise.resolve("done"),()=>Promise.resolve("done")));
 
               return promise.then(
                 function close(result) { // used clicked o.k, save document
@@ -187,10 +187,11 @@ class QwDialogService {
   // qwDialogService.showNoticeDialog("Warning","You selected a large file, it may take some time to load")
   //   .then(function close(result)   {console.log("User hit OK, 'result' is value entered by the user");})
   //
-  showNoticeDialog(header_message, body_message) {
+  showNoticeDialog(header_message, body_message, body_message_array) {
     this.dialogRef = this.modalService.open(QwNoticeDialog);
     this.dialogRef.componentInstance.header_message = header_message;
     this.dialogRef.componentInstance.body_message = body_message;
+    this.dialogRef.componentInstance.body_message_array = body_message_array;
     return(this.dialogRef.result);
   }
 

@@ -6,9 +6,9 @@
     <div class="panel-content">
       <div class="row">
       <span class="flex-grow-3">
-        <div ng-if="detail">{{body_message}}</div>
-        <ul class="nobullet" ng-if="body_message_array">
-            <li ng-repeat="msg in body_message_array">{{msg}}</li>
+        <div *ngIf="body_message">{{body_message}}</div>
+        <ul class="nobullet" *ngIf="body_message_array">
+            <li *ngFor="let msg of body_message_array">{{msg}}</li>
         </ul>
       </span>
       </div>
