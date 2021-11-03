@@ -166,14 +166,14 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp) 
     _bucketStatsList = [];
 
     // stats perms
-    _clusterStatsAllowed = (perms && perms.stats && perms.stats.read);
+    _clusterStatsAllowed = perms.collection['.:.:.'].stats.read;
 
     // metadata perms
     _monitoringAllowed = (perms && perms.n1ql && perms.n1ql.meta && perms.n1ql.meta.read);
 
     if (resp && resp.data && resp.data.results && resp.data.results.forEach)
       resp.data.results.forEach(function (bucket) {
-        var bucket_perms = (perms && perms.bucket && perms.bucket[bucket.name] ? perms.bucket[bucket.name] : null);
+        var bucket_perms = perms.collection[bucket.name + ':.:.'];
         // handle case where permissions is unknown - just include all buckets
         if (!bucket_perms) {
           _bucketList.push(bucket.name);
@@ -182,8 +182,9 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp) 
         // otherwise only include buckets that we're allow to query or see stats.
         else {
           //if (bucket_perms.n1ql && bucket_perms.n1ql.select && bucket_perms.n1ql.select.execute)
-            _bucketList.push(bucket.name);
-          if (bucket_perms.stats && bucket_perms.stats.read)
+          _bucketList.push(bucket.name);
+
+          if (bucket_perms.stats.read)
             _bucketStatsList.push(bucket.name);
         }
       });
