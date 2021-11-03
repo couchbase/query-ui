@@ -8,7 +8,7 @@
 
   <div *ngIf="!error">
     <div *ngFor="let element of advice; let $index = index" class="margin-bottom-1">
-      <div *ngIf="element.current_indexes.length > 0">
+      <div *ngIf="element.current_indexes && element.current_indexes.length > 0">
         <h5>Index<span *ngIf="element.current_indexes.length > 1">es</span> Currently Used</h5>
         <p class="margin-bottom-0 indent-1"
            *ngFor="let curIdx of element.current_indexes"
@@ -30,7 +30,6 @@
         <button class="outline" (click)="create_option('covering_indexes',$index)">
           Create & Build Covering Index<span *ngIf="get_covered_indexes(element).length > 1">es</span>
         </button>
-        <br><br>
       </div>
 
       <div

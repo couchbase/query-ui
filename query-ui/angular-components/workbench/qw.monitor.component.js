@@ -31,7 +31,7 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl:  "../_p/ui/query/angular-components/workbench/qw.monitor.html",
+        templateUrl:  new URL("./qw.monitor.html", import.meta.url).pathname,
         //styleUrls: ["../../angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })

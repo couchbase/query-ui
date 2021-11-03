@@ -31,7 +31,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl: "/_p/ui/query/angular-components/workbench/qw.query.html",
+        templateUrl: new URL("./qw.query.html", import.meta.url).pathname,
         //styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })
@@ -92,6 +92,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     this.uiRouter = uiRouter;
     this.element = element;
     this.QwDialogService = qwDialogService;
+    qc.qwDialogService = qwDialogService;
     qc.modalService = ngbModal;
 
     qc.compat = mnPoolDefault.export.compat;
@@ -288,6 +289,14 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.has_prim_buckets = function() {for (var i=0; i < qwQueryService.buckets.length; i++) if (qwQueryService.buckets[i].has_prim) return true; return false;}
     qc.has_sec_buckets = function() {for (var i=0; i < qwQueryService.buckets.length; i++) if (!qwQueryService.buckets[i].has_prim && qwQueryService.buckets[i].has_sec) return true; return false;}
     qc.has_unindexed_buckets = function() {for (var i=0; i < qwQueryService.buckets.length; i++) if (!qwQueryService.buckets[i].has_prim && !qwQueryService.buckets[i].has_sec) return true; return false;}
+
+    //
+    // code for handling when collections need a primary index to run queries
+    //
+
+    qc.needsPrimaryIndex = needsPrimaryIndex;
+    qc.createPrimaryIndex = createPrimaryIndex;
+    qc.canCreateOtherIndexes = canCreateOtherIndexes;
 
     //
     // call the activate method for initialization
@@ -962,7 +971,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         if (_.isArray(parseResults)) for (var i=0; i< parseResults.length; i++) {
           var result = parseResults[i];
           if (result && (result.isUpdate || result.isDelete) && !result.has_where && !result.use_keys) {
-            warningPromise = qwDialogService.showNoticeDialog("Warning",
+            warningPromise = qc.qwDialogService.showNoticeDialog("Warning",
               "Query contains UPDATE/DELETE with no WHERE clause or USE KEYS. Such a query would affect all documents. Proceed anyway?");
             break;
           }
@@ -1253,6 +1262,48 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         }
       }
       return scopes;
+    }
+
+    //
+    // dealing with collections in need of a primary index
+    //
+
+    function needsPrimaryIndex() {
+      var res = qc.lastResult().data;
+      return(_.isArray(res) && res.length > 0 && res[0].code == 4000 &&
+        res[0].msg && res[0].msg.indexOf("CREATE PRIMARY") >= 0);
+    }
+
+    function createPrimaryIndex() {
+      var res = qc.lastResult().data;
+      var createCmd = res[0].msg.substring(res[0].msg.indexOf("CREATE PRIMARY"),
+        res[0].msg.indexOf(" to create a primary index"));
+      if (createCmd && createCmd.length)
+        qc.qwQueryService.executeQueryUtil(createCmd,false)
+          .then(
+            function success(resp) {
+              // bring up a dialog to warn that building indexes may take time.
+              qc.qwDialogService
+                .showNoticeDialog("Creating primary index...","Creating primary index. This will take a moment.",
+                  null,true);
+            },
+            function error(resp)
+            {
+              var message = "Error creating primary index.";
+              var message_details = [];
+              if (resp && resp.config && resp.config.data && resp.config.data.statement)
+                message_details.push(resp.config.data.statement);
+              if (resp && resp.data && resp.data.errors)
+                resp.data.errors.forEach(error => message_details.push(error.msg));
+
+              qc.qwQueryService.showErrorDialog(message,message_details);
+            });
+    }
+
+    // do we have advice indicating other indexes might help?
+    function canCreateOtherIndexes() {
+      var advice = qc.lastResult().advice;
+      return(advice && advice.recommended_indexes && advice.recommended_indexes.indexes);
     }
   }
 

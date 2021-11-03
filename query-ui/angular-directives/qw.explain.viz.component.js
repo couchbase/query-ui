@@ -34,7 +34,7 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-explain-viz",
-      templateUrl: "../_p/ui/query/angular-directives/qw.explain.viz.template.html",
+      templateUrl: new URL("./qw.explain.viz.template.html", import.meta.url).pathname,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],

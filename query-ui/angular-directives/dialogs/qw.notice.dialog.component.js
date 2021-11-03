@@ -9,7 +9,7 @@ class QwNoticeDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "/_p/ui/query/angular-directives/dialogs/qw.notice.dialog.html",
+      templateUrl: new URL("./qw.notice.dialog.html", import.meta.url).pathname,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: ["header_message", "body_message", "body_message_array"],

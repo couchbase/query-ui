@@ -187,11 +187,12 @@ class QwDialogService {
   // qwDialogService.showNoticeDialog("Warning","You selected a large file, it may take some time to load")
   //   .then(function close(result)   {console.log("User hit OK, 'result' is value entered by the user");})
   //
-  showNoticeDialog(header_message, body_message, body_message_array) {
+  showNoticeDialog(header_message, body_message, body_message_array, hide_cancel) {
     this.dialogRef = this.modalService.open(QwNoticeDialog);
     this.dialogRef.componentInstance.header_message = header_message;
     this.dialogRef.componentInstance.body_message = body_message;
     this.dialogRef.componentInstance.body_message_array = body_message_array;
+    this.dialogRef.hide_cancel = hide_cancel;
     return(this.dialogRef.result);
   }
 

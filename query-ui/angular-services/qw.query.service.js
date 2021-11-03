@@ -1391,7 +1391,7 @@ function getQwQueryService(
 
     // make sure that the current query isn't already running
     if (getCurrentResult().busy)
-      return;
+      return(Promise.resolve('query busy, nothing to do'));
 
     getCurrentResult().busy = true;
 
@@ -2081,9 +2081,9 @@ function getQwQueryService(
 
     // if the query already starts with 'advise', run it as a regular query
     if (queryIsAdvise) {
-      executeUserQuery(false);
+      var promise = executeUserQuery(false);
       qwQueryService.selectTab(1);
-      return;
+      return promise;
     }
 
     // if the user edited an already-run query, add the edited query to the end of the history

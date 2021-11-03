@@ -24,7 +24,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl: "../_p/ui/query/angular-components/documents/qw.documents.html",
+        templateUrl: new URL("./qw.documents.html", import.meta.url).pathname,
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
 //        changeDetection: ChangeDetectionStrategy.OnPush

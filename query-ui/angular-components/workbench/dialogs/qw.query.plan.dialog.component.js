@@ -13,7 +13,7 @@ class QwQueryPlanDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "/_p/ui/query/angular-components/workbench/dialogs/qw.query.plan.dialog.html",
+      templateUrl: new URL("./qw.query.plan.dialog.html", import.meta.url).pathname,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: [],

@@ -37,7 +37,7 @@
     <div class="wb-query-editor">
       <!-- Editor "header row" ----------------------------------------------------->
       <div class="wb-query-editor-header"  (click)="qc.handleClick('editor')">
-        <h5>Query Editor</h5>
+        <h5>Query Editor {{TEST_URL}}</h5>
         <span class="wb-history-controls">
           <span
              title="View previous queries & results" (click)="qc.prev()"
@@ -219,39 +219,56 @@
     </div>
 
     <div class="wb-results-wrapper" (click)="qc.handleClick('results')">
-      <div class="wb-results-show-anyway" *ngIf="!qc.showBigDatasets && qc.dataTooBig()">
-        <div [innerHtml]="qc.getBigDataMessage()"> </div>
-        <a (click)="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span class="icon fa-angle-right"></span></a>
+      <div class="wb-results-extra margin-1 text-small" *ngIf="qc.needsPrimaryIndex()">
+        This query needs an index. To lean more click
+        <a target="_blank" href="https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/createindex.html">here</a>.
+        Primary indexes are simple to build but resource intensive and not recommended in production.
+        <br>
+        <button class="outline" (click)="qc.createPrimaryIndex()">
+          Create Primary Index
+        </button>
+        <div *ngIf="qc.canCreateOtherIndexes() && !qc.isSelected(6)">
+          Other indexes may also help this query, click the Advice tab for details.
+        </div>
+        <br>
+
       </div>
+      <div class="wb-normal-results" style="height:100%" *ngIf="!qc.needsPrimaryIndex() || (qc.canCreateOtherIndexes() && qc.isSelected(6))">
+        <div class="wb-results-show-anyway" *ngIf="!qc.showBigDatasets && qc.dataTooBig()">
+          <div [innerHtml]="qc.getBigDataMessage()"></div>
+          <a (click)="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span
+             class="icon fa-angle-right"></span></a>
+        </div>
 
-      <ngx-ace class="wb-results-json"
-               *ngIf="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
-               (ready)="qc.aceOutputLoaded($event)" [(ngModel)]="qc.lastResult().result">
-      </ngx-ace>
+        <ngx-ace class="wb-results-json"
+                 *ngIf="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
+                 (ready)="qc.aceOutputLoaded($event)" [(ngModel)]="qc.lastResult().result">
+        </ngx-ace>
 
-      <div class="wb-results-table"
-           *ngIf="qc.isSelected(2) && qc.lastResult().data">
-        <qw-json-data-table-comp [subject]="qc.result_subject"></qw-json-data-table-comp>
-      </div>
+        <div class="wb-results-table"
+             *ngIf="qc.isSelected(2) && qc.lastResult().data">
+          <qw-json-data-table-comp [subject]="qc.result_subject"></qw-json-data-table-comp>
+        </div>
 
-      <div class="wb-results-chart" *ngIf="qc.isSelected(3)">
-        <qw-json-chart [subject]="qc.result_subject"></qw-json-chart>
-      </div>
+        <div class="wb-results-chart" *ngIf="qc.isSelected(3)">
+          <qw-json-chart [subject]="qc.result_subject"></qw-json-chart>
+        </div>
 
-      <!-- [data]="qc.lastResult().data" -->
+        <!-- [data]="qc.lastResult().data" -->
 
-      <div class="wb-results-explain" *ngIf="qc.isSelected(4) && qc.lastResult().explainResult">
-        <qw-explain-viz [subject]="qc.result_subject"></qw-explain-viz>
-      </div>
+        <div class="wb-results-explain" *ngIf="qc.isSelected(4) && qc.lastResult().explainResult">
+          <qw-explain-viz [subject]="qc.result_subject"></qw-explain-viz>
+        </div>
 
-      <ngx-ace class="wb-results-explain-text" *ngIf="qc.isSelected(5)"
-               (ready)="qc.acePlanLoaded($event)"
-               [(ngModel)]="qc.lastResult().explainResultText">
-      </ngx-ace>
+        <ngx-ace class="wb-results-explain-text" *ngIf="qc.isSelected(5)"
+                 (ready)="qc.acePlanLoaded($event)"
+                 [(ngModel)]="qc.lastResult().explainResultText">
+        </ngx-ace>
 
-      <div class="wb-results-advice" style="overflow:auto" *ngIf="qc.isSelected(6)">
-           <qw-advice-viz [subject]="qc.result_subject">
-           </qw-advice-viz>
+        <div class="wb-results-advice" style="overflow:auto" *ngIf="qc.isSelected(6)">
+          <qw-advice-viz [subject]="qc.result_subject">
+          </qw-advice-viz>
+        </div>
       </div>
     </div>
   </div>

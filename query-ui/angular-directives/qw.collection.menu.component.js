@@ -26,7 +26,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-collection-menu",
-      templateUrl: "../_p/ui/query/angular-directives/qw.collection.menu.html",
+      templateUrl: new URL("./qw.collection.menu.html", import.meta.url).pathname,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],
