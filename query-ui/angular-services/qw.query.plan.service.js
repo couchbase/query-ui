@@ -932,7 +932,7 @@ function getQwQueryPlanService() {
         for (var i = 0; i < plan.keys.length; i++) {
           var parseResults = N1qlParser.parse(plan.keys[i].expr);
           parseResults.forEach(result =>
-            result.all_paths_used.forEach(field => lists.fields[field.join('.')] = true));
+            result.all_paths_used && result.all_paths_used.forEach(field => lists.fields[field.join('.')] = true));
         }
      }
 
@@ -999,7 +999,7 @@ function getQwQueryPlanService() {
     //console.log("Got expr: "+ expression);
     var parseResults = N1qlParser.parse(expression);
     parseResults.forEach(result =>
-      result.all_paths_used.forEach(path => {
+      result.all_paths_used && result.all_paths_used.forEach(path => {
         // mark the bucket (or alias) as used
         var first = path[0];
         var first_alias = lists.aliases.find(alias => alias.as == first);

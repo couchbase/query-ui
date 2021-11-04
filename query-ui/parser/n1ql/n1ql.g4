@@ -927,7 +927,7 @@ c_expr: literal
 	| SELF
 	| param_expr
 	| function_expr
-	| MINUS
+	| MINUS c_expr
 	| case_expr
 	| collection_expr
 	| paren_expr
