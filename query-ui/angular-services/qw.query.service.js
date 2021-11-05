@@ -681,7 +681,6 @@ function getQwQueryService(
       if (!qwQueryService.options.transaction_timeout)
         qwQueryService.options.transaction_timeout = 120;
 
-
     } catch (err) {
       console.log("Error loading state: " + err);
     }
@@ -1440,6 +1439,13 @@ function getQwQueryService(
 
       for (var i = 0; i < queries.length; i++)
         newResult.batch_results.push(newQueryTemplate.clone());
+
+      // if we have a query context, make sure the children have it as well
+      if (newResult.query_context_bucket)
+        newResult.batch_results.forEach(child => {
+          child.query_context_bucket = newResult.query_context_bucket;
+          child.query_context_scope = newResult.query_context_scope;
+        });
 
       newResult.explainResult = "Graphical plans not available for multiple query sequences.";
       queryExecutionPromise = runBatchQuery(newResult, queries, 0, explainOnly);
@@ -2555,7 +2561,17 @@ function getQwQueryService(
   function query_context_bucket_changed() {
     var bucket = qwQueryService.buckets.find(bucket => bucket.id == qwQueryService.getCurrentResult().query_context_bucket);
     if (bucket)
-      updateBucketMetadata(bucket);
+      updateBucketMetadata(bucket)
+        .then(() => {
+          let scopeName = qwQueryService.getCurrentResult().query_context_scope;
+          // make sure we have a valid scope if changing buckets
+          if (!scopeName || !bucket.scopes[scopeName]) {
+            let scopes = Object.keys(bucket.scopes);
+            qwQueryService.getCurrentResult().query_context_scope = scopes.length ? scopes[0] : null;
+          }
+        });
+    else
+      qwQueryService.getCurrentResult().query_context_scope = "";
   }
 
   //

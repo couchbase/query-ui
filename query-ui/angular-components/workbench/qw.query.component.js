@@ -64,6 +64,19 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     this.qc.wbMainWrapper = this.element.nativeElement.querySelector(".insights-sidebar");
   }
 
+  ngAfterViewInit() {
+    // for unknown reasons the context menu is not picking up the value on reload
+    // force it to notice a change by setting to null, then resetting after some amount of time.
+    if (this.qc.lastResult().query_context_bucket) {
+      let cachedBucket = this.qc.lastResult().query_context_bucket;
+      this.qc.lastResult().query_context_bucket = null;
+      setTimeout(() => {
+        this.qc.lastResult().query_context_bucket = cachedBucket;
+      }, 500);
+
+    }
+  }
+
   ngOnDestroy() {
     this.resizeSubscription.unsubscribe();
   }

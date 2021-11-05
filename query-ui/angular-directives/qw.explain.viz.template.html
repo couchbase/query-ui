@@ -2,7 +2,9 @@
   <p *ngIf="dataIsString" class="text-small margin-left-half">{{ data }}</p>
   <p *ngIf="dataIsArray" class="text-small margin-left-half">Graphical plans are not supported for multiple query sequences. Try the plan text view.</p>
   <p *ngIf="(!data || (data && data['No data to display']))" class="text-small margin-left-half">Hit enter to run query</p>
-  <p *ngIf="(data && data.errors)" class="text-small margin-left-half">{{ data.errors }}</p>
+  <div *ngIf="(data && data.errors)">
+    <p *ngFor="let error of data.errors" class="text-small margin-left-half">{{ error.msg }}</p>
+  </div>
 
   <div *ngIf="data && data.analysis">
     <div class="row wb-explain-summary">

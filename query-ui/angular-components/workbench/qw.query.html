@@ -56,18 +56,19 @@
           </span>
         </span>
         <span class="query-context" *ngIf="qc.compat.atLeast70">
+          context
           <select
-             [(ngModel)]="qc.qqs.options.query_context_bucket"
+             [(ngModel)]="qc.lastResult().query_context_bucket"
              (change)="qc.qqs.query_context_bucket_changed()"
              appendToBody="true"
              ngbTooltip="Set a default bucket and scope to use for your queries, so you may write queries with only the collection name."
           >
-            <option value>query context</option>
+            <option [ngValue]="null">unset</option>
             <option *ngFor="let bucket of qc.getContextBuckets()">{{bucket}}</option>
           </select>
           <select
-             *ngIf="qc.qqs.options.query_context_bucket"
-             [(ngModel)]="qc.qqs.options.query_context_scope">
+             *ngIf="qc.lastResult().query_context_bucket"
+             [(ngModel)]="qc.lastResult().query_context_scope">
             <option *ngFor="let name of qc.getContextScopes()">{{name}}</option>
           </select>
         </span>
