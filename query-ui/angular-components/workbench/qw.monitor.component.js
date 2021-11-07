@@ -16,7 +16,7 @@ import { QwValidateQueryService }  from '../../angular-services/qw.validate.quer
 
 import { QwQueryPlanDialog }       from '../../angular-components/workbench/dialogs/qw.query.plan.dialog.component.js';
 
-import {MnPermissions, $rootScope, MnPoolDefault, MnStatisticsNewService,
+import {MnPermissions, $rootScope, MnPoolDefault, MnStatisticsNew,
   MnHelper}                        from 'ajs.upgraded.providers';
 
 import { BehaviorSubject, timer}   from "rxjs";
@@ -46,7 +46,7 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
       MnHelper,
       MnPermissions,
       MnPoolDefault,
-      MnStatisticsNewService,
+      MnStatisticsNew,
       NgbModal,
       NgbModalConfig,
       QwDialogService,
@@ -67,7 +67,7 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
     mnHelper,
     mnPermissions,
     mnPoolDefault,
-    mnStatisticsNewService,
+    mnStatisticsNew,
     ngbModal,
     ngbModalConfig,
     qwDialogService,
@@ -85,7 +85,7 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
       mnHelper,
       mnPermissions,
       mnPoolDefault,
-      mnStatisticsNewService,
+      mnStatisticsNew,
       ngbModal,
       ngbModalConfig,
       qwDialogService,
@@ -107,7 +107,7 @@ function queryMonController (This,
                              mnHelper,
                              mnPermissions,
                              mnPoolDefault,
-                             mnStatisticsNewService,
+                             mnStatisticsNew,
                              ngbModal,
                              ngbModalConfig,
                              qwDialogService,
