@@ -13,7 +13,7 @@ class QwSchemaDisplay extends MnLifeCycleHooksToStream {
     return [
       new Component({
         selector: "qw-schema-display",
-        templateUrl: new URL("./qw.schema.display.html", import.meta.url).pathname,
+        templateUrl: "../_p/ui/query/angular-directives/qw.schema.display.html",
         styleUrls: ["/_p/ui/query/angular-directives/qw.json.chart.css"],
         inputs: [
           "schema",

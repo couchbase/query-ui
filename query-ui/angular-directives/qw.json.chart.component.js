@@ -47,7 +47,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-json-chart",
-      templateUrl: new URL("./qw.json.chart.template.html", import.meta.url).pathname,
+      templateUrl: "../_p/ui/query/angular-directives/qw.json.chart.template.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.json.chart.css"],
       inputs: [
         "subject"

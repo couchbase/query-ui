@@ -12,7 +12,7 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         selector: "qw-advice-viz",
-        templateUrl: new URL("./qw.advice.viz.html", import.meta.url).pathname,
+        templateUrl: "../_p/ui/query/angular-components/workbench/qw.advice.viz.html",
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         inputs: [
           "subject"

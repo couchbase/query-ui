@@ -11,7 +11,7 @@ class QwHistoryDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: new URL("./qw.history.dialog.html", import.meta.url).pathname,
+      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.history.dialog.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: [],

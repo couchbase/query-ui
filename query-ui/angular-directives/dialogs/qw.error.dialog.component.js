@@ -9,7 +9,7 @@ class QwErrorDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: new URL("./qw.error.dialog.html", import.meta.url).pathname,
+      templateUrl: "../_p/ui/query/angular-directives/dialogs/qw.error.dialog.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: ["error_title", "error_detail", "error_detail_array", "hide_cancel"],

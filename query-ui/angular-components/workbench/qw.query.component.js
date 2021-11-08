@@ -31,7 +31,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl: new URL("./qw.query.html", import.meta.url).pathname,
+        templateUrl: "../_p/ui/query/angular-components/workbench/qw.query.html",
         //styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })
