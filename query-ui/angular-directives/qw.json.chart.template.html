@@ -1,11 +1,14 @@
 <div style="height: 100%" >
   <!-- Error messages are JSON, but not an array -->
-  <div *ngIf="!isArray()" class="padding-1 text-small">
+  <div *ngIf="!isArray() && !isError()" class="padding-1 text-small">
     No data to chart. First execute a query.
+  </div>
+  <div *ngIf="isArray() && isError()" class="padding-1 text-small">
+    Query error: {{data[0].msg}}
   </div>
 
   <!-- query results should be an array -->
-  <div *ngIf="isArray()" style="height: 100%">
+  <div *ngIf="isArray() && !isError()" style="height: 100%">
     <div class="row text-small items-top">
       <div class="row flex-wrap flex-left padding-half padding-left-1">
         <span>

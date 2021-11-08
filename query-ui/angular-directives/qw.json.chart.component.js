@@ -928,6 +928,10 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     return(_.isArray(this.data));
   }
 
+  isError() {
+    return(this.result && this.result.status != 'success');
+  }
+
   ten_sample_values(field) {
     var result = '';
     var cnt = 0;
