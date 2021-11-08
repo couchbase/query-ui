@@ -129,8 +129,9 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     qc.rbac = mnPermissions.export;
     qc.queryPermitted = function() {
-      return qc.rbac.cluster.collection['.:.:.'].data.docs.read &&
-        qc.rbac.cluster.collection['.:.:.'].n1ql.select.execute;
+      return (qc.rbac.cluster.collection['.:.:.'].data.docs.read &&
+              qc.rbac.cluster.collection['.:.:.'].n1ql.select.execute) ||
+        qc.rbac.cluster.collection['.:.:.'].n1ql.index.all;
     };
 
     // some functions for handling query history, going backward and forward

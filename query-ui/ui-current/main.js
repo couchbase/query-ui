@@ -27,6 +27,7 @@ angular
     mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!write" ); // needed for Import
     mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read" ); // needed for Documents
     mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute" );
+    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.index!all" );
 
     ace.config.set('basePath','/ui/libs/ace');
 
@@ -46,7 +47,7 @@ angular
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
-      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read",
+      ngShow: "(rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read) || cluster.collection[.:.:.].n1ql.index!all",
       index: 1
     });
 
