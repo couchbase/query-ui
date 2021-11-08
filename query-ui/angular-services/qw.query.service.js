@@ -2512,6 +2512,10 @@ function getQwQueryService(
       return;
 
     var bucketsToInfer = [];
+
+    // clear the known buckets
+    qwQueryService.buckets.length = 0;
+    
     // for those buckets that are valid for querying, add them to the list
     validateQueryService.validBuckets().forEach(bucketName => {
 
