@@ -47,7 +47,7 @@ angular
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
-      ngShow: "(rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read) || cluster.collection[.:.:.].n1ql.index!all",
+      ngShow: "(rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read) || rbac.cluster.collection['.:.:.'].n1ql.index.all",
       index: 1
     });
 
