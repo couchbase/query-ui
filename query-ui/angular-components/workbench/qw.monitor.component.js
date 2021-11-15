@@ -244,9 +244,15 @@ function queryMonController (This,
     return(qmc.options().completed_sort_by == field && !qmc.options().completed_sort_reverse);
   };
 
-  qmc.get_prepared_requests = () =>
-    qmc.monitoring.prepared_requests
-      .sort((a,b) => a[qmc.options().prepared_sort_by].localeCompare(b[qmc.options().prepared_sort_by])*(qmc.options().prepared_sort_reverse ? -1 : 1));
+  qmc.get_prepared_requests = () => qmc.monitoring.prepareds.sort(prepareds_sort_comparison);
+
+  function prepareds_sort_comparison(a,b) {
+    var psb = qmc.options().prepared_sort_by;
+    if (!psb) return 1;
+    // convert values to strings if needed
+    var a_val = (a.hasOwnProperty(psb) ? a[psb] : '') + '', b_val = (b.hasOwnProperty(psb) ? b[psb] : '') + '';
+    return a_val.localeCompare(b_val) * (qmc.options().prepared_sort_reverse ? -1 : 1);
+  }
 
   qmc.update_prepared_sort = function(field) {
     if (qmc.options().prepared_sort_by == field)

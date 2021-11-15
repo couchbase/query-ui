@@ -39,7 +39,7 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],
       inputs: [
-        "data",         // for use with a single query plan
+        "plan",         // for use with a single query plan
         "subject"  // for use with an observable containing a query result
         ],
         //changeDetection: ChangeDetectionStrategy.OnPush
@@ -56,10 +56,13 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
     super();
     this.element = element;
     this.renderer = renderer;
+    this.data = {
+      analysis: {indexes:[], buckets:[], fields:[]},
+    };
+    this.dataIsArray = false;
+    this.dataIsString = false;
     queryService = qwQueryService;
-  }
 
-  ngOnInit() {
     //console.log("Directive ngOnInit, input: " + this.qwExplainViz);
     this.topDown = topDown;
     this.leftRight = leftRight;
@@ -72,6 +75,9 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
     this.zoomOut = zoomOut;
   }
 
+  ngOnInit() {
+  }
+
   ngAfterViewInit() {
     //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
     outerElement = this.element.nativeElement.querySelector('.wb-results-explain');
@@ -82,8 +88,8 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
     if (this.subject)
       this.subscription = this.subject.subscribe(val => this.handleNewData(val));
     // when used in a dialog box, we just get the query plan
-    else if (this.data)
-      this.handleNewData({explainResult: this.data});
+    else if (this.plan)
+      this.handleNewData({explainResult: this.plan});
   }
 
   ngOnDestroy() {
@@ -96,18 +102,21 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
       return;
     }
 
-    this.data = queryResult.explainResult;
-    this.dataIsArray = _.isArray(this.data);
-    this.dataIsString = _.isString(this.data);
-    if (this.data && this.data.analysis) {
-      if (_.isPlainObject(this.data.analysis.indexes))
-        this.data.analysis.indexes = Object.keys(this.data.analysis.indexes);
-      if (_.isPlainObject(this.data.analysis.buckets))
-        this.data.analysis.buckets = Object.keys(this.data.analysis.buckets);
-      if (_.isPlainObject(this.data.analysis.fields))
-        this.data.analysis.fields = Object.keys(this.data.analysis.fields);
+    this.dataIsArray = _.isArray(queryResult.explainResult);
+    this.dataIsString = _.isString(queryResult.explainResult);
+    if (queryResult.explainResult.analysis) {
+      this.data.analysis.indexes.length = 0;
+      this.data.analysis.buckets.length = 0;
+      this.data.analysis.fields.length = 0;
 
-      simpleTree = makeSimpleTreeFromPlanNodes(this.data.plan_nodes,null,"null");
+      if (_.isPlainObject(queryResult.explainResult.analysis.indexes))
+        Object.keys(queryResult.explainResult.analysis.indexes).forEach(index => this.data.analysis.indexes.push(index));
+      if (_.isPlainObject(queryResult.explainResult.analysis.buckets))
+        Object.keys(queryResult.explainResult.analysis.buckets).forEach(bucket => this.data.analysis.buckets.push(bucket));
+      if (_.isPlainObject(queryResult.explainResult.analysis.fields))
+        Object.keys(queryResult.explainResult.analysis.fields).forEach(field => this.data.analysis.fields.push(field));
+
+      simpleTree = makeSimpleTreeFromPlanNodes(queryResult.explainResult.plan_nodes,null,"null");
 
       makeTree(this.element.nativeElement);
     }
