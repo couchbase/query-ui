@@ -8,7 +8,7 @@
 
   <div *ngIf="!error">
     <div *ngFor="let element of advice; let $index = index" class="margin-bottom-1">
-      <div *ngIf="element.current_indexes && element.current_indexes.length > 0">
+      <div *ngIf="element.current_indexes && element.current_indexes.length > 0" class="zero-content">
         <h5>Index<span *ngIf="element.current_indexes.length > 1">es</span> Currently Used</h5>
         <p class="margin-bottom-0 indent-1"
            *ngFor="let curIdx of element.current_indexes"
@@ -22,23 +22,25 @@
       </div>
 
       <div
-         *ngIf="has_covered(element)">
+         *ngIf="has_covered(element)"
+         class="zero-content">
         <h5>Covering Index Recommendations</h5>
         <div class="margin-bottom-1">
-          <p class="margin-bottom-0 indent-1" *ngFor="let stmt of get_covered_indexes(element);">{{stmt}}</p>
+          <p class="margin-bottom-0" *ngFor="let stmt of get_covered_indexes(element);">{{stmt}}</p>
         </div>
-        <button class="outline" (click)="create_option('covering_indexes',$index)">
+        <button (click)="create_option('covering_indexes',$index)">
           Create & Build Covering Index<span *ngIf="get_covered_indexes(element).length > 1">es</span>
         </button>
       </div>
 
       <div
-         *ngIf="get_regular_indexes(element).length > 0">
+         *ngIf="get_regular_indexes(element).length > 0"
+         class="zero-content">
         <h5>Index Recommendations</h5>
         <div class="margin-bottom-1">
-          <p class="margin-bottom-0 indent-1" *ngFor="let stmt of get_regular_indexes(element)">{{stmt}}</p>
+          <p class="margin-bottom-0" *ngFor="let stmt of get_regular_indexes(element)">{{stmt}}</p>
         </div>
-        <button class="outline" (click)="create_option('indexes',$index)">
+        <button (click)="create_option('indexes',$index)">
           Create & Build Index<span *ngIf="get_regular_indexes(element).length > 1">es</span>
         </button>
       </div>
