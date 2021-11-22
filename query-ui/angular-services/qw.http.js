@@ -116,7 +116,7 @@ class QwHttp {
   }
 
   delete(url, config) {
-    config = {};
+    config = config || {};
     config.url = url;
     config.method = 'DELETE';
 

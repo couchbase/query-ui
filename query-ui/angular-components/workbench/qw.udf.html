@@ -1,0 +1,93 @@
+<qw-workbench-subnav></qw-workbench-subnav>
+
+<!-- Function Libraries Table  ************************************  -->
+<h4 class="margin-top-half">Javascript Function Libraries</h4>
+<div class="qm-table-active cbui-table margin-bottom-2">
+  <!-- table wrapper -->
+  <div class="cbui-table-header flex-grow-half padding-left">
+    <!-- table header row, no <section> wrapper -->
+    <span class="cbui-table-cell">name</span>
+    <span class="cbui-table-cell flex-grow-2">definition</span>
+    <span class="cbui-table-cell flex-grow-half"></span>
+  </div>
+
+  <section
+     *ngFor="let lib of qqs.udfLibs">
+    <div class="cbui-tablerow padding-left">
+      <span class="cbui-table-cell">
+        {{lib.name}}
+      </span>
+      <span class="cbui-table-cell flex-grow-2"
+            ngbTooltip="{{lib.content}}"
+            placement="auto"
+            tooltip-append-to-body="true"
+            tooltip-class="break-word">
+      {{lib.content}}
+      </span>
+      <span class="cbui-table-cell text-right flex-grow-half">
+        <a class="margin-right-1" (click)="editLibrary(lib)">edit</a>
+        <a (click)="dropLibrary(lib)">drop</a>
+       </span>
+    </div>
+  </section>
+  <div class="cbui-tablerow padding-left">
+    <a (click)="createLibrary()">+ add function library</a>
+  </div>
+</div>
+
+<!-- Functions Table  ************************************  -->
+<h4>User-Defined Functions</h4>
+<div class="padding-bottom-6">
+  <div class="qm-table-active cbui-table">
+    <!-- table wrapper -->
+    <div class="cbui-table-header padding-left">
+      <!-- table header row, no <section> wrapper -->
+      <span class="cbui-table-cell" (click)="update_function_sort('scope')">namespace
+          <span *ngIf="show_up_caret_function('scope')" class="icon fa-caret-up"></span>
+          <span *ngIf="show_down_caret_function('scope')" class="icon fa-caret-down"></span>
+   </span>
+      <span class="cbui-table-cell" (click)="update_function_sort('name')">function name
+          <span *ngIf="show_up_caret_function('name')" class="icon fa-caret-up"></span>
+          <span *ngIf="show_down_caret_function('name')" class="icon fa-caret-down"></span>
+        </span>
+      <span class="cbui-table-cell flex-grow-half" (click)="update_function_sort('language')">language
+          <span *ngIf="show_up_caret_function('language')" class="icon fa-caret-up"></span>
+          <span *ngIf="show_down_caret_function('language')" class="icon fa-caret-down"></span>
+        </span>
+      <span class="cbui-table-cell flex-grow-2">definition / expression</span>
+      <span class="cbui-table-cell flex-grow-half"></span>
+    </div>
+
+    <section
+       *ngFor="let function of get_sorted_udfs()">
+      <div class="cbui-tablerow padding-left">
+          <span
+             class="cbui-table-cell"
+             ngbTooltip="{{function.identity.bucket}} {{function.identity.scope}}"
+             placement="auto"
+             tooltip-append-to-body="true"
+             tooltip-class="break-word">
+            {{function.identity.bucket}}.{{function.identity.scope}}
+          </span>
+        <span class="cbui-table-cell">
+            {{function.identity.name}}
+          </span>
+        <span class="cbui-table-cell flex-grow-half">
+      {{function.definition['#language']}}
+      <span *ngIf="function.definition.library">({{function.definition.library}})</span>
+    </span>
+        <span class="cbui-table-cell flex-grow-2">
+       {{function.definition.object || function.definition.expression}}
+    </span>
+        <span class="cbui-table-cell text-right flex-grow-half">
+       <a class="margin-right-1" (click)="editFunction(function)">edit</a>
+       <a (click)="dropFunction(function)">drop</a>
+     </span>
+      </div>
+    </section>
+      <div class="cbui-tablerow padding-left">
+        <a (click)="createFunction()">+ add function</a>
+      </div>
+  </div>
+
+</div>

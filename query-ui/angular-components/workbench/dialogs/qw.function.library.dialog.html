@@ -1,0 +1,42 @@
+<form class="forms">
+<div class="dialog-lg dialog-resizable" style="height:80vh">
+  <div class="panel-header">
+    <h2 class="ellipsis">{{header}}</h2>
+    <a class="ui-dialog-titlebar-close modal-close" (click)="activeModal.dismiss('X')">X</a>
+  </div>
+  <div class="alert alert-warning" *ngIf="error_message">{{error_message}}</div>
+  <div class="panel-content" [ngStyle]="{ height: error_message ? 'calc(100% - 120px)' : 'calc(100% - 100px)'}">
+    <div class="row margin-bottom-half">
+      <h4 class="row margin-right-half width-12 max-width-5 flex-left">
+        <span *ngIf="new_lib" class="row flex-left">
+          <label class="margin-right-half nowrap">Library Name:</label>
+          <input type="text" [(ngModel)]="lib_name" [ngModelOptions]="{standalone: true}">
+        </span>
+        <div *ngIf="!new_lib" class="ellipsis">
+          {{lib_name}}
+        </div>
+        <div class="icon fa-search find-icon fix-width-half" (click)="searchDoc()"></div>
+      </h4>
+    </div>
+    <ngx-ace class="doc-ace-editor" (ready)="onMainEditorReady($event)" [(ngModel)]="lib_contents" [ngModelOptions]="{standalone: true}"></ngx-ace>
+  </div>
+  <div class="panel-footer">
+    <a (click)="activeModal.dismiss('cancel')" [hidden]="readonly">
+      Cancel
+    </a>
+    <button
+       [hidden]="readonly"
+       type="submit"
+       [disabled]="errors()"
+       (click)="!errors() && activeModal.close({name: lib_name, content: lib_contents})">
+       Save
+     </button>
+    <button
+       [hidden]="!readonly"
+       type="submit"
+       (click)="activeModal.dismiss('cancel')">
+      Done
+    </button>
+  </div>
+</div>
+</form>

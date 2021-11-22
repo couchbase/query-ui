@@ -319,6 +319,13 @@ function queryMonController (This,
   // when was the data last updated?
   //
 
+  let dateFormat = Intl.DateTimeFormat('en-US',
+    {hour: 'numeric',
+      hourCycle: 'h24',
+      minute: 'numeric',
+      second: 'numeric',
+      timeZoneName: 'short'});
+
   function updatedTime() {
     var result;
     switch (qwQueryService.getMonitoringSelectedTab()) {
@@ -327,13 +334,8 @@ function queryMonController (This,
       case 3: result = qmc.monitoring.prepareds_updated; break;
     }
 
-    if (is(Date, result)) {
-      var minutes = result.getMinutes() > 9 ? result.getMinutes() : "0" + result.getMinutes();
-      var seconds = result.getSeconds() > 9 ? result.getSeconds() : "0" + result.getSeconds();
-      var dateStr = result.toString();
-      var zone = dateStr.substring(dateStr.length-4,dateStr.length-1);
-      result = " " + result.getHours() + ":" + minutes + ":" + seconds + " " + zone;
-    }
+    if (is(Date, result))
+      result = dateFormat.format(result);
 
     return result;
   }

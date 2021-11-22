@@ -1,0 +1,113 @@
+<div class="dialog-med">
+  <div class="panel-header">
+    <h2 class="ellipsis">{{header}}</h2>
+    <a class="ui-dialog-titlebar-close modal-close" (click)="activeModal.dismiss('X')">X</a>
+  </div>
+  <div class="alert alert-warning" *ngIf="error_message">{{error_message}}</div>
+  <div class="panel-content">
+
+    <form class="forms" name="functionForm">
+      <div class="formrow">
+        <label>Function Name</label>
+        <input *ngIf="is_new" type="text" id="name" required name="name" [(ngModel)]="name"
+               [ngModelOptions]="{standalone: true}">
+        <span *ngIf="!is_new">{{name}}</span>
+      </div>
+
+      <div class="formrow">
+        <label>Namespace</label>
+        <select
+           [(ngModel)]="bucket"
+           [disabled]="!is_new"
+           [ngModelOptions]="{standalone: true}"
+           (change)="bucket_changed()">
+          <option [ngValue]="null">global</option>
+          <option *ngFor="let bucket of bucket_list">{{bucket}}</option>
+        </select>
+        <select
+           [hidden]="!bucket"
+           [disabled]="!is_new"
+           [(ngModel)]="scope"
+           [ngModelOptions]="{standalone: true}">
+          <option *ngFor="let scope of scope_list">{{scope}}</option>
+        </select>
+      </div>
+
+      <div class="formrow">
+        <div class="row">
+          <label>Parameters</label>
+          <span>
+            <button type="button" class="outline btn-small" title="Add parameter"
+                    (click)="parameters.push('name'+parameters.length)">+</button>
+            <button type="button" class="outline btn-small" title="Remove parameter" (click)="parameters.splice(-1,1)"
+                    [disabled]="parameters.length < 1">-</button>
+          </span>
+        </div>
+        <div class="row" *ngFor="let param of parameters; let $index = index">
+          <div class="column width-6" style="margin-bottom:.5rem">
+          <span class="input-prepend">
+              <input type="text" name="names_{{$index}}" [(ngModel)]="parameters[$index]"
+                     [ngModelOptions]="{standalone: true}">
+          </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="formrow">
+        <label>Function Type</label>
+        <select [(ngModel)]="function_type" name="function_type" [ngModelOptions]="{standalone: true}">
+          <option value="inline">inline</option>
+          <option value="javascript">javascript</option>
+        </select>
+      </div>
+
+      <div class="formrow" *ngIf="function_type=='javascript'">
+        <label>Javascript Library</label>
+        <select [(ngModel)]="library_name" name="type"
+                [ngModelOptions]="{standalone: true}"
+                [attr.title]="getLibContent()">
+          <option *ngFor="let lib of libraries()">{{lib.name}}</option>
+        </select>
+      </div>
+
+      <div class="formrow" *ngIf="function_type=='javascript'">
+        <label>Library Function Name</label>
+        <input type="text"
+               [(ngModel)]="library_function"
+               [ngModelOptions]="{standalone: true}"
+               placeholder="name of function from the above library"
+               required name="library_function">
+      </div>
+
+      <div class="formrow" *ngIf="function_type=='inline'">
+        <label>Expression</label>
+        <input type="text"
+               [(ngModel)]="expression"
+               [ngModelOptions]="{standalone: true}"
+               placeholder="N1QL expression, e.g. args[0] + 1"
+               required name="expression">
+      </div>
+
+      <div *ngIf="error">
+        <h6 class="label red">Error creating/updating function:</h6>
+        <ngx-ace (ready)="setErrorOptions($event)"
+                 [(ngModel)]="error"
+                 [ngModelOptions]="{standalone: true}"
+        >
+        </ngx-ace>
+
+      </div>
+
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <a (click)="activeModal.dismiss('cancel')">Cancel</a>
+    <button
+       [disabled]="!ok_to_save()"
+       type="submit"
+       (click)="createOrReplaceFunction()">
+      <span>Save Function</span>
+    </button>
+  </div>
+</div>

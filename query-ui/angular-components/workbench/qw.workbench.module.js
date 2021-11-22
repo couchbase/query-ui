@@ -19,6 +19,7 @@ import { NgbModule, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { QwQueryComponent }          from './qw.query.component.js';
 import { QwMonitorComponent }        from './qw.monitor.component.js';
+import { QwUdfComponent }            from './qw.udf.component.js';
 import { QwWorkbenchSubNavComponent }from './qw.workbench.subnav.js';
 import { QwAdviceVizComponent }      from './qw.advice.viz.component.js';
 
@@ -35,6 +36,8 @@ import { QwValidateQueryService } from "../../angular-services/qw.validate.query
 import { QwHttp }                 from '../../angular-services/qw.http.js';
 
 import { QwFileImportDialog }     from '../../angular-components/workbench/dialogs/qw.file.import.dialog.component.js';
+import { QwFunctionDialog }       from '../../angular-components/workbench/dialogs/qw.function.dialog.component.js';
+import { QwFunctionLibraryDialog }from '../../angular-components/workbench/dialogs/qw.function.library.dialog.component.js';
 import { QwUnifiedFileDialog }    from '../../angular-components/workbench/dialogs/qw.unified.file.dialog.component.js';
 import { QwHistoryDialog }        from '../../angular-components/workbench/dialogs/qw.history.dialog.component.js';
 import { QwPrefsDialog }          from '../../angular-components/workbench/dialogs/qw.prefs.dialog.component.js';
@@ -84,6 +87,19 @@ let documentsStates = [
       }
     }
   },
+  {
+    url: '/udf',
+    name: 'app.admin.query.udf',
+    data: {
+      title: "UDFs",  // appears in breadcrumbs in title bar
+      //compat: "atLeast70"    // Cheshire Cat
+    },
+    views: {
+      "main@app.admin": {
+        component: QwUdfComponent
+      }
+    }
+  },
 
 ];
 
@@ -95,9 +111,12 @@ class QwWorkbenchModule {
       entryComponents: [
         QwMonitorComponent,
         QwQueryComponent,
+        QwUdfComponent,
         QwAdviceVizComponent,
         QwWorkbenchSubNavComponent,
         QwFileImportDialog,
+        QwFunctionDialog,
+        QwFunctionLibraryDialog,
         QwHistoryDialog,
         QwPrefsDialog,
         QwQueryPlanDialog,
@@ -106,11 +125,14 @@ class QwWorkbenchModule {
       declarations: [
         QwMonitorComponent,
         QwQueryComponent,
+        QwUdfComponent,
         QwWorkbenchSubNavComponent,
         QwAdviceVizComponent,
 
         // dialog used in the workbench
         QwFileImportDialog,
+        QwFunctionDialog,
+        QwFunctionLibraryDialog,
         QwHistoryDialog,
         QwPrefsDialog,
         QwQueryPlanDialog,

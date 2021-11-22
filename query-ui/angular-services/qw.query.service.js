@@ -27,8 +27,6 @@ import {MnAdminService}         from "mn.admin.service";
 import _                        from 'lodash';
 export {QwQueryService};
 
-var queryServiceCore = null;
-
 class QwQueryService {
   static get annotations() {
     return [
@@ -69,8 +67,10 @@ class QwQueryService {
     qwQueryPlanService,
     validateQueryService) {
 
-    if (!queryServiceCore)
-      queryServiceCore = getQwQueryService(
+    // to reuse the code from AngularJS, we create the service object as before, then assign
+    // all the members to this object.
+    // TODO: bring all those functions and code into this object definition.
+    let queryServiceCore = getQwQueryService(
         mnAdminService,
         mnPendingQueryKeeper,
         mnPermissions,
@@ -218,11 +218,17 @@ function getQwQueryService(
   qwQueryService.buckets = [];
   qwQueryService.bucket_names = [];
   qwQueryService.indexes = [];
+  qwQueryService.udfs = [];
+  qwQueryService.udfLibs = [];
   qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
   qwQueryService.updateBucketCounts = updateBucketCounts;   // get list of buckets
   qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
   qwQueryService.updateBucketMetadata = updateBucketMetadata;
   qwQueryService.updateCountsForBucket = updateCountsForBucket;
+  qwQueryService.updateUDFs = updateUDFs;
+  qwQueryService.updateUDFlibs = updateUDFlibs;
+  qwQueryService.newUDFlib = newUDFlib;
+  qwQueryService.dropUDFlib = dropUDFlib;
 
   qwQueryService.runAdvise = runAdvise;
   qwQueryService.runAdviseOnLatest = runAdviseOnLatest;
@@ -2930,7 +2936,7 @@ function getQwQueryService(
       if (theField.properties)
         markIndexedFields(fieldMap, theField, path + '`' + field_name + '`.');
     });
-  };
+  }
 
   //
   // show an error dialog
@@ -2942,6 +2948,76 @@ function getQwQueryService(
 
   function showWarningDialog(message, details_array) {
     qwDialogService.showErrorDialog("Warning", message, details_array, true);
+  }
+
+  //
+  // Functions for dealing with User-Defined Functions (UDFs)
+  //
+
+  function updateUDFs() {
+    return executeQueryUtil("select functions.* from system:functions", false)
+      .then(function success(resp) {
+          qwQueryService.udfs.length = 0;
+          if (resp.data && resp.data.results)
+            resp.data.results.forEach(udf => qwQueryService.udfs.push(udf));
+        },
+
+        // sanity check - if there was an error put a message in the console.
+        function error(resp) {
+          qwQueryService.udfs.length = 0;
+          console.log("Error getting UDFs: " + JSON.stringify(resp));
+        });
+  }
+
+  function updateUDFlibs() {
+    var userAgent = 'Couchbase Query Workbench';
+    return qwHttp.do({
+      url: "../_p/query/evaluator/v1/libraries/",
+      headers: {
+        'Content-Type': 'application/json', 'ns-server-proxy-timeout':
+          (qwQueryService.options.query_timeout + 1) * 1000,
+        'ignore-401': 'true', 'CB-User-Agent': userAgent, 'isNotForm': 'true'
+      },
+      method: "GET"
+    })
+      .then(function success(resp) {
+          qwQueryService.udfLibs.length = 0;
+          if (resp.data)
+            for (var key in resp.data)
+              qwQueryService.udfLibs.push({name: key, content: resp.data[key]});
+        },
+
+        // sanity check - if there was an error put a message in the console.
+        function error(resp) {
+          qwQueryService.udfLibs.length = 0;
+          console.log("Error getting UDF Libs: " + JSON.stringify(resp));
+        });
+  }
+
+  function newUDFlib(name, contents) {
+    var userAgent = 'Couchbase Query Workbench';
+    return qwHttp.do({
+      url: "../_p/query/evaluator/v1/libraries/" + name,
+      headers: {
+        'Content-Type': 'application/json', 'ns-server-proxy-timeout':
+          (qwQueryService.options.query_timeout + 1) * 1000,
+        'ignore-401': 'true', 'CB-User-Agent': userAgent, 'isNotForm': 'true'
+      },
+      data: contents,
+      method: "POST",
+    });
+  }
+
+  function dropUDFlib(name) {
+    var userAgent = 'Couchbase Query Workbench';
+    return qwHttp.do({
+      url: "../_p/query/evaluator/v1/libraries/" + name,
+      headers: {
+        'Content-Type': 'plain/text','ns-server-proxy-timeout': (qwQueryService.options.query_timeout + 1) * 1000,
+        'ignore-401': 'true', 'CB-User-Agent': userAgent, 'isNotForm': 'true'
+      },
+      method: "DELETE",
+    });
   }
 
   //
