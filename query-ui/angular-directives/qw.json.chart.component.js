@@ -30,6 +30,7 @@ import _                            from 'lodash';
 
 import {min as d3Min, max as d3Max, group as d3Group,extent as d3Extent,
   sum as d3Sum, merge as d3Merge}   from "d3-array";
+import {nest as d3Nest} from "d3-collection";
 import {axisBottom as d3AxisBottom,
   axisLeft as d3AxisLeft }          from "d3-axis";
 import {select as d3Select, event as d3Event,
@@ -233,7 +234,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         this.field2++;
     }
 
-    if (this.chartType == "scatter" && this.field3 >= 0) {
+    if ((this.chartType == "scatter"|| this.chartType=="groupedline") && this.field3 >= 0) {
       if (!this.field3 || this.field_invalid_for_chart_type(this.field3,3)) {
         this.field3 = 0;
         while (this.field_invalid_for_chart_type(this.field3,3) && this.field3 < this.flat_data[0].length)
@@ -259,9 +260,15 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "xy": this.createXYChart();break;
       case "scatter": this.createScatterChart(); break;
       case "line": this.createLineChart(); break;
+      case "groupedline":
+      case "multiline":
+        this.createGroupedLineChart();
+        break;
+      //case "multiline": this.createMultiLineChart();break;
       case "area": this.createAreaChart(); break;
       case "bar": this.createBarChart(); break;
       case "connscatter": this.createConnScatterChart(); break;
+      case "multiconnscatter": this.createMultiConnScatterChart(); break;
       case "donut": this.createPieChart(true); break;
       case "pie": this.createPieChart(false); break;
       case "gbar": this.createGroupedBarChart(); break;
@@ -286,7 +293,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   // Flatten input data into d3 readable format
   // Here we also type check the data
-  flattenData (numFields) {
+  unflattenData (numFields) {
     // make sure the user selected fields
 
     var Field1 = this.field1,
@@ -304,7 +311,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
     // some charts use every piece of data (x-y, line, etc), others aggregate (pie, donut, bar)
     var aggregation_chart = ["pie","donut","bar","gbar"].indexOf(this.chartType) > -1;
-
     // flatten the data into a data object with x and y values
     // Into data_x for x-axis
     // Into data_y for y-axis
@@ -322,8 +328,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         else if (isDate(tval))
           tval = parseDate(tval);
 
-        // scatter charts with color
-        if (Field3 >= 0 && numFields === 3 && this.chartType == "scatter") {
+        // scatter charts with color and grouped line charts
+        if (Field3 >= 0 && numFields === 3 && (this.chartType == "scatter"|| this.chartType == "groupedline")) {
             // This is for scatter charts
             if (_.isNull(obj[Field3]) == false) {
               // Populate data thats not null only.
@@ -339,9 +345,23 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         }
         // regular scatter charts
         else {
-            data.push({x: tval, y: obj[Field2]});
+          // for multiline we need a separate point for each selected column
+          if (this.chartType == "multiline" || this.chartType == "multiconnscatter") {
+            var t = "";
+            for (let i = 0; i < this.field2_list.length; i++) {
+              data.push({x: tval, y: obj[this.field2_list[i]], z: this.field2_list[i]}); // z is category
+              data_x.push(tval);
+              data_y.push(obj[this.field2_list[i]]);
+              t = this.fields()[this.field2_list[i]];
+              if (data_group.indexOf(t) == -1) {
+                data_group.push(t);
+              }
+            }
+          } else {
             data_x.push(tval);
+            data.push({x: tval, y: obj[Field2]});
             data_y.push(obj[Field2]);
+          }
         }
       }
     });
@@ -386,7 +406,9 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
    }
 
     // before returning data sort data.x for line and area charts
-    if (this.chartType == "line" || this.chartType == "area" || this.chartType == "connscatter") {
+    if (this.chartType == "line" || this.chartType == "area" ||
+        this.chartType == "connscatter" || this.chartType == "groupedline" ||
+        this.chartType == "multiline"|| this.chartType == "multiconnscatter") {
       data.sort((firstItem, secondItem) => firstItem.x - secondItem.x);
     }
 
@@ -518,7 +540,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createXYChart() {
-    var values = this.flattenData(2);
+    var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -542,7 +564,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createScatterChart() {
-    var values = this.flattenData(3);
+    var values = this.unflattenData(3);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -587,8 +609,59 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .text(function(d) { return d; });
   }
 
+  createGroupedLineChart() {
+    var values = this.unflattenData(3);
+    // group the data: I want to draw one line per group
+    var sumstat = d3Nest() // nest function allows to group the calculation per level of a factor
+        .key(function(d) { return d.z;})
+        .entries(values[0]);
+
+    var scale_x = this.createXAxis(values),
+        scale_y = this.createYAxis(values);
+
+    var color = d3ScaleOrdinal()
+        .domain(values[3])
+        .range(d3SchemeTableau10);
+
+    // Draw the line
+    svg.selectAll(".line")
+        .attr("class", "groupedline")
+        .data(sumstat)
+        .enter()
+        .append("path")
+        .attr("fill", "none")
+        .attr("stroke", function(d){ return color(d.key) })
+        .attr("stroke-width", 1.5)
+        .attr("d", function(d){
+          return d3Line()
+              .x(function(d) { return scale_x(d.x); })
+              .y(function(d) { return scale_y(d.y); })
+              ((d.values))
+        })
+
+    var legend = svg.selectAll(".legend")
+        .data(values[3].slice().reverse())
+        .enter()
+        .append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", this.canvas_width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .attr("x", this.canvas_width+5)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "left")
+        .text(function(d) { return d; });
+  }
+
   createLineChart() {
-    var values = this.flattenData(2);
+    var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -606,7 +679,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createConnScatterChart() {
-    var values = this.flattenData(2);
+    var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -640,8 +713,95 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
 
   }
 
+  createMultiConnScatterChart() {
+    var values = this.unflattenData(3);
+
+    // group the data: I want to draw one line per group
+    var sumstat = d3Nest() // nest function allows to group the calculation per level of a factor
+        .key(function(d) { return d.z;})
+        .entries(values[0]);
+
+    var scale_x = this.createXAxis(values),
+        scale_y = this.createYAxis(values);
+
+    var color = d3ScaleOrdinal()
+        .domain(values[3])
+        .range(d3SchemeTableau10);
+
+    // Draw the line
+    svg.selectAll(".line")
+        .attr("class", "connscatter")
+        .data(sumstat)
+        .enter()
+        .append("path")
+        .attr("fill", "none")
+        .attr("stroke", function(d){ return color(d.key) })
+        .attr("stroke-width", 1.5)
+        .attr("d", function(d){
+          return d3Line()
+              .x(function(d) { return scale_x(d.x); })
+              .y(function(d) { return scale_y(d.y); })
+              ((d.values))
+        })
+
+    svg
+        // First we need to enter in a group
+        .selectAll("myDots")
+        .data(sumstat)
+        .enter()
+        .append('g')
+        .style("fill", function(d){ return color(d.key) })
+        // Second we need to enter in the 'values' part of this group
+        .selectAll("myPoints")
+        .data(function(d){ return d.values })
+        .enter()
+        .append("circle")
+        .attr("cx", function(d) { return scale_x(d.x) } )
+        .attr("cy", function(d) { return scale_y(d.y) } )
+        .attr("r", 3)
+        .attr("stroke", "white")
+        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y + "<br/>y: " + d.z)}))
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip);
+
+    /* Draw the dot
+    svg
+        .selectAll('dot')
+        .data(sumstat)
+        .enter().append("circle")
+        .style("fill", function(d){ return color(d.key) })
+        .attr("r",3)
+        .attr("cx", d => scale_x(d.x))
+        .attr("cy", d => scale_y(d.y))
+        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y + "<br/>y: " + d.z)}))
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip);
+
+     */
+
+    var legend = svg.selectAll(".legend")
+        .data(values[3].slice().reverse())
+        .enter()
+        .append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", this.canvas_width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .attr("x", this.canvas_width+5)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "left")
+        .text(function(d) { return d; });
+  }
+
   createAreaChart() {
-    var values = this.flattenData(2);
+    var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -660,7 +820,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createBarChart() {
-    var values = this.flattenData(2);
+    var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -686,7 +846,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createGroupedBarChart() {
-    var values = this.flattenData(4);
+    var values = this.unflattenData(4);
     this.value_count = values[0].length;
 
     var scale_x = this.createXAxis(values),
@@ -773,7 +933,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   }
 
   createPieChart(donut) {
-    var values = this.flattenData(2);
+    var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
     var width = this.canvas_width,
@@ -982,8 +1142,11 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "xy":
       case "scatter":
       case "line":
+      case "groupedline":
+      case "multiline":
       case "area":
       case "connscatter":
+      case "multiconnscatter":
         return("X-Axis");
 
       case "bar":
@@ -1001,6 +1164,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "xy":
       case "scatter":
       case "line":
+      case "groupedline":
       case "area":
       case "connscatter":
         return("Y-Axis");
@@ -1009,8 +1173,12 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "donut":
       case "pie":
         return("Value");
+
       case "gbar":
-        return("Values")
+        return("Bar Values");
+      case "multiline":
+      case "multiconnscatter":
+        return("Y-Values");
     }
     return(null);
   }
@@ -1019,6 +1187,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     switch (this.chartType) {
       case "scatter":
         return("Color");
+      case "groupedline":
+        return("Line per value of");
     }
     return(null);
   }
@@ -1047,6 +1217,8 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "xy":
       case "scatter":
       case "line":
+      case "groupedline":
+      case "multiline":
       case "area":
       case "connscatter":
         switch (entry) {

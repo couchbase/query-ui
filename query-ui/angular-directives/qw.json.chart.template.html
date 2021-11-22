@@ -31,7 +31,10 @@ licenses/APL2.txt.
             <!--option value="xy">X-Y</option-->
             <option value="scatter">X-Y</option>
             <option value="connscatter">Connected Points</option>
+            <option value="multiconnscatter">Multi-Connected Points by Columns</option>
             <option value="line">Line</option>
+            <option value="multiline">Multi-Line by Columns</option>
+            <option value="groupedline">Multi-Line by Values</option>
             <option value="area">Area</option>
             <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
             <option value="bar">Bar</option>
@@ -63,7 +66,7 @@ licenses/APL2.txt.
         </span>
 
 <!-- menu for field2 for everything but grouped bars -->
-        <span *ngIf="chartType != 'gbar'">
+        <span *ngIf="chartType != 'gbar' && chartType != 'multiline' && chartType != 'multiconnscatter'">
           <h6>{{get_field2_label()}}</h6>
           <select
              [(ngModel)]="field2"
@@ -82,8 +85,8 @@ licenses/APL2.txt.
         </span>
 
 <!-- special menu for field2 for everything but grouped bars -->
-        <div *ngIf="chartType == 'gbar'" class="relative">
-          <h6>Values <small class="text-fine">cmd/ctrl + click to multi-select</small></h6>
+        <div *ngIf="chartType == 'gbar' || chartType == 'multiline' || chartType == 'multiconnscatter'" class="relative">
+          <h6>{{get_field2_label()}}<small class="text-fine">cmd/ctrl + click to multi-select</small></h6>
           <select
              [(ngModel)]="field2_list"
              theme="selectize"
@@ -105,7 +108,7 @@ licenses/APL2.txt.
         </div>
 
 <!-- menu for field3 -->
-      <span *ngIf="chartType == 'scatter'">
+      <span *ngIf="chartType == 'scatter' || chartType == 'groupedline'">
         <h6>{{get_field3_label()}}</h6>
         <select
            [(ngModel)]="field3"
