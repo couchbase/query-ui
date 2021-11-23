@@ -32,7 +32,7 @@
                [ngModelOptions]="{standalone: true}">
         <label for="for-auto-format" class="checkbox">Automatically format queries before executing</label>
       </div>
-      <div class="formrow" *ngIf="mode != 'analytics' && isEnterprise">
+      <div class="formrow" *ngIf="mode != 'analytics' && options.isEnterprise">
         <input id="for-cbo" name="cbo" type="checkbox" [(ngModel)]="options.use_cbo"
                [ngModelOptions]="{standalone: true}">
         <label for="for-cbo" class="checkbox">Use Cost-Based Optimizer</label>

@@ -58,10 +58,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     this.resizeObservable = fromEvent(window,'resize');
     this.resizeSubscription = this.resizeObservable.subscribe( evt => this.qc && this.qc.updateEditorSizes && this.qc.updateEditorSizes());
 
-    this.qc.editorElement = this.element.nativeElement.querySelector(".wb-ace-editor");
-    this.qc.loadQuery = this.element.nativeElement.querySelector("#loadQuery");
-    this.qc.insightsSidebar = this.element.nativeElement.querySelector(".insights-sidebar");
-    this.qc.wbMainWrapper = this.element.nativeElement.querySelector(".insights-sidebar");
   }
 
   ngAfterViewInit() {
@@ -75,6 +71,11 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       }, 500);
 
     }
+
+    this.qc.editorElement = this.element.nativeElement.querySelector(".wb-ace-editor");
+    this.qc.loadQuery = this.element.nativeElement.querySelector("#loadQuery");
+    this.qc.insightsSidebar = this.element.nativeElement.querySelector(".insights-sidebar");
+    this.qc.wbMainWrapper = this.element.nativeElement.querySelector(".wb-main-wrapper");
   }
 
   ngOnDestroy() {
@@ -859,6 +860,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     //
 
     var updateEditorSizes = _.debounce(updateEditorSizesInner,100);
+    var minEditorHeight = 66;
 
     function updateEditorSizesInner() {
       var totalHeight = window.innerHeight - 130; // window minus header size
@@ -868,15 +870,15 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       if (qc.inputEditor) {
         // give the query editor at least 3 lines, but it might want more if the query has > 3 lines
         var lines = qc.inputEditor.getSession().getLength();       // how long in the query?
-        var desiredQueryHeight = Math.max(23,(lines-1)*22-11);         // make sure height no less than 23
+        var desiredQueryHeight = Math.max(23,lines*22);         // make sure height no less than 23
 
         // when focused on the query editor, give it up to 3/4 of the total height, but make sure the results
         // never gets smaller than 270
         var maxEditorSize = Math.min(totalHeight*3/4,totalHeight - 270);
 
         // if the user has been clicking on the results, minimize the query editor
-        if (qc.getUserInterest() == 'results')
-          aceEditorHeight = 23;//Math.min(totalHeight/5,desiredQueryHeight); // 1/5 space for editor, more for results
+        if (qc.getUserInterest() == 'results' || desiredQueryHeight < minEditorHeight)
+          aceEditorHeight = minEditorHeight;
         else
           aceEditorHeight = Math.min(maxEditorSize,desiredQueryHeight);      // don't give it more than it wants
 
@@ -1198,16 +1200,16 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     function toggleAnalysisSize() {
       if (!qc.analysisExpanded) {
-        qc.insightsSidebar.removeClass("width-3");
-        qc.insightsSidebar.addClass("width-6");
-        qc.wbMainWrapper.removeClass("width-9");
-        qc.wbMainWrapper.addClass("width-6")
+        qc.insightsSidebar.classList.remove("width-3");
+        qc.insightsSidebar.classList.add("width-6");
+        qc.wbMainWrapper.classList.remove("width-9");
+        qc.wbMainWrapper.classList.add("width-6")
       }
       else {
-        qc.insightsSidebar.removeClass("width-6");
-        qc.insightsSidebar.addClass("width-3");
-        qc.wbMainWrapper.removeClass("width-6");
-        qc.wbMainWrapper.addClass("width-9");
+        qc.insightsSidebar.classList.remove("width-6");
+        qc.insightsSidebar.classList.add("width-3");
+        qc.wbMainWrapper.classList.remove("width-6");
+        qc.wbMainWrapper.classList.add("width-9");
       }
       qc.analysisExpanded = !qc.analysisExpanded;
     }
@@ -1217,17 +1219,17 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     function toggleFullscreen() {
       if (!qc.fullscreen) {
-        qc.insightsSidebar.removeClass("width-3");
-        qc.insightsSidebar.addClass("fix-width-0");
-        qc.wbMainWrapper.removeClass("width-9");
-        qc.wbMainWrapper.addClass("width-12");
+        qc.insightsSidebar.classList.remove("width-3");
+        qc.insightsSidebar.classList.add("fix-width-0");
+        qc.wbMainWrapper.classList.remove("width-9");
+        qc.wbMainWrapper.classList.add("width-12");
         mnPoolDefault.setHideNavSidebar(true);
       }
       else {
-        qc.insightsSidebar.removeClass("fix-width-0");
-        qc.insightsSidebar.addClass("width-3");
-        qc.wbMainWrapper.removeClass("width-12");
-        qc.wbMainWrapper.addClass("width-9");
+        qc.insightsSidebar.classList.remove("fix-width-0");
+        qc.insightsSidebar.classList.add("width-3");
+        qc.wbMainWrapper.classList.remove("width-12");
+        qc.wbMainWrapper.classList.add("width-9");
         mnPoolDefault.setHideNavSidebar(false);
       }
       qc.fullscreen = !qc.fullscreen;
