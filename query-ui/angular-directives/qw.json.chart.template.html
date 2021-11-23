@@ -10,13 +10,13 @@
   <!-- query results should be an array -->
   <div *ngIf="isArray() && !isError()" style="height: 100%">
     <div class="row text-small items-top">
-      <div class="row flex-wrap flex-left padding-half padding-left-1">
+      <div class="row flex-wrap items-top flex-left padding-half padding-left-1">
         <span>
           <h6>Chart Type</h6>
           <select
              [(ngModel)]="chartType"
              theme="selectize"
-             class="cbui-select margin-right-1 margin-bottom-half text-smaller"
+             class="cbui-select margin-right-1 margin-bottom-half text-smaller max-width-3"
              (change)="createChart()">
             <!--option value="xy">X-Y</option-->
             <option value="scatter">X-Y</option>
@@ -39,7 +39,7 @@
           <select
              [(ngModel)]="field1"
              theme="selectize"
-             class="cbui-select margin-right-1 margin-bottom-half text-smaller"
+             class="cbui-select margin-right-1 margin-bottom-half text-smaller max-width-3"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -58,7 +58,7 @@
           <select
              [(ngModel)]="field2"
              theme="selectize"
-             class="cbui-select margin-right-1 margin-bottom-half text-smaller"
+             class="cbui-select margin-right-1 margin-bottom-half text-smaller max-width-3"
              (change)="createChart()">
             <option
                [attr.title]="ten_sample_values(i)"
@@ -72,15 +72,16 @@
         </span>
 
 <!-- special menu for field2 for everything but grouped bars -->
-        <div *ngIf="chartType == 'gbar'" style="align-self: start;" class="margin-right-1">
-          <h6>Values <small>shift + click to multi-select</small></h6>
+        <div *ngIf="chartType == 'gbar'" class="relative">
+          <h6>Values <small class="text-fine">cmd/ctrl + click to multi-select</small></h6>
           <select
              [(ngModel)]="field2_list"
              theme="selectize"
-             class="cbui-select text-smaller"
+             class="cbui-select text-smaller max-width-3"
              (change)="createChart()"
              multiple
-             style="position: absolute;width: fit-content;">
+             size="3"
+             style="position: absolute;width: 100%;">
             <option
                [attr.title]="ten_sample_values(i)"
                class="ui-select-choices"
@@ -99,7 +100,7 @@
         <select
            [(ngModel)]="field3"
            theme="selectize"
-           class="cbui-select margin-right-1 margin-bottom-half  text-smaller"
+           class="cbui-select margin-bottom-half text-smaller max-width-3"
            (change)="createChart()">
           <option [value]="-1">none</option>
           <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
@@ -112,13 +113,16 @@
             {{field}} - {{get_types(i)}}
           </option>
         </select>
-        </span>
-        <div><span *ngIf="value_count > -1">{{value_count}} / </span>{{data.length}} documents</div>
-      </div>
+      </span>
+    </div>
 
-<!-- download -->
-      <a (click)="saveChart()" class="icon fa-download margin-1" title="Download chart as SVG"></a>
-      </div>
+<!-- docs count after chart selections -->
+    <p class="text-smaller margin-1">
+      <span *ngIf="value_count > -1">{{value_count}} / </span>{{data.length}} documents
+    </p>
+<!-- download chart as SVG -->
+    <span (click)="saveChart()" class="icon fa-download icon-clickable" title="Download chart as an SVG image"></span>
+  </div>
 
-    <div class="chart-d3-wrapper" style="height: calc(100% - 60px)"></div>
+  <div class="chart-d3-wrapper" style="height: calc(100% - 60px)"></div>
 </div>
