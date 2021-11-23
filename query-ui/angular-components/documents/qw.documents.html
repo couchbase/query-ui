@@ -174,8 +174,8 @@ licenses/APL2.txt.
   <div class="row resp-sml margin-bottom-half"   *ngIf="!dec.options.queryBusy && dec.options.selected_bucket && dec.options.current_query.length > 0">
     <div class="text-small resp-margin-sml">
       <strong>
-        <span *ngIf="dec.resultSize()">{{dec.resultSize()}}</span>
-        <span *ngIf="!dec.resultSize()">No </span>
+        <span *ngIf="dec.tableHasRows()">{{dec.resultSize()}}</span>
+        <span *ngIf="!dec.tableHasRows()">No </span>
        Results for&nbsp;</strong> <em>{{dec.options.current_query}}</em>
     </div>
     <div class="row text-small margin-right-half resp-margin-sml nowrap">

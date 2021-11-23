@@ -24,6 +24,7 @@ import {QwCollectionsService}   from '../../angular-services/qw.collections.serv
 import {QwFixLongNumberService} from "../../angular-services/qw.fix.long.number.service.js";
 import {QwQueryService}         from "../../angular-services/qw.query.service.js";
 import {QwValidateQueryService} from "../../angular-services/qw.validate.query.service.js";
+import {QwConstantsService}     from '../../angular-services/qw.constants.service.js';
 import {QwHttp}                 from '../../angular-services/qw.http.js';
 
 import {QwDialogService}        from '../../angular-directives/qw.dialog.service.js';
@@ -52,6 +53,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       QwFixLongNumberService,
       QwQueryService,
       QwValidateQueryService,
+      QwConstantsService,
       UIRouter,
       QwHttp
     ];
@@ -100,6 +102,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     qwFixLongNumberService,
     qwQueryService,
     validateQueryService,
+    qwConstantsService,
     uiRouter,
     qwHttp) {
     super();
@@ -158,6 +161,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (_.isArray(dec.options.current_result))
         return dec.options.current_result.length;
       else return null;
+    };
+    dec.tableHasRows = function () {
+      if (_.isArray(dec.options.current_result)) {
+        return dec.options.current_result.find(row => row.data !== qwConstantsService.docNotFoundError);
+      }
+      return false;
     };
 
     dec.how_to_query = how_to_query;
@@ -970,7 +979,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           var message = JSON.stringify(resp.status);
           if (resp.statusText)
             message += " - " + resp.statusText;
-          dec.options.current_result[position].data = "ERROR: Document not found.";
+          dec.options.current_result[position].data = qwConstantsService.docNotFoundError;
           showErrorDialog("Error with document: " + idArray[position],  message, true);
         }
 

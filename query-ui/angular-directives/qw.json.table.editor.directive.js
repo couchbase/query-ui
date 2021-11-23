@@ -47,6 +47,8 @@ import {
 
 import {MnPermissions} from 'ajs.upgraded.providers';
 
+import {QwConstantsService} from '../angular-services/qw.constants.service.js';
+
 import {FormsModule} from '@angular/forms';
 import {MnLifeCycleHooksToStream} from 'mn.core';
 import {CommonModule} from '@angular/common';
@@ -79,14 +81,16 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
       Compiler,
       ViewContainerRef,
       MnPermissions,
+      QwConstantsService
     ]
   }
 
-  constructor(changeDetectorRef,compiler, vcr, mnPermissions) {
+  constructor(changeDetectorRef,compiler, vcr, mnPermissions, qwConstantsService) {
     super();
     this.cdr = changeDetectorRef;
     this.compiler = compiler;
     this.mnPermissions = mnPermissions.export;
+    this.qwConstantsService = qwConstantsService;
   }
 
   // the table editor is dynamically created HTML that needs to use angular functions,
@@ -542,7 +546,7 @@ function makeHTMLTopLevel() {
   // we expect an array of objects, which we turn into an HTML table.
 
   // if the array is empty, say so
-  if (!_.isArray(tdata) || tdata.length == 0)
+  if (!_.isArray(tdata) || tdata.length == 0 || !tdata.find(row => row.data !== This.qwConstantsService.docNotFoundError))
     return ('<p class="error">No Results</p>');
 
   var topLevelKeys = meta.topLevelKeys;

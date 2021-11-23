@@ -96,6 +96,10 @@ function getQwConstantsService() {
   qwConstantsService.showOptions = true;
 
   //
+  // Error result of searching a document with a non-existing ID
+  qwConstantsService.docNotFoundError = "ERROR: Document not found.";
+
+  //
   //
   // all done creating the service, now return it
   //
