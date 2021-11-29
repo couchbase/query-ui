@@ -11,7 +11,7 @@
         <label for="for-collect-timings" class="checkbox inline margin-right-zero">Collect query timings</label>
         <span
            class="fa-stack icon-info"
-           uib-tooltip="Collects per-operator query timings during query execution and displays them in the query plan. This preference is ON by default.">
+           ngbTooltip="Collects per-operator query timings during query execution and displays them in the query plan. This preference is ON by default.">
            <span class="icon fa-circle-thin fa-stack-2x"></span>
            <span class="icon fa-info fa-stack-1x"></span>
         </span>
@@ -22,7 +22,7 @@
         <label for="for-auto-infer" class="checkbox inline margin-right-zero">Automatically infer bucket schemas</label>
         <span
            class="fa-stack icon-info"
-           uib-tooltip="When you launch the query workbench, automatically infer bucket schemas to make field names available for autocompletion. In some cases this may impact server performance.">
+           ngbTooltip="When you launch the query workbench, automatically infer bucket schemas to make field names available for autocompletion. In some cases this may impact server performance.">
            <span class="icon fa-circle-thin fa-stack-2x"></span>
            <span class="icon fa-info fa-stack-1x"></span>
         </span>
@@ -43,7 +43,7 @@
         <label for="for-dont-save" class="checkbox inline margin-right-zero">Don't save query history</label>
          <span
             class="fa-stack icon-info"
-            uib-tooltip="Disables auto-saving query history to local storage in your browser. This is a consideration for shared machines. When selected, any query history will be lost if you leave or refresh the Query Workbench.">
+            ngbTooltip="Disables auto-saving query history to local storage in your browser. This is a consideration for shared machines. When selected, any query history will be lost if you leave or refresh the Query Workbench.">
             <span class="icon fa-circle-thin fa-stack-2x"></span>
             <span class="icon fa-info fa-stack-1x"></span>
          </span>
@@ -74,38 +74,50 @@
         <div class="row">
           <label>Positional Parameters</label>
           <span>
-            <button type="button" class="outline btn-small" title="Add a parameter" (click)="options.positional_parameters.push('')">+</button>
-            <button type="button" class="outline btn-small" title="Remove parameter" (click)="options.positional_parameters.splice(-1,1)" [disabled]="options.positional_parameters.length < 1">-</button>
+            <button type="button" class="outline btn-small" title="Add a parameter"
+                    (click)="addPosParam(options.positional_parameters.length)">+</button>
+            <button type="button" class="outline btn-small" title="Remove parameter"
+                    (click)="removePosParam()"
+                    [disabled]="options.positional_parameters.length < 1">-</button>
           </span>
         </div>
-          <div style="margin:.5rem 0;" *ngFor="let param of options.positional_parameters; let $index = index">
+        <div style="margin:.5rem 0;" *ngFor="let param of options.positional_parameters; let $index = index; trackBy:trackByFn">
             <span class="input-prepend">
               ${{$index + 1}} = &nbsp;
-              <input type="text" name="position_{{$index}}" [(ngModel)]="options.positional_parameters[$index]" qw-valid-json
-                     [ngModelOptions]="{standalone: true}">
             </span>
-          </div>
+
+          <input type="text" name="position_{{$index}}" id="pwd"
+                 formControlName="position_{{$index}}"
+                 [ngClass]="{'ng-invalid-number': prefsForm.get('position_'+$index).invalid}">
+        </div>
       </div>
+
       <div class="formrow">
         <div class="row">
           <label>Named Parameters</label>
           <span>
-            <button type="button" class="outline btn-small" title="Add parameter" (click)="options.named_parameters.push({name:'',value:''})" >+</button>
-            <button type="button" class="outline btn-small" title="Remove parameter" (click)="options.named_parameters.splice(-1,1)" [disabled]="options.named_parameters.length < 1">-</button>
+            <button type="button" class="outline btn-small" title="Add parameter"
+                    (click)="addNamedParam(options.named_parameters.length)">+</button>
+            <button type="button" class="outline btn-small" title="Remove parameter"
+                    (click)="removeNamedParam()"
+                    [disabled]="options.named_parameters.length < 1">-</button>
           </span>
         </div>
         <div class="row" *ngFor="let param of options.named_parameters; let $index = index">
           <div class="column width-6" style="margin-bottom:.5rem">
             <label>name</label>
             <span class="input-prepend">
-              <input type="text" name="names_{{$index}}" [(ngModel)]="options.named_parameters[$index].name"
-                     [ngModelOptions]="{standalone: true}">
+              <input type="text" name="names_{{$index}}" id="pwd"
+                     formControlName="names_{{$index}}"
+                     pattern="^[\w\$]+$" required
+                     [ngClass]="{'ng-invalid-number': prefsForm.get('names_'+$index).invalid}">
             </span>
           </div>
           <div class="column width-6" style="margin-bottom:.5rem">
             <label>value</label>
-            <input type="text" name="named_val_{{$index}}" [(ngModel)]="options.named_parameters[$index].value"
-                   [ngModelOptions]="{standalone: true}" qw-valid-json>
+            <input type="text" name="values_{{$index}}"
+                   formControlName="values_{{$index}}"
+                   [ngClass]="{'ng-invalid-number': prefsForm.get('values_'+$index).invalid}">
           </div>
         </div>
       </div>

@@ -1875,9 +1875,6 @@ function getQwQueryService(
               result = {status: "Query stopped on server."};
             }
 
-            if (_.isString(newResult.warnings))
-              newResult.warnings = newResult.warnings.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
-
             // if we got no metrics, create a dummy version
             if (!data.metrics) {
               data.metrics = {elapsedTime: "0.0s", executionTime: "0.0s", resultCount: 0, resultSize: "0"};
@@ -2515,7 +2512,7 @@ function getQwQueryService(
 
     // clear the known buckets
     qwQueryService.buckets.length = 0;
-    
+
     // for those buckets that are valid for querying, add them to the list
     validateQueryService.validBuckets().forEach(bucketName => {
 

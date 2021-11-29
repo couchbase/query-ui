@@ -194,7 +194,7 @@
            *ngIf="qc.lastResult().warnings"
            class="fa-warning icon force-orange-3 cursor-pointer"
            appendToBody="true"
-           [ngbTooltip]="qc.lastResult().warnings"></span>
+           [ngbTooltip]="qc.lastResult().warnings" container="body"></span>
         <a
            *ngIf="qc.isSelected(1)"
            (click)="qc.aceSearchOutput()"><span class="icon fa-search"></span></a>
