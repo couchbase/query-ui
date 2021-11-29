@@ -1269,12 +1269,12 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     function getContextScopes() {
       var scopes = [];
 
-      if (qc.qqs.options.query_context_bucket) {
-        var bucket = qc.buckets.find(b => b.name == qc.qqs.options.query_context_bucket);
+      if (qc.lastResult().query_context_bucket) {
+        var bucket = qc.buckets.find(b => b.name == qc.lastResult().query_context_bucket);
         if (bucket) {
           bucket.scopeArray.forEach(scope => scopes.push(scope.id));
-          if ((!qc.qqs.options.query_context_scope || scopes.indexOf(qc.qqs.options.query_context_scope) < 0) && scopes.length > 0)
-            qc.qqs.options.query_context_scope = scopes[0];
+          if ((!qc.lastResult().query_context_scope || scopes.indexOf(qc.lastResult().query_context_scope) < 0) && scopes.length > 0)
+            qc.lastResult().query_context_scope = scopes[0];
         }
       }
       return scopes;
