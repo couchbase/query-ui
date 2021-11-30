@@ -55,13 +55,11 @@ licenses/APL2.txt.
         </button>
       </div>
       <div
-         *ngIf="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && element.current_indexes.length > 0"
+         *ngIf="existing_indexes_sufficient(element)"
          class="success">
         Existing indexes are sufficient.
       </div>
-      <div
-         *ngIf="get_regular_indexes(element).length == 0 && get_covered_indexes(element).length == 0 && !element.current_indexes.length"
-         class="success">
+      <div *ngIf="no_indexes_possible(element)" class="success">
         {{element.recommended_indexes}}
       </div>
     </div>

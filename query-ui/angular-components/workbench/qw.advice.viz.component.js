@@ -117,6 +117,17 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
     return(indexes);
   }
 
+  // are the existing indexes sufficient?
+  existing_indexes_sufficient(element) {
+    return this.get_regular_indexes(element).length == 0 &&
+      this.get_covered_indexes(element).length == 0 &&
+      element.current_indexes && element.current_indexes.length > 0;
+  }
+
+  no_indexes_possible(element) {
+    return(element && _.isString(element.recommended_indexes));
+  }
+
   // create the recommended indexes
   create_option(type,index) {
     var This = this; // for callbacks
