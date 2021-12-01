@@ -334,12 +334,14 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     //
 
     function dataTooBig() {
-      switch (qwQueryService.outputTab) {
-        case 1: return(qc.lastResult().resultSize / qc.maxAceSize) > 1.1;
-        //case 2: return(qc.lastResult.resultSize / qc.maxTableSize) > 1.1;
-        case 3: return(qc.lastResult().resultSize / qc.maxTreeSize) > 1.1;
-      }
+      if (qwQueryService.isSelected(1))
+        return(qc.lastResult().resultSize / qc.maxAceSize) > 1.1;
+      else if (qwQueryService.isSelected(3))
+        return(qc.lastResult().resultSize / qc.maxTreeSize) > 1.1;
 
+    //case 2: return(qc.lastResult.resultSize / qc.maxTableSize) > 1.1;
+
+      return(false);
     }
 
     //
