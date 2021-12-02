@@ -1360,19 +1360,20 @@ function getQwQueryService(
     var problem_fields = [];
 
     for (var f in fields) {
-      var firstDot = f.indexOf(".");
-      var bucketName = f.substring(0, firstDot);
-      var fieldName = f.substring(firstDot + 1);
+      var lastDot = f.lastIndexOf(".");
+      var collectionName = f.substring(0, lastDot);
+      var fieldName = f.substring(lastDot + 1);
       //console.log("Checking field: " + f + ", bucket: " + bucketName);
-      var bucket = _.find(qwQueryService.buckets, function (b) {
-        return (b.id == bucketName);
-      });
-      if (bucket) {
-        if (bucket && bucket.schema.length > 0 && !isFieldNameInSchema(bucket.schema, fieldName)) {
-          problem_fields.push({field: fieldName, bucket: bucket.id});
-          //console.log("Field: " + fieldName + " is not o.k.");
-          //console.log("  Got bucket schema: " + JSON.stringify(bucket.schema,null,2));
+      var collection = null;
+      qwQueryService.buckets.forEach(bucket => {
+        if (collectionName.startsWith(bucket.id)) {
+          let coll = bucket.collections.find(coll => collectionName == coll.bucket + '.' + coll.scope + '.' + coll.id);
+          if (coll != null)
+            collection = coll;
         }
+      });
+      if (collection && collection.schema.length > 0 && !isFieldNameInSchema(collection.schema, fieldName)) {
+          problem_fields.push({field: fieldName, bucket: collectionName});
       }
     }
 

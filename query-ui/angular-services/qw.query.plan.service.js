@@ -497,10 +497,10 @@ function getQwQueryPlanService() {
       return(0);
 
     switch (op['#operator']) {
-    case "PrimaryScan":
-    case "IntersectScan":
-      return(2);
-
+      case "PrimaryScan":
+      case "PrimaryScan3":
+      case "IntersectScan":
+        return(2);
     }
 
     return(0);
@@ -949,7 +949,9 @@ function getQwQueryPlanService() {
     //
 
     // for all other operators, certain fields will tell us stuff:
-    //  - keyspace is a bucket name
+    //  - bucket is a bucket name
+    //  - scope is a scope name
+    //  - keyspace is a collection name
     //  - index is an index name
     //  - condition is a string containing an expression, fields there are of the form (`keyspace`.`field`)
     //  - expr is the same as condition
@@ -957,8 +959,13 @@ function getQwQueryPlanService() {
     //  - limit is an expression
     //  - group_keys is an array of fields
 
-    if (plan.keyspace)
-      lists.buckets[plan.keyspace] = true;
+    if (plan.keyspace) {
+      let fullName = plan.bucket + '.' + plan.scope + '.' + plan.keyspace;
+      lists.buckets[fullName] = true;
+      if (plan.as)
+        lists.aliases.push({keyspace: fullName, as: plan.as});
+    }
+
     if (plan.index && plan.keyspace)
       lists.indexes[plan.keyspace + "." + plan.index] = true;
     else if (plan.index)
@@ -974,10 +981,6 @@ function getQwQueryPlanService() {
     if (plan.limit)
       getFieldsFromExpressionWithParser(plan.limit,lists);
 
-    if (plan.as && plan.keyspace) {
-      lists.aliases.push({keyspace: plan.keyspace, as: plan.as});
-      //console.log("Got alias " + plan.as + " for " + plan.keyspace);
-    }
     if (plan.result_terms && _.isArray(plan.result_terms))
       for (var i=0; i< plan.result_terms.length; i++) if (plan.result_terms[i].expr )
         if (plan.result_terms[i].expr == "self" && plan.result_terms[i].star &&
@@ -1011,16 +1014,28 @@ function getQwQueryPlanService() {
     parseResults.forEach(result =>
       result.all_paths_used && result.all_paths_used.forEach(path => {
         // mark the bucket (or alias) as used
-        var first = path[0];
+        var first = stripBackTicks(path[0]);
         var first_alias = lists.aliases.find(alias => alias.as == first);
-        lists.buckets[first_alias || first] = true;
+        if (first_alias)
+          first = first_alias.keyspace;
+        path[0] = first; // replace alias with collection name in path
+        lists.buckets[first] = true;
 
         // mark the fully qualified path as a used field
+        path = path.map(name => stripBackTicks(name));
         lists.fields[path.join('.')] = true;
       })
     );
   }
 
+  // with the advent of collections many names in the query plan have backticks
+  function stripBackTicks(name) {
+    // remove any back ticks
+    if (name.match(/^`.*`$/gi))
+      return name.slice(1,-1);
+    else
+      return name;
+  }
   //
   // convert a duration expression, which might be 3m23.7777s or 234.9999ms or 3.8888s
   // or even 44.999us, to a real time value
