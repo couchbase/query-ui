@@ -960,10 +960,18 @@ function getQwQueryPlanService() {
     //  - group_keys is an array of fields
 
     if (plan.keyspace) {
-      let fullName = plan.bucket + '.' + plan.scope + '.' + plan.keyspace;
+      var fullName;
+      if (plan.bucket)
+        fullName = plan.bucket + '.' + plan.scope + '.' + plan.keyspace;
+      else // old style bucket-name only
+        fullName = plan.keyspace + '._default._default';
+
       lists.buckets[fullName] = true;
+      // the alias for a keyspace is either its keyspace name or the 'as' name
       if (plan.as)
         lists.aliases.push({keyspace: fullName, as: plan.as});
+      else
+        lists.aliases.push({keyspace: fullName, as: plan.keyspace});
     }
 
     if (plan.index && plan.keyspace)
@@ -1008,6 +1016,11 @@ function getQwQueryPlanService() {
   //
 
   function getFieldsFromExpressionWithParser(expression,lists) {
+
+    // we need to ignore expressions as part of 'search_meta' or 'search_score' functions
+    if (expression.toLowerCase().startsWith('search_meta(') ||
+      expression.toLowerCase().startsWith('search_score('))
+      return;
 
     //console.log("Got expr: "+ expression);
     var parseResults = N1qlParser.parse(expression);

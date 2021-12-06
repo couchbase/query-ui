@@ -89,6 +89,11 @@ class myN1qlListener extends n1qlListener {
       this.currentParseResult.stmt = ctx.children[0].ruleIndex;
   }
 
+  // keep track of functions used
+  exitFunction_name(ctx) {
+    this.functions_used.push(ctx.IDENT());
+  }
+
   // Exit a parse tree produced by n1qlParser#use_keys.
   exitUse_keys(ctx) {
     this.currentParseResult.use_keys = true;
@@ -156,6 +161,7 @@ class myParseResult {
   constructor() {
     this.path_expr = [];
     this.all_paths_used = [];
+    this.functions_used = [];
     this.stmt_category = 0; // explain, prepare, advise, execute, or regular stmtm
     this.stmt = 0; // top level statement: select, update, delete, merge, upsert
   }
@@ -228,8 +234,9 @@ function parse(n1ql) {
       currentParseResults.push(currentParseResult);
     }
   } catch (error) {
-    console.log(error.message);
-    console.log(n1ql.substring(0,error.column) + '^^^' + n1ql.substring(error.column+1));
+    // console.log("Error line: " + error.line + ", column: " + error.column + ": " + error.message);
+    // let line = n1ql.split('\n')[error.line-1];
+    // console.log(line.substring(0,error.column) + '^^^' + line.substring(error.column));
     currentParseResults.push(error);
   }
 
