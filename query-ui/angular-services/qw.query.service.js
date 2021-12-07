@@ -2554,8 +2554,9 @@ function getQwQueryService(
           addToken(bucket.id, "bucket");
         addToken('`' + bucket.id + '`', "bucket");
       }
-      // if the bucket is expanded, get the scopes and collections
-      if (bucket.expanded) {
+
+      // if the bucket is expanded, or is the current query context, get the scopes and collections
+      if (bucket.expanded || bucket.id == getCurrentResult().query_context_bucket) {
         if (qwQueryService.compat.atLeast70)
           updateBucketMetadata(bucket);
         else {

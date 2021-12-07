@@ -262,7 +262,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     // error message when result is too large to display
     //
 
-    qc.maxTableSize = 750000;
+    qc.maxTableSize = 104857600;
     qc.maxTreeSize = 750000;
     qc.maxAceSize = 10485760;
     qc.maxSizeMsgTable = {error: "The table view is slow with results sized > " + qc.maxTableSize + " bytes. Try using the JSON view or specifying a lower limit in your query."};
