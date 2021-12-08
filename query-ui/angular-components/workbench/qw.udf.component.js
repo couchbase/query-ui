@@ -1,5 +1,3 @@
-import {is}                        from 'ramda';
-import _                           from 'lodash';
 import {MnLifeCycleHooksToStream}  from 'mn.core';
 import {Component,
   ViewEncapsulation,
@@ -7,23 +5,11 @@ import {Component,
 
 import { NgbModal, NgbModalConfig }from '@ng-bootstrap/ng-bootstrap';
 
-import { QwHttp }                  from '../../angular-services/qw.http.js';
-import { QwImportService }         from '../../angular-services/qw.import.service.js';
 import { QwDialogService }         from '../../angular-directives/qw.dialog.service.js';
 import { QwQueryService }          from '../../angular-services/qw.query.service.js';
-import { QwQueryPlanService }      from '../../angular-services/qw.query.plan.service.js';
-import { QwValidateQueryService }  from '../../angular-services/qw.validate.query.service.js';
 
-import { QwFunctionDialog }       from '../../angular-components/workbench/dialogs/qw.function.dialog.component.js';
-import { QwFunctionLibraryDialog }from '../../angular-components/workbench/dialogs/qw.function.library.dialog.component.js';
-
-import {MnPermissions, $rootScope, MnPoolDefault, MnStatisticsNew,
-  MnHelper}                        from 'ajs.upgraded.providers';
-
-import { BehaviorSubject, timer}   from "rxjs";
-import { switchMap,
-  shareReplay,
-  takeUntil}                       from 'rxjs/operators';
+import { QwFunctionDialog }        from '../../angular-components/workbench/dialogs/qw.function.dialog.component.js';
+import { QwFunctionLibraryDialog } from '../../angular-components/workbench/dialogs/qw.function.library.dialog.component.js';
 
 export {QwUdfComponent};
 
@@ -41,20 +27,9 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
   static get parameters() {
     return [
-      $rootScope,
-      QwHttp,
-      ChangeDetectorRef,
-      MnHelper,
-      MnPermissions,
-      MnPoolDefault,
-      MnStatisticsNew,
       NgbModal,
-      NgbModalConfig,
       QwDialogService,
-      QwImportService,
       QwQueryService,
-      QwQueryPlanService,
-      QwValidateQueryService,
     ];
   }
 
@@ -64,20 +39,9 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   }
 
   constructor(
-    rootScope,
-    qwHttp,
-    cdr,
-    mnHelper,
-    mnPermissions,
-    mnPoolDefault,
-    mnStatisticsNew,
     modalService,
-    ngbModalConfig,
     qwDialogService,
-    qwImportService,
-    qwQueryService,
-    qwQueryPlanService,
-    validateQueryService) {
+    qwQueryService) {
     super();
 
     this.qqs = qwQueryService;
@@ -215,8 +179,10 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.result
       .then(function ok(new_value) {
         This.qqs.newUDFlib(new_value.name, new_value.content)
-          .then(function success() {This.qqs.updateUDFlibs();});
-      }, function cancel(resp) {console.log("Error creating new library: " + JSON.stringify(resp))})
+          .then(function success() {setTimeout(This.qqs.updateUDFlibs,500)},
+            function cancel(resp) {console.log('Error creating UDF library: ' + JSON.stringify(resp))});
+      }, function cancel(resp) { // ignore cancel
+      });
   }
 
   editLibrary(lib) {

@@ -9,8 +9,14 @@
     <form class="forms" name="functionForm">
       <div class="formrow">
         <label>Function Name</label>
-        <input *ngIf="is_new" type="text" id="name" required name="name" [(ngModel)]="name"
-               [ngModelOptions]="{standalone: true}">
+        <span class="row" *ngIf="is_new">
+          <span
+             *ngIf="functionNameUsed(name)"
+             class="fa-warning icon force-orange-3 cursor-pointer"
+             appendToBody="true"
+             [ngbTooltip]="'function name already in use in namespace'" container="body"></span>
+          <input type="text" id="name" required name="name" [(ngModel)]="name" [ngModelOptions]="{standalone: true}">
+        </span>
         <span *ngIf="!is_new">{{name}}</span>
       </div>
 

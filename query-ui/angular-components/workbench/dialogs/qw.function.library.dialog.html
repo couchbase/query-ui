@@ -8,10 +8,17 @@
   <div class="panel-content" [ngStyle]="{ height: error_message ? 'calc(100% - 120px)' : 'calc(100% - 100px)'}">
     <div class="row margin-bottom-half">
       <h4 class="row margin-right-half width-12 max-width-5 flex-left">
+
         <span *ngIf="new_lib" class="row flex-left">
           <label class="margin-right-half nowrap">Library Name:</label>
+          <span
+             *ngIf="libraryNameUsed(name)"
+             class="fa-warning icon force-orange-3 cursor-pointer"
+             appendToBody="true"
+             [ngbTooltip]="'function library name already in use'" container="body"></span>
           <input type="text" [(ngModel)]="lib_name" [ngModelOptions]="{standalone: true}">
         </span>
+
         <div *ngIf="!new_lib" class="ellipsis">
           {{lib_name}}
         </div>

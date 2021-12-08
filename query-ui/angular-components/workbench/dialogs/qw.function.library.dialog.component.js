@@ -2,6 +2,7 @@ import {MnLifeCycleHooksToStream}     from 'mn.core';
 import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
+import { QwQueryService }             from '../../../angular-services/qw.query.service.js';
 
 export { QwFunctionLibraryDialog };
 
@@ -20,16 +21,19 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       NgbActiveModal,
+      QwQueryService,
       ];
   }
 
   ngOnInit() {
   }
 
-  constructor(activeModal) {
+  constructor(activeModal,
+              qwQueryService) {
     super();
 
     this.activeModal = activeModal;
+    this.qqs = qwQueryService;
     this.config = ace.require("ace/config" );
 
     // unbind ^F for all ACE editors
@@ -55,7 +59,14 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
     if (!this.lib_name)
       return true;
 
+    if (this.libraryNameUsed())
+      return true;
+
     return false;
+  }
+
+  libraryNameUsed() {
+    return this.qqs.udfLibs.some(udfLib => udfLib.name == this.lib_name);
   }
 
   onMainEditorReady(editor) {

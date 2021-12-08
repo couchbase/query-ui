@@ -67,7 +67,8 @@
              placement="auto"
              tooltip-append-to-body="true"
              tooltip-class="break-word">
-            {{function.identity.bucket}}.{{function.identity.scope}}
+            <span *ngIf="function.identity.bucket">{{function.identity.bucket}}.{{function.identity.scope}}</span>
+            <span *ngIf="!function.identity.bucket">( global )</span>
           </span>
         <span class="cbui-table-cell">
             {{function.identity.name}}

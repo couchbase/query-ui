@@ -103,7 +103,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
   }
 
   ok_to_save() {
-    return(this.name &&
+    return(this.name && !this.functionNameUsed(name) &&
       ((this.function_type == 'inline' && this.expression)) ||
       (this.function_type == 'javascript' && this.library_name && this.library_function));
   }
@@ -146,6 +146,13 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     _editor.$blockScrolling = Infinity;
     _editor.setReadOnly(true);
     _editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
+  }
+
+  // check if function name already in use
+  functionNameUsed() {
+    return this.qqs.udfs.some(udf => udf.identity.name == this.name &&
+      ((this.bucket == null && udf.identity.type == "global") ||
+        (udf.identity.type == "scope" && this.bucket == udf.identity.bucket && this.scope == udf.identity.scope)));
   }
 
 }
