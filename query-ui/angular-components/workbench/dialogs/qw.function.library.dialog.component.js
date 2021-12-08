@@ -50,24 +50,11 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
 
   }
 
-   errors() {
-    if (this.mainEditor) {
-      var annot_list = this.mainEditor.getSession().getAnnotations();
-      if (annot_list && annot_list.length)
-        for (var i=0; i < annot_list.length; i++)
-          if (annot_list[i].type == "error") {
-            return true;
-          }
+  errors() {
+    // don't allow empty doc id
+    if (!this.lib_name)
+      return true;
 
-      // don't allow empty documents or documents > 10MB
-      if ((this.mainEditor.getSession().getValue().trim().length == 0) ||
-          (this.mainEditor.getSession().getValue().trim().length > 10*1024*1024))
-        return true;
-
-      // don't allow empty doc id
-      if (!this.lib_name)
-        return true;
-    }
     return false;
   }
 
@@ -77,19 +64,9 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
     editor.$blockScrolling = Infinity;
     editor.renderer.setPrintMarginColumn(false); // hide page boundary lines
     editor.setReadOnly(this.readonly);
-    editor.getSession().on("changeAnnotation", function() {
-      var annot_list = editor.getSession().getAnnotations();
-      if (annot_list && annot_list.length) for (var i=0; i < annot_list.length; i++)
-        if (annot_list[i].type == "error") {
-          This.error_message = "Error on row: " + annot_list[i].row + ": " + annot_list[i].text;
-          //dialogScope.$applyAsync(function() {});
-          return;
-        }
-      if (editor) {
-        This.error_message = null; // no errors found
-        //dialogScope.$applyAsync(function() {});
-      }
-    });
+
+    // disable syntax checking, since non-standard javascript in use
+    editor.getSession().setUseWorker(false);
     if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
       editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
 
