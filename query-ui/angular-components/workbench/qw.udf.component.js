@@ -90,6 +90,22 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     return(this.function_sort == field && this.function_sort_direction == 1);
   }
 
+  // get params for display in list
+
+  getFunctionParams(fn) {
+    if (!fn.definition.parameters || fn.definition.parameters.length == 0)
+      return('...')
+    else
+      return(JSON.stringify(fn.definition.parameters));
+  }
+
+  // inline functions are just 'inline', but javascript are: javascript (lib name)
+  getFunctionLanguage(fn) {
+    let result = fn.definition['#language'];
+    if (fn.definition.library)
+      result += ' (' + fn.definition.library + ')';
+    return(result);
+  }
 
   // function edit/drop/create
 
@@ -134,7 +150,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
         this.dialogRef.componentInstance.function_type = 'inline';
         break;
     }
-    this.dialogRef.componentInstance.parameters = fn.definition.parameters || [];
+    this.dialogRef.componentInstance.parameters = fn.definition.parameters || ['...'];
 
     this.dialogRef.result
       .then(function ok(new_value) {

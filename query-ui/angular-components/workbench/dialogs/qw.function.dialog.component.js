@@ -103,7 +103,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
   }
 
   ok_to_save() {
-    return(this.name && !this.functionNameUsed(name) &&
+    return(this.name && (!this.is_new || !this.functionNameUsed(this.name)) &&
       ((this.function_type == 'inline' && this.expression)) ||
       (this.function_type == 'javascript' && this.library_name && this.library_function));
   }
@@ -114,7 +114,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     let This = this;
     let scope = (this.bucket && this.scope) ?
       'default:`' + this.bucket + '`.`' + this.scope + '`.' : '';
-    let as_expr = (this.function_type == 'inline') ? this.expression :
+    let as_expr = (this.function_type == 'inline') ? '(' + this.expression + ')' :
       '"' + this.library_function + '" AT "' + this.library_name + '"';
 
     let query = "CREATE OR REPLACE FUNCTION " +
@@ -126,12 +126,13 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
         This.activeModal.close('ok');
         },
       function fail(resp) {
+        This.error = 'Creation query: ' + query + '\n';
         if (resp.data.errors)
-          This.error = JSON.stringify(resp.data.errors);
+          This.error += JSON.stringify(resp.data.errors);
         else if (resp.error && resp.error.errors)
-          This.error = JSON.stringify(resp.error.errors);
+          This.error += JSON.stringify(resp.error.errors);
         else
-          This.error = "Unknown error updating function, status: " + resp.status +
+          This.error += "Error updating function, status: " + resp.status +
             " - " + resp.statusText;
       });
   }
@@ -154,5 +155,11 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
       ((this.bucket == null && udf.identity.type == "global") ||
         (udf.identity.type == "scope" && this.bucket == udf.identity.bucket && this.scope == udf.identity.scope)));
   }
+
+  // for iterating over the array of strings used for parameters, we need a track-by function
+  trackByFn(index, item) {
+    return(index);
+  }
+
 
 }

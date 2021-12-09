@@ -45,45 +45,48 @@
       <span class="cbui-table-cell" (click)="update_function_sort('scope')">namespace
           <span *ngIf="show_up_caret_function('scope')" class="icon fa-caret-up"></span>
           <span *ngIf="show_down_caret_function('scope')" class="icon fa-caret-down"></span>
-   </span>
-      <span class="cbui-table-cell" (click)="update_function_sort('name')">function name
+      </span>
+      <span class="cbui-table-cell flex-grow-half" (click)="update_function_sort('name')">function name
           <span *ngIf="show_up_caret_function('name')" class="icon fa-caret-up"></span>
           <span *ngIf="show_down_caret_function('name')" class="icon fa-caret-down"></span>
-        </span>
+      </span>
       <span class="cbui-table-cell flex-grow-half" (click)="update_function_sort('language')">language
           <span *ngIf="show_up_caret_function('language')" class="icon fa-caret-up"></span>
           <span *ngIf="show_down_caret_function('language')" class="icon fa-caret-down"></span>
-        </span>
+      </span>
+      <span class="cbui-table-cell flex-grow-half">parameters</span>
       <span class="cbui-table-cell flex-grow-2">definition / expression</span>
       <span class="cbui-table-cell flex-grow-half"></span>
     </div>
 
-    <section
-       *ngFor="let function of get_sorted_udfs()">
+    <section *ngFor="let function of get_sorted_udfs()">
       <div class="cbui-tablerow padding-left">
-          <span
-             class="cbui-table-cell"
-             ngbTooltip="{{function.identity.bucket}} {{function.identity.scope}}"
-             placement="auto"
-             tooltip-append-to-body="true"
-             tooltip-class="break-word">
-            <span *ngIf="function.identity.bucket">{{function.identity.bucket}}.{{function.identity.scope}}</span>
-            <span *ngIf="!function.identity.bucket">( global )</span>
-          </span>
-        <span class="cbui-table-cell">
-            {{function.identity.name}}
-          </span>
-        <span class="cbui-table-cell flex-grow-half">
-      {{function.definition['#language']}}
-      <span *ngIf="function.definition.library">({{function.definition.library}})</span>
-    </span>
-        <span class="cbui-table-cell flex-grow-2">
-       {{function.definition.object || function.definition.expression}}
-    </span>
+        <span
+           class="cbui-table-cell"
+           ngbTooltip="{{function.identity.bucket}} {{function.identity.scope}}"
+           placement="auto"
+           tooltip-append-to-body="true"
+           tooltip-class="break-word">
+          <span *ngIf="function.identity.bucket">{{function.identity.bucket}}.{{function.identity.scope}}</span>
+          <span *ngIf="!function.identity.bucket">( global )</span>
+        </span>
+        <span class="cbui-table-cell flex-grow-half has-hover" [attr.title]="function.identity.name">
+          {{function.identity.name}}
+        </span>
+        <span class="cbui-table-cell flex-grow-half has-hover" [attr.title]="getFunctionLanguage(function)">
+          {{getFunctionLanguage(function)}}
+        </span>
+        <span class="cbui-table-cell flex-grow-half has-hover" [attr.title]="getFunctionParams(function)">
+          {{getFunctionParams(function)}}
+        </span>
+        <span class="cbui-table-cell flex-grow-2 has-hover"
+              [attr.title]="function.definition.object || function.definition.expression">
+          {{function.definition.object || function.definition.expression}}
+        </span>
         <span class="cbui-table-cell text-right flex-grow-half">
-       <a class="margin-right-1" (click)="editFunction(function)">edit</a>
-       <a (click)="dropFunction(function)">drop</a>
-     </span>
+          <a class="margin-right-1" (click)="editFunction(function)">edit</a>
+          <a (click)="dropFunction(function)">drop</a>
+        </span>
       </div>
     </section>
       <div class="cbui-tablerow padding-left">

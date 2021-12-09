@@ -49,7 +49,7 @@
                     [disabled]="parameters.length < 1">-</button>
           </span>
         </div>
-        <div class="row" *ngFor="let param of parameters; let $index = index">
+        <div class="row" *ngFor="let param of parameters; let $index = index; trackBy:trackByFn">
           <div class="column width-6" style="margin-bottom:.5rem">
           <span class="input-prepend">
               <input type="text" name="names_{{$index}}" [(ngModel)]="parameters[$index]"
@@ -96,7 +96,8 @@
 
       <div *ngIf="error">
         <h6 class="label red">Error creating/updating function:</h6>
-        <ngx-ace (ready)="setErrorOptions($event)"
+        <ngx-ace class="min-height-2"
+                 (ready)="setErrorOptions($event)"
                  [(ngModel)]="error"
                  [ngModelOptions]="{standalone: true}"
         >
