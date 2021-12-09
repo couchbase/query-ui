@@ -85,9 +85,10 @@ licenses/APL2.txt.
         </span>
 
 <!-- special menu for field2 for everything but grouped bars -->
-        <div *ngIf="chartType == 'gbar' || chartType == 'multiline' || chartType == 'multiconnscatter'" class="relative">
+        <div [hidden]="chartType != 'gbar' && chartType != 'multiline' && chartType != 'multiconnscatter'" class="relative">
           <h6>{{get_field2_label()}}<small class="text-fine">cmd/ctrl + click to multi-select</small></h6>
           <select
+             id="multiSelect"
              [(ngModel)]="field2_list"
              theme="selectize"
              class="cbui-select text-smaller max-width-3"

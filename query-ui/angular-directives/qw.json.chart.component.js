@@ -52,7 +52,7 @@ import { fromEvent }                          from 'rxjs';
 
 export { QwJsonChart };
 
-var svg, tooltip, wrapperElement; // needs to be global for certain callback functions
+var svg, tooltip, wrapperElement, multiSelectMenu; // needs to be global for certain callback functions
 
 class QwJsonChart extends MnLifeCycleHooksToStream {
   static get annotations() { return [
@@ -289,6 +289,24 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         d3ZoomIdentity.translate(offsetX*scale,offsetY*scale).scale(scale)
       );
     }
+
+    // if we are showing the multi-select menu, we need to send focus there
+
+    switch (this.chartType) {
+      case 'gbar':
+      case 'multiline':
+      case 'multiconnscatter':
+        multiSelectMenu = this.element.nativeElement.querySelector("#multiSelect");
+        setTimeout(this.focusMultiSelect,100);
+        break;
+    }
+  }
+
+  // ugly hack - the multi-select menu doesn't show selections when it doesn't have focus
+  // send focus to the multiselect menu so that selected items are visible
+  focusMultiSelect() {
+    if (multiSelectMenu)
+      multiSelectMenu.focus();
   }
 
   // Flatten input data into d3 readable format
@@ -823,6 +841,19 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     var values = this.unflattenData(2);
     this.value_count = values[0].length;
 
+    // how big is the canvas compared to the data? For bar charts need at least #bars + (margin*2) pixels in canvas_width
+    if (this.canvas_width < (this.value_count + this.margin*2 + 10)) {
+      svg.append("text")
+        .attr("x", (this.canvas_width/2+this.margin))
+        .attr("y", 100)
+        .attr("stroke", "#fff")
+        .style("font-size", "6em")
+        .style("font-family", "OpenSans")
+        .style("text-anchor", "middle")
+        .text("Too many bars for window size. Select less data, or enlarge window.");
+      return;
+    }
+
     var scale_x = this.createXAxis(values),
         scale_y = this.createYAxis(values);
 
@@ -849,9 +880,6 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     var values = this.unflattenData(4);
     this.value_count = values[0].length;
 
-    var scale_x = this.createXAxis(values),
-        scale_y = this.createYAxis(values);
-
     // Another scale for the subgroups position
     // If we are adding a + sign we need to make sure this is redone.
     var subgroups = [];
@@ -859,6 +887,26 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
     for (let i = 0; i < this.field2_list.length; i++) {
       subgroups.push(this.fields()[this.field2_list[i]]);
     }
+
+    // do we have too many bars?
+    // if one bar, max # is (width - 2*margin)/2
+    // for n bars, max # is (width - 2*margin)/(n+2)
+    let divisor = (subgroups.length == 1) ? 2 : (subgroups.length + 2);
+    let maxBars = (this.canvas_width - this.margin*2)/divisor;
+    if (this.value_count >= maxBars) {
+      svg.append("text")
+        .attr("x", (this.canvas_width/2+this.margin))
+        .attr("y", 200)
+        .attr("stroke", "#fff")
+        .style("font-size", "6em")
+        .style("font-family", "OpenSans")
+        .style("text-anchor", "middle")
+        .text("Too many bars for window size. Select less data, or enlarge window.");
+      return;
+    }
+
+    var scale_x = this.createXAxis(values),
+      scale_y = this.createYAxis(values);
 
     var scale_subgroup = d3ScaleBand()
         .domain(subgroups)
