@@ -3,6 +3,8 @@ import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
 import { QwQueryService }             from '../../../angular-services/qw.query.service.js';
+import { QwDialogService }            from '../../../angular-directives/qw.dialog.service.js';
+import _                              from 'lodash';
 
 export { QwFunctionLibraryDialog };
 
@@ -21,6 +23,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       NgbActiveModal,
+      QwDialogService,
       QwQueryService,
       ];
   }
@@ -29,11 +32,13 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   }
 
   constructor(activeModal,
+              qwDialogService,
               qwQueryService) {
     super();
 
     this.activeModal = activeModal;
     this.qqs = qwQueryService;
+    this.qds = qwDialogService;
     this.config = ace.require("ace/config" );
 
     // unbind ^F for all ACE editors
@@ -86,6 +91,30 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
       showGutter: true,
       wrap: true,
     });
+  }
+
+  // when they click o.k., update the new library
+  createOrReplaceLibrary() {
+    this.error = null;
+    var This = this;
+    this.qqs.newUDFlib(this.lib_name, this.lib_contents)
+      .then(function success() {
+          setTimeout(This.qqs.updateUDFlibs,500);
+          This.activeModal.close('ok');
+        },
+        function error(resp) {
+          if (resp.data && resp.data.errors)
+            This.error += JSON.stringify(resp.data.errors);
+          else if (_.isString(resp.error))
+            This.error += resp.error;
+          else if (resp.error && resp.error.errors)
+            This.error += JSON.stringify(resp.error.errors);
+          else
+            This.error += "Error updating function, status: " + resp.status +
+              " - " + resp.statusText;
+          This.qds.showErrorDialog("Error Creating Library",This.error,null,true).then(()=>{},()=>{});
+         }
+      );
   }
 
 }

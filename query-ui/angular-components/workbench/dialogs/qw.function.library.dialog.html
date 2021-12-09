@@ -27,6 +27,7 @@
     </div>
     <ngx-ace class="doc-ace-editor" (ready)="onMainEditorReady($event)" [(ngModel)]="lib_contents" [ngModelOptions]="{standalone: true}"></ngx-ace>
   </div>
+
   <div class="panel-footer">
     <a (click)="activeModal.dismiss('cancel')" [hidden]="readonly">
       Cancel
@@ -35,7 +36,7 @@
        [hidden]="readonly"
        type="submit"
        [disabled]="errors()"
-       (click)="!errors() && activeModal.close({name: lib_name, content: lib_contents})">
+       (click)="createOrReplaceLibrary()">
        Save
      </button>
     <button

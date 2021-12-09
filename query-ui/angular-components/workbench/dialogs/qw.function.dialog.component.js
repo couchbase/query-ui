@@ -127,7 +127,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
         },
       function fail(resp) {
         This.error = 'Creation query: ' + query + '\n';
-        if (resp.data.errors)
+        if (resp.data && resp.data.errors)
           This.error += JSON.stringify(resp.data.errors);
         else if (resp.error && resp.error.errors)
           This.error += JSON.stringify(resp.error.errors);

@@ -193,12 +193,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
       '  return(a+b);\n' +
       '}\n';
     this.dialogRef.result
-      .then(function ok(new_value) {
-        This.qqs.newUDFlib(new_value.name, new_value.content)
-          .then(function success() {setTimeout(This.qqs.updateUDFlibs,500)},
-            function cancel(resp) {console.log('Error creating UDF library: ' + JSON.stringify(resp))});
-      }, function cancel(resp) { // ignore cancel
-      });
+      .then(function ok() {}, function cancel(resp) {});
   }
 
   editLibrary(lib) {
@@ -209,11 +204,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.lib_name = lib.name;
     this.dialogRef.componentInstance.lib_contents = lib.content;
     this.dialogRef.result
-      .then(function ok(new_value) {
-        This.qqs.newUDFlib(new_value.name, new_value.content)
-          .then(function success() {This.qqs.updateUDFlibs();},
-            function err(resp) {console.log("Error updating library: " + JSON.stringify(resp))});
-      }, function cancel() {})
+      .then(function ok() {}, function cancel(resp) {});
   }
 
   dropLibrary(lib) {
