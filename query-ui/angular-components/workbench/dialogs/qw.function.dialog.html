@@ -43,16 +43,17 @@
         <div class="row">
           <label>Parameters</label>
           <span>
-            <button type="button" class="outline btn-small" title="Add parameter"
+            <button [disabled]="readOnly" type="button" class="outline btn-small" title="Add parameter"
                     (click)="parameters.push('name'+parameters.length)">+</button>
-            <button type="button" class="outline btn-small" title="Remove parameter" (click)="parameters.splice(-1,1)"
-                    [disabled]="parameters.length < 1">-</button>
+            <button [disabled]="readOnly || parameters.length < 1"
+                    type="button" class="outline btn-small" title="Remove parameter"
+                    (click)="parameters.splice(-1,1)">-</button>
           </span>
         </div>
         <div class="row" *ngFor="let param of parameters; let $index = index; trackBy:trackByFn">
           <div class="column width-6" style="margin-bottom:.5rem">
           <span class="input-prepend">
-              <input type="text" name="names_{{$index}}" [(ngModel)]="parameters[$index]"
+              <input [disabled]="readOnly" type="text" name="names_{{$index}}" [(ngModel)]="parameters[$index]"
                      [ngModelOptions]="{standalone: true}">
           </span>
           </div>
@@ -61,7 +62,7 @@
 
       <div class="formrow">
         <label>Function Type</label>
-        <select [(ngModel)]="function_type" name="function_type" [ngModelOptions]="{standalone: true}">
+        <select [disabled]="readOnly" [(ngModel)]="function_type" name="function_type" [ngModelOptions]="{standalone: true}">
           <option value="inline">inline</option>
           <option value="javascript">javascript</option>
         </select>
@@ -69,7 +70,8 @@
 
       <div class="formrow" *ngIf="function_type=='javascript'">
         <label>Javascript Library</label>
-        <select [(ngModel)]="library_name" name="type"
+        <select [disabled]="readOnly"
+                [(ngModel)]="library_name" name="type"
                 [ngModelOptions]="{standalone: true}"
                 [attr.title]="getLibContent()">
           <option *ngFor="let lib of libraries()">{{lib.name}}</option>
@@ -78,7 +80,8 @@
 
       <div class="formrow" *ngIf="function_type=='javascript'">
         <label>Library Function Name</label>
-        <input type="text"
+        <input [disabled]="readOnly"
+               type="text"
                [(ngModel)]="library_function"
                [ngModelOptions]="{standalone: true}"
                placeholder="name of function from the above library"
@@ -87,7 +90,8 @@
 
       <div class="formrow" *ngIf="function_type=='inline'">
         <label>Expression</label>
-        <input type="text"
+        <input [disabled]="readOnly"
+               type="text"
                [(ngModel)]="expression"
                [ngModelOptions]="{standalone: true}"
                placeholder="N1QL expression, e.g. args[0] + 1"
@@ -109,8 +113,10 @@
   </div>
 
   <div class="panel-footer">
-    <a (click)="activeModal.dismiss('cancel')">Cancel</a>
+    <a *ngIf="readOnly" (click)="activeModal.dismiss('close')">Close</a>
+    <a *ngIf="!readOnly" (click)="activeModal.dismiss('cancel')">Cancel</a>
     <button
+       *ngIf="!readOnly"
        [disabled]="!ok_to_save()"
        type="submit"
        (click)="createOrReplaceFunction()">

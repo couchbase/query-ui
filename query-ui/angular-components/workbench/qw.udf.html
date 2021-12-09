@@ -1,8 +1,12 @@
 <qw-workbench-subnav></qw-workbench-subnav>
 
 <!-- Function Libraries Table  ************************************  -->
+
 <h4 class="margin-top-half">Javascript Function Libraries</h4>
-<div class="qm-table-active cbui-table margin-bottom-2">
+<div *ngIf="!externalPermitted()" class="margin-bottom-1">
+  <smalL class="margin-left-1">Insufficent permissions to view/edit external function libraries.</smalL>
+</div>
+<div *ngIf="externalPermitted()" class="qm-table-active cbui-table margin-bottom-2">
   <!-- table wrapper -->
   <div class="cbui-table-header flex-grow-half padding-left">
     <!-- table header row, no <section> wrapper -->
@@ -37,7 +41,10 @@
 
 <!-- Functions Table  ************************************  -->
 <h4>User-Defined Functions</h4>
-<div class="padding-bottom-6">
+<div *ngIf="!viewFunctionsPermitted()">
+  <small class="margin-left-1">Insufficient permissions to view user-defined functions.</small>
+</div>
+<div *ngIf="viewFunctionsPermitted()" class="padding-bottom-6">
   <div class="qm-table-active cbui-table">
     <!-- table wrapper -->
     <div class="cbui-table-header padding-left">
@@ -63,33 +70,36 @@
       <div class="cbui-tablerow padding-left">
         <span
            class="cbui-table-cell"
-           ngbTooltip="{{function.identity.bucket}} {{function.identity.scope}}"
+           ngbTooltip="{{getFunctionScope(function)}}"
            placement="auto"
            tooltip-append-to-body="true"
            tooltip-class="break-word">
-          <span *ngIf="function.identity.bucket">{{function.identity.bucket}}.{{function.identity.scope}}</span>
-          <span *ngIf="!function.identity.bucket">( global )</span>
+          <span>{{getFunctionScope(function)}}</span>
         </span>
-        <span class="cbui-table-cell flex-grow-half has-hover" [attr.title]="function.identity.name">
+        <span class="cbui-table-cell flex-grow-half has-hover"
+              ngbTooltip="{{function.identity.name}}">
           {{function.identity.name}}
         </span>
-        <span class="cbui-table-cell flex-grow-half has-hover" [attr.title]="getFunctionLanguage(function)">
+        <span class="cbui-table-cell flex-grow-half has-hover"
+              ngbTooltip="{{getFunctionLanguage(function)}}">
           {{getFunctionLanguage(function)}}
         </span>
-        <span class="cbui-table-cell flex-grow-half has-hover" [attr.title]="getFunctionParams(function)">
+        <span class="cbui-table-cell flex-grow-half has-hover"
+              ngbTooltip="{{getFunctionParams(function)}}">
           {{getFunctionParams(function)}}
         </span>
         <span class="cbui-table-cell flex-grow-2 has-hover"
-              [attr.title]="function.definition.object || function.definition.expression">
+              ngbTooltip="{{function.definition.object || function.definition.expression}}">
           {{function.definition.object || function.definition.expression}}
         </span>
         <span class="cbui-table-cell text-right flex-grow-half">
-          <a class="margin-right-1" (click)="editFunction(function)">edit</a>
-          <a (click)="dropFunction(function)">drop</a>
+          <a *ngIf="manageFunctionsPermitted()" class="margin-right-1" (click)="editFunction(function)">edit</a>
+          <a *ngIf="manageFunctionsPermitted()" (click)="dropFunction(function)">drop</a>
+          <a *ngIf="!manageFunctionsPermitted()" class="margin-right-1" (click)="editFunction(function)">view</a>
         </span>
       </div>
     </section>
-      <div class="cbui-tablerow padding-left">
+      <div *ngIf="manageFunctionsPermitted()" class="cbui-tablerow padding-left">
         <a (click)="createFunction()">+ add function</a>
       </div>
   </div>

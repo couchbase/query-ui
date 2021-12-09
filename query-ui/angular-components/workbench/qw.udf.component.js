@@ -5,6 +5,8 @@ import {Component,
 
 import { NgbModal, NgbModalConfig }from '@ng-bootstrap/ng-bootstrap';
 
+import { MnPermissions }           from 'ajs.upgraded.providers';
+
 import { QwDialogService }         from '../../angular-directives/qw.dialog.service.js';
 import { QwQueryService }          from '../../angular-services/qw.query.service.js';
 
@@ -27,6 +29,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
   static get parameters() {
     return [
+      MnPermissions,
       NgbModal,
       QwDialogService,
       QwQueryService,
@@ -34,11 +37,14 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
-    this.qqs.updateUDFs();
-    this.qqs.updateUDFlibs();
+    if (this.viewFunctionsPermitted())
+      this.qqs.updateUDFs();
+    if (this.externalPermitted())
+      this.qqs.updateUDFlibs();
   }
 
   constructor(
+    mnPermissions,
     modalService,
     qwDialogService,
     qwQueryService) {
@@ -50,9 +56,26 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
     this.function_sort = 'name';
     this.function_sort_direction = 1;
+    this.rbac = mnPermissions.export;
   }
 
   ngOnDestroy() {
+  }
+
+  // do we have permissions to view/manage external libraries?
+
+  externalPermitted() {
+    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage ||
+      this.rbac.cluster.n1ql.udf_external.manage);
+  }
+
+  viewFunctionsPermitted() {
+    return(this.rbac.cluster.n1ql.meta.read);
+  }
+
+  manageFunctionsPermitted() {
+    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
+      this.rbac.cluster.n1ql.udf.manage);
   }
 
   //
@@ -107,6 +130,13 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     return(result);
   }
 
+  getFunctionScope(fn) {
+    if (fn.identity.bucket)
+      return(fn.identity.bucket + '.' + fn.identity.scope);
+    else
+      return("( global )");
+  }
+
   // function edit/drop/create
 
   createFunction() {
@@ -124,14 +154,15 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
     this.dialogRef.result
       .then(function ok(new_value) {
-        This.qqs.updateUDFs();
+        if (This.viewFunctionsPermitted())
+          This.qqs.updateUDFs();
       }, function cancel() {});
   }
 
   editFunction(fn) {
     let This = this;
     this.dialogRef = this.modalService.open(QwFunctionDialog);
-    this.dialogRef.componentInstance.header = "Edit Function";
+    this.dialogRef.componentInstance.header = this.manageFunctionsPermitted() ? "Edit Function" : "View Function";
     this.dialogRef.componentInstance.is_new = false;
     this.dialogRef.componentInstance.name = fn.identity.name;
     if (fn.identity.type == "scope") {
@@ -151,6 +182,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
         break;
     }
     this.dialogRef.componentInstance.parameters = fn.definition.parameters || ['...'];
+    this.dialogRef.componentInstance.readOnly = !this.manageFunctionsPermitted();
 
     this.dialogRef.result
       .then(function ok(new_value) {

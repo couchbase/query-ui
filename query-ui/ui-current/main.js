@@ -33,11 +33,17 @@ import { QwDirectivesModule }     from "../angular-directives/qw.directives.modu
 angular
   .module(app)
   .config(function (mnPluggableUiRegistryProvider, mnPermissionsProvider) {
-    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!read" ); // needed for Documents and Query
-    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!write" ); // needed for Import
-    mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read" ); // needed for Documents
-    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute" );
-    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.index!all" );
+    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!read"); // needed for Documents and Query
+    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!write"); // needed for Import
+    mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read"); // needed for Documents
+    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute");
+    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.index!all");
+
+    // permissions for UDFs
+    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.udf!manage");
+    mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.udf_external!manage");
+    mnPermissionsProvider.set("cluster.n1ql.udf!manage");
+    mnPermissionsProvider.set("cluster.n1ql.udf_external!manage");
 
     ace.config.set('basePath','/ui/libs/ace');
 
