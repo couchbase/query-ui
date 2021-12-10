@@ -36,6 +36,7 @@ class QwValidateQueryService {
 
   constructor(mnPools, mnPermissions, mnPoolDefault, qwHttp) {
     Object.assign(this, getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp));
+    this.getBucketsAndNodes(); // check for the query service right away
   }
 }
 
@@ -47,6 +48,7 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp) 
   var _checked = false;              // have we checked validity yet?
   var _valid = false;                // do we have a valid query node?
   var _bucketsInProgress = false;    // are we retrieving the list of buckets?
+  var _progressPromise = null;
   var _monitoringAllowed = false;
   var _clusterStatsAllowed = false;
   var _otherStatus;
@@ -62,6 +64,12 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp) 
     },
     isEnterprise: function () {
       return (_isEnterprise);
+    },
+    whenValid: function() {
+      if (_bucketsInProgress)
+        return(_progressPromise);
+      else
+        return(Promise.resolve(_valid));
     },
     valid: function () {
       return _valid;
@@ -143,7 +151,7 @@ function getValidateQueryService(mnPools, mnPermissions, mnPoolDefault, qwHttp) 
     else
       queryData = {statement: "select keyspaces.name from system:keyspaces;"};
 
-    qwHttp.post("/_p/query/query/service", queryData)
+    _progressPromise = qwHttp.post("/_p/query/query/service", queryData)
       .then(function success(resp) {
           //var data = resp.data, status = resp.status;
           //console.log("Got bucket list data: " + JSON.stringify(resp).substring(0,10) + " with callbacks: " + _callbackList.length);

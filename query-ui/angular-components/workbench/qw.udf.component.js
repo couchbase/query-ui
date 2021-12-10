@@ -37,10 +37,16 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
-    if (this.viewFunctionsPermitted())
-      this.qqs.updateUDFs();
-    if (this.externalPermitted())
-      this.qqs.updateUDFlibs();
+    this.validated.whenValid().then((val) =>
+    {
+      // update the UDF info if we have a valid service
+      if (this.validated.valid()) {
+        if (this.viewFunctionsPermitted())
+          this.qqs.updateUDFs();
+        if (this.externalPermitted())
+          this.qqs.updateUDFlibs();
+      }
+    });
   }
 
   constructor(
@@ -52,6 +58,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
     this.qqs = qwQueryService;
     this.qds = qwDialogService;
+    this.validated = qwQueryService.validateQueryService;
     this.modalService = modalService;
 
     this.function_sort = 'name';

@@ -10,7 +10,11 @@ licenses/APL2.txt.
 
 <qw-workbench-subnav></qw-workbench-subnav>
 
-<div>
+<div *ngIf="!qmc.validated.valid()">
+  No query service found. If the cluster recently started, try reloading the page.
+</div>
+
+<div *ngIf="qmc.validated.valid()">
   <div class="row margin-bottom-half">
     <!-- top row w/ title/time/pill selectors -->
     <div class="row">

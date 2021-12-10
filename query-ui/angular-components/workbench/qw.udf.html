@@ -1,7 +1,13 @@
 <qw-workbench-subnav></qw-workbench-subnav>
 
+<div *ngIf="!validated.valid()">
+  No query service found. If the cluster recently started, try reloading the page.
+</div>
+
+
 <!-- Function Libraries Table  ************************************  -->
 
+<div *ngIf="validated.valid()">
 <h4 class="margin-top-half">Javascript Function Libraries</h4>
 <div *ngIf="!externalPermitted()" class="margin-bottom-1">
   <smalL class="margin-left-1">Insufficent permissions to view/edit external function libraries.</smalL>
@@ -104,4 +110,5 @@
       </div>
   </div>
 
+</div>
 </div>

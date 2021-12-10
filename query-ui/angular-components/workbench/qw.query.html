@@ -15,6 +15,10 @@ licenses/APL2.txt.
   one or more collections.
 </div>
 
+<div *ngIf="!qc.validated.valid()">
+  No query service found. If the cluster recently started, try reloading the page.
+</div>
+
 <div
    [hidden]="!qc.validated.valid() || !qc.queryPermitted()"
    class="wb-wrapper">

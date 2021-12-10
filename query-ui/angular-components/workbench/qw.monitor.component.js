@@ -87,22 +87,22 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
     validateQueryService) {
     super();
 
-    this.qmc = queryMonController(
-      this,
-      rootScope,
-      qwHttp,
-      cdr,
-      mnHelper,
-      mnPermissions,
-      mnPoolDefault,
-      mnStatisticsNew,
-      ngbModal,
-      ngbModalConfig,
-      qwDialogService,
-      qwImportService,
-      qwQueryService,
-      qwQueryPlanService,
-      validateQueryService
+      this.qmc = queryMonController(
+        this,
+        rootScope,
+        qwHttp,
+        cdr,
+        mnHelper,
+        mnPermissions,
+        mnPoolDefault,
+        mnStatisticsNew,
+        ngbModal,
+        ngbModalConfig,
+        qwDialogService,
+        qwImportService,
+        qwQueryService,
+        qwQueryPlanService,
+        validateQueryService
       );
   }
 
@@ -351,6 +351,9 @@ function queryMonController (This,
   //
 
   function activate() {
+    if (!qmc.validated.valid())
+      return;
+
     // get initial data for each panel
     if (qmc.monitoring.active_updated == "never")
       qwQueryService.updateQueryMonitoring(1);

@@ -64,7 +64,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
     if (!this.lib_name)
       return true;
 
-    if (this.libraryNameUsed())
+    if (this.new_lib && this.libraryNameUsed())
       return true;
 
     return false;
@@ -99,7 +99,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
     var This = this;
     this.qqs.newUDFlib(this.lib_name, this.lib_contents)
       .then(function success() {
-          setTimeout(This.qqs.updateUDFlibs,500);
+          setTimeout(This.qqs.updateUDFlibs,1000);
           This.activeModal.close('ok');
         },
         function error(resp) {
