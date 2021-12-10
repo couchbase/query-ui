@@ -103,9 +103,11 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
   }
 
   ok_to_save() {
-    return(this.name && (!this.is_new || !this.functionNameUsed(this.name)) &&
-      ((this.function_type == 'inline' && this.expression)) ||
-      (this.function_type == 'javascript' && this.library_name && this.library_function));
+    return(
+      (this.name != null) &&                                   // need function name...
+      (!this.is_new || !this.functionNameUsed(this.name)) &&   // ...that is not already used
+      ((this.function_type == 'inline' && this.expression) ||  // ...and is appropriately defined
+      (this.function_type == 'javascript' && this.library_name && this.library_function)));
   }
 
   // uses qw.query.service to create/update the function
