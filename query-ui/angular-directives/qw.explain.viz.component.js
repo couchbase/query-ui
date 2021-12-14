@@ -112,6 +112,8 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
       return;
     }
 
+    simpleTree = null;
+
     this.dataIsArray = _.isArray(queryResult.explainResult);
     this.dataIsString = _.isString(queryResult.explainResult);
     if (queryResult.explainResult.analysis) {
@@ -148,7 +150,8 @@ var simpleTree; // underlying data
 
 function makeTree(element) {
   clearContent();
-  makeD3TreeFromSimpleTree(simpleTree,element);
+  if (simpleTree)
+    makeD3TreeFromSimpleTree(simpleTree,element);
 }
 
 //

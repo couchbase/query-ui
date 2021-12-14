@@ -1296,7 +1296,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     function needsPrimaryIndex() {
       var res = qc.lastResult().data;
-      return(_.isArray(res) && res.length > 0 && res[0].code == 4000 &&
+      return(_.isArray(res) && res.length > 0 && res[0] && res[0].code == 4000 &&
         res[0].msg && res[0].msg.indexOf("CREATE PRIMARY") >= 0);
     }
 
