@@ -123,7 +123,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   // get params for display in list
 
   getFunctionParams(fn) {
-    if (!fn.definition.parameters || fn.definition.parameters.length == 0)
+    if (!fn.definition.parameters)
       return('...')
     else
       return(JSON.stringify(fn.definition.parameters));
