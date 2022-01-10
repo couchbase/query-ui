@@ -5,10 +5,9 @@ import {Component,
 
 import { NgbModal, NgbModalConfig }from '@ng-bootstrap/ng-bootstrap';
 
-import { MnPermissions }           from 'ajs.upgraded.providers';
-
 import { QwDialogService }         from '../../angular-directives/qw.dialog.service.js';
 import { QwQueryService }          from '../../angular-services/qw.query.service.js';
+import { QwMetadataService }       from "../../angular-services/qw.metadata.service.js";
 
 import { QwFunctionDialog }        from '../../angular-components/workbench/dialogs/qw.function.dialog.component.js';
 import { QwFunctionLibraryDialog } from '../../angular-components/workbench/dialogs/qw.function.library.dialog.component.js';
@@ -23,6 +22,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         template,
+        selector: "qw-udf-component",
         //styleUrls: ["../../angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })
@@ -31,18 +31,18 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
   static get parameters() {
     return [
-      MnPermissions,
       NgbModal,
       QwDialogService,
+      QwMetadataService,
       QwQueryService,
     ];
   }
 
   ngOnInit() {
-    this.validated.whenValid().then((val) =>
+    this.qms.metaReady.then((val) =>
     {
       // update the UDF info if we have a valid service
-      if (this.validated.valid()) {
+      if (this.qms.valid()) {
         if (this.viewFunctionsPermitted())
           this.qqs.updateUDFs();
         if (this.externalPermitted())
@@ -52,15 +52,15 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   }
 
   constructor(
-    mnPermissions,
     modalService,
     qwDialogService,
+    qwMetadataService,
     qwQueryService) {
     super();
 
     this.qqs = qwQueryService;
     this.qds = qwDialogService;
-    this.validated = qwQueryService.validateQueryService;
+    this.qms = qwMetadataService;
     this.modalService = modalService;
 
     this.function_sort = 'name';
@@ -69,7 +69,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.lib_sort = 'namespace';
     this.lib_sort_direction = 1;
 
-    this.rbac = mnPermissions.export;
+    this.rbac = qwMetadataService.rbac;
   }
 
   ngOnDestroy() {
@@ -78,17 +78,17 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   // do we have permissions to view/manage external libraries?
 
   externalPermitted() {
-    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage ||
-      this.rbac.cluster.n1ql.udf_external.manage);
+    return(this.rbac.init && (this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage ||
+      this.rbac.cluster.n1ql.udf_external.manage));
   }
 
   viewFunctionsPermitted() {
-    return(this.rbac.cluster.n1ql.meta.read);
+    return(this.rbac.init && this.rbac.cluster.n1ql.meta.read);
   }
 
   manageFunctionsPermitted() {
-    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
-      this.rbac.cluster.n1ql.udf.manage);
+    return(this.rbac.init && (this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
+      this.rbac.cluster.n1ql.udf.manage));
   }
 
   //

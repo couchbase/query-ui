@@ -91,7 +91,7 @@ class myN1qlListener extends n1qlListener {
 
   // keep track of functions used
   exitFunction_name(ctx) {
-    this.functions_used.push(ctx.IDENT());
+    this.currentParseResult.functions_used.push(ctx.IDENT());
   }
 
   // Exit a parse tree produced by n1qlParser#use_keys.
@@ -234,9 +234,9 @@ function parse(n1ql) {
       currentParseResults.push(currentParseResult);
     }
   } catch (error) {
-    // console.log("Error line: " + error.line + ", column: " + error.column + ": " + error.message);
-    // let line = n1ql.split('\n')[error.line-1];
-    // console.log(line.substring(0,error.column) + '^^^' + line.substring(error.column));
+    console.log("Error line: " + error.line + ", column: " + error.column + ": " + error.message);
+    let line = n1ql.split('\n')[error.line-1];
+    console.log(line.substring(0,error.column) + '^^^' + line.substring(error.column));
     currentParseResults.push(error);
   }
 

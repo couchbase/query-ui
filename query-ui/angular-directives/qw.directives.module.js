@@ -37,8 +37,7 @@ import { QwQueryService }      from "../angular-services/qw.query.service.js";
 import { QwCollectionsService }   from "../angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "../angular-services/qw.constants.service.js";
 import { QwFixLongNumberService } from "../angular-services/qw.fix.long.number.service.js";
-import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
-
+import { QwMetadataService }      from "../angular-services/qw.metadata.service.js";
 
 import { QwDialogService }     from "./qw.dialog.service.js";
 import { QwDocEditorDialog }   from "./dialogs/qw.doc.editor.dialog.component.js";
@@ -102,7 +101,7 @@ class QwDirectivesModule {
         QwCollectionsService,
         QwConstantsService,
         QwFixLongNumberService,
-        QwValidateQueryService,
+        QwMetadataService,
 
         QwDialogService,
         QwHttp,

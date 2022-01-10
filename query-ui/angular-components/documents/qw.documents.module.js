@@ -5,7 +5,7 @@ Use of this software is governed by the Business Source License included in
 the file licenses/BSL-Couchbase.txt.  As of the Change Date specified in that
 file, in accordance with the Business Source License, use of this software will
 be governed by the Apache License, Version 2.0, included in the file
-licenses/APL2.txt.
+licenses/APLtxt.
 */
 
 import { NgModule }               from '@angular/core';
@@ -30,7 +30,6 @@ import { QwFixLongNumberService } from "../../angular-services/qw.fix.long.numbe
 import { QwImportService }        from '../../angular-services/qw.import.service.js';
 import { QwQueryService }         from "../../angular-services/qw.query.service.js";
 import { QwQueryPlanService }     from "../../angular-services/qw.query.plan.service.js";
-import { QwValidateQueryService } from "../../angular-services/qw.validate.query.service.js";
 import { QwHttp }                 from '../../angular-services/qw.http.js';
 
 import { NgxAceModule } from 'ace/@nowzoo/ngx-ace';
@@ -122,7 +121,6 @@ class QwDocumentsModule {
         QwImportService,
         QwQueryService,
         QwQueryPlanService,
-        QwValidateQueryService,
         QwHttp
       ],
     })

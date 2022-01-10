@@ -16,9 +16,9 @@ import {Component,
 import { FormControl, FormGroup}        from '@angular/forms';
 
 import { QwImportService }              from '../../angular-services/qw.import.service.js';
+import { QwMetadataService }            from '../../angular-services/qw.metadata.service.js';
+import { QwQueryService }               from '../../angular-services/qw.query.service.js';
 import { QwDialogService }              from '../../angular-directives/qw.dialog.service.js';
-import { QwValidateQueryService }       from '../../angular-services/qw.validate.query.service.js';
-import { MnPermissions, MnPoolDefault } from 'ajs.upgraded.providers';
 
 import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "d3-dsv";
 
@@ -40,11 +40,10 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       ChangeDetectorRef,
-      MnPermissions,
-      MnPoolDefault,
       QwDialogService,
       QwImportService,
-      QwValidateQueryService,
+      QwMetadataService,
+      QwQueryService,
       ];
   }
 
@@ -54,22 +53,22 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   }
 
 
-  constructor(cdr, mnPermissions, mnPoolDefault, qwDialogService, qwImportService, validateQueryService) {
+  constructor(cdr, qwDialogService, qwImportService, qwMetadataService, qwQueryService) {
     super();
 
     var ic = this;
     var qis = qwImportService;
     ic.cdr = cdr;
     this.ic = ic;
-    this.compat = mnPoolDefault.export.compat;
+    this.compat = qwMetadataService.compat;
 
     this.configForm = new FormGroup({
         useKey: new FormControl()
     });
 
-    ic.rbac = mnPermissions.export;
+    ic.rbac = qwMetadataService.rbac;
     ic.docImporter = function() {
-      return ic.rbac.cluster.collection['.:.:.'].data.docs.write &&
+      return ic.rbac.init && ic.rbac.cluster.collection['.:.:.'].data.docs.write &&
         ic.rbac.cluster.collection['.:.:.'].collections.read;
     };
 
@@ -86,7 +85,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
     ic.formats = ["CSV","TSV","JSON List","JSON Lines"];
     ic.options.selectedFormat = ic.formats[0];
-    ic.validQueryService = validateQueryService.valid;
+    ic.validQueryService = qwMetadataService.valid;
 
     ic.selectFile = function() {
       var fileInput = document.getElementById("loadQuery");
@@ -135,8 +134,20 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
     // can we import?
     ic.canImport = function() {
-      return ic.options.docData.length && ic.options.selected_bucket && ic.validQueryService() &&
-        (!this.compat.atLeast70 || (ic.options.selected_collection && ic.options.selected_scope));
+      let a = ic.options.docData.length > 0 && ic.options.selected_bucket && ic.validQueryService();
+      let b = (!this.compat.atLeast70 || (ic.options.selected_collection && ic.options.selected_scope));
+      return ic.options.docData.length > 0 && ic.options.selected_bucket && ic.validQueryService() &&
+          (!this.compat.atLeast70 || (ic.options.selected_collection && ic.options.selected_scope));
+    };
+
+    // reasons that could prevent us from importing
+    ic.importError = function() {
+      if (!qwMetadataService.valid()) return "No query service";
+      if (ic.options.docData.length == 0) return "No data to import";
+      if (!ic.options.selected_bucket) return "No selected bucket";
+      if (this.compat.atLeast70 && (!ic.options.selected_collection || !ic.options.selected_scope))
+        return "No selected scope/coll";
+      return null;
     };
 
     // regex to figure out what format the data appears to be
@@ -384,8 +395,8 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         ic.options.fileData = "";
       }
       // see if we have access to a query service
-      validateQueryService.getBucketsAndNodes(function() {
-        if (!validateQueryService.valid())
+      qwMetadataService.metaReady.then(() => {
+        if (!qwMetadataService.valid())
           qwDialogService.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
         });
     }
@@ -395,8 +406,5 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     //
 
     activate();
-
-
-
   }
 }

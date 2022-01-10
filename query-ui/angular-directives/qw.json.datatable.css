@@ -1,0 +1,135 @@
+.data-table-wrapper > form:nth-child(even),
+.data-table-wrapper > div:nth-child(even) {
+    background-color: #fff;
+}
+
+.data-table-wrapper > form:nth-child(even),
+.data-table-wrapper > div:nth-child(even) {
+    background-color: #fff;
+}
+
+/*
+ * the data-table-header is a separate div that holds the column headers, so
+ * they stay visible even when the table is scrolled. This div is programatically
+ * scrolled horizontally to stay in sync with the table contents.
+ *
+ * the spacing and font should be set the same as the table contents, since the
+ * size of all the columns are specified in 'ch', and when the font changes the
+ * size of a 'ch' also changes.
+ */
+
+.data-table-header-row {
+    white-space: nowrap;            /* keep as a single row */
+    overflow-x: scroll;             /* horizontal scroll with data */
+    overflow: -moz-scrollbars-none; /* hide scrollbar in firefox */
+    scrollbar-width: none;          /* a different way to hide firefox scrollbars */
+    overflow-y: hidden;
+    border-bottom: solid 1px #d1d1d1;
+    background-color: #eceff2 !important;
+    cursor: default;
+    color: #555;
+    height: 26px;
+}
+
+.data-table-editor-header-row {
+    white-space: nowrap;            /* keep as a single row */
+    border-bottom: solid 1px #d1d1d1;
+    background-color: #eceff2 !important;
+    cursor: default;
+    color: #555;
+    height: 40px;
+}
+
+.data-table-inner-header-row { /* used for headers on nested tables */
+    white-space: nowrap;
+    top: 0px;
+    border-bottom: solid 1px #d1d1d1;
+    background-color: #eceff2 !important;
+    cursor: default;
+    color: #555;
+    height: 23px;
+}
+
+.data-table-header-row::-webkit-scrollbar {
+    display: none;
+}
+
+.data-table-header-cell {
+    display: inline-block;
+    border-right: solid 1px #d1d1d1;
+    padding-left: .25rem;
+    cursor: pointer;
+    font-size: .75rem; /* make sure font and size are the same as the data cells */
+    overflow: hidden;
+    height: 100%;
+    line-height: 22px;
+}
+.data-table-header-cell:last-child {
+    border-right: solid 0px #d1d1d1;
+}
+.caret-subspan {
+    padding-left: .25rem;
+}
+
+/*
+ * the data-table-wrapper is a div holding the table contents. We want it to show scrollbars
+ * all the time. We also need it to have relative positioning, since the table rows are
+ * set with absolute positioning, allowing big un-rendered gaps where the user hasn't looked
+ */
+
+.data-table-wrapper {
+    width: 100%;
+    height: calc(100% - 28px);
+    overflow: scroll;
+    position: relative;
+}
+
+.data-table {
+    border: 1px solid #ececec;
+}
+
+.data-table-row {
+    position: absolute;
+    white-space: nowrap;
+    border-left: solid 1px #d1d1d1;
+    border-right: solid 1px #d1d1d1;
+}
+
+.data-table-editor-row {
+    white-space: nowrap;
+    padding-top: 0.25rem;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: 1px;
+}
+
+.data-table-cell {
+    display: inline-block;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    vertical-align: top;
+    white-space: normal;
+    font-size: .75rem; /* same as the header font for alignment HACK */
+    padding-left: .25rem;
+}
+
+.data-table-cell-special { /* used for cells containing objects or arrays */
+    display: inline-block;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    vertical-align: top;
+    white-space: normal;
+    font-size: .75rem; /* same as the header font for alignment HACK */
+    padding: 0rem;
+}
+
+.data-table-special-value {
+    font-style: italic;
+    color: #2ca01c;
+}
+
+.data-table-array {
+    border: 1px solid #ececec;
+    /*margin: -.125rem;*/
+
+}

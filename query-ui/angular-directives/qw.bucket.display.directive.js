@@ -15,8 +15,8 @@ licenses/APL2.txt.
 import { Component, ElementRef, Renderer2 } from '@angular/core';
 
 import { MnLifeCycleHooksToStream }         from 'mn.core';
-import { MnPoolDefault }                    from 'ajs.upgraded.providers';
 
+import { QwMetadataService }                from '../angular-services/qw.metadata.service.js';
 import { QwQueryService }                   from '../angular-services/qw.query.service.js';
 
 import template                             from "./qw.bucket.display.html";
@@ -41,16 +41,16 @@ class QwBucketDisplay extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       ElementRef,
-      MnPoolDefault,
+      QwMetadataService,
       QwQueryService,
       Renderer2,
     ]
   }
 
-  constructor(element, mnPoolDefault, qwQueryService, renderer) {
+  constructor(element, qwMetadataService, qwQueryService, renderer) {
     super();
     this.element = element;
-    this.compat = mnPoolDefault.export.compat;
+    this.compat = qwMetadataService.compat;
     this.renderer = renderer;
     this.qwQueryService = qwQueryService;
   }

@@ -16,15 +16,13 @@ import {UIRouter}                                        from '@uirouter/angular
 import js_beautify                                       from "js-beautify";
 import _                                                 from "lodash";
 
-import {MnPermissions, MnPoolDefault}                    from 'ajs.upgraded.providers';
-
 import { Subject } from 'rxjs';
 
 import {QwCollectionsService}   from '../../angular-services/qw.collections.service.js';
-import {QwFixLongNumberService} from "../../angular-services/qw.fix.long.number.service.js";
-import {QwQueryService}         from "../../angular-services/qw.query.service.js";
-import {QwValidateQueryService} from "../../angular-services/qw.validate.query.service.js";
 import {QwConstantsService}     from '../../angular-services/qw.constants.service.js';
+import {QwFixLongNumberService} from "../../angular-services/qw.fix.long.number.service.js";
+import {QwMetadataService}      from "../../angular-services/qw.metadata.service.js";
+import {QwQueryService}         from "../../angular-services/qw.query.service.js";
 import {QwHttp}                 from '../../angular-services/qw.http.js';
 
 import {QwDialogService}        from '../../angular-directives/qw.dialog.service.js';
@@ -49,13 +47,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       ChangeDetectorRef,
-      MnPermissions,
-      MnPoolDefault,
       QwCollectionsService,
       QwDialogService,
       QwFixLongNumberService,
+      QwMetadataService,
       QwQueryService,
-      QwValidateQueryService,
       QwConstantsService,
       UIRouter,
       QwHttp
@@ -98,13 +94,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
   constructor(
     changeDetectorRef,
-    mnPermissions,
-    mnPoolDefault,
     qwCollectionsService,
     qwDialogService,
     qwFixLongNumberService,
+    qwMetadataService,
     qwQueryService,
-    validateQueryService,
     qwConstantsService,
     uiRouter,
     qwHttp) {
@@ -112,11 +106,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     var dec = {};
     this.dec = dec;
-    dec.rbac = mnPermissions.export;
-    dec.compat = mnPoolDefault.export.compat;
+    dec.rbac = qwMetadataService.rbac;
+    dec.compat = qwMetadataService.compat;
     dec.docViewer = function() {
-      return dec.rbac.cluster.collection['.:.:.'].data.docs.read &&
-      dec.rbac.cluster.collection['.:.:.'].collections.read;
+      return dec.rbac.init && dec.rbac.cluster.collection['.:.:.'].data.docs.read
+          && dec.rbac.cluster.collection['.:.:.'].collections.read;
     };
     dec.searchForm = this.searchForm;
 
@@ -133,12 +127,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     });
 
     dec.searchForm = this.searchForm;
-
-    //
-    // Do we have a REST API to work with?
-    //
-
-    dec.validated = validateQueryService;
 
     //
     // for persistence, keep some options in the query_service
@@ -697,7 +685,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // the bucket information yet. If we want to use n1ql, but can't do so yet, put up a message
       // asking the user to click "retrieve"
 
-      if (validateQueryService.valid() &&
+      if (qwMetadataService.valid() &&
         (dec.options.where_clause || dec.buckets_ephemeral[dec.options.selected_bucket]) &&
         !qwQueryService.buckets.length) { // no bucket info yet
         dec.options.current_query = dec.options.selected_bucket;
@@ -1247,15 +1235,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     function activate() {
-      // the following checks whether the query service is active, and if so updates the list of buckets
-      // and checks their index status
-      qwQueryService.updateBuckets();
-
-      //qwCollectionsService.bucket_bus('bucket_metadata').subscribe(bucketsUpdate);
-      //qwCollectionsService.bucket_bus('scopes_coll_metadata').subscribe(scopeCollUpdate);
-
-      // use the collections service to get the list of buckets from the REST API
-      qwCollectionsService.getBuckets().then(meta => bucketsUpdate(meta));
+      qwMetadataService.metaReady.then(() => {
+        // use the collections service to get the list of buckets from the REST API
+        qwCollectionsService.getBuckets().then(meta => bucketsUpdate(meta));
+      });
     }
   }
 

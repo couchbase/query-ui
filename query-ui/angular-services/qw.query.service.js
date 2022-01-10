@@ -13,16 +13,11 @@ import {NgbModal}               from '@ng-bootstrap/ng-bootstrap';
 import {QwCollectionsService}   from "./qw.collections.service.js";
 import {QwConstantsService}     from "./qw.constants.service.js";
 import {QwFixLongNumberService} from "./qw.fix.long.number.service.js";
-import {QwValidateQueryService} from './qw.validate.query.service.js';
 import {QwQueryPlanService}     from "./qw.query.plan.service.js";
 import {QwHttp}                 from './qw.http.js';
+import {QwMetadataService}      from "./qw.metadata.service.js";
 
 import {QwDialogService}        from '../angular-directives/qw.dialog.service.js';
-
-import {MnPendingQueryKeeper,
-  MnPools,
-  MnPoolDefault, MnPermissions} from 'ajs.upgraded.providers';
-import {MnAdminService}         from "mn.admin.service";
 
 import _                        from 'lodash';
 export {QwQueryService};
@@ -37,77 +32,67 @@ class QwQueryService {
   static get parameters() {
     return [
       QwHttp,
-      MnAdminService,
-      MnPendingQueryKeeper,
-      MnPermissions,
-      MnPoolDefault,
-      MnPools,
       NgbModal,
       QwCollectionsService,
       QwConstantsService,
       QwDialogService,
       QwFixLongNumberService,
+      QwMetadataService,
       QwQueryPlanService,
-      QwValidateQueryService,
     ]
   }
 
   constructor(
     qwHttp,
-    mnAdminService,
-    mnPendingQueryKeeper,
-    mnPermissions,
-    mnPoolDefault,
-    mnPools,
     ngbModal,
     qwCollectionsService,
     qwConstantsService,
     qwDialogService,
     qwFixLongNumberService,
+    qwMetadataService,
     qwQueryPlanService,
-    validateQueryService) {
+    ) {
 
     // to reuse the code from AngularJS, we create the service object as before, then assign
     // all the members to this object.
     // TODO: bring all those functions and code into this object definition.
     let queryServiceCore = getQwQueryService(
-        mnAdminService,
-        mnPendingQueryKeeper,
-        mnPermissions,
-        mnPoolDefault,
-        mnPools,
         ngbModal,
         qwCollectionsService,
         qwConstantsService,
         qwDialogService,
         qwFixLongNumberService,
+        qwHttp,
+        qwMetadataService,
         qwQueryPlanService,
-        validateQueryService,
-        qwHttp);
+    );
 
     Object.assign(this, queryServiceCore);
+
+    this.metaReady = this.updateBuckets();
   }
 }
 
 function getQwQueryService(
-  mnAdmin,
-  mnPendingQueryKeeper,
-  mnPermissions,
-  mnPoolDefault,
-  mnPools,
   ngbModal,
   qwCollectionsService,
   qwConstantsService,
   qwDialogService,
   qwFixLongNumberService,
+  qwHttp,
+  qwMetadataService,
   qwQueryPlanService,
-  validateQueryService,
-  qwHttp) {
+) {
 
   var qwQueryService = {};
-  qwQueryService.validateQueryService = validateQueryService;
   qwQueryService.queryPlanService = qwQueryPlanService;
-  qwQueryService.compat = mnPoolDefault.export.compat;
+
+  qwQueryService.updateBuckets = () => {
+    return qwMetadataService.updateBuckets().then(
+        () => {updateBucketsCallback();},
+        () => {console.log("Error getting buckets in qwQueryService")}
+    )
+  };
 
   //
   // remember which tab is selected for output style: JSON, table, or tree
@@ -118,7 +103,7 @@ function getQwQueryService(
     // some tabs are not available in some modes
     switch (newTab) {
       case 6: // advice is only available in EE
-        if (!mnPools.export.isEnterprise)
+        if (!qwMetadataService.isEnterprise())
           newTab = 1;
         break;
     }
@@ -220,7 +205,6 @@ function getQwQueryService(
   qwQueryService.indexes = [];
   qwQueryService.udfs = [];
   qwQueryService.udfLibs = [];
-  qwQueryService.updateBuckets = updateBuckets;             // get list of buckets
   qwQueryService.updateBucketCounts = updateBucketCounts;   // get list of buckets
   qwQueryService.getSchemaForBucket = getSchemaForBucket;   // get schema
   qwQueryService.updateBucketMetadata = updateBucketMetadata;
@@ -237,10 +221,6 @@ function getQwQueryService(
   qwQueryService.hasRecommendedIndex = hasRecommendedIndex;
 
   qwQueryService.workbenchUserInterest = 'editor';
-
-  mnPools.get().then(function (pools) {
-    qwQueryService.pools = pools;
-  });
 
   //
   // keep track of active queries, complete requests, and prepared statements
@@ -1122,8 +1102,8 @@ function getQwQueryService(
 
     //console.log("Cancelling query, currentQuery: " + queryResult.client_context_id);
     if (queryResult && queryResult.client_context_id != null) {
-      var queryInFly = mnPendingQueryKeeper.getQueryInFly(queryResult.client_context_id);
-      queryInFly && queryInFly.canceler("test");
+      //var queryInFly = mnPendingQueryKeeper.getQueryInFly(queryResult.client_context_id);
+      //queryInFly && queryInFly.canceler("test");
 
       queryResult.busy = false;
       queryResult.status = "Cancelling...";
@@ -1317,8 +1297,6 @@ function getQwQueryService(
 
     var queryRequest;
     var userAgent = 'Couchbase Query Workbench';
-    //if (mnAdmin.stream.prettyVersion)
-    //  userAgent += ' (' + JSON.stringify(mnAdmin.stream.prettyVersion) + ')';
 
     var queryRequest = {
       url: qwConstantsService.queryURL,
@@ -2070,7 +2048,7 @@ function getQwQueryService(
     //
 
     if (!explainOnly && !queryIsExplain && !queryIsAdvise && !queryIsTransaction &&
-      mnPools.export.isEnterprise) {
+      qwMetadataService.isEnterprise()) {
       var advise_promise = runAdvise(queryText, newResult);
       if (advise_promise != null)
         promises.push(advise_promise);
@@ -2446,21 +2424,6 @@ function getQwQueryService(
         });
   };
 
-  //
-  // whenever the system changes, we need to update the list of valid buckets
-  //
-
-  //$rootScope.$on("indexStatusURIChanged",updateBuckets/*function() {console.log("indexStatusURIChanged")}*/);
-  // if ($rootScope) {
-  //   $rootScope.$on("bucketUriChanged", updateBuckets);
-  //   $rootScope.$on("checkBucketCounts", updateBucketCounts);
-  // }
-
-  function updateBuckets(event, data) {
-    qwCollectionsService.refreshBuckets().then(() =>
-      validateQueryService.getBucketsAndNodes(updateBucketsCallback)
-    );
-  }
 
   //
   // get the number of docs in each visible collection on the screen
@@ -2522,7 +2485,7 @@ function getQwQueryService(
 
   function updateBucketsCallback() {
     // make sure we have a query node
-    if (!validateQueryService.valid())
+    if (!qwMetadataService.valid())
       return;
 
     var bucketsToInfer = [];
@@ -2531,7 +2494,7 @@ function getQwQueryService(
     qwQueryService.buckets.length = 0;
 
     // for those buckets that are valid for querying, add them to the list
-    validateQueryService.validBuckets().forEach(bucketName => {
+    qwMetadataService.bucketList.forEach(bucketName => {
 
       var bucket = qwQueryService.buckets.find(bucket => bucket.id == bucketName);
       // if we don't know about this bucket, add it
@@ -2557,7 +2520,7 @@ function getQwQueryService(
 
       // if the bucket is expanded, or is the current query context, get the scopes and collections
       if (bucket.expanded || bucket.id == getCurrentResult().query_context_bucket) {
-        if (qwQueryService.compat.atLeast70)
+        if (qwMetadataService.compat.atLeast70)
           updateBucketMetadata(bucket);
         else {
           bucket.schema_error = "waiting for schema...";
@@ -2567,14 +2530,14 @@ function getQwQueryService(
     });
 
     // for mixed clusters, infer bucket schemas directly
-    if (!qwQueryService.compat.atLeast70 && bucketsToInfer.length > 0)
+    if (!qwMetadataService.compat.atLeast70 && bucketsToInfer.length > 0)
       getCollectionsSchemasBackground(bucketsToInfer,0);
 
     refreshAutoCompleteArray();
   }
 
   //
-  // make sure we have metadata when query contect bucket changes
+  // make sure we have metadata when query context bucket changes
   //
 
   function query_context_bucket_changed() {
@@ -2600,7 +2563,7 @@ function getQwQueryService(
   function updateBucketMetadata(bucket) {
     var bucketName = bucket.name;
     // in mixed cluster mode, there are no scopes or collections
-    if (!qwQueryService.compat.atLast70 && bucket.schema.length == 0 && !bucket.schema_error)
+    if (!qwMetadataService.compat.atLast70 && bucket.schema.length == 0 && !bucket.schema_error)
       getSchemaForBucket(bucket);
 
     // for the bucket, get the scopes and collections
@@ -3036,7 +2999,7 @@ function getQwQueryService(
   // when we are initialized, get the list of buckets
   //
 
-  setTimeout(updateBuckets, 500);
+  //setTimeout(updateBuckets, 500);
 
   return qwQueryService;
 }

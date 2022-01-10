@@ -18,7 +18,6 @@ licenses/APL2.txt.
 // that provides REST API access to another couchbase cluster.
 
 import {QwHttp}         from './qw.http.js';
-import {MnPermissions} from 'ajs.upgraded.providers';
 import _               from 'lodash';
 
 export {QwCollectionsService};
@@ -32,16 +31,13 @@ class QwCollectionsService {
 
   static get parameters() {
     return [
-      MnPermissions,
       QwHttp,
     ]
   }
 
   constructor(
-    mnPermissions,
     qwHttp) {
     Object.assign(this, getQwCollectionsService(
-      mnPermissions,
       qwHttp));
   }
 }
@@ -50,11 +46,9 @@ class QwCollectionsService {
 // to reduce overhead, it retrieves scopes and collections in a lazy fashion.
 
 function getQwCollectionsService(
-  mnPermissions,
   qwHttp) {
 
   var qcs = {};
-  qcs.rbac = mnPermissions.export;
 
   let local_metadata = {
     buckets: [],
@@ -111,7 +105,6 @@ function getQwCollectionsService(
         Object.keys(meta.buckets_ephemeral).forEach(function(key) { delete meta.buckets_ephemeral[key]; });
         // get the bucket names
         for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
-          //if (qcs.rbac.cluster.bucket[resp.data[i].name].data.docs.read) // only include buckets we have access to
           meta.buckets.push(resp.data[i].name);
 
           if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently

@@ -15,7 +15,6 @@ import {Component,
         ElementRef,
         ViewEncapsulation,
         ChangeDetectorRef}            from '@angular/core';
-import {UIRouter}                     from '@uirouter/angular';
 
 import { NgbModal, NgbModalConfig }   from '@ng-bootstrap/ng-bootstrap';
 
@@ -24,9 +23,8 @@ import { BehaviorSubject, fromEvent } from 'rxjs';
 import { QwDialogService }            from '../../angular-directives/qw.dialog.service.js';
 import { QwConstantsService }         from '../../angular-services/qw.constants.service.js';
 import { QwJsonCsvService }           from '../../angular-services/qw.json.csv.service.js';
+import { QwMetadataService }          from "../../angular-services/qw.metadata.service.js";
 import { QwQueryService }             from '../../angular-services/qw.query.service.js';
-
-import {MnPermissions, MnPoolDefault }from 'ajs.upgraded.providers';
 
 import { QwFileImportDialog }         from './dialogs/qw.file.import.dialog.component.js';
 import { QwUnifiedFileDialog }        from './dialogs/qw.unified.file.dialog.component.js';
@@ -45,8 +43,13 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         template,
+        selector: "qw-query-component",
         styleUrls: ["../_p/ui/query/ui-current/query.css"],
         encapsulation: ViewEncapsulation.None,
+        inputs: [
+          "wrapper",
+          "queryparam",
+        ],
       })
     ]
   }
@@ -55,23 +58,29 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     return [
       ChangeDetectorRef,
       ElementRef,
-      MnPermissions,
-      MnPoolDefault,
       NgbModal,
       NgbModalConfig,
       QwConstantsService,
       QwDialogService,
       QwJsonCsvService,
+      QwMetadataService,
       QwQueryService,
-      UIRouter,
     ];
   }
 
   ngOnInit() {
-    this.params = this.uiRouter.globals.params;
+    if (this.wrapper)
+      this.wrapper.wrapped = this; // let parent know who we are for mnCrane functions
     this.resizeObservable = fromEvent(window,'resize');
     this.resizeSubscription = this.resizeObservable.subscribe( evt => this.qc && this.qc.updateEditorSizes && this.qc.updateEditorSizes());
 
+    // if we receive a query parameter, and it's not the same as the current query,
+    // insert it at the end of history
+
+    if (this.queryparam && _.isString(this.queryparam) && this.queryparam.length > 0 &&
+        this.queryparam != this.qc.lastResult().query) {
+      this.qc.qwQueryService.addNewQueryAtEndOfHistory(this.queryparam);
+    }
   }
 
   ngAfterViewInit() {
@@ -102,15 +111,13 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
   constructor(cdr,
               element,
-              mnPermissions,
-              mnPoolDefault,
               ngbModal,
               ngbModalConfig,
               qwConstantsService,
               qwDialogService,
               qwJsonCsvService,
+              qwMetadataService,
               qwQueryService,
-              uiRouter
   ) {
     super();
 
@@ -118,13 +125,16 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     // of this Component class
     var qc = {};
     this.qc = qc;
-    this.uiRouter = uiRouter;
+    this.foo = "foo";
+    qc.foo = "bar";
     this.element = element;
     this.QwDialogService = qwDialogService;
     qc.qwDialogService = qwDialogService;
+    qc.qms = qwMetadataService;
+    this.qms = qwMetadataService;
     qc.modalService = ngbModal;
 
-    qc.compat = mnPoolDefault.export.compat;
+    qc.compat = qwMetadataService.compat;
 
     //
     // alot of state is provided by the qwQueryService
@@ -132,22 +142,25 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     qc.qwQueryService = qwQueryService;
     qc.buckets = qwQueryService.buckets;                // buckets on cluster
+    qc.valid = qwMetadataService.valid;
+    qc.isEnterprise = qwMetadataService.isEnterprise;
     qc.gettingBuckets = qwQueryService.gettingBuckets;  // busy retrieving?
     qc.updateBuckets = qwQueryService.updateBuckets;    // function to update
     qc.lastResult = qwQueryService.getCurrentResult; // holds the current query and result
     //qc.limit = qwQueryService.limit;            // automatic result limiter
     //qc.executingQuery = qwQueryService.executingQuery;
+
     qc.emptyQuery = function() {return(qwQueryService.getResult().query.length == 0);}
     qc.emptyResult = qwQueryService.emptyResult;
     qc.hasRecommendedIndex = qwQueryService.hasRecommendedIndex;
 
     qc.result_subject = new BehaviorSubject();
 
-    qc.rbac = mnPermissions.export;
+    qc.rbac = qwMetadataService.rbac;
     qc.queryPermitted = function() {
-      return (qc.rbac.cluster.collection['.:.:.'].data.docs.read &&
+      return qc.rbac.init && ((qc.rbac.cluster.collection['.:.:.'].data.docs.read &&
               qc.rbac.cluster.collection['.:.:.'].n1ql.select.execute) ||
-        qc.rbac.cluster.collection['.:.:.'].n1ql.index.all;
+          qc.rbac.cluster.collection['.:.:.'].n1ql.index.all);
     };
 
     // some functions for handling query history, going backward and forward
@@ -256,14 +269,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.aceSearchOutput = aceSearchOutput;
 
     //
-    // Do we have a REST API to work with?
-    //
-
-    qc.validated = qwQueryService.validateQueryService;
-    qc.validNodes = qc.validated.validNodes;
-    qc.updateNodes = qc.validated.updateNodes;    // function to update
-
-    //
     // error message when result is too large to display
     //
 
@@ -303,8 +308,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.nonIndexedBuckets = qwConstantsService.nonIndexedBuckets;
 
     // are we enterprise?
-
-    qc.isEnterprise = qc.validated.isEnterprise;
 
     qc.copyResultAsCSV = function() {copyResultAsCSV();};
 
@@ -1198,7 +1201,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     function edit_history() {
 
       // bring up the dialog
-      this.dialogRef = this.modalService.open(QwHistoryDialog);
+      this.dialogRef = qc.modalService.open(QwHistoryDialog);
 
       this.dialogRef.result.then(
         function ok(result) {
@@ -1238,14 +1241,12 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         qc.insightsSidebar.classList.add("fix-width-0");
         qc.wbMainWrapper.classList.remove("width-9");
         qc.wbMainWrapper.classList.add("width-12");
-        mnPoolDefault.setHideNavSidebar(true);
       }
       else {
         qc.insightsSidebar.classList.remove("fix-width-0");
         qc.insightsSidebar.classList.add("width-3");
         qc.wbMainWrapper.classList.remove("width-12");
         qc.wbMainWrapper.classList.add("width-9");
-        mnPoolDefault.setHideNavSidebar(false);
       }
       qc.fullscreen = !qc.fullscreen;
     }
@@ -1349,72 +1350,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     this.qc.updateBuckets();
 
-    //$rootScope.$on("nodesChanged", function () {
-    // qc.updateNodes();
-    //});
-
-    // if we receive a query parameter, and it's not the same as the current query,
-    // insert it at the end of history
-    var params = this.uiRouter.globals.params;
-
-    if (params && _.isString(params.query) && params.query.length > 0 &&
-      params.query != this.qc.lastResult().query) {
-      this.qc.qwQueryService.addNewQueryAtEndOfHistory(params.query);
-    }
-
-    // Prevent the backspace key from navigating back. Thanks StackOverflow!
-    // $(document).unbind('keydown').bind('keydown', function (event) {
-    //   var doPrevent = false;
-    //   if (event.keyCode === 8) {
-    //     var d = event.srcElement || event.target;
-    //     if ((d.tagName.toUpperCase() === 'INPUT' &&
-    //         (
-    //           d.type.toUpperCase() === 'TEXT' ||
-    //           d.type.toUpperCase() === 'PASSWORD' ||
-    //           d.type.toUpperCase() === 'FILE' ||
-    //           d.type.toUpperCase() === 'SEARCH' ||
-    //           d.type.toUpperCase() === 'EMAIL' ||
-    //           d.type.toUpperCase() === 'NUMBER' ||
-    //           d.type.toUpperCase() === 'DATE' )
-    //       ) ||
-    //       d.tagName.toUpperCase() === 'TEXTAREA') {
-    //       doPrevent = d.readOnly || d.disabled;
-    //     }
-    //     else {
-    //       doPrevent = true;
-    //     }
-    //   }
-    //
-    //   if (doPrevent) {
-    //     event.preventDefault();
-    //   }
-    // });
-
-    //
-    // check bucket counts every 5 seconds
-    //
-
-    //if (!qwQueryService.pollSizes) {
-    //  qwQueryService.pollSizes = $interval(function () {
-    //$rootScope.$broadcast("checkBucketCounts");
-    //  }, 10000);
-
-    //$scope.$on('$destroy', function () {
-    //$interval.cancel(qwQueryService.pollSizes);
-    //  qwQueryService.pollSizes = null;
-    //});
-    //}
-
-    /*
-     * Watch whether a query is running, meaning that the query input should be read-only
-     */
-
-    //$scope.$watch($interpolate("{{qc.lastResult().busy}}"),function(newValue) {
-    //  if (qc.inputEditor) {
-    //    qc.inputEditor.setReadOnly(qc.lastResult().busy);
-    //  }
-    //});
-
     //
     // now let's make sure the window is the right size
     //
@@ -1427,13 +1362,13 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   //
 
   options() {
-    var qwQueryService = this.qwQueryService;
-    var prefOptions = this.qwQueryService.clone_options();
+    var qwQueryService = this.qc.qwQueryService;
+    var prefOptions = this.qc.qwQueryService.clone_options();
     var pp = prefOptions.positional_parameters;
     var np = prefOptions.named_parameters;
     prefOptions.positional_parameters = [];
     prefOptions.named_parameters = [];
-    prefOptions.isEnterprise = this.isEnterprise();
+    prefOptions.isEnterprise = this.qc.qms.isEnterprise();
 
     // the named & positional parameters are values, convert to JSON
     if (pp)
@@ -1450,7 +1385,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       }
 
     // bring up the dialog
-    this.dialogRef = this.modalService.open(QwPrefsDialog);
+    this.dialogRef = this.qc.modalService.open(QwPrefsDialog);
     this.dialogRef.componentInstance.options = prefOptions;
 
     this.dialogRef.result

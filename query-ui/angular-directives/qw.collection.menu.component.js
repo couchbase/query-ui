@@ -21,7 +21,6 @@ import { ViewEncapsulation,
   NgModule,
   Renderer2 }                             from '@angular/core';
 import { MnLifeCycleHooksToStream }       from 'mn.core';
-import { MnPoolDefault }                  from 'ajs.upgraded.providers';
 import { CommonModule }                   from '@angular/common';
 import { Subject, pipe }                  from 'rxjs';
 import { takeUntil, distinctUntilChanged,
@@ -29,6 +28,8 @@ import { takeUntil, distinctUntilChanged,
 import { FormControl, FormGroup }         from '@angular/forms';
 
 import {QwCollectionsService}             from '../angular-services/qw.collections.service.js';
+import {QwMetadataService}                from '../angular-services/qw.metadata.service.js';
+import {QwQueryService}                   from '../angular-services/qw.query.service.js';
 
 import template                           from "./qw.collection.menu.html";
 
@@ -58,11 +59,11 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
   static get parameters() { return [
     ChangeDetectorRef,
-    MnPoolDefault,
-    QwCollectionsService
+    QwCollectionsService,
+    QwMetadataService,
   ] }
 
-  constructor(changeDetectorRef,mnPoolDefault,qwCollectionsService) {
+  constructor(changeDetectorRef,qwCollectionsService,qwMetadataService) {
     super();
     this.cdr = changeDetectorRef;
     this.qwCollectionsService = qwCollectionsService;
@@ -73,7 +74,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     this.scopes = {};      // scopes and collections indexed by bucket name
     this.collections = {};
 
-    this.compat = mnPoolDefault.export.compat;
+    this.compat = qwMetadataService.compat;
 
     this.scopes_subject = new Subject();
     this.collections_subject = new Subject();

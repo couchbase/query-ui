@@ -186,9 +186,10 @@ licenses/APL2.txt.
   <footer class="footer-import">
     <button
        (click)="ic.doImport()"
-       [disabled]="!ic.canImport()"
+       [disabled]="ic.importError() != null"
        class="fix-width-3 margin-right-1">
-      <div *ngIf="!ic.options.importing">Import Data</div>
+      <div *ngIf="!ic.options.importing && ic.importError() == null">Import Data</div>
+      <div *ngIf="!ic.options.importing && ic.importError() != null">{{ic.importError()}}</div>
       <div *ngIf="ic.options.importing" class="icon-button">
         Cancel Import
         <span class="icon fa-spinner fa-spin fa-pulse"></span>

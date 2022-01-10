@@ -8,13 +8,11 @@ be governed by the Apache License, Version 2.0, included in the file
 licenses/APL2.txt.
 -->
 
-<qw-workbench-subnav></qw-workbench-subnav>
-
-<div *ngIf="!qmc.validated.valid()">
+<div *ngIf="!qmc.qms.valid()">
   No query service found. If the cluster recently started, try reloading the page.
 </div>
 
-<div *ngIf="qmc.validated.valid()">
+<div *ngIf="qmc.qms.valid()">
   <div class="row margin-bottom-half">
     <!-- top row w/ title/time/pill selectors -->
     <div class="row">
@@ -44,11 +42,11 @@ licenses/APL2.txt.
   </div>
 
   <!--  Insufficient permissions ************************************  -->
-  <div id="not_permitted" *ngIf="!qmc.validated.monitoringAllowed()">
+  <div id="not_permitted" *ngIf="!qmc.qms.monitoringAllowed()">
     Insufficient permissions to perform query monitoring.
   </div>
 
-  <div class="padding-bottom-6" id="monitoring_tables" *ngIf="qmc.validated.monitoringAllowed()">
+  <div class="padding-bottom-6" id="monitoring_tables" *ngIf="qmc.qms.monitoringAllowed()">
 
     <!-- ACTIVE QUERIES TABLE  ************************************  -->
     <div class="qm-table-active cbui-table" *ngIf="qmc.isSelected(1)">
@@ -107,12 +105,13 @@ licenses/APL2.txt.
           </span>
           <span class="cbui-table-cell flex-grow-1-5 wrap text-right">
             <a *ngIf="result.plan" (click)="qmc.showPlan(result.statement,result.plan)">Plan&nbsp;</a>
-            <a uiSref="app.admin.query.workbench"
+            <a (click)="navigateToQuery(result.statement)">Edit</a>
+            <!--a uiSref="app.admin.query.workbench"
                uiSrefActive="selected"
                [uiParams]="{ query: result.statement }"
                class="nowrap">
               Edit
-            </a>
+            </a-->
             <a class="margin-left-half nowrap" (click)="qmc.cancelQueryById(result.requestId)">
               {{qmc.getCancelLabel(result.requestId)}}
             </a>
@@ -196,12 +195,12 @@ licenses/APL2.txt.
           </span>
           <span class="cbui-table-cell text-right flex-grow-half">
             <a *ngIf="result.plan" (click)="qmc.showPlan(result.statement,result.plan)">plan&nbsp;</a>
-            <a uiSref="app.admin.query.workbench"
+            <!--a uiSref="app.admin.query.workbench"
                uiSrefActive="selected"
                [uiParams]="{ query: result.statement }"
                class="nowrap">
               edit
-            </a>
+            </a-->
           </span>
         </div>
       </section>
@@ -256,8 +255,8 @@ licenses/APL2.txt.
   <!-- Query Service-Level Stats --------------------------------------------- -->
   <div>
 
-    <footer *ngIf="qmc.validated.monitoringAllowed()" class="footer-querymonitor">
-      <div class="column vertical-divider margin-0" *ngIf="qmc.validated.clusterStatsAllowed()">
+    <footer *ngIf="qmc.qms.monitoringAllowed()" class="footer-querymonitor">
+      <div class="column vertical-divider margin-0" *ngIf="qmc.clusterStatsAllowed()">
         <span class="width-6">Queries &gt; 250ms - last min</span>
         <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_requests_250ms'] | number:'1.0' }}</span>
         <br>
@@ -271,7 +270,7 @@ licenses/APL2.txt.
         <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_requests_5000ms'] | number:'1.0'}}</span>
         <br>
       </div>
-      <div class="column vertical-divider margin-left-1" *ngIf="qmc.validated.clusterStatsAllowed()">
+      <div class="column vertical-divider margin-left-1" *ngIf="qmc.clusterStatsAllowed()">
           <br>
           <span class="width-6">Query Request Time - last min</span>
           <span class="text-right width-6">{{qmc.stats && qmc.stats['n1ql_avg_req_time'] | number:'1.0'}} </span>
@@ -294,7 +293,7 @@ licenses/APL2.txt.
           </mn-statistics-chart>
         </span-->
       </div>
-      <div class="column wide vertical-divider text-center" *ngIf="!qmc.validated.clusterStatsAllowed()">
+      <div class="column wide vertical-divider text-center" *ngIf="!qmc.clusterStatsAllowed()">
         <div>memory utilization (this node): {{qmc.getVital("memory_util") | number:'1.0'}}%</div>
         <br>
         <br>

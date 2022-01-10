@@ -82,8 +82,8 @@ class QueryUI {
           }, {
             name: "app.admin.query.**",
             url: "/query",
-            lazyLoad: mnLoadNgModule(() => import("../angular-components/workbench/qw.workbench.module.js"),
-              "QwWorkbenchModule")
+            lazyLoad: mnLoadNgModule(() => import("../angular-component-wrappers/qw.wrapper.module.js"),
+              "QwWrapperModule")
           },
           ]
         })

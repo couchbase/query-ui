@@ -14,8 +14,8 @@ import { QwDocEditorDialog } from './dialogs/qw.doc.editor.dialog.component.js';
 import { QwErrorDialog }     from './dialogs/qw.error.dialog.component.js';
 import { QwInputDialog }     from './dialogs/qw.input.dialog.component.js';
 import { QwNoticeDialog }    from './dialogs/qw.notice.dialog.component.js';
-import { MnPoolDefault }     from 'ajs.upgraded.providers';
 import { QwHttp }            from '../angular-services/qw.http.js';
+import { QwMetadataService } from '../angular-services/qw.metadata.service.js';
 import js_beautify           from "js-beautify";
 
 export { QwDialogService };
@@ -27,15 +27,15 @@ class QwDialogService {
   ]}
 
   static get parameters() { return [
-    MnPoolDefault,
     NgbModal,
     NgbModalConfig,
     QwHttp,
+    QwMetadataService,
   ]}
 
-  constructor(mnPoolDefault, modalService, ngbModalConfig, qwHttp) {
+  constructor(modalService, ngbModalConfig, qwHttp, qwMetadataService) {
     this.modalService = modalService;
-    this.compat = mnPoolDefault.export.compat;
+    this.compat = qwMetadataService.compat;
     this.qwHttp = qwHttp;
     ngbModalConfig.backdrop = "static";
   }

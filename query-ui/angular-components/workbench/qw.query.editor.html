@@ -1,0 +1,131 @@
+<!-- query editor header, main editor area, and results footer --------------->
+<div class="wb-query-editor">
+    <!-- Editor "header row" ----------------------------------------------------->
+    <div class="wb-query-editor-header">
+        <h5>Query Editor</h5>
+        <span class="wb-history-controls">
+          <span
+                  title="View previous queries & results" (click)="prev()"
+                  class="icon angle-icon left"
+                  [attr.disabled]="!qqs.hasPrevResult() || null">
+          </span>
+          <span class="wb-history-controls-inner">
+            <a (click)="historyMenu()">history</a>
+            ({{qqs.getCurrentIndex()}})
+          </span>
+          <span
+                  title="View subsequent queries & results"
+                  (click)="next()"
+                  class="icon angle-icon right"
+                  [attr.disabled]="!qqs.hasNextResult() || null">
+          </span>
+        </span>
+        <span class="query-context" *ngIf="qms.compat.atLeast70">
+          context
+          <select
+                  [(ngModel)]="qqs.getCurrentResult().query_context_bucket"
+                  (change)="qqs.query_context_bucket_changed()"
+                  appendToBody="true"
+                  ngbTooltip="Set a default bucket and scope to use for your queries, so you may write queries with only the collection name."
+          >
+            <option [ngValue]="null">unset</option>
+            <option *ngFor="let bucket of qms.bucketList">{{bucket}}</option>
+          </select>
+          <select
+                  *ngIf="qqs.getCurrentResult().query_context_bucket"
+                  [(ngModel)]="qqs.getCurrentResult().query_context_scope">
+            <option *ngFor="let name of getContextScopes()">{{name}}</option>
+          </select>
+        </span>
+    </div>
+
+    <!-- Ace editor -------------------------------------------------------------->
+    <ngx-ace class="wb-ace-editor" (ready)="aceInputLoaded($event)"
+             [(ngModel)]="qqs.getCurrentResult().query">
+    </ngx-ace>
+    <!-- wrapper under query editor for button and stats ------------------------->
+    <div class="wb-query-editor-footer">
+        <span class="wb-button-wrapper nowrap" (click)="handleClick('results')">
+          <button (click)="query({})" class="wb-button-execute">
+            <div *ngIf="!qqs.getCurrentResult().busy">Execute</div>
+            <div *ngIf="qqs.getCurrentResult().busy" class="icon-button">
+              Cancel
+              <span class="icon fa-spinner fa-spin fa-pulse"></span>
+            </div>
+          </button>
+          <div *ngIf="!qms.compat.atLeast70" class="padding-left-1 padding-right-half">
+              <button
+                      [disabled]="qqs.getCurrentResult().busy"
+                      (click)="query({explainOnly: true})"
+                      class="outline tight margin-0">
+                Explain
+              </button>
+              <button
+                      *ngIf="qms.isEnterprise()"
+                      [disabled]="qqs.getCurrentResult().busy"
+                      (click)="runAdviseOnLatest()"
+                      class="outline tight margin-0">
+                Index Advisor
+              </button>
+          </div>
+          <div *ngIf="qms.compat.atLeast70" class="nowrap padding-left-1 padding-right-half">
+            <button *ngIf="qms.isEnterprise()"
+                    [disabled]="qqs.getCurrentResult().busy"
+                    (click)="qc.query({txImplicit: true})"
+                    class="outline tight margin-0">
+              Run as TX
+            </button>
+            <button *ngIf="qms.isEnterprise()"
+                    [disabled]="qqs.getCurrentResult().busy"
+                    (click)="qc.runAdviseOnLatest()"
+                    class="outline tight margin-0">
+              Index Advisor
+            </button>
+            <button
+                    [disabled]="qqs.getCurrentResult().busy"
+                    (click)="query({explainOnly: true})"
+                    class="outline tight margin-0">
+              Explain
+            </button>
+
+
+          </div>
+        </span>
+        <!-- query execution summary stats -------------------------------------------->
+        <div class="wb-result-summary">
+         <span class="wb-result-summary" *ngIf="!qms.isEnterprise()">
+            <a href="https://index-advisor.couchbase.com/indexadvisor" target="_blank">External Query Advisor</a>&nbsp;&nbsp;&nbsp;&nbsp;
+          </span>
+            <span
+                    class="nowrap wb-result-status padding-right-half"
+                    [ngClass]="{success: qqs.status_success() || qqs.getCurrentResult().status == 'explain success', error: qqs.status_fail()}">
+            {{qqs.getCurrentResult().status}}
+          </span>
+            <span class="nowrap grayblack-1" [hidden]="qqs.getCurrentResult().status == 'executing'">
+            {{qqs.getCurrentResult().getLastRun()}}
+          </span>
+            <!--
+              <span *ngIf="qqs.getCurrentResult().elapsedTime" class="nowrap pipe">
+                elapsed: {{qqs.getCurrentResult().elapsedTime}}
+              </span>
+              No one knows what this means anyhow
+            -->
+            <span *ngIf="qqs.getCurrentResult().executionTime" class="nowrap pipe bold cursor-pointer"
+                  [attr.title]="'Execution: ' + qqs.getCurrentResult().executionTime + ', Elapsed: ' + qqs.getCurrentResult().elapsedTime"
+            >
+            {{qqs.getCurrentResult().executionTime}}
+          </span>
+            <span *ngIf="qqs.getCurrentResult().mutationCount" class="nowrap pipe bold cursor-pointer" title="Mutation Count">
+            {{qqs.getCurrentResult().mutationCount}} mutations
+          </span>
+            <span *ngIf="!qqs.getCurrentResult().mutationCount && qqs.getCurrentResult().resultCount" class="nowrap pipe bold cursor-pointer"
+                  title="Result Count">
+            {{qqs.getCurrentResult().resultCount}} docs
+          </span>
+            <span *ngIf="qqs.getCurrentResult().resultSize" class="nowrap pipe bold cursor-pointer" title="Result Size">
+            {{qqs.getCurrentResult().resultSize}} bytes
+          </span>
+        </div>
+
+    </div>
+</div>

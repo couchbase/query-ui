@@ -7,43 +7,18 @@
      be governed by the Apache License, Version 2.0, included in the file
      licenses/APL2.txt.
 -->
-
-<qw-workbench-subnav></qw-workbench-subnav>
-
 <div [hidden]="qc.queryPermitted()">
   Insufficient permissions to run queries. User must have at least Data Reader and Query Select on
   one or more collections.
 </div>
 
-<div *ngIf="!qc.validated.valid()">
+<div *ngIf="!qms.valid()">
   No query service found. If the cluster recently started, try reloading the page.
 </div>
 
 <div
-   [hidden]="!qc.validated.valid() || !qc.queryPermitted()"
+   [hidden]="!qms.valid() || !qc.queryPermitted()"
    class="wb-wrapper">
-
-  <mn-element-cargo depot="actions" *ngIf="qc.validated.valid()">
-    <div class="header-controls">
-      <a
-         *ngIf="qc.showOptions"
-         (click)="qc.options()">
-        <span class="icon fa-cog fa-lg"></span>
-      </a>
-      <a
-         id="loadQueryButton"
-         (click)="qc.do_import()"
-         class="outline resp-hide-sml"
-         onchange="console.log('changed files')">
-        IMPORT
-      </a>
-      <a
-         (click)="qc.unified_save()"
-         class="resp-hide-sml">
-        EXPORT
-      </a>
-    </div>
-  </mn-element-cargo>
 
   <!-- wrapper for query editor and results ------------------------------------>
   <div mn-spinner="queryInProgress" class="wb-main-wrapper width-9 resp-small">
@@ -51,7 +26,7 @@
     <div class="wb-query-editor">
       <!-- Editor "header row" ----------------------------------------------------->
       <div class="wb-query-editor-header"  (click)="qc.handleClick('editor')">
-        <h5>Query Editor {{TEST_URL}}</h5>
+        <h5>Query Editor</h5>
         <span class="wb-history-controls">
           <span
              title="View previous queries & results" (click)="qc.prev()"
@@ -69,7 +44,7 @@
              [attr.disabled]="!qc.hasNext() || null">
           </span>
         </span>
-        <span class="query-context" *ngIf="qc.compat.atLeast70">
+        <span class="query-context" *ngIf="qc.qms.compat.atLeast70">
           context
           <select
              [(ngModel)]="qc.lastResult().query_context_bucket"
@@ -102,7 +77,7 @@
               <span class="icon fa-spinner fa-spin fa-pulse"></span>
             </div>
           </button>
-          <div *ngIf="!qc.compat.atLeast70" class="padding-left-1 padding-right-half">
+          <div *ngIf="!qc.qms.compat.atLeast70" class="padding-left-1 padding-right-half">
               <button
                  [disabled]="qc.lastResult().busy"
                  (click)="qc.query({explainOnly: true})"
@@ -110,21 +85,21 @@
                 Explain
               </button>
               <button
-                 *ngIf="qc.isEnterprise()"
+                 *ngIf="qc.qms.isEnterprise()"
                  [disabled]="qc.lastResult().busy"
                  (click)="qc.runAdviseOnLatest()"
                  class="outline tight margin-0">
                 Index Advisor
               </button>
           </div>
-          <div *ngIf="qc.compat.atLeast70" class="nowrap padding-left-1 padding-right-half">
-            <button *ngIf="qc.isEnterprise()"
+          <div *ngIf="qc.qms.compat.atLeast70" class="nowrap padding-left-1 padding-right-half">
+            <button *ngIf="qc.qms.isEnterprise()"
                     [disabled]="qc.lastResult().busy"
                     (click)="qc.query({txImplicit: true})"
                     class="outline tight margin-0">
               Run as TX
             </button>
-            <button *ngIf="qc.isEnterprise()"
+            <button *ngIf="qc.qms.isEnterprise()"
                     [disabled]="qc.lastResult().busy"
                     (click)="qc.runAdviseOnLatest()"
                     class="outline tight margin-0">
@@ -142,7 +117,7 @@
         </span>
         <!-- query execution summary stats -------------------------------------------->
         <div class="wb-result-summary">
-         <span class="wb-result-summary" *ngIf="!qc.isEnterprise()">
+         <span class="wb-result-summary" *ngIf="!qc.qms.isEnterprise()">
             <a href="https://index-advisor.couchbase.com/indexadvisor" target="_blank">External Query Advisor</a>&nbsp;&nbsp;&nbsp;&nbsp;
           </span>
           <span
@@ -226,7 +201,7 @@
         <a (click)="qc.selectTab(5)"
            [ngClass]="{selected: qc.isSelected(5)}"
            class="resp-hide-med">Plan Text</a>
-        <a (click)="qc.selectTab(6)" *ngIf="qc.isEnterprise()"
+        <a (click)="qc.selectTab(6)" *ngIf="qc.qms.isEnterprise()"
            [ngClass]="{selected: qc.isSelected(6)}">Advice
              <span *ngIf="qc.hasRecommendedIndex(qc.lastResult())">*</span>
          </a>
@@ -307,7 +282,7 @@
           <span *ngIf="qc.analysisExpanded" class="icon fa-compress" title="contract"></span>
         </div>
       </div>
-      <p class="resp-hide-med text-small margin-right-half" *ngIf="qc.compat.atLeast70">
+      <p class="resp-hide-med text-small margin-right-half" *ngIf="qc.qms.compat.atLeast70">
         Common document types, field names, and sample values from your data - by bucket, scope, collection.
       </p>
       <div class="insights-sidebar-body">

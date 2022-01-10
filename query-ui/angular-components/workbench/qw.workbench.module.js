@@ -9,22 +9,24 @@ licenses/APL2.txt.
 */
 
 import { NgModule }               from '@angular/core';
-import { UIRouterModule }         from '@uirouter/angular';
-import { MnElementCraneModule }   from 'mn.element.crane';
 import { FormsModule }            from '@angular/forms';
 import { CommonModule }           from '@angular/common';
 import { ReactiveFormsModule }    from '@angular/forms';
 
 import { NgbModule, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal }            from '@ng-bootstrap/ng-bootstrap';
 
-import { QwQueryComponent }          from './qw.query.component.js';
-import { QwMonitorComponent }        from './qw.monitor.component.js';
-import { QwUdfComponent }            from './qw.udf.component.js';
-import { QwWorkbenchSubNavComponent }from './qw.workbench.subnav.js';
-import { QwAdviceVizComponent }      from './qw.advice.viz.component.js';
+import { QwAdviceVizComponent }    from './qw.advice.viz.component.js';
+import { QwInsightsComponent }     from './qw.insights.component.js';
+import { QwMonitorComponent }      from './qw.monitor.component.js';
+import { QwQueryEditorComponent }  from './qw.query.editor.component.js';
+import { QwQueryComponent }        from './qw.query.component.js';
+import { QwUdfComponent }          from './qw.udf.component.js';
 
 import { QwDirectivesModule }     from "../../angular-directives/qw.directives.module.js";
 import { QwDialogService }        from "../../angular-directives/qw.dialog.service.js";
+
+import {MnAlertsService}          from '../../../../../../ui/app/mn.alerts.service.js';
 
 import { QwCollectionsService }   from "../../angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "../../angular-services/qw.constants.service.js";
@@ -32,7 +34,6 @@ import { QwFixLongNumberService } from "../../angular-services/qw.fix.long.numbe
 import { QwImportService }        from '../../angular-services/qw.import.service.js';
 import { QwQueryService }         from "../../angular-services/qw.query.service.js";
 import { QwQueryPlanService }     from "../../angular-services/qw.query.plan.service.js";
-import { QwValidateQueryService } from "../../angular-services/qw.validate.query.service.js";
 import { QwHttp }                 from '../../angular-services/qw.http.js';
 
 import { QwFileImportDialog }     from '../../angular-components/workbench/dialogs/qw.file.import.dialog.component.js';
@@ -45,75 +46,17 @@ import { QwQueryPlanDialog }      from '../../angular-components/workbench/dialo
 
 import { NgxAceModule }           from 'ace/@nowzoo/ngx-ace';
 
-
-let documentsStates = [
-  {
-    url: '/query',
-    name: "app.admin.query",
-    data: {
-      title: "Query",  // appears in breadcrumbs in title bar
-    },
-    abstract: true,
-  },
-  {
-    url: '/workbench?query',
-    name: 'app.admin.query.workbench',
-    data: {
-      title: "Query",  // appears in breadcrumbs in title bar
-      //compat: "atLeast70"    // Cheshire Cat
-    },
-    params: {
-      query: {
-        type: 'string',
-        dynamic: true
-      },
-    },
-    views: {
-      "main@app.admin": {
-        component: QwQueryComponent
-      }
-    }
-  },
-  {
-    url: '/monitor',
-    name: 'app.admin.query.monitor',
-    data: {
-      title: "Query",  // appears in breadcrumbs in title bar
-      //       compat: "atLeast70"    // Cheshire Cat
-    },
-    views: {
-      "main@app.admin": {
-        component: QwMonitorComponent
-      }
-    }
-  },
-  {
-    url: '/udf',
-    name: 'app.admin.query.udf',
-    data: {
-      title: "UDFs",  // appears in breadcrumbs in title bar
-      //compat: "atLeast70"    // Cheshire Cat
-    },
-    views: {
-      "main@app.admin": {
-        component: QwUdfComponent
-      }
-    }
-  },
-
-];
-
 export { QwWorkbenchModule };
 
 class QwWorkbenchModule {
   static get annotations() { return [
     new NgModule({
       entryComponents: [
+        QwInsightsComponent,
         QwMonitorComponent,
         QwQueryComponent,
         QwUdfComponent,
         QwAdviceVizComponent,
-        QwWorkbenchSubNavComponent,
         QwFileImportDialog,
         QwFunctionDialog,
         QwFunctionLibraryDialog,
@@ -123,10 +66,11 @@ class QwWorkbenchModule {
         QwUnifiedFileDialog,
       ],
       declarations: [
+        QwInsightsComponent,
         QwMonitorComponent,
         QwQueryComponent,
+        QwQueryEditorComponent,
         QwUdfComponent,
-        QwWorkbenchSubNavComponent,
         QwAdviceVizComponent,
 
         // dialog used in the workbench
@@ -139,8 +83,6 @@ class QwWorkbenchModule {
         QwUnifiedFileDialog,
       ],
       imports: [
-        MnElementCraneModule,
-        UIRouterModule.forChild({ states: documentsStates }),
         QwDirectivesModule,
         FormsModule,
         CommonModule,
@@ -149,16 +91,28 @@ class QwWorkbenchModule {
         NgbModule, // for tooltips
         NgxAceModule.forRoot(),
       ],
+      exports: [
+        QwInsightsComponent,
+        QwMonitorComponent,
+        QwQueryComponent,
+        QwQueryEditorComponent,
+        QwUdfComponent,
+        QwAdviceVizComponent,
+
+        QwHistoryDialog,
+      ],
       providers: [
+        MnAlertsService,
+        NgbActiveModal,
         QwCollectionsService,
         QwConstantsService,
         QwDialogService,
         QwFixLongNumberService,
+        QwHistoryDialog,
         QwImportService,
         QwQueryService,
         QwQueryPlanService,
-        QwValidateQueryService,
-        QwHttp
+        QwHttp,
       ],
     })
   ]}

@@ -1,0 +1,39 @@
+<!-- data insights sidebar ------------------------------------------------ -->
+<div class="insights-sidebar resp-hide-sml">
+    <div *ngIf="qqs.bucket_errors" class="insights-sidebar-body">
+        {{qc.qqs.bucket_errors}}
+    </div>
+    <span *ngIf="!qqs.bucket_errors">
+      <div class="row">
+        <h5 class="ellipsis">
+          Explore Your Data
+        </h5>
+        <div *ngIf="!hideExpandToggle" class="insights-sidebar-expand" (click)="qc.toggleAnalysisSize()">
+          <span *ngIf="!analysisExpanded" class="icon fa-expand" title="expand"></span>
+          <span *ngIf="analysisExpanded" class="icon fa-compress" title="contract"></span>
+        </div>
+      </div>
+      <p class="resp-hide-med text-small margin-right-half" *ngIf="qms.compat.atLeast70">
+        Common document types, field names, and sample values from your data - by bucket, scope, collection.
+      </p>
+      <div class="insights-sidebar-body">
+        <section>
+          <span *ngFor="let abucket of qqs.buckets">
+            <qw-bucket-display [bucket]="abucket"></qw-bucket-display>
+          </span>
+        </section>
+      </div>
+
+        <!-- bucket insights refresh button ---------------------------------------- -->
+      <div class="row fix-position-br wb-refresh-btn" *ngIf="!fullscreen">
+        <button
+                title="Refresh bucket insights"
+                (click)="qqs.updateBuckets()"
+                class="outline tight"
+                [disabled]="qqs.loadingBuckets">
+          Refresh &nbsp;
+          <span class="icon fa-refresh"></span>
+        </button>
+      </div>
+    </span>
+</div>

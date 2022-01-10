@@ -45,14 +45,14 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 
-import {MnPermissions} from 'ajs.upgraded.providers';
+import {QwConstantsService}       from '../angular-services/qw.constants.service.js';
+import {QwMetadataService}        from '../angular-services/qw.metadata.service.js';
+import {QwQueryService}           from '../angular-services/qw.query.service.js';
 
-import {QwConstantsService} from '../angular-services/qw.constants.service.js';
-
-import {FormsModule} from '@angular/forms';
+import {FormsModule}              from '@angular/forms';
 import {MnLifeCycleHooksToStream} from 'mn.core';
-import {CommonModule} from '@angular/common';
-import _ from "lodash";
+import {CommonModule}             from '@angular/common';
+import _                          from "lodash";
 
 export {QwJsonTableEditor2};
 
@@ -80,16 +80,17 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
       ChangeDetectorRef,
       Compiler,
       ViewContainerRef,
-      MnPermissions,
-      QwConstantsService
+      QwConstantsService,
+      QwMetadataService,
+      QwQueryService,
     ]
   }
 
-  constructor(changeDetectorRef,compiler, vcr, mnPermissions, qwConstantsService) {
+  constructor(changeDetectorRef,compiler, vcr, qwConstantsService, qwMetadataService, qwQueryService) {
     super();
     this.cdr = changeDetectorRef;
     this.compiler = compiler;
-    this.mnPermissions = mnPermissions.export;
+    this.rbac = qwMetadataService.rbac;
     this.qwConstantsService = qwConstantsService;
   }
 
@@ -138,7 +139,7 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
     // data elements accessible to the Angular in the generated HTML
     component.instance.results = this.data;
     component.instance.dec = this.controller;
-    component.instance.rbac = this.mnPermissions;
+    component.instance.rbac = this.rbac;
     component.instance.getTooltip = getTooltip;
     component.instance.sortTable = sortTable;
     component.instance.isSorted = isSorted;

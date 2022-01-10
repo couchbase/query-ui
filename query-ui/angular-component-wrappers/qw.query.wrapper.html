@@ -1,0 +1,49 @@
+<!--
+     Copyright 2021-Present Couchbase, Inc.
+
+     Use of this software is governed by the Business Source License included in
+     the file licenses/BSL-Couchbase.txt.  As of the Change Date specified in that
+     file, in accordance with the Business Source License, use of this software will
+     be governed by the Apache License, Version 2.0, included in the file
+     licenses/APL2.txt.
+-->
+
+<qw-workbench-subnav></qw-workbench-subnav>
+<div [hidden]="qms.queryPermitted()">
+  Insufficient permissions to run queries. User must have at least Data Reader and Query Select on
+  one or more collections.
+</div>
+
+<div *ngIf="!qms.valid()">
+  No query service found. If the cluster recently started, try reloading the page.
+</div>
+
+<div
+   [hidden]="!qms.valid() || !qms.queryPermitted()"
+   class="wb-wrapper">
+
+  <mn-element-cargo depot="actions" *ngIf="qms.valid()">
+    <div class="header-controls">
+      <a
+         *ngIf="showOptions"
+         (click)="options()">
+        <span class="icon fa-cog fa-lg"></span>
+      </a>
+      <a
+         id="loadQueryButton"
+         (click)="do_import()"
+         class="outline resp-hide-sml"
+         onchange="console.log('changed files')">
+        IMPORT
+      </a>
+      <a
+         (click)="unified_save()"
+         class="resp-hide-sml">
+        EXPORT
+      </a>
+    </div>
+  </mn-element-cargo>
+
+  <qw-query-component [wrapper]="This" [queryparam]="queryParam"></qw-query-component>
+
+</div>

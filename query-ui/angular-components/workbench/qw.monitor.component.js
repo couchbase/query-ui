@@ -20,14 +20,11 @@ import { NgbModal, NgbModalConfig }from '@ng-bootstrap/ng-bootstrap';
 import { QwHttp }                  from '../../angular-services/qw.http.js';
 import { QwImportService }         from '../../angular-services/qw.import.service.js';
 import { QwDialogService }         from '../../angular-directives/qw.dialog.service.js';
+import { QwMetadataService }       from "../../angular-services/qw.metadata.service.js";
 import { QwQueryService }          from '../../angular-services/qw.query.service.js';
 import { QwQueryPlanService }      from '../../angular-services/qw.query.plan.service.js';
-import { QwValidateQueryService }  from '../../angular-services/qw.validate.query.service.js';
 
 import { QwQueryPlanDialog }       from '../../angular-components/workbench/dialogs/qw.query.plan.dialog.component.js';
-
-import {MnPermissions, $rootScope, MnPoolDefault, MnStatisticsNew,
-  MnHelper}                        from 'ajs.upgraded.providers';
 
 import { BehaviorSubject, timer}   from "rxjs";
 import { switchMap,
@@ -44,28 +41,27 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         template,
+        selector: "qw-monitor-component",
         //styleUrls: ["../../angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
+        inputs: [
+          "wrapper",
+        ],
       })
     ]
   }
 
   static get parameters() {
     return [
-      $rootScope,
       QwHttp,
       ChangeDetectorRef,
-      MnHelper,
-      MnPermissions,
-      MnPoolDefault,
-      MnStatisticsNew,
       NgbModal,
       NgbModalConfig,
       QwDialogService,
       QwImportService,
+      QwMetadataService,
       QwQueryService,
       QwQueryPlanService,
-      QwValidateQueryService,
     ];
   }
 
@@ -73,60 +69,51 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
   }
 
   constructor(
-    rootScope,
     qwHttp,
     cdr,
-    mnHelper,
-    mnPermissions,
-    mnPoolDefault,
-    mnStatisticsNew,
     ngbModal,
     ngbModalConfig,
     qwDialogService,
     qwImportService,
+    qwMetadataService,
     qwQueryService,
-    qwQueryPlanService,
-    validateQueryService) {
+    qwQueryPlanService) {
     super();
 
       this.qmc = queryMonController(
         this,
-        rootScope,
         qwHttp,
         cdr,
-        mnHelper,
-        mnPermissions,
-        mnPoolDefault,
-        mnStatisticsNew,
         ngbModal,
         ngbModalConfig,
         qwDialogService,
         qwImportService,
+        qwMetadataService,
         qwQueryService,
         qwQueryPlanService,
-        validateQueryService
       );
   }
 
   ngOnDestroy() {
   }
+
+  // only our parent knows about UI routing
+  navigateToQuery(queryText) {
+    if (this.wrapper)
+      this.wrapper.navigateToQuery(queryText);
+  }
 }
 
 function queryMonController (This,
-                             rootScope,
                              qWttp,
                              cdr,
-                             mnHelper,
-                             mnPermissions,
-                             mnPoolDefault,
-                             mnStatisticsNew,
                              ngbModal,
                              ngbModalConfig,
                              qwDialogService,
                              qwImportService,
+                             qwMetadataService,
                              qwQueryService,
                              queryPlanService,
-                             validateQueryService
 ) {
 
   var qmc = {};
@@ -135,9 +122,6 @@ function queryMonController (This,
   // Do we have a REST API to work with?
   //
 
-  qmc.validated = validateQueryService;
-  if (qmc.validated.inProgress()) // may need to validate connection to query service
-    qmc.validated.getBucketsAndNodes();
   qmc.queryPlan = queryPlanService;
   qmc.modalService = ngbModal;
 
@@ -145,6 +129,10 @@ function queryMonController (This,
 
   qmc.selectTab = qwQueryService.selectMonitoringTab;
   qmc.isSelected = qwQueryService.isMonitoringSelected;
+  qmc.qms = qwMetadataService;
+  qmc.monitoringAllowed = qwMetadataService.monitoringAllowed;
+  qmc.clusterStatsAllowed = () => qwMetadataService.rbac.init && qwMetadataService.rbac.cluster.collection['.:.:.'].stats.read;
+
   qmc.cancelQueryById = cancelQueryById;
   qmc.getCancelLabel = getCancelLabel;
   qmc.cancelledQueries = {}; // keep track of user-cancelled queries
@@ -160,7 +148,7 @@ function queryMonController (This,
   qmc.get_update_flag = function() {return(qwQueryService.getMonitoringAutoUpdate());}
   qmc.options = qwQueryService.getMonitoringOptions;
 
-  qmc.getSummaryStat = mnPoolDefault.export.compat.atLeast70 ? getSummaryStat70 : getSummaryStat;
+  qmc.getSummaryStat = qwMetadataService.compat.atLeast70 ? getSummaryStat70 : getSummaryStat;
 
   qmc.vitals = {};
   qmc.vitals_names = ["request.per.sec.15min","request.per.sec.5min",
@@ -177,11 +165,10 @@ function queryMonController (This,
     "@query.query_avg_req_time",
     "@query.query_avg_svc_time"
   ]).map(name => {
-    //name = mnPoolDefault.export.compat.atLeast70 ? mnStatsDesc.mapping65(name) : name;
     let stats = {};
     stats[name] = true;
     return {
-      id: mnHelper.generateID(),
+      id: Math.random().toString(36).substr(2, 9),
       node: "all",
       stats: stats,
       size: "tiny",
@@ -353,40 +340,42 @@ function queryMonController (This,
   //
 
   function activate() {
-    if (!qmc.validated.valid())
-      return;
+    qwMetadataService.metaReady.then(() => {
+      if (!qwMetadataService.valid())
+        return;
 
-    // get initial data for each panel
-    if (qmc.monitoring.active_updated == "never")
-      qwQueryService.updateQueryMonitoring(1);
-    if (qmc.monitoring.completed_updated == "never")
-      qwQueryService.updateQueryMonitoring(2);
-    if (qmc.monitoring.prepareds_updated == "never")
-      qwQueryService.updateQueryMonitoring(3);
+      // get initial data for each panel
+      if (qmc.monitoring.active_updated == "never")
+        qwQueryService.updateQueryMonitoring(1);
+      if (qmc.monitoring.completed_updated == "never")
+        qwQueryService.updateQueryMonitoring(2);
+      if (qmc.monitoring.prepareds_updated == "never")
+        qwQueryService.updateQueryMonitoring(3);
 
-    // set up a steram to run the queries and get query engine stats
-    let query_poller = timer(0,5000)
-      .pipe(switchMap(qwQueryService.runMonitoringQuery),
+      // set up a steram to run the queries and get query engine stats
+      let query_poller = timer(0,5000)
+          .pipe(switchMap(qwQueryService.runMonitoringQuery),
             shareReplay({refCount: true, bufferSize: 1}));
 
-    query_poller.pipe(takeUntil(This.mnOnDestroy))
-      .subscribe(qwQueryService.processMonitoringQueryResults);
+      query_poller.pipe(takeUntil(This.mnOnDestroy))
+          .subscribe(qwQueryService.processMonitoringQueryResults);
 
-    // stream to get stats from query service
-    let query_stats_poller = timer(0,5000)
-      .pipe(switchMap(qwQueryService.getQueryServiceStats),
-        shareReplay({refCount: true, bufferSize: 1}));
+      // stream to get stats from query service
+      let query_stats_poller = timer(0,5000)
+          .pipe(switchMap(qwQueryService.getQueryServiceStats),
+              shareReplay({refCount: true, bufferSize: 1}));
 
-    query_stats_poller.pipe(takeUntil(This.mnOnDestroy))
-      .subscribe(handleQueryStatsResult);
+      query_stats_poller.pipe(takeUntil(This.mnOnDestroy))
+          .subscribe(handleQueryStatsResult);
 
-    // plus the ns_server query stats
-    let stats_poller = timer(0,5000)
-      .pipe(switchMap(qwQueryService.getQueryStats),
-        shareReplay({refCount: true, bufferSize: 1}));
+      // plus the ns_server query stats
+      let stats_poller = timer(0,5000)
+          .pipe(switchMap(qwQueryService.getQueryStats),
+              shareReplay({refCount: true, bufferSize: 1}));
 
-    stats_poller.pipe(takeUntil(This.mnOnDestroy))
-      .subscribe(handleStatsResult);
+      stats_poller.pipe(takeUntil(This.mnOnDestroy))
+          .subscribe(handleStatsResult);
+    })
   }
 
   function toggle_update() {
@@ -453,7 +442,7 @@ function queryMonController (This,
     // we need to pass in the name of a bucket to which we have access, even though
     // the query stats are not bucket-specific
 
-    qmc.buckets = qmc.validated.validBuckets();
+    qmc.buckets = qwQueryService.bucketList;
     //console.log("Got buckets: "+ JSON.stringify(qmc.buckets));
     if (Array.isArray(qmc.buckets) && qmc.buckets.length > 1) {
       qmc.statsConfig.bucket = qmc.buckets[1];
