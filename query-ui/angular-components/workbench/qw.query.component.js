@@ -23,6 +23,7 @@ import { BehaviorSubject, fromEvent } from 'rxjs';
 
 import { QwDialogService }            from '../../angular-directives/qw.dialog.service.js';
 import { QwConstantsService }         from '../../angular-services/qw.constants.service.js';
+import { QwJsonCsvService }           from '../../angular-services/qw.json.csv.service.js';
 import { QwQueryService }             from '../../angular-services/qw.query.service.js';
 
 import {MnPermissions, MnPoolDefault }from 'ajs.upgraded.providers';
@@ -58,6 +59,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       NgbModalConfig,
       QwConstantsService,
       QwDialogService,
+      QwJsonCsvService,
       QwQueryService,
       UIRouter,
     ];
@@ -104,6 +106,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
               ngbModalConfig,
               qwConstantsService,
               qwDialogService,
+              qwJsonCsvService,
               qwQueryService,
               uiRouter
   ) {
