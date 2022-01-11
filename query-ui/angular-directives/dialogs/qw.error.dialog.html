@@ -18,7 +18,7 @@ licenses/APL2.txt.
       <span *ngIf="!info" class="icon red-3 fa-warning fa-2x">&nbsp;</span>
       <span *ngIf="info" class="icon blue-1 fa-info-circle fa-2x">&nbsp;</span>
       <span class="flex-grow-3">
-        <div *ngIf="error_detail">{{error_detail}}</div>
+        <span *ngIf="error_detail" class="break-word">{{error_detail}}</span>
         <ul class="nobullet" *ngIf="error_detail_array">
             <li *ngFor="let msg of error_detail_array">{{msg}}</li>
         </ul>
