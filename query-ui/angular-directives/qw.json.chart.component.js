@@ -367,10 +367,11 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
           if (this.chartType == "multiline" || this.chartType == "multiconnscatter") {
             var t = "";
             for (let i = 0; i < this.field2_list.length; i++) {
-              data.push({x: tval, y: obj[this.field2_list[i]], z: this.field2_list[i]}); // z is category
+              t = this.fields()[this.field2_list[i]];
               data_x.push(tval);
               data_y.push(obj[this.field2_list[i]]);
-              t = this.fields()[this.field2_list[i]];
+              data.push({x: tval, y: obj[this.field2_list[i]], z: this.field2_list[i], a:t}); // z is category
+
               if (data_group.indexOf(t) == -1) {
                 data_group.push(t);
               }
@@ -658,7 +659,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         })
 
     var legend = svg.selectAll(".legend")
-        .data(values[3].slice().reverse())
+        .data(sumstat)
         .enter()
         .append("g")
         .attr("class", "legend")
@@ -668,14 +669,14 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("x", this.canvas_width - 18)
         .attr("width", 18)
         .attr("height", 18)
-        .style("fill", color);
+        .style("fill", function(d){ return color(d.key) });
 
     legend.append("text")
         .attr("x", this.canvas_width+5)
         .attr("y", 9)
         .attr("dy", ".35em")
         .style("text-anchor", "left")
-        .text(function(d) { return d; });
+        .text(function(d) { if (d.values[0].a ==null ) {return d.key} else {return d.values[0].a; }});
   }
 
   createLineChart() {
@@ -778,7 +779,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("cy", function(d) { return scale_y(d.y) } )
         .attr("r", 3)
         .attr("stroke", "white")
-        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y + "<br/>y: " + d.z)}))
+        .on("mouseover", createShowTooltipFn(d => {return('x: ' + d.x + "<br/>y: "  +d.y + "<br/>z: " + d.z)}))
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
 
@@ -798,7 +799,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
      */
 
     var legend = svg.selectAll(".legend")
-        .data(values[3].slice().reverse())
+        .data(sumstat)
         .enter()
         .append("g")
         .attr("class", "legend")
@@ -808,14 +809,14 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
         .attr("x", this.canvas_width - 18)
         .attr("width", 18)
         .attr("height", 18)
-        .style("fill", color);
+        .style("fill", function(d){ return color(d.key) });
 
     legend.append("text")
         .attr("x", this.canvas_width+5)
         .attr("y", 9)
         .attr("dy", ".35em")
         .style("text-anchor", "left")
-        .text(function(d) { return d; });
+        .text(function(d) { return d.values[0].a; });
   }
 
   createAreaChart() {
