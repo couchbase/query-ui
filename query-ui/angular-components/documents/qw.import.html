@@ -172,8 +172,8 @@ licenses/APL2.txt.
         </div>
         <div
            *ngIf="ic.isSelected(2)"
-           class="wb-results-table import-table-panel"
-           [qwJsonDataTable2]="ic.options.docData">
+           class="wb-results-table import-table-panel">
+          <qw-json-data-table-comp [data]="ic.options.docData"></qw-json-data-table-comp>
         </div>
         <div
            *ngIf="ic.isSelected(3)"

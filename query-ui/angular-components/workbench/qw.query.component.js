@@ -43,7 +43,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         templateUrl: "../_p/ui/query/angular-components/workbench/qw.query.html",
-        //styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+        styleUrls: ["../_p/ui/query/ui-current/query.css"],
         encapsulation: ViewEncapsulation.None,
       })
     ]

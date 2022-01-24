@@ -24,8 +24,7 @@ import { NgxAceModule }        from 'ace/@nowzoo/ngx-ace';
 import { QwBucketDisplay }     from "./qw.bucket.display.directive.js";
 import { QwCollectionMenu }    from "./qw.collection.menu.component.js"
 import { QwExplainViz }        from "./qw.explain.viz.component.js";
-import { QwJsonDataTable,
-  QwJsonDataTableComp }        from "./qw.json.datatable.directive.js";
+import { QwJsonDataTableComp } from "./qw.json.datatable.directive.js";
 import { QwJsonChart }         from "./qw.json.chart.component.js";
 import { QwJsonTree }          from "./qw.json.tree.directive.js";
 import { QwJsonTableEditor2 }  from "./qw.json.table.editor.directive.js";
@@ -50,7 +49,6 @@ class QwDirectivesModule {
         QwExplainViz,
         QwInputDialog,
         QwJsonChart,
-        QwJsonDataTable,
         QwJsonDataTableComp,
         QwJsonTableEditor2,
         QwJsonTree,
@@ -82,7 +80,6 @@ class QwDirectivesModule {
         QwErrorDialog,
         QwExplainViz,
         QwJsonChart,
-        QwJsonDataTable,
         QwJsonDataTableComp,
         QwJsonTableEditor2,
         QwJsonTree,

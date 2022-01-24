@@ -36,13 +36,18 @@ import { MnLifeCycleHooksToStream } from 'mn.core';
 
 import _                            from "lodash";
 
-export { QwJsonDataTable, QwJsonDataTableComp };
+export { QwJsonDataTableComp };
 
 class QwJsonDataTableComp extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-json-data-table-comp",
       template: "<div></div>",
+      styleUrls: [
+        "../_p/ui/query/angular-directives/qw.directives.css",
+        "../_p/ui/query/ui-current/query.css",
+      ],
+      encapsulation: ViewEncapsulation.None,
       inputs: [
         "data", // either an array of data or an observable wrapping the data
         "subject",
@@ -88,38 +93,40 @@ class QwJsonDataTableComp extends MnLifeCycleHooksToStream {
   }
 }
 
-class QwJsonDataTable extends MnLifeCycleHooksToStream {
-  static get annotations() { return [
-    new Directive({
-      selector: "[qwJsonDataTable2]",
-// for unknown reasons, 'styleUrls' doesn't work with directives, so I need to put it in
-// an enclosing Component
-//      styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
-//      encapsulation: ViewEncapsulation.None,
-      inputs: [
-        "qwJsonDataTable2"
-      ],
-//      changeDetection: ChangeDetectionStrategy.OnPush
-    })
-  ]}
-
-  static get parameters() { return [ElementRef, Renderer2] }
-
-  constructor(element, renderer) {
-    super();
-    this.element = element;
-    this.renderer = renderer;
-  }
-
-  ngOnInit() {
-    //console.log("Directive ngOnInit, input: " + this.qwJsonDataTable);
-  }
-
-  ngAfterViewInit() {
-    //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
-    createTable(this.qwJsonDataTable2,this.element.nativeElement, this.renderer);
-  }
-}
+// class QwJsonDataTable extends MnLifeCycleHooksToStream {
+//   static get annotations() { return [
+//     new Component({
+//       selector: "[qwJsonDataTable2]",
+//       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
+//         "../_p/ui/query/ui-current/query.css"],
+// // for unknown reasons, 'styleUrls' doesn't work with directives, so I need to put it in
+// // an enclosing Component
+// //      styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+//       encapsulation: ViewEncapsulation.None,
+//       inputs: [
+//         "qwJsonDataTable2"
+//       ],
+// //      changeDetection: ChangeDetectionStrategy.OnPush
+//     })
+//   ]}
+//
+//   static get parameters() { return [ElementRef, Renderer2] }
+//
+//   constructor(element, renderer) {
+//     super();
+//     this.element = element;
+//     this.renderer = renderer;
+//   }
+//
+//   ngOnInit() {
+//     //console.log("Directive ngOnInit, input: " + this.qwJsonDataTable);
+//   }
+//
+//   ngAfterViewInit() {
+//     //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
+//     createTable(this.qwJsonDataTable2,this.element.nativeElement, this.renderer);
+//   }
+//}
 
 
 function createTable(json, element, renderer) {
