@@ -90,12 +90,12 @@
 
       <div class="formrow" *ngIf="function_type=='inline'">
         <label>Expression</label>
-        <input [disabled]="readOnly"
-               type="text"
-               [(ngModel)]="expression"
-               [ngModelOptions]="{standalone: true}"
-               placeholder="N1QL expression, e.g. args[0] + 1"
-               required name="expression">
+        <textarea class="monospaced full-width"
+                  [disabled]="readOnly"
+                  [(ngModel)]="expression"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="N1QL expression, e.g. args[0] + 1"
+                  required name="expression"></textarea>
       </div>
 
       <div *ngIf="error">

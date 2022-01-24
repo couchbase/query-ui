@@ -274,3 +274,8 @@ td.ajtd-type-array {
   border: 0px;
   border-radius: 0px;
 }
+
+.full-width {
+  max-width: 100%;
+  min-width: 100%;
+}
