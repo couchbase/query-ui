@@ -241,7 +241,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
       case ic.formats[2]: // JSON List
         try {
-          ic.options.docData = JSON.parse(ic.options.fileData);
+          ic.options.docData = JSON.parse(ic.options.fileData.replace('/\\/g','\\\\'));
         } catch (e) {
           qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON list: ' + JSON.stringify(e), true);
         }
@@ -251,7 +251,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
         ic.options.docData = [];
         var parseErrors = "";
         ic.options.fileData.split('\n').forEach(function (line) {
-          try {if (line && line.length >=2) ic.options.docData.push(JSON.parse(line));}
+          try {if (line && line.length >=2) ic.options.docData.push(JSON.parse(line.replace('/\\/g','\\\\')));}
           catch (e) {parseErrors += JSON.stringify(e);}
         });
         if (parseErrors.length > 0)
