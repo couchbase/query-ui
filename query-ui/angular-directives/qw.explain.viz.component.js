@@ -519,8 +519,7 @@ function makeTooltip(d) {
   removeAllTooltips();
 
   // the tooltip is relative to the query plan div, so we need to know its offset.
-  var query_plan_offset = outerElement.offset();
-
+  var outerBox = outerElement.getBoundingClientRect();
   // create the new tooltip
   var tooltip_div = d3Select(".wb-results-explain")
       .append("div")
@@ -536,9 +535,9 @@ function makeTooltip(d) {
     var header_div = tooltip_div.append("div");
     header_div.html('<a class="ui-dialog-titlebar-close modal-close" onclick="console.log(\"click\")"> X </a>');
     tooltip_div.html(d.data.tooltip)
-      .style("left", (d3Event.x + 40 - query_plan_offset.left) + "px")
-      .style("top", (d3Event.y - query_plan_offset.top/2) + "px");
-  }
+        .style("left", (d3Event.x - outerBox.left) + "px")
+        .style("top", (d3Event.y - outerElement.offsetTop/2) + "px");
+    }
 
   d3Event.stopPropagation();
 }
