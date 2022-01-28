@@ -184,7 +184,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
         this.dialogRef.componentInstance.function_type = 'javascript';
         break;
       case 'inline':
-        this.dialogRef.componentInstance.expression = fn.definition.expression;
+        this.dialogRef.componentInstance.expression = fn.definition.text;
         this.dialogRef.componentInstance.function_type = 'inline';
         break;
     }
