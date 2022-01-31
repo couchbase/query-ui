@@ -36,7 +36,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         templateUrl: "../_p/ui/query/angular-components/documents/qw.documents.html",
-        styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+        styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
+          "../_p/ui/query/ui-current/query.css"],
         encapsulation: ViewEncapsulation.None,
 //        changeDetection: ChangeDetectionStrategy.OnPush
       })
