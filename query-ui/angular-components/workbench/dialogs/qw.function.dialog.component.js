@@ -104,7 +104,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
 
   ok_to_save() {
     return(
-      (this.name != null) &&                                   // need function name...
+      (this.name != null && this.name.trim().length > 0) &&    // need function name...
       (!this.is_new || !this.functionNameUsed(this.name)) &&   // ...that is not already used
       ((this.function_type == 'inline' && this.expression) ||  // ...and is appropriately defined
       (this.function_type == 'javascript' && this.library_name && this.library_function)));
@@ -116,8 +116,17 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     let This = this;
     let scope = (this.bucket && this.scope) ?
       'default:`' + this.bucket + '`.`' + this.scope + '`.' : '';
-    let as_expr = (this.function_type == 'inline') ? '(' + this.expression + ')' :
-      '"' + this.library_function + '" AT "' + this.library_name + '"';
+    var as_expr;
+
+    // inline functions need parens around them if not already there
+    if (this.function_type == 'inline') {
+      let expr = this.expression.trim();
+      if (!expr.match(/^\(.+\)$/))
+        expr = '(' + expr + ')';
+      as_expr = expr;
+    }
+    else
+      as_expr = '"' + this.library_function + '" AT "' + this.library_name + '"';
 
     let query = "CREATE OR REPLACE FUNCTION " +
       scope + '`' + this.name + '` (' + this.parameters.join(',') + ') LANGUAGE ' +

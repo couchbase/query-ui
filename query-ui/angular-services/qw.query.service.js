@@ -2998,7 +2998,7 @@ function getQwQueryService(
   function newUDFlib(name, contents) {
     var userAgent = 'Couchbase Query Workbench';
     return qwHttp.do({
-      url: "../_p/query/evaluator/v1/libraries/" + name,
+      url: "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(name),
       headers: {
         'Content-Type': 'application/json', 'ns-server-proxy-timeout':
           (qwQueryService.options.query_timeout + 1) * 1000,
@@ -3012,7 +3012,7 @@ function getQwQueryService(
   function dropUDFlib(name) {
     var userAgent = 'Couchbase Query Workbench';
     return qwHttp.do({
-      url: "../_p/query/evaluator/v1/libraries/" + name,
+      url: "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(name),
       headers: {
         'Content-Type': 'plain/text','ns-server-proxy-timeout': (qwQueryService.options.query_timeout + 1) * 1000,
         'ignore-401': 'true', 'CB-User-Agent': userAgent, 'isNotForm': 'true'
