@@ -121,7 +121,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     // inline functions need parens around them if not already there
     if (this.function_type == 'inline') {
       let expr = this.expression.trim();
-      if (!expr.match(/^\(.+\)$/))
+      if (!expr.match(/^\([\s\S]+\)$/))
         expr = '(' + expr + ')';
       as_expr = expr;
     }
