@@ -2,6 +2,7 @@ import {MnLifeCycleHooksToStream}     from 'mn.core';
 import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
 
 import {QwCollectionsService}         from "../../../angular-services/qw.collections.service.js";
 import {QwQueryService}               from "../../../angular-services/qw.query.service.js";
@@ -13,7 +14,8 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     return [
     new Component({
       templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.function.dialog.html",
-      styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
+      styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
+        "../_p/ui/query/ui-current/query.css"],
       imports: [ CommonModule ],
       inputs: [
         "header",
@@ -25,6 +27,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
         "library_name",
         "library_function",
         "expression",
+        "is_new",
       ],
       encapsulation: ViewEncapsulation.None,
     })
@@ -49,6 +52,15 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
       this.bucket_changed();
     else
       this.bucket = null;
+
+    // we make a form group for only those options that need validation
+    this.formGroup = new FormGroup({
+      name: new FormControl(this.name,[Validators.pattern("^[a-zA-Z0-9][a-zA-Z0-9_\-]{0,99}$")]),
+      expression: new FormControl(this.expression,[Validators.required]),
+    });
+
+    this.formGroup.get('name').valueChanges.subscribe(data => this.name = data);
+    this.formGroup.get('expression').valueChanges.subscribe(data => this.expression = data);
   }
 
   ngAfterViewInit() {
@@ -67,10 +79,6 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     this.bucket_list = [];
     this.scope_list = [];
 
-    this.update_buckets();
-  }
-
-  update_buckets() {
     this.qcs.getBuckets().then(meta => {
       this.bucket_list.length = 0;
       meta.buckets.forEach(bucket => this.bucket_list.push(bucket));
@@ -92,8 +100,19 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
       this.scope_list.length = 0;
   }
 
-  libraries() {
-    return this.qqs.udfLibs;
+  // when function type changes or new namespace selected, make sure selected library valid for namespace
+  check_lib() {
+    let libs = this.libraries();
+    if (libs.length == 0)
+      this.library_name = null;
+    else if (this.library_name == null)
+      this.library_name = libs[0].name;
+  }
+
+  libraries() { // only show libraries from the currently selected namespace
+    return this.qqs.udfLibs.filter(lib =>
+        (this.bucket == null && lib.bucket == "") ||
+        (this.bucket == lib.bucket && this.scope == lib.scope));
   }
 
   getLibContent() {

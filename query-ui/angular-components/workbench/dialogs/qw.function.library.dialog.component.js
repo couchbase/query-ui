@@ -2,6 +2,7 @@ import {MnLifeCycleHooksToStream}     from 'mn.core';
 import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
+import { QwCollectionsService }       from '../../../angular-services/qw.collections.service.js';
 import { QwQueryService }             from '../../../angular-services/qw.query.service.js';
 import { QwDialogService }            from '../../../angular-directives/qw.dialog.service.js';
 import _                              from 'lodash';
@@ -15,7 +16,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
       templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.function.library.dialog.html",
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
-      inputs: ["header", "lib_name","lib_contents", "new_lib"],
+      inputs: ["header", "lib_name","lib_contents", "new_lib","bucket","scope","is_new"],
       encapsulation: ViewEncapsulation.None,
     })
   ]}
@@ -23,6 +24,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   static get parameters() {
     return [
       NgbActiveModal,
+      QwCollectionsService,
       QwDialogService,
       QwQueryService,
       ];
@@ -32,14 +34,24 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   }
 
   constructor(activeModal,
+              qwCollectionsService,
               qwDialogService,
               qwQueryService) {
     super();
 
     this.activeModal = activeModal;
+    this.qcs = qwCollectionsService;
     this.qqs = qwQueryService;
     this.qds = qwDialogService;
     this.config = ace.require("ace/config" );
+
+    this.bucket_list = [];
+    this.scope_list = [];
+
+    qwCollectionsService.getBuckets().then(meta => {
+      this.bucket_list.length = 0;
+      meta.buckets.forEach(bucket => this.bucket_list.push(bucket));
+    });
 
     // unbind ^F for all ACE editors
     var default_commands = ace.require("ace/commands/default_commands");
@@ -48,6 +60,21 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
         default_commands.commands.splice(i,1);
         i--;
       }
+  }
+
+  // when the bucket changes, make sure to update the scopes
+  bucket_changed() {
+    if (this.bucket)
+      this.qcs.getScopesForBucket(this.bucket).then(meta => {
+        this.scope_list.length = 0;
+        meta.scopes[this.bucket].forEach(scope => this.scope_list.push(scope));
+        // is our current scope valid?
+        var i = this.scope_list.indexOf(this.scope);
+        if (this.scope_list.length && i < 0)
+          this.scope = this.scope_list[0];
+      });
+    else
+      this.scope_list.length = 0;
   }
 
   searchDoc() {
@@ -97,7 +124,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   createOrReplaceLibrary() {
     this.error = null;
     var This = this;
-    this.qqs.newUDFlib(this.lib_name, this.lib_contents)
+    this.qqs.newUDFlib(this.lib_name, this.lib_contents, this.bucket, this.scope)
       .then(function success() {
           setTimeout(This.qqs.updateUDFlibs,1000);
           This.activeModal.close('ok');

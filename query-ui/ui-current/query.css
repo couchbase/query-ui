@@ -61,6 +61,9 @@
 input.ng-invalid-number {
   background-color: #f9e9ea; /* red-7 */
 }
+textarea.ng-invalid-number {
+  background-color: #f9e9ea; /* red-7 */
+}
 
 /* small square buttons for the document editor ---------------------------- */
 .btn.square-button {

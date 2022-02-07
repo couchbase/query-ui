@@ -63,6 +63,10 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
     this.function_sort = 'name';
     this.function_sort_direction = 1;
+
+    this.lib_sort = 'namespace';
+    this.lib_sort_direction = 1;
+
     this.rbac = mnPermissions.export;
   }
 
@@ -103,6 +107,22 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     return this.qqs.udfs;
   }
 
+  get_sorted_libs() {
+    let This = this;
+    switch(this.lib_sort) {
+      case 'name':
+        return this.qqs.udfLibs.sort((a,b) => a.name.localeCompare(b.name)*This.lib_sort_direction);
+      case 'namespace':
+        return this.qqs.udfLibs.sort((a,b) => ((a.bucket || '') + (b.scope || ''))
+            .localeCompare((b.bucket || '')+(b.scope || ''))*This.lib_sort_direction);
+    }
+    return this.qqs.udfLibs;
+  }
+
+  //
+  // sorting for functions
+  //
+
   update_function_sort(field) {
     if (this.function_sort == field)
       this.function_sort_direction *= -1;
@@ -119,6 +139,29 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   show_down_caret_function(field) {
     return(this.function_sort == field && this.function_sort_direction == 1);
   }
+
+  //
+  // sorting for libraries
+  //
+
+  update_lib_sort(field) {
+    if (this.lib_sort == field)
+      this.lib_sort_direction *= -1;
+    else {
+      this.lib_sort = field;
+      this.lib_sort_direction = 1;
+    }
+  }
+
+  show_up_caret_lib(field) {
+    return(this.lib_sort == field && this.lib_sort_direction == -1);
+  }
+
+  show_down_caret_lib(field) {
+    return(this.lib_sort == field && this.lib_sort_direction == 1);
+  }
+
+
 
   // get params for display in list
 
@@ -155,9 +198,8 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.function_type = 'inline';
     this.dialogRef.componentInstance.expression = "";
     this.dialogRef.componentInstance.parameters = ['...'];
+    this.dialogRef.componentInstance.library_name = null;
     this.dialogRef.componentInstance.is_new = true;
-    if (this.qqs.udfLibs.length > 0)
-      this.dialogRef.componentInstance.library_name = this.qqs.udfLibs[0].name;
 
     this.dialogRef.result
       .then(function ok(new_value) {
@@ -201,8 +243,10 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     let This = this;
     let fnName = (fn.identity.bucket ? '`' + fn.identity.namespace + '`:`' + fn.identity.bucket + '`.`' +
         fn.identity.scope + '`.`' : '`') + fn.identity.name + '`';
+    let fnUserVisibleName = (fn.identity.bucket ? fn.identity.bucket + '.' + fn.identity.scope + '.' : '') +
+        fn.identity.name;
     this.qds.showNoticeDialog("Confirm Drop Function", "Warning, this function will be permanently removed: ",
-      ["Drop: " + fnName], "false")
+      [fnUserVisibleName], "false")
       .then(function ok() {
         let query = 'DROP FUNCTION ' + fnName;
         This.qqs.executeQueryUtil(query, false)
@@ -226,11 +270,14 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.header = "Add Library";
     this.dialogRef.componentInstance.new_lib = true;
     this.dialogRef.componentInstance.lib_name = '';
+    this.dialogRef.componentInstance.bucket = null;
+    this.dialogRef.componentInstance.scope = null;
     this.dialogRef.componentInstance.lib_contents =
       '/* a UDF library contains one or more javascript functions */\n' +
       'function add(a,b) {\n' +
       '  return(a+b);\n' +
       '}\n';
+    this.dialogRef.componentInstance.is_new = true;
     this.dialogRef.result
       .then(function ok() {}, function cancel(resp) {});
   }
@@ -241,17 +288,23 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.header = "Edit Library";
     this.dialogRef.componentInstance.new_lib = false;
     this.dialogRef.componentInstance.lib_name = lib.name;
+    this.dialogRef.componentInstance.bucket = lib.bucket;
+    this.dialogRef.componentInstance.scope = lib.scope;
     this.dialogRef.componentInstance.lib_contents = lib.content;
+    this.dialogRef.componentInstance.is_new = false;
     this.dialogRef.result
       .then(function ok() {}, function cancel(resp) {});
   }
 
   dropLibrary(lib) {
+    let libName = lib.name;
+    if (lib.bucket && lib.scope && lib.bucket.length && lib.scope.length)
+      libName = lib.bucket + '.' + lib.scope + '.' + lib.name;
     let This = this;
     this.qds.showNoticeDialog("Confirm Drop Function Library", "Warning, this javascript function library will be permanently removed:",
-        [lib.name], "false")
+        [libName], "false")
       .then(function ok() {
-        This.qqs.dropUDFlib(lib.name)
+        This.qqs.dropUDFlib(lib)
           .then(function success() {This.qqs.updateUDFlibs();},
             function err(resp) {This.qqs.updateUDFlibs();console.log("Error deleting library: " + JSON.stringify(resp))})
       }, function cancel() {

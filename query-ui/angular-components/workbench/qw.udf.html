@@ -16,14 +16,25 @@
   <!-- table wrapper -->
   <div class="cbui-table-header flex-grow-half padding-left">
     <!-- table header row, no <section> wrapper -->
-    <span class="cbui-table-cell">name</span>
+    <span class="cbui-table-cell" (click)="update_lib_sort('namespace')">namespace
+      <span *ngIf="show_up_caret_lib('namespace')" class="icon fa-caret-up"></span>
+      <span *ngIf="show_down_caret_lib('namespace')" class="icon fa-caret-down"></span>
+    </span>
+    <span class="cbui-table-cell" (click)="update_lib_sort('name')">name
+      <span *ngIf="show_up_caret_lib('name')" class="icon fa-caret-up"></span>
+      <span *ngIf="show_down_caret_lib('name')" class="icon fa-caret-down"></span>
+    </span>
     <span class="cbui-table-cell flex-grow-2">definition</span>
     <span class="cbui-table-cell flex-grow-half"></span>
   </div>
 
   <section
-     *ngFor="let lib of qqs.udfLibs">
+     *ngFor="let lib of get_sorted_libs()">
     <div class="cbui-tablerow padding-left">
+      <span class="cbui-table-cell">
+        <span *ngIf="lib.bucket.length && lib.scope.length">{{lib.bucket}}.{{lib.scope}}</span>
+        <span *ngIf="!lib.bucket.length || !lib.scope.length">( global )</span>
+      </span>
       <span class="cbui-table-cell">
         {{lib.name}}
       </span>

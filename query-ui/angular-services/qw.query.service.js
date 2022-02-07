@@ -2983,9 +2983,8 @@ function getQwQueryService(
     })
       .then(function success(resp) {
           qwQueryService.udfLibs.length = 0;
-          if (resp.data)
-            for (var key in resp.data)
-              qwQueryService.udfLibs.push({name: key, content: resp.data[key]});
+          if (_.isArray(resp.data)) resp.data.forEach(lib =>
+              qwQueryService.udfLibs.push({name: lib.name, content: lib.code, bucket: lib.bucket, scope: lib.scope}));
         },
 
         // sanity check - if there was an error put a message in the console.
@@ -2995,10 +2994,13 @@ function getQwQueryService(
         });
   }
 
-  function newUDFlib(name, contents) {
+  function newUDFlib(name, contents, bucket, scope) {
     var userAgent = 'Couchbase Query Workbench';
+    let url = "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(name);
+    if (bucket && scope && bucket.length && scope.length)
+      url = url + '?bucket=' + encodeURIComponent(bucket) + '&scope=' + encodeURIComponent(scope);
     return qwHttp.do({
-      url: "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(name),
+      url: url,
       headers: {
         'Content-Type': 'application/json', 'ns-server-proxy-timeout':
           (qwQueryService.options.query_timeout + 1) * 1000,
@@ -3009,10 +3011,13 @@ function getQwQueryService(
     });
   }
 
-  function dropUDFlib(name) {
+  function dropUDFlib(lib) {
     var userAgent = 'Couchbase Query Workbench';
+    let url = "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(lib.name);
+    if (lib.bucket && lib.scope && lib.bucket.length && lib.scope.length)
+      url = url + '?bucket=' + encodeURIComponent(lib.bucket) + '&scope=' + encodeURIComponent(lib.scope);
     return qwHttp.do({
-      url: "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(name),
+      url: url,
       headers: {
         'Content-Type': 'plain/text','ns-server-proxy-timeout': (qwQueryService.options.query_timeout + 1) * 1000,
         'ignore-401': 'true', 'CB-User-Agent': userAgent, 'isNotForm': 'true'
