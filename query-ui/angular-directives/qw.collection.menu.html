@@ -8,7 +8,7 @@ be governed by the Apache License, Version 2.0, included in the file
 licenses/APL2.txt.
 -->
 
-  <label class="margin-bottom-0">{{label}}&nbsp;<small *ngIf="compat.atLeast70">bucket.scope.collection</small></label>
+  <label class="margin-bottom-0">{{label}}&nbsp;<small *ngIf="compat.atLeast70">bucket.scope<span *ngIf="!hideCollections">.collection</span></small></label>
     <mn-select
        class="inline fix-width-2 margin-right-quarter"
        mnFormControlName="bucketName"
@@ -17,7 +17,7 @@ licenses/APL2.txt.
        hasSearch="true">
     </mn-select>
     <mn-select
-       *ngIf="compat.atLeast70 && !pre70"
+       *ngIf="compat.atLeast70 && !pre70 && (getBucket() || !hideCollections)"
        class="inline fix-width-2 margin-right-quarter"
        mnFormControlName="scopeName"
        [values]="scopes_subject | async"
@@ -25,7 +25,7 @@ licenses/APL2.txt.
        hasSearch="true">
     </mn-select>
     <mn-select
-       *ngIf="compat.atLeast70 && !pre70"
+       *ngIf="compat.atLeast70 && !pre70 && !hideCollections"
        class="inline fix-width-2 margin-right-quarter"
        mnFormControlName="collectionName"
        [values]="collections_subject | async"

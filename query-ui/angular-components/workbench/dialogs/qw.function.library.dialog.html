@@ -8,22 +8,14 @@
   <div class="panel-content" [ngStyle]="{ height: error_message ? 'calc(100% - 120px)' : 'calc(100% - 100px)'}">
 
     <div class="formrow">
-      <label>Namespace</label>
-      <select
-              [(ngModel)]="bucket"
-              [disabled]="!is_new"
-              [ngModelOptions]="{standalone: true}"
-              (change)="bucket_changed()">
-        <option [ngValue]="null">global</option>
-        <option *ngFor="let bucket of bucket_list">{{bucket}}</option>
-      </select>
-      <select
-              [hidden]="!bucket"
-              [disabled]="!is_new"
-              [(ngModel)]="scope"
-              [ngModelOptions]="{standalone: true}">
-        <option *ngFor="let scope of scope_list">{{scope}}</option>
-      </select>
+      <qw-collection-menu label="Namespace"
+                          [allowEmpty]="true"
+                          [disabled]="!is_new"
+                          [hideCollections]="true"
+                          [initialSelection]="initialNamespace"
+                          (onSelection)="namespace_changed($event)"
+                          emptyPlaceholder="( global )">
+      </qw-collection-menu>
     </div>
 
     <div class="row margin-bottom-half">

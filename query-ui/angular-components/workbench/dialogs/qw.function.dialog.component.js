@@ -42,16 +42,13 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
+    this.initialNamespace = {selected_bucket: this.bucket, selected_scope: this.scope};
     if (!this.function_type)
       this.function_type = "inline";
     if (!this.parameters)
       this.parameters = [];
     if (this.scope)
       this.scope_list.push(this.scope);
-    if (this.bucket)
-      this.bucket_changed();
-    else
-      this.bucket = null;
 
     // we make a form group for only those options that need validation
     this.formGroup = new FormGroup({
@@ -85,22 +82,13 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     });
   }
 
-  // when the bucket changes, make sure to update the scopes
-  bucket_changed() {
-    if (this.bucket)
-      this.qcs.getScopesForBucket(this.bucket).then(meta => {
-        this.scope_list.length = 0;
-        meta.scopes[this.bucket].forEach(scope => this.scope_list.push(scope));
-        // is our current scope valid?
-        var i = this.scope_list.indexOf(this.scope);
-        if (this.scope_list.length && i < 0)
-          this.scope = this.scope_list[0];
-      });
-    else
-      this.scope_list.length = 0;
+  // when the namespace is selected, update our results
+  namespace_changed(namespace) {
+    this.bucket = namespace.bucket;
+    this.scope = namespace.scope;
   }
 
-  // when function type changes or new namespace selected, make sure selected library valid for namespace
+   // when function type changes or new namespace selected, make sure selected library valid for namespace
   check_lib() {
     let libs = this.libraries();
     if (libs.length == 0)

@@ -44,9 +44,11 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
         'label',             // text to show above the menu
         'initialSelection',  // initial value to be selected
         'disabled',          // indicates whether menus should be disabled
-        'callback',          // function to call whenever menus changed
+        'callback',          // function to call whenever menus changed (for AngularJS, otherwise use onSelection)
         'allowEmpty',        // allow empty selection (default initial state for Import)
-        'proxy'              // proxy to remote cluster to select remote collection
+        'emptyPlaceholder',  // text to show when no bucket selected, e.g., "unset" or "( global )"
+        'proxy',             // proxy to remote cluster to select remote collection
+        'hideCollections',   // show bucket & scope only, not collection
       ],
       outputs: ['onSelection']
     })
@@ -129,10 +131,22 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
   // update the scopes and collections menus when they change
   update_scopes_collections_menu() {
-    let selectedBucket = this.keyspaceForm.get("bucketName").value;
+    let selectedBucket = this.getBucket();
 
     this.scopes_subject.next(selectedBucket ? this.scopes[selectedBucket] : []);
     this.collections_subject.next(this.getCollections());
+  }
+
+  //
+  // since we allow an unselected bucket with a non-empty label, this function returns the right bucket value
+  //
+
+  getBucket() {
+    let selectedBucket = this.keyspaceForm.get("bucketName").value;
+    if (selectedBucket != null && selectedBucket == this.emptyPlaceholder)
+      selectedBucket = null;
+
+    return(selectedBucket);
   }
 
   //
@@ -140,12 +154,12 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
 
   notifyChange() {
-    let selectedBucket = this.keyspaceForm.get("bucketName").value;
+    let selectedBucket = this.getBucket();
     let selectedScope = this.keyspaceForm.get("scopeName").value;
     let selectedCollection = this.keyspaceForm.get("collectionName").value;
 
     var allSelected = selectedBucket &&
-      (!this.compat.atLeast70 || this.pre70 || (selectedScope && selectedCollection));
+      (!this.compat.atLeast70 || this.pre70 || (selectedScope && (selectedCollection || this.hideCollections)));
     let newSelection = {
       bucket: allSelected ? selectedBucket : null,
       scope: allSelected ? selectedScope : null,
@@ -177,11 +191,11 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
     if (this.allowEmpty) {
       this.buckets = Array.from(this.buckets);
-      this.buckets.unshift('');
+      this.buckets.unshift(this.emptyPlaceholder || '');
     }
 
     // if our previously selected bucket has been removed, reset
-    let selectedBucket = this.keyspaceForm.get("bucketName").value;
+    let selectedBucket = this.getBucket();
     if (selectedBucket && this.buckets.indexOf(selectedBucket) == -1)
       this.keyspaceForm.get("bucketName").setValue("");
     // if we don't have a selected bucket, use the first in the list (if any)
@@ -206,12 +220,12 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
 
     if (this.allowEmpty) {
       this.buckets = Array.from(this.buckets);
-      this.buckets.unshift('');
+      this.buckets.unshift(this.emptyPlaceholder || '');
     }
 
     this.errors = meta.errors.length ? JSON.stringify(meta.errors) : null;
 
-    let selectedBucket = this.keyspaceForm.get("bucketName").value;
+    let selectedBucket = this.getBucket();
     let selectedScope = this.keyspaceForm.get("scopeName").value;
     let selectedCollection = this.keyspaceForm.get("collectionName").value;
     if (!selectedBucket || !this.scopes[selectedBucket] || !this.collections[selectedBucket]) {
@@ -254,7 +268,8 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
 
   bucketChanged(selectedBucket) {
-    this.keyspaceForm.get("bucketName").setValue(selectedBucket);
+    if (selectedBucket == this.emptyPlaceholder)
+      selectedBucket = null;
     if (!selectedBucket) {
       this.keyspaceForm.get("scopeName").setValue(null);
       this.keyspaceForm.get("collectionName").setValue(null);
@@ -276,11 +291,11 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   // the selected_collection is on the list of current collections, otherwise set
   // the selected_collection to the first on the list
   scopeChanged(selectedScope) {
-    if (!selectedScope)
+    if (!selectedScope || !this.getBucket())
       return;
 
     // if we have a scope, make sure to have an appropriate collection selected
-    var collections = this.collections[this.keyspaceForm.get("bucketName").value][selectedScope];
+    var collections = this.collections[this.getBucket()][selectedScope];
     let selectedCollection = this.keyspaceForm.get("collectionName").value;
 
     // if the selected collection is available we can just use it, so proceed if not found
@@ -305,7 +320,7 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
   //
 
   getCollections() {
-    let selectedBucket = this.keyspaceForm.get("bucketName").value;
+    let selectedBucket = this.getBucket();
     let selectedScope = this.keyspaceForm.get("scopeName").value;
     if (!selectedBucket || !selectedScope ||
       !this.collections[selectedBucket] ||

@@ -31,6 +31,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
+    this.initialNamespace = {selected_bucket: this.bucket, selected_scope: this.scope};
   }
 
   constructor(activeModal,
@@ -62,19 +63,10 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
       }
   }
 
-  // when the bucket changes, make sure to update the scopes
-  bucket_changed() {
-    if (this.bucket)
-      this.qcs.getScopesForBucket(this.bucket).then(meta => {
-        this.scope_list.length = 0;
-        meta.scopes[this.bucket].forEach(scope => this.scope_list.push(scope));
-        // is our current scope valid?
-        var i = this.scope_list.indexOf(this.scope);
-        if (this.scope_list.length && i < 0)
-          this.scope = this.scope_list[0];
-      });
-    else
-      this.scope_list.length = 0;
+  // when the namespace is selected, update our results
+  namespace_changed(namespace) {
+    this.bucket = namespace.bucket;
+    this.scope = namespace.scope;
   }
 
   searchDoc() {
@@ -97,8 +89,11 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
     return false;
   }
 
+  // global libraries have "" as their bucket and scope, but the menu returns null for bucket/scope
   libraryNameUsed() {
-    return this.qqs.udfLibs.some(udfLib => udfLib.name == this.lib_name);
+    return this.qqs.udfLibs.some(udfLib => (udfLib.name == this.lib_name &&
+        ((udfLib.bucket == "" && this.bucket == null) || udfLib.bucket == this.bucket) &&
+        ((udfLib.scope == "" && this.scope == null) || udfLib.scope == this.scope)));
   }
 
   onMainEditorReady(editor) {
@@ -122,7 +117,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
 
   // when they click o.k., update the new library
   createOrReplaceLibrary() {
-    this.error = null;
+    this.error = '';
     var This = this;
     this.qqs.newUDFlib(this.lib_name, this.lib_contents, this.bucket, this.scope)
       .then(function success() {
