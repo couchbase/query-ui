@@ -14,6 +14,8 @@ import { Component, ViewEncapsulation} from '@angular/core';
 
 import { QwQueryService }              from '../../angular-services/qw.query.service.js';
 
+import template                        from './qw.advice.viz.html';
+
 export { QwAdviceVizComponent };
 
 
@@ -22,7 +24,7 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
     return [
       new Component({
         selector: "qw-advice-viz",
-        templateUrl: "../_p/ui/query/angular-components/workbench/qw.advice.viz.html",
+        template,
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         inputs: [
           "subject"

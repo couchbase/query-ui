@@ -14,13 +14,15 @@ import {Component, ViewEncapsulation}       from '@angular/core';
 import { CommonModule }                     from '@angular/common';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
 
+import template                             from "./qw.prefs.dialog.html";
+
 export { QwPrefsDialog };
 
 class QwPrefsDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.prefs.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: [],

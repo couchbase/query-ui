@@ -15,13 +15,15 @@ import { CommonModule }               from '@angular/common';
 import { QwQueryService }             from "../../../angular-services/qw.query.service.js";
 import { QwDialogService }            from '../../../angular-directives/qw.dialog.service.js';
 
+import template                       from "./qw.history.dialog.html";
+
 export { QwHistoryDialog };
 
 class QwHistoryDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.history.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
         "../_p/ui/query/ui-current/query.css",],
       imports: [ CommonModule ],

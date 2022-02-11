@@ -17,13 +17,15 @@ import { QwQueryPlanService }         from '../../../angular-services/qw.query.p
 
 import _                              from "lodash";
 
+import template                       from "./qw.query.plan.dialog.html";
+
 export { QwQueryPlanDialog };
 
 class QwQueryPlanDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.query.plan.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: [],

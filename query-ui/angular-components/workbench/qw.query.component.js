@@ -35,6 +35,8 @@ import { QwHistoryDialog }            from './dialogs/qw.history.dialog.componen
 
 import N1qlParser                     from '../../parser/n1ql/myN1qlListener.js';
 
+import template                       from './qw.query.html';
+
 export {QwQueryComponent};
 
 
@@ -42,7 +44,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl: "../_p/ui/query/angular-components/workbench/qw.query.html",
+        template,
         styleUrls: ["../_p/ui/query/ui-current/query.css"],
         encapsulation: ViewEncapsulation.None,
       })

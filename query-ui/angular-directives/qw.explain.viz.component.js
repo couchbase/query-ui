@@ -38,13 +38,15 @@ import {hierarchy as d3Hierarchy}           from "d3-hierarchy";
 
 import { QwQueryService }                   from "../angular-services/qw.query.service.js";
 
+import template                             from "./qw.explain.viz.template.html";
+
 export { QwExplainViz };
 
 class QwExplainViz extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-explain-viz",
-      templateUrl: "../_p/ui/query/angular-directives/qw.explain.viz.template.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
                    "../_p/ui/query/ui-current/query.css"],
       encapsulation: ViewEncapsulation.None,

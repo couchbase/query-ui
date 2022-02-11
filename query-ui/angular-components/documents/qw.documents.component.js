@@ -29,13 +29,15 @@ import {QwHttp}                 from '../../angular-services/qw.http.js';
 
 import {QwDialogService}        from '../../angular-directives/qw.dialog.service.js';
 
+import template                 from "./qw.documents.html";
+
 export {QwDocumentsComponent};
 
 class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl: "../_p/ui/query/angular-components/documents/qw.documents.html",
+        template,
         styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
           "../_p/ui/query/ui-current/query.css"],
         encapsulation: ViewEncapsulation.None,

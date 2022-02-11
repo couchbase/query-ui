@@ -6,6 +6,7 @@ import { QwCollectionsService }       from '../../../angular-services/qw.collect
 import { QwQueryService }             from '../../../angular-services/qw.query.service.js';
 import { QwDialogService }            from '../../../angular-directives/qw.dialog.service.js';
 import _                              from 'lodash';
+import template                       from "./qw.function.library.dialog.html";
 
 export { QwFunctionLibraryDialog };
 
@@ -13,7 +14,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.function.library.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: ["header", "lib_name","lib_contents", "new_lib","bucket","scope","is_new"],

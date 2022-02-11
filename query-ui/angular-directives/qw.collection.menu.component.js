@@ -30,13 +30,15 @@ import { FormControl, FormGroup }         from '@angular/forms';
 
 import {QwCollectionsService}             from '../angular-services/qw.collections.service.js';
 
+import template                           from "./qw.collection.menu.html";
+
 export { QwCollectionMenu };
 
 class QwCollectionMenu extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-collection-menu",
-      templateUrl: "../_p/ui/query/angular-directives/qw.collection.menu.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
       imports: [ CommonModule ],

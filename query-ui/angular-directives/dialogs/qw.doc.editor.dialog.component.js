@@ -13,13 +13,15 @@ import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
 
+import template                       from "./qw.doc.editor.dialog.html";
+
 export { QwDocEditorDialog };
 
 class QwDocEditorDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-directives/dialogs/qw.doc.editor.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: ["readonly", "header", "doc_id","doc_json", "doc_meta", "new_doc"],

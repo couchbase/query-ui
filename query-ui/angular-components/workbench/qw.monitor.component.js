@@ -34,6 +34,8 @@ import { switchMap,
   shareReplay,
   takeUntil}                       from 'rxjs/operators';
 
+import template                    from './qw.monitor.html';
+
 export {QwMonitorComponent};
 
 
@@ -41,7 +43,7 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl:  "../_p/ui/query/angular-components/workbench/qw.monitor.html",
+        template,
         //styleUrls: ["../../angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })

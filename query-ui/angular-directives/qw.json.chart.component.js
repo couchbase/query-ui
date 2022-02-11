@@ -50,6 +50,8 @@ import {zoom as d3Zoom,
   zoomIdentity as d3ZoomIdentity}             from "d3-zoom";
 import { fromEvent }                          from 'rxjs';
 
+import template                               from "./qw.json.chart.template.html";
+
 export { QwJsonChart };
 
 var svg, tooltip, wrapperElement, multiSelectMenu; // needs to be global for certain callback functions
@@ -58,7 +60,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-json-chart",
-      templateUrl: "../_p/ui/query/angular-directives/qw.json.chart.template.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.json.chart.css"],
       inputs: [
         "subject"

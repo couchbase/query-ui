@@ -13,6 +13,8 @@ import { QwQueryService }          from '../../angular-services/qw.query.service
 import { QwFunctionDialog }        from '../../angular-components/workbench/dialogs/qw.function.dialog.component.js';
 import { QwFunctionLibraryDialog } from '../../angular-components/workbench/dialogs/qw.function.library.dialog.component.js';
 
+import template                    from "./qw.udf.html";
+
 export {QwUdfComponent};
 
 
@@ -20,7 +22,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
       new Component({
-        templateUrl:  "../_p/ui/query/angular-components/workbench/qw.udf.html",
+        template,
         //styleUrls: ["../../angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })

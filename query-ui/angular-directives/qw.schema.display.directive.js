@@ -16,6 +16,8 @@ import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { MnLifeCycleHooksToStream }         from 'mn.core';
 import _                                    from 'lodash';
 
+import template                             from "./qw.schema.display.html";
+
 export { QwSchemaDisplay };
 
 class QwSchemaDisplay extends MnLifeCycleHooksToStream {
@@ -23,7 +25,7 @@ class QwSchemaDisplay extends MnLifeCycleHooksToStream {
     return [
       new Component({
         selector: "qw-schema-display",
-        templateUrl: "../_p/ui/query/angular-directives/qw.schema.display.html",
+        template,
         styleUrls: ["/_p/ui/query/angular-directives/qw.json.chart.css"],
         inputs: [
           "schema",

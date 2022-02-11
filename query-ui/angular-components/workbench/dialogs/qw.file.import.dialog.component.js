@@ -13,13 +13,15 @@ import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
 
+import template                       from "./qw.file.import.dialog.html";
+
 export { QwFileImportDialog };
 
 class QwFileImportDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.file.import.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: [],

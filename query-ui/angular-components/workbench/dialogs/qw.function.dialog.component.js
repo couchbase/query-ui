@@ -7,15 +7,17 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {QwCollectionsService}         from "../../../angular-services/qw.collections.service.js";
 import {QwQueryService}               from "../../../angular-services/qw.query.service.js";
 
+import template                       from "./qw.function.dialog.html";
+
 export { QwFunctionDialog };
 
 class QwFunctionDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/workbench/dialogs/qw.function.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css",
-        "../_p/ui/query/ui-current/query.css"],
+                  "../_p/ui/query/ui-current/query.css"],
       imports: [ CommonModule ],
       inputs: [
         "header",

@@ -13,13 +13,15 @@ import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
 
+import template                       from "./qw.error.dialog.html";
+
 export { QwErrorDialog };
 
 class QwErrorDialog extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-directives/dialogs/qw.error.dialog.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
       inputs: ["error_title", "error_detail", "error_detail_array", "hide_cancel"],

@@ -19,6 +19,8 @@ import { MnPoolDefault }                    from 'ajs.upgraded.providers';
 
 import { QwQueryService }                   from '../angular-services/qw.query.service.js';
 
+import template                             from "./qw.bucket.display.html";
+
 export { QwBucketDisplay };
 
 class QwBucketDisplay extends MnLifeCycleHooksToStream {
@@ -26,7 +28,7 @@ class QwBucketDisplay extends MnLifeCycleHooksToStream {
     return [
       new Component({
         selector: "qw-bucket-display",
-        templateUrl: "../_p/ui/query/angular-directives/qw.bucket.display.html",
+        template,
         styleUrls: ["/_p/ui/query/angular-directives/qw.json.chart.css"],
         inputs: [
           "bucket"

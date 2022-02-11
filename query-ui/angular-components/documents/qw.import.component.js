@@ -22,6 +22,8 @@ import { MnPermissions, MnPoolDefault } from 'ajs.upgraded.providers';
 
 import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "d3-dsv";
 
+import template                         from "./qw.import.html";
+
 export {QwImportComponent};
 
 
@@ -29,7 +31,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
   static get annotations() {
     return [
     new Component({
-      templateUrl: "../_p/ui/query/angular-components/documents/qw.import.html",
+      template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       encapsulation: ViewEncapsulation.None,
     })
