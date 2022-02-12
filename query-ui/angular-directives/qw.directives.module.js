@@ -30,6 +30,16 @@ import { QwJsonTree }          from "./qw.json.tree.directive.js";
 import { QwJsonTableEditor2 }  from "./qw.json.table.editor.directive.js";
 import { QwSchemaDisplay }     from "./qw.schema.display.directive.js";
 
+import { QwHttp }              from "../angular-services/qw.http.js";
+import { QwJsonCsvService }    from "../angular-services/qw.json.csv.service.js";
+import { QwQueryService }      from "../angular-services/qw.query.service.js";
+
+import { QwCollectionsService }   from "../angular-services/qw.collections.service.js";
+import { QwConstantsService }     from "../angular-services/qw.constants.service.js";
+import { QwFixLongNumberService } from "../angular-services/qw.fix.long.number.service.js";
+import { QwValidateQueryService } from "../angular-services/qw.validate.query.service.js";
+
+
 import { QwDialogService }     from "./qw.dialog.service.js";
 import { QwDocEditorDialog }   from "./dialogs/qw.doc.editor.dialog.component.js";
 import { QwErrorDialog }       from "./dialogs/qw.error.dialog.component.js";
@@ -89,7 +99,15 @@ class QwDirectivesModule {
       entryComponents: {
       },
       providers: [
+        QwCollectionsService,
+        QwConstantsService,
+        QwFixLongNumberService,
+        QwValidateQueryService,
+
         QwDialogService,
+        QwHttp,
+        QwJsonCsvService,
+        QwQueryService,
         // Compiler is not included in AOT-compiled bundle.
         // Must explicitly provide compiler to be able to compile templates at runtime.
         { provide: COMPILER_OPTIONS, useValue: {}, multi: true },
