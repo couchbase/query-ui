@@ -99,10 +99,11 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
       case 'name':
         return this.qqs.udfs.sort((a,b) => a.identity.name.localeCompare(b.identity.name)*This.function_sort_direction);
       case 'scope':
-        return this.qqs.udfs.sort((a,b) => ((a.identity.bucket || '') + (b.identity.scope || ''))
-          .localeCompare((b.identity.bucket || '')+(b.identity.scope || ''))*This.function_sort_direction);
+        return this.qqs.udfs.sort((a,b) => ((a.identity.bucket || ' ') + (a.identity.scope || '') + a.identity.name)
+          .localeCompare((b.identity.bucket || '')+(b.identity.scope || ' ') + b.identity.name)*This.function_sort_direction);
       case 'language':
-        return this.qqs.udfs.sort((a,b) => a.definition['#language'].localeCompare(b.definition['#language'])*This.function_sort_direction);
+        return this.qqs.udfs.sort((a,b) => (a.definition['#language']+a.identity.name)
+            .localeCompare(b.definition['#language'] + b.identity.name)*This.function_sort_direction);
     }
     return this.qqs.udfs;
   }
@@ -113,8 +114,8 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
       case 'name':
         return this.qqs.udfLibs.sort((a,b) => a.name.localeCompare(b.name)*This.lib_sort_direction);
       case 'namespace':
-        return this.qqs.udfLibs.sort((a,b) => ((a.bucket || '') + (b.scope || ''))
-            .localeCompare((b.bucket || '')+(b.scope || ''))*This.lib_sort_direction);
+        return this.qqs.udfLibs.sort((a,b) => ((a.bucket || '') + (a.scope || '') + a.name)
+            .localeCompare((b.bucket || '')+(b.scope || '') + b.name)*This.lib_sort_direction);
     }
     return this.qqs.udfLibs;
   }
