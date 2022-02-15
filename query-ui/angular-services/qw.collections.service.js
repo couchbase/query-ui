@@ -102,6 +102,7 @@ function getQwCollectionsService(
       if (resp && resp.status == 200 && resp.data) {
         // empty out any prior bucket info
         meta.buckets.length = 0;
+        meta.errors.length = 0;
         Object.keys(meta.buckets_ephemeral).forEach(function(key) { delete meta.buckets_ephemeral[key]; });
         // get the bucket names
         for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {

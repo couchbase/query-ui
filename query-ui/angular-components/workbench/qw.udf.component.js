@@ -82,13 +82,30 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
       this.rbac.cluster.n1ql.udf_external.manage));
   }
 
+  inlinePermitted() {
+    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
+        this.rbac.cluster.n1ql.udf.manage);
+  }
+
   viewFunctionsPermitted() {
     return(this.rbac.init && this.rbac.cluster.n1ql.meta.read);
   }
 
   manageFunctionsPermitted() {
-    return(this.rbac.init && (this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
-      this.rbac.cluster.n1ql.udf.manage));
+    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
+        this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage ||
+        this.rbac.cluster.n1ql.udf.manage ||
+        this.rbac.cluster.n1ql.udf_external.manage);
+  }
+
+  globalFunctionsPermitted() {
+    return this.rbac.cluster.n1ql.udf.manage ||
+        this.rbac.cluster.n1ql.udf_external.manage;
+  }
+
+  scopedFunctionsPermitted() {
+    return(this.rbac.cluster.collection['.:.:.'].n1ql.udf.manage ||
+        this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage);
   }
 
   //
@@ -97,29 +114,47 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
 
   get_sorted_udfs() {
     let This = this;
+    let udfs = this.qqs.udfs;
+    // don't show functions we aren't allowed to manage
+    if (!this.inlinePermitted())
+      udfs = udfs.filter(fn => this.getFunctionLanguage(fn) != 'inline');
+    if (!this.externalPermitted())
+      udfs = udfs.filter(fn => this.getFunctionLanguage(fn) == 'inline');
+    if (!this.globalFunctionsPermitted())
+      udfs = udfs.filter(fn => fn.identity.bucket);
+    if (!this.scopedFunctionsPermitted())
+      udfs = udfs.filter(fn => !fn.identity.bucket);
+
     switch(this.function_sort) {
       case 'name':
-        return this.qqs.udfs.sort((a,b) => a.identity.name.localeCompare(b.identity.name)*This.function_sort_direction);
+        return udfs.sort((a,b) => a.identity.name.localeCompare(b.identity.name)*This.function_sort_direction);
       case 'scope':
-        return this.qqs.udfs.sort((a,b) => ((a.identity.bucket || ' ') + (a.identity.scope || '') + a.identity.name)
+        return udfs.sort((a,b) => ((a.identity.bucket || ' ') + (a.identity.scope || '') + a.identity.name)
           .localeCompare((b.identity.bucket || '')+(b.identity.scope || ' ') + b.identity.name)*This.function_sort_direction);
       case 'language':
-        return this.qqs.udfs.sort((a,b) => (a.definition['#language']+a.identity.name)
+        return udfs.sort((a,b) => (a.definition['#language']+a.identity.name)
             .localeCompare(b.definition['#language'] + b.identity.name)*This.function_sort_direction);
     }
-    return this.qqs.udfs;
+    return udfs;
   }
 
   get_sorted_libs() {
     let This = this;
+    let libs = this.qqs.udfLibs;
+    // don't show libs we aren't allowed to manage
+    if (!this.globalFunctionsPermitted())
+      libs = libs.filter(lib => lib.bucket);
+    if (!this.scopedFunctionsPermitted())
+      libs = libs.filter(lib => !lib.bucket);
+
     switch(this.lib_sort) {
       case 'name':
-        return this.qqs.udfLibs.sort((a,b) => a.name.localeCompare(b.name)*This.lib_sort_direction);
+        return libs.sort((a,b) => a.name.localeCompare(b.name)*This.lib_sort_direction);
       case 'namespace':
-        return this.qqs.udfLibs.sort((a,b) => ((a.bucket || '') + (a.scope || '') + a.name)
+        return libs.sort((a,b) => ((a.bucket || '') + (a.scope || '') + a.name)
             .localeCompare((b.bucket || '')+(b.scope || '') + b.name)*This.lib_sort_direction);
     }
-    return this.qqs.udfLibs;
+    return libs;
   }
 
   //
@@ -198,11 +233,15 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.header = "Add Function";
     this.dialogRef.componentInstance.name = "";
     this.dialogRef.componentInstance.bucket = null;
-    this.dialogRef.componentInstance.function_type = 'inline';
+    this.dialogRef.componentInstance.function_type = this.inlinePermitted() ? 'inline' : 'javascript';
     this.dialogRef.componentInstance.expression = "";
     this.dialogRef.componentInstance.parameters = ['...'];
     this.dialogRef.componentInstance.library_name = null;
     this.dialogRef.componentInstance.is_new = true;
+    this.dialogRef.componentInstance.global_functions_permitted = this.globalFunctionsPermitted();
+    this.dialogRef.componentInstance.scoped_functions_permitted = this.scopedFunctionsPermitted();
+    this.dialogRef.componentInstance.inline_permitted = this.inlinePermitted();
+    this.dialogRef.componentInstance.external_permitted = this.externalPermitted();
 
     this.dialogRef.result
       .then(function ok(new_value) {

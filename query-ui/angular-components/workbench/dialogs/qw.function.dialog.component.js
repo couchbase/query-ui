@@ -30,6 +30,10 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
         "library_function",
         "expression",
         "is_new",
+        "global_functions_permitted",
+        "scoped_functions_permitted",
+        "external_permitted",
+        "inline_permitted",
       ],
       encapsulation: ViewEncapsulation.None,
     })
@@ -45,8 +49,13 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
 
   ngOnInit() {
     this.initialNamespace = {selected_bucket: this.bucket, selected_scope: this.scope};
+    // make sure we have a valid function_type
     if (!this.function_type)
-      this.function_type = "inline";
+      this.function_type = this.inline_permitted ? 'inline' : 'javascript';
+    // and a valid library name (if javascript function)
+    if (this.function_type == 'javascript' && !this.library_name)
+      this.library_name = this.libraries()[0] ? this.libraries()[0].name : null;
+    // make sure empty parameters shown correctly
     if (!this.parameters)
       this.parameters = [];
     if (this.scope)
@@ -88,6 +97,10 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
   namespace_changed(namespace) {
     this.bucket = namespace.bucket;
     this.scope = namespace.scope;
+    // make sure we have a valid library name when the namespace changes
+    let libs = this.libraries();
+    if (!this.library_name || libs.indexOf(this.library_name) == -1)
+      this.library_name = (libs.length > 0) ? libs[0].name : null;
   }
 
    // when function type changes or new namespace selected, make sure selected library valid for namespace
@@ -142,8 +155,11 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
       this.function_type + ' AS ' + as_expr;
 
     this.qqs.executeQueryUtil(query, false)
-      .then(function success() {
-        This.activeModal.close('ok');
+      .then(function success(resp) {
+        if (resp.data && resp.data.errors && resp.data.errors[0])
+          This.error = JSON.stringify(resp.data.errors[0]);
+        else
+          This.activeModal.close('ok');
         },
       function fail(resp) {
         This.error = 'Creation query: ' + query + '\n';

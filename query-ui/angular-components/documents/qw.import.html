@@ -13,9 +13,9 @@ licenses/APL2.txt.
   collections, and also the ability to view scopes and collections on that bucket.
 </div>
 
-<div *ngIf="ic.docImporter()">
-  <qw-docs-subnav></qw-docs-subnav>
+<qw-docs-subnav></qw-docs-subnav>
 
+<div *ngIf="ic.docImporter()">
   <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
     <div class="width-4 import-col1">
       <div class="formrow row flex-left items-top">

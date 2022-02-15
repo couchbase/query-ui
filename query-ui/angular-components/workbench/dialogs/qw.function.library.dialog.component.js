@@ -87,6 +87,9 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
     if (this.new_lib && this.libraryNameUsed())
       return true;
 
+    if (this.bucket && !this.scope)
+      return true;
+
     return false;
   }
 

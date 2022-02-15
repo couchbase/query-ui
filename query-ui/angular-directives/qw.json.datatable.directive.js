@@ -42,14 +42,12 @@ class QwJsonDataTableComp extends MnLifeCycleHooksToStream {
   static get annotations() { return [
     new Component({
       selector: "qw-json-data-table-comp",
-      styleUrls: ["../_p/ui/query/angular-directives/qw.json.datatable.css"],
       encapsulation: ViewEncapsulation.None,
       template: "<div></div>",
       styleUrls: [
         "../_p/ui/query/angular-directives/qw.directives.css",
         "../_p/ui/query/ui-current/query.css",
       ],
-      encapsulation: ViewEncapsulation.None,
       inputs: [
         "data", // either an array of data or an observable wrapping the data
         "subject",

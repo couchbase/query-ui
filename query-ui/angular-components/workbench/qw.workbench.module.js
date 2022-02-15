@@ -26,7 +26,7 @@ import { QwUdfComponent }          from './qw.udf.component.js';
 import { QwDirectivesModule }     from "../../angular-directives/qw.directives.module.js";
 import { QwDialogService }        from "../../angular-directives/qw.dialog.service.js";
 
-import {MnAlertsService}          from '../../../../../../ui/app/mn.alerts.service.js';
+import {MnAlertsService}          from '../../../../../ui/app/mn.alerts.service.js';
 
 import { QwCollectionsService }   from "../../angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "../../angular-services/qw.constants.service.js";

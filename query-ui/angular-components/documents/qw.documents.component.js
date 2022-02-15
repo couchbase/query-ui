@@ -1220,7 +1220,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             retrieveDocs_inner();
 
       }, function error(resp) {
-        console.log("Error getting indexes: " + JSON.stringify(resp.body));
+        console.log("Error getting indexes: " + JSON.stringify(resp));
       });
     }
 

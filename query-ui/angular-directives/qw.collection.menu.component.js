@@ -161,18 +161,25 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
     let selectedScope = this.keyspaceForm.get("scopeName").value;
     let selectedCollection = this.keyspaceForm.get("collectionName").value;
 
+    // several possibilities:
+    //  - allow empty and nothing selected
+    //  - pre-70 and bucket only selected
+    //  - 70+ and bucket/scope/collection selected
+    //  - errors
     var allSelected = selectedBucket &&
       (!this.compat.atLeast70 || this.pre70 || (selectedScope && (selectedCollection || this.hideCollections)));
     let newSelection = {
       bucket: allSelected ? selectedBucket : null,
       scope: allSelected ? selectedScope : null,
       collection: allSelected ? selectedCollection : null,
+      errors: this.errors,
     };
 
     // call onSelection callback only if there is at least one modified value
     if (this.latestSelection.bucket !== newSelection.bucket ||
         this.latestSelection.scope !== newSelection.scope ||
-        this.latestSelection.collection !== newSelection.collection) {
+        this.latestSelection.collection !== newSelection.collection ||
+        this.latestSelection.errors !== newSelection.errors) {
       this.latestSelection = newSelection;
       this.onSelection.next(newSelection);
 
@@ -278,10 +285,12 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
       this.keyspaceForm.get("collectionName").setValue(null);
       this.collections = {};
       this.scopes = {};
+      this.errors = null;
       this.notifyChange();
     } else {
       if (selectedBucket && this.compat.atLeast70 && !this.pre70)
-        this.qwCollectionsService.refreshScopesAndCollectionsForBucket(selectedBucket, this.proxy).then(meta => this.scopeListChangedCallback(meta));
+        this.qwCollectionsService.refreshScopesAndCollectionsForBucket(selectedBucket, this.proxy)
+            .then(meta => this.scopeListChangedCallback(meta));
       else
         this.notifyChange();
     }
