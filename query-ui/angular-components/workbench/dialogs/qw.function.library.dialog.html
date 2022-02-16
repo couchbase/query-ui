@@ -9,13 +9,16 @@
 
     <div class="formrow">
       <qw-collection-menu label="Namespace"
-                          [allowEmpty]="true"
+                          *ngIf="scoped_permitted"
+                          [allowEmpty]="global_permitted"
                           [disabled]="!is_new"
                           [hideCollections]="true"
                           [initialSelection]="initialNamespace"
                           (onSelection)="namespace_changed($event)"
                           emptyPlaceholder="( global )">
       </qw-collection-menu>
+      <div *ngIf="!scoped_permitted">
+        <label class="margin-bottom-0">Namespace</label>( global )</div>
     </div>
 
     <div class="row margin-bottom-half">

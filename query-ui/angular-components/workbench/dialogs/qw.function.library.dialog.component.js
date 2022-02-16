@@ -17,7 +17,17 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
       template,
       styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
       imports: [ CommonModule ],
-      inputs: ["header", "lib_name","lib_contents", "new_lib","bucket","scope","is_new"],
+      inputs: [
+        "header",
+        "lib_name",
+        "lib_contents",
+        "new_lib",
+        "bucket",
+        "scope",
+        "is_new",
+        "global_permitted",
+        "scoped_permitted",
+      ],
       encapsulation: ViewEncapsulation.None,
     })
   ]}

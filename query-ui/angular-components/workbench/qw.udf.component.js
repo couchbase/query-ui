@@ -314,6 +314,8 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.lib_name = '';
     this.dialogRef.componentInstance.bucket = null;
     this.dialogRef.componentInstance.scope = null;
+    this.dialogRef.componentInstance.global_permitted = this.globalFunctionsPermitted();
+    this.dialogRef.componentInstance.scoped_permitted = this.scopedFunctionsPermitted();
     this.dialogRef.componentInstance.lib_contents =
       '/* a UDF library contains one or more javascript functions */\n' +
       'function add(a,b) {\n' +
