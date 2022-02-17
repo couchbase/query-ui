@@ -52,7 +52,6 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     this.configForm.get('useKey').valueChanges.subscribe(data => this.options.useKey = data);
   }
 
-
   constructor(cdr, qwDialogService, qwImportService, qwMetadataService, qwQueryService) {
     super();
 
@@ -147,6 +146,8 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       if (!ic.options.selected_bucket) return "No selected bucket";
       if (this.compat.atLeast70 && (!ic.options.selected_collection || !ic.options.selected_scope))
         return "No selected scope/coll";
+      if (ic.importErrors)
+        return ic.importErrors;
       return null;
     };
 
@@ -160,7 +161,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     // the user selected a new file to import
     //
 
-    function handleFileSelect() {
+    function handleFileSelect(event) {
       ic.options.fileName = "";
       ic.options.fileSize = "";
       ic.options.fileData = "";
@@ -168,16 +169,16 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       ic.options.selectedDocIDField = "";
       ic.options.last_import_status = "";
 
-      var file = this.files[0];
-      var fileSize = this.files[0].size;
-      var fileName = this.files[0].name;
+      var file = event.target.files[0];
+      var fileSize = event.target.files[0].size;
+      var fileName = event.target.files[0].name;
 
       if (fileSize/1024/1024 > 100) {
-        ic.options.status = this.files[0].name + " is too large (> 100 MiB)";
+        ic.options.status = fileName + " is too large (> 100 MiB)";
         return;
       }
 
-      ic.options.fileName = this.files[0].name;
+      ic.options.fileName = fileName;
       ic.options.fileSize = Math.round(fileSize*1000/1024/1024)/1000;
       ic.options.status = "loading data file";
 
@@ -207,17 +208,16 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
           parseAs(ic.formats[0]);
 
         else {
-          qwDialogService.showErrorDialog("Import Warning","Data doesn't look like JSON list/lines, CSV, or TSV. Try a different parsing format.", true);
+          qwDialogService.showErrorDialog("Import Warning","Data doesn't look like JSON list/lines, CSV, or TSV. Try a different parsing format.", null, true);
           ic.selectTab(1);
           ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MiB)";
         }
-        qwDialogService.closeAllDialogs();
       });
 
       // handle any errors reading the file
       var handleReaderError = function(e) {
         qwDialogService.closeAllDialogs();
-        qwDialogService.showErrorDialog("File Loading Error", 'Errors loading file: ' + JSON.stringify(e), true);
+        qwDialogService.showErrorDialog("File Loading Error", 'Errors loading file: ' + JSON.stringify(e), null, true);
       }
       reader.addEventListener("error",handleReaderError);
       reader.addEventListener("abort",handleReaderError);
@@ -225,6 +225,15 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       reader.readAsText(file);
     }
 
+
+    // d3AutoType makes empty strings into null, we want them to be empty strings
+    // change empty strings to '""', let d3AutoType do its stuff, then convert back
+    function checkTypes(object) {
+      for (var key in object) if (object[key] == "") object[key] = '""';
+      object = d3AutoType(object);
+      for (var key in object) if (object[key] == '""') object[key] = "";
+      return object;
+    }
 
     //
     // try to turn the data file into a list of JSON documents we can upload to a bucket
@@ -242,21 +251,22 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       ic.options.selectedFormat = format;
       ic.options.status = "Parsing data file...";
       ic.options.useKey = false;
+      ic.importErrors = null;
 
       switch (format) {
       case ic.formats[0]:
-        ic.options.docData = d3CsvParse(ic.options.fileData,d3AutoType);
+        ic.options.docData = d3CsvParse(ic.options.fileData,checkTypes);
       break;
 
       case ic.formats[1]:
-        ic.options.docData = d3TsvParse(ic.options.fileData,d3AutoType);
+        ic.options.docData = d3TsvParse(ic.options.fileData,checkTypes);
         break;
 
       case ic.formats[2]: // JSON List
         try {
           ic.options.docData = JSON.parse(ic.options.fileData.replace('/\\/g','\\\\'));
         } catch (e) {
-          qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON list: ' + JSON.stringify(e), true);
+          qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON list: ' + JSON.stringify(e), null, true);
         }
         break;
 
@@ -268,7 +278,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
           catch (e) {parseErrors += JSON.stringify(e);}
         });
         if (parseErrors.length > 0)
-          qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON: ' + JSON.stringify(parseErrors).slice(0,255), true);
+          qwDialogService.showErrorDialog("JSON Parse Errors", 'Errors parsing JSON: ' + JSON.stringify(parseErrors).slice(0,255), null, true);
         break;
 
       }
@@ -280,6 +290,10 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
           ic.options.docJson = JSON.stringify(ic.options.docData,null,2);
 
         var fields = getDocFields(ic.options.docData[0]);
+        if (fields.some(name => !name)) {
+          ic.importErrors = "Empty field name.";
+          qwDialogService.showErrorDialog("Parse Errors", "One or more field names are empty.", null,true);
+        }
         ic.options.docData.forEach(function (doc) {
           fields = _.intersection(getDocFields(doc),fields);
         });
@@ -289,7 +303,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       }
       // no records seen?
       else {
-        qwDialogService.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON List/Lines)", true);
+        qwDialogService.showErrorDialog("Import Warning","No records found in data file, is it a valid format? (CSV, TSV, JSON List/Lines)", null, true);
         ic.selectTab(1);
         ic.options.status = ic.options.fileName + " (" + ic.options.fileSize + " MiB)";
       }
@@ -397,7 +411,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       // see if we have access to a query service
       qwMetadataService.metaReady.then(() => {
         if (!qwMetadataService.valid())
-          qwDialogService.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", true);
+          qwDialogService.showErrorDialog("Import Error","Unable to contact query service, which is required to use Import UI. Ensure that a query service is running.", null, true);
         });
     }
 
