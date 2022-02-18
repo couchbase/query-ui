@@ -102,11 +102,7 @@ class QwDirectivesModule {
         QwConstantsService,
         QwFixLongNumberService,
         QwMetadataService,
-
         QwDialogService,
-        QwHttp,
-        QwJsonCsvService,
-        QwQueryService,
         // Compiler is not included in AOT-compiled bundle.
         // Must explicitly provide compiler to be able to compile templates at runtime.
         { provide: COMPILER_OPTIONS, useValue: {}, multi: true },
