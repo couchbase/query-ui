@@ -29,7 +29,7 @@ import { FormControl, FormGroup }         from '@angular/forms';
 
 import {QwCollectionsService}             from '../angular-services/qw.collections.service.js';
 import {QwMetadataService}                from '../angular-services/qw.metadata.service.js';
-import {QwQueryService}                   from '../angular-services/qw.query.service.js';
+import {QwQueryWorkbenchService}                   from '../angular-services/qw.query.workbench.service.js';
 
 import template                           from "./qw.collection.menu.html";
 

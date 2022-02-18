@@ -12,7 +12,7 @@ import {MnLifeCycleHooksToStream}     from 'mn.core';
 import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
-import { QwQueryService }             from "../../../angular-services/qw.query.service.js";
+import { QwQueryWorkbenchService }             from "../../../angular-services/qw.query.workbench.service.js";
 import { QwDialogService }            from '../../../angular-directives/qw.dialog.service.js';
 
 import template                       from "./qw.history.dialog.html";
@@ -36,7 +36,7 @@ class QwHistoryDialog extends MnLifeCycleHooksToStream {
     return [
       NgbActiveModal,
       QwDialogService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       ];
   }
 

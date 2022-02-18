@@ -10,7 +10,7 @@ licenses/APL2.txt.
 
 import {QwDialogService}   from '../angular-directives/qw.dialog.service.js';
 import {QwMetadataService} from './qw.metadata.service.js';
-import {QwQueryService}    from './qw.query.service.js';
+import {QwQueryWorkbenchService}    from './qw.query.workbench.service.js';
 import {QwHttp}            from './qw.http.js';
 import _                   from 'lodash';
 import {MnAlertsService}    from '../../../../ui/app/mn.alerts.service.js';
@@ -29,7 +29,7 @@ class QwImportService {
       MnAlertsService,
       QwDialogService,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       QwHttp,
     ]
   }

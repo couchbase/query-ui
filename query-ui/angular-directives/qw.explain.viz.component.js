@@ -36,7 +36,7 @@ import {zoom as d3Zoom,
   zoomIdentity as d3ZoomIdentity}           from "d3-zoom";
 import {hierarchy as d3Hierarchy}           from "d3-hierarchy";
 
-import { QwQueryService }                   from "../angular-services/qw.query.service.js";
+import { QwQueryWorkbenchService }                   from "../angular-services/qw.query.workbench.service.js";
 
 import template                             from "./qw.explain.viz.template.html";
 
@@ -62,7 +62,7 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
   static get parameters() { return [
     ElementRef,
     Renderer2,
-    QwQueryService,
+    QwQueryWorkbenchService,
   ] }
 
   constructor(element, renderer, qwQueryService) {

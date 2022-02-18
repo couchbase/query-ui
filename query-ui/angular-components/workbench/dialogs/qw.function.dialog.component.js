@@ -5,7 +5,7 @@ import { CommonModule }               from '@angular/common';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
 
 import {QwCollectionsService}         from "../../../angular-services/qw.collections.service.js";
-import {QwQueryService}               from "../../../angular-services/qw.query.service.js";
+import {QwQueryWorkbenchService}               from "../../../angular-services/qw.query.workbench.service.js";
 
 import template                       from "./qw.function.dialog.html";
 
@@ -43,7 +43,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     return [
       NgbActiveModal,
       QwCollectionsService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       ];
   }
 

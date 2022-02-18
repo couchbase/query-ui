@@ -6,7 +6,7 @@ import {Component,
 import { NgbModal, NgbModalConfig }from '@ng-bootstrap/ng-bootstrap';
 
 import { QwDialogService }         from '../../angular-directives/qw.dialog.service.js';
-import { QwQueryService }          from '../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }          from '../../angular-services/qw.query.workbench.service.js';
 import { QwMetadataService }       from "../../angular-services/qw.metadata.service.js";
 
 import { QwFunctionDialog }        from '../../angular-components/workbench/dialogs/qw.function.dialog.component.js';
@@ -34,7 +34,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
       NgbModal,
       QwDialogService,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
     ];
   }
 

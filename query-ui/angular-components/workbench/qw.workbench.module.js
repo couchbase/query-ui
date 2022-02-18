@@ -33,6 +33,7 @@ import { QwConstantsService }     from "../../angular-services/qw.constants.serv
 import { QwFixLongNumberService } from "../../angular-services/qw.fix.long.number.service.js";
 import { QwImportService }        from '../../angular-services/qw.import.service.js';
 import { QwQueryService }         from "../../angular-services/qw.query.service.js";
+import { QwQueryWorkbenchService }from "../../angular-services/qw.query.workbench.service.js";
 import { QwQueryPlanService }     from "../../angular-services/qw.query.plan.service.js";
 import { QwHttp }                 from '../../angular-services/qw.http.js';
 
@@ -111,6 +112,7 @@ class QwWorkbenchModule {
         QwHistoryDialog,
         QwImportService,
         QwQueryService,
+        QwQueryWorkbenchService,
         QwQueryPlanService,
         QwHttp,
       ],

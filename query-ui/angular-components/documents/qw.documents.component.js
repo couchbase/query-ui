@@ -22,7 +22,7 @@ import {QwCollectionsService}   from '../../angular-services/qw.collections.serv
 import {QwConstantsService}     from '../../angular-services/qw.constants.service.js';
 import {QwFixLongNumberService} from "../../angular-services/qw.fix.long.number.service.js";
 import {QwMetadataService}      from "../../angular-services/qw.metadata.service.js";
-import {QwQueryService}         from "../../angular-services/qw.query.service.js";
+import {QwQueryWorkbenchService}         from "../../angular-services/qw.query.workbench.service.js";
 import {QwHttp}                 from '../../angular-services/qw.http.js';
 
 import {QwDialogService}        from '../../angular-directives/qw.dialog.service.js';
@@ -51,7 +51,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       QwDialogService,
       QwFixLongNumberService,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       QwConstantsService,
       UIRouter,
       QwHttp

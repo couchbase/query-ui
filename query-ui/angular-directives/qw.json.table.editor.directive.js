@@ -47,7 +47,7 @@ import {
 
 import {QwConstantsService}       from '../angular-services/qw.constants.service.js';
 import {QwMetadataService}        from '../angular-services/qw.metadata.service.js';
-import {QwQueryService}           from '../angular-services/qw.query.service.js';
+import {QwQueryWorkbenchService}           from '../angular-services/qw.query.workbench.service.js';
 
 import {FormsModule}              from '@angular/forms';
 import {MnLifeCycleHooksToStream} from 'mn.core';
@@ -82,7 +82,7 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
       ViewContainerRef,
       QwConstantsService,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
     ]
   }
 

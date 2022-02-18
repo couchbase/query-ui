@@ -12,7 +12,7 @@ import _                               from 'lodash';
 import { MnLifeCycleHooksToStream }    from 'mn.core';
 import { Component, ViewEncapsulation} from '@angular/core';
 
-import { QwQueryService }              from '../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }              from '../../angular-services/qw.query.workbench.service.js';
 
 import template                        from './qw.advice.viz.html';
 
@@ -36,7 +36,7 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
 
   static get parameters() {
     return [
-      QwQueryService,
+      QwQueryWorkbenchService,
     ];
   }
 

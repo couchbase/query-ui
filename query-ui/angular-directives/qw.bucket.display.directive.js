@@ -17,7 +17,7 @@ import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { MnLifeCycleHooksToStream }         from 'mn.core';
 
 import { QwMetadataService }                from '../angular-services/qw.metadata.service.js';
-import { QwQueryService }                   from '../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }                   from '../angular-services/qw.query.workbench.service.js';
 
 import template                             from "./qw.bucket.display.html";
 
@@ -42,7 +42,7 @@ class QwBucketDisplay extends MnLifeCycleHooksToStream {
     return [
       ElementRef,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       Renderer2,
     ]
   }

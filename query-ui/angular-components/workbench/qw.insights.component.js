@@ -3,7 +3,7 @@ import {Component,
     ViewEncapsulation,
     ChangeDetectorRef}               from '@angular/core';
 
-import { QwQueryService }          from '../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }          from '../../angular-services/qw.query.workbench.service.js';
 import { QwMetadataService }       from "../../angular-services/qw.metadata.service.js";
 
 export {QwInsightsComponent};
@@ -27,7 +27,7 @@ class QwInsightsComponent extends MnLifeCycleHooksToStream {
     static get parameters() {
         return [
             QwMetadataService,
-            QwQueryService,
+            QwQueryWorkbenchService,
         ];
     }
 

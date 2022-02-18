@@ -3,7 +3,7 @@ import {NgbActiveModal}               from '@ng-bootstrap/ng-bootstrap';
 import {Component, ViewEncapsulation} from '@angular/core';
 import { CommonModule }               from '@angular/common';
 import { QwCollectionsService }       from '../../../angular-services/qw.collections.service.js';
-import { QwQueryService }             from '../../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }             from '../../../angular-services/qw.query.workbench.service.js';
 import { QwDialogService }            from '../../../angular-directives/qw.dialog.service.js';
 import _                              from 'lodash';
 import template                       from "./qw.function.library.dialog.html";
@@ -37,7 +37,7 @@ class QwFunctionLibraryDialog extends MnLifeCycleHooksToStream {
       NgbActiveModal,
       QwCollectionsService,
       QwDialogService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       ];
   }
 

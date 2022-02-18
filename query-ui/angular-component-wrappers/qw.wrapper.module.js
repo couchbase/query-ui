@@ -25,7 +25,7 @@ import { QwWorkbenchSubNavComponent }from './qw.workbench.subnav.js';
 import { QwWorkbenchModule}          from "../angular-components/workbench/qw.workbench.module.js";
 
 import { QwMetadataService }         from "../angular-services/qw.metadata.service.js";
-import { QwQueryService }            from "../angular-services/qw.query.service.js";
+import { QwQueryWorkbenchService }            from "../angular-services/qw.query.workbench.service.js";
 import { QwHttp }                    from '../angular-services/qw.http.js';
 
 let documentsStates = [
@@ -120,7 +120,7 @@ class QwWrapperModule {
       ],
       providers: [
         QwMetadataService,
-        QwQueryService,
+        QwQueryWorkbenchService,
         QwHttp,
       ],
     })

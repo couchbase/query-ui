@@ -11,7 +11,7 @@ import { BehaviorSubject }         from 'rxjs';
 
 import { QwHistoryDialog }         from './dialogs/qw.history.dialog.component.js';
 
-import { QwQueryService }          from '../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }          from '../../angular-services/qw.query.workbench.service.js';
 import { QwMetadataService }       from "../../angular-services/qw.metadata.service.js";
 
 export {QwQueryEditorComponent};
@@ -36,7 +36,7 @@ class QwQueryEditorComponent extends MnLifeCycleHooksToStream {
             NgbModal,
             QwHistoryDialog,
             QwMetadataService,
-            QwQueryService,
+            QwQueryWorkbenchService,
         ];
     }
 

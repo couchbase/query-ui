@@ -24,7 +24,7 @@ import { QwDialogService }            from '../../angular-directives/qw.dialog.s
 import { QwConstantsService }         from '../../angular-services/qw.constants.service.js';
 import { QwJsonCsvService }           from '../../angular-services/qw.json.csv.service.js';
 import { QwMetadataService }          from "../../angular-services/qw.metadata.service.js";
-import { QwQueryService }             from '../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }             from '../../angular-services/qw.query.workbench.service.js';
 
 import { QwFileImportDialog }         from './dialogs/qw.file.import.dialog.component.js';
 import { QwUnifiedFileDialog }        from './dialogs/qw.unified.file.dialog.component.js';
@@ -64,7 +64,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       QwDialogService,
       QwJsonCsvService,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
     ];
   }
 

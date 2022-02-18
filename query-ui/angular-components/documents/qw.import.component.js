@@ -17,7 +17,7 @@ import { FormControl, FormGroup}        from '@angular/forms';
 
 import { QwImportService }              from '../../angular-services/qw.import.service.js';
 import { QwMetadataService }            from '../../angular-services/qw.metadata.service.js';
-import { QwQueryService }               from '../../angular-services/qw.query.service.js';
+import { QwQueryWorkbenchService }               from '../../angular-services/qw.query.workbench.service.js';
 import { QwDialogService }              from '../../angular-directives/qw.dialog.service.js';
 
 import { csvParse as d3CsvParse, tsvParse as d3TsvParse, autoType as d3AutoType } from "d3-dsv";
@@ -43,7 +43,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
       QwDialogService,
       QwImportService,
       QwMetadataService,
-      QwQueryService,
+      QwQueryWorkbenchService,
       ];
   }
 

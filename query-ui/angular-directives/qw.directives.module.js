@@ -33,6 +33,7 @@ import { QwSchemaDisplay }     from "./qw.schema.display.directive.js";
 import { QwHttp }              from "../angular-services/qw.http.js";
 import { QwJsonCsvService }    from "../angular-services/qw.json.csv.service.js";
 import { QwQueryService }      from "../angular-services/qw.query.service.js";
+import { QwQueryWorkbenchService }from "../angular-services/qw.query.workbench.service.js";
 
 import { QwCollectionsService }   from "../angular-services/qw.collections.service.js";
 import { QwConstantsService }     from "../angular-services/qw.constants.service.js";
@@ -103,6 +104,10 @@ class QwDirectivesModule {
         QwFixLongNumberService,
         QwMetadataService,
         QwDialogService,
+        QwHttp,
+        QwJsonCsvService,
+        QwQueryService,
+        QwQueryWorkbenchService,
         // Compiler is not included in AOT-compiled bundle.
         // Must explicitly provide compiler to be able to compile templates at runtime.
         { provide: COMPILER_OPTIONS, useValue: {}, multi: true },
