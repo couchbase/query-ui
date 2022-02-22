@@ -279,3 +279,8 @@ td.ajtd-type-array {
   max-width: 100%;
   min-width: 100%;
 }
+
+/* prevent udf library editor from overflowing */
+.udf-lib-ace-editor {
+  height: calc(100% - 95px) !important;
+}
