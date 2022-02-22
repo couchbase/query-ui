@@ -78,7 +78,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   // do we have permissions to view/manage external libraries?
 
   externalPermitted() {
-    return(this.rbac.init && (this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage ||
+    return(this.qms.isEnterprise() && this.rbac.init && (this.rbac.cluster.collection['.:.:.'].n1ql.udf_external.manage ||
       this.rbac.cluster.n1ql.udf_external.manage));
   }
 

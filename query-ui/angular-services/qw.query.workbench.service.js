@@ -2883,6 +2883,8 @@ function getQwQueryService(
   }
 
   function updateUDFlibs() {
+    if (!qwMetadataService.isEnterprise()) // no libraries in CE
+      return;
     var userAgent = 'Couchbase Query Workbench';
     return qwHttp.do({
       url: "../_p/query/evaluator/v1/libraries/",
@@ -2907,6 +2909,8 @@ function getQwQueryService(
   }
 
   function newUDFlib(name, contents, bucket, scope) {
+    if (!qwMetadataService.isEnterprise()) // no libraries in CE
+      return;
     var userAgent = 'Couchbase Query Workbench';
     let url = "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(name);
     if (bucket && scope && bucket.length && scope.length)
@@ -2924,6 +2928,8 @@ function getQwQueryService(
   }
 
   function dropUDFlib(lib) {
+    if (!qwMetadataService.isEnterprise()) // no libraries in CE
+      return;
     var userAgent = 'Couchbase Query Workbench';
     let url = "../_p/query/evaluator/v1/libraries/" + encodeURIComponent(lib.name);
     if (lib.bucket && lib.scope && lib.bucket.length && lib.scope.length)

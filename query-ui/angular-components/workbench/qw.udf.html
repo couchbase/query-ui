@@ -6,6 +6,8 @@
 <!-- Function Libraries Table  ************************************  -->
 
 <div *ngIf="qms.valid()">
+
+<div *ngIf="qms.isEnterprise()">
 <h4 class="margin-top-half">Javascript Function Libraries</h4>
 <div *ngIf="!externalPermitted()" class="margin-bottom-1">
   <smalL class="margin-left-1">Insufficent permissions to view/edit external function libraries. Either Global Manage External or Scoped Manage External roles required.</smalL>
@@ -52,6 +54,7 @@
   <div class="cbui-tablerow padding-left">
     <a (click)="createLibrary()">+ add function library</a>
   </div>
+</div>
 </div>
 
 <!-- Functions Table  ************************************  -->
