@@ -1272,6 +1272,7 @@ class QwJsonChart extends MnLifeCycleHooksToStream {
       case "multiline":
       case "area":
       case "connscatter":
+      case "multiconnscatter":
         switch (entry) {
         case 1: return(!is_number_date); // x axis date or number
         case 2: return(!is_number);      // y axis must be number

@@ -29,19 +29,30 @@ licenses/APL2.txt.
              class="cbui-select margin-right-1 margin-bottom-half text-smaller max-width-3"
              (change)="createChart()">
             <!--option value="xy">X-Y</option-->
-            <option value="scatter">X-Y</option>
-            <option value="connscatter">Connected Points</option>
-            <option value="multiconnscatter">Multi-Connected Points by Columns</option>
-            <option value="line">Line</option>
-            <option value="multiline">Multi-Line by Columns</option>
-            <option value="groupedline">Multi-Line by Values</option>
-            <option value="area">Area</option>
+            <option title="Standard X-Y charting with the ability to gather data by color.Displays the relationship between 2 values and groups data-points using a third value"
+                    value="scatter">X-Y</option>
+            <option title = "Displays the evolution or trend of a given numeric value over another value usually representing an interval of time, while also displaying the individual data points"
+                    value="connscatter">Connected Points</option>
+            <option title = "Plots a connected scatter chart for multiple values in the same chart"
+                    value="multiconnscatter">Multi-Connected Points by Columns</option>
+            <option title = "Displays the evolution of a numeric value over another value"
+                    value="line">Line</option>
+            <option title = "Multi-line chart with a separate line for each specified column attribute"
+                    value="multiline">Multi-Line by Columns</option>
+            <option title= "Multi-line chart with a separate line for each distinct value of a given column attribute"
+                    value="groupedline">Multi-Line by Values</option>
+            <option title= "Combines a line and bar chart to show how numeric values change over time"
+                    value="area">Area</option>
             <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
-            <option value="bar">Bar</option>
-            <option value="gbar">Grouped Bar</option>
+            <option title = "Display data that is categorical with rectangular bars with heights proportional to the values they represent"
+                    value="bar">Bar</option>
+            <option title = "Groups bar plots based on input values"
+                    value="gbar">Grouped Bar</option>
             <option value="" disabled="disabled">&#x2500;&#x2500;&#x2500;&#x2500;</option>
-            <option value="pie">Pie</option>
-            <option value="donut">Donut</option>
+            <option title = "Pie chart with slices for each distinct value of one column, where slice size in the sum of values from another column"
+                    value="pie">Pie</option>
+            <option title = "Pie chart with the center cut out"
+                    value="donut">Donut</option>
           </select>
         </span>
 
