@@ -102,6 +102,8 @@ class QwMetadataService {
             'cluster.n1ql.udf_external!manage',
             ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!upsert'),
             ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].data.docs!upsert'),
+            ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!write'),
+            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].data.docs!write'),
         ];
 
         let promise = this.qwHttp.post('/pools/default/checkPermissions',perms.join(','))

@@ -112,6 +112,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       return dec.rbac.init && dec.rbac.cluster.collection['.:.:.'].data.docs.read
           && dec.rbac.cluster.collection['.:.:.'].collections.read;
     };
+    dec.writeAllowed = function() {
+      return dec.rbac.init && dec.options.selected_bucket &&
+          (dec.rbac.cluster.collection[dec.options.selected_bucket + ':.:.'].data.docs.upsert ||
+              dec.rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert);
+    };
+
     dec.searchForm = this.searchForm;
 
     this.uiRouter = uiRouter;
