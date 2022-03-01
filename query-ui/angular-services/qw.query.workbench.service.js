@@ -1657,7 +1657,8 @@ function getQwQueryService(
                 }
 
                 var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
-                newResult.explainResultText = JSON.stringify(data.results[0].plan, null, '    ');
+                newResult.explainResultText = JSON.stringify(
+                    {optimizer_hints: data.results[0].optimizer_hints, plan: data.results[0].plan}, null, '    ');
                 newResult.explainResult =
                   {
                     explain: data.results[0],
