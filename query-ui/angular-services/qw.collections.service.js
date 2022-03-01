@@ -17,8 +17,9 @@ licenses/APL2.txt.
 // To support querying the metadat for remote clusters in analytics, the service can optionally accept a proxy
 // that provides REST API access to another couchbase cluster.
 
-import {QwHttp}         from './qw.http.js';
-import _               from 'lodash';
+import {QwHttp}            from './qw.http.js';
+import {QwMetadataService} from "./qw.metadata.service.js";
+import _                   from 'lodash';
 
 export {QwCollectionsService};
 
@@ -32,13 +33,18 @@ class QwCollectionsService {
   static get parameters() {
     return [
       QwHttp,
+      QwMetadataService,
     ]
   }
 
   constructor(
-    qwHttp) {
+    qwHttp,
+    qwMetadataService,
+  ) {
     Object.assign(this, getQwCollectionsService(
-      qwHttp));
+        qwHttp,
+        qwMetadataService,
+    ));
   }
 }
 
@@ -46,7 +52,8 @@ class QwCollectionsService {
 // to reduce overhead, it retrieves scopes and collections in a lazy fashion.
 
 function getQwCollectionsService(
-  qwHttp) {
+  qwHttp,
+  qms) {
 
   var qcs = {};
 
@@ -87,12 +94,27 @@ function getQwCollectionsService(
   }
 
   //
-  // get a list of buckets from the server via the REST API
+  // For local buckets we will use the list from qw.metadata.service.
+  // For remote buckets, use the proxy to get a list of buckets from the server via the REST API
   //
 
   function refreshBuckets(proxy) {
-    var meta = getMeta(proxy);
+    let meta = getMeta(proxy);
+    let promises = [];
     meta.errors.length = 0;
+
+    if (!proxy) { // local
+      promises.push(qms.updateBuckets()
+          .then(success => {
+            meta.buckets.length = 0;
+            meta.buckets.push(...qms.permittedBucketList);
+          }, error => {
+            meta.buckets.length = 0;
+          })
+      );
+    }
+
+    // need to use pools/default/buckets to find out which buckets are ephemeral (for doc editor)
     var api = "/pools/default/buckets/";
     var url = getApiUrl(api, proxy);
     var promise = qwHttp.do({
@@ -101,12 +123,14 @@ function getQwCollectionsService(
     }).then(function success(resp) {
       if (resp && resp.status == 200 && resp.data) {
         // empty out any prior bucket info
-        meta.buckets.length = 0;
+        if (proxy)
+          meta.buckets.length = 0;
         meta.errors.length = 0;
         Object.keys(meta.buckets_ephemeral).forEach(function(key) { delete meta.buckets_ephemeral[key]; });
         // get the bucket names
         for (var i = 0; i < resp.data.length; i++) if (resp.data[i]) {
-          meta.buckets.push(resp.data[i].name);
+          if (proxy)
+            meta.buckets.push(resp.data[i].name);
 
           if (resp.data[i].bucketType == "ephemeral") // must handle ephemeral buckets differently
             meta.buckets_ephemeral[resp.data[i].name] = true;
@@ -135,7 +159,9 @@ function getQwCollectionsService(
       return(meta);
     });
 
-    return (promise);
+    promises.push(promise);
+
+    return Promise.all(promises).then(() => meta, () => meta);
   }
 
 

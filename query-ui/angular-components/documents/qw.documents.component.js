@@ -92,6 +92,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //console.log("Docs afterInit");
   }
 
+  docViewer() {
+    return this.rbac.init && this.rbac.cluster.collection['.:.:.'].data.docs.read
+        && this.rbac.cluster.collection['.:.:.'].collections.read;
+  }
+
   constructor(
     changeDetectorRef,
     qwCollectionsService,
@@ -104,21 +109,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     qwHttp) {
     super();
 
-    var dec = {};
+    let dec = {};
     this.dec = dec;
+    this.qms = qwMetadataService;
+    this.rbac = this.qms.rbac;
     dec.rbac = qwMetadataService.rbac;
     dec.compat = qwMetadataService.compat;
-    dec.docViewer = function() {
-      return dec.rbac.init && dec.rbac.cluster.collection['.:.:.'].data.docs.read
-          && dec.rbac.cluster.collection['.:.:.'].collections.read;
-    };
-    dec.writeAllowed = function() {
-      return dec.rbac.init && dec.options.selected_bucket &&
-          (dec.rbac.cluster.collection[dec.options.selected_bucket + ':.:.'].data.docs.upsert ||
-              dec.rbac.cluster.bucket[dec.options.selected_bucket].data.docs.upsert);
-    };
-
-    dec.searchForm = this.searchForm;
 
     this.uiRouter = uiRouter;
 
@@ -193,6 +189,23 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     };
 
     //
+    // what are we allowed to do?
+    //
+
+    dec.upsertAllowed = function() {
+      return this.rbac.init && this.options.selected_bucket &&
+          this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'] &&
+          (this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'].data.docs.upsert ||
+              this.rbac.cluster.bucket[this.options.selected_bucket].data.docs.upsert);
+    };
+    dec.deleteAllowed = function() {
+      return this.rbac.init && this.options.selected_bucket &&
+          this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'] &&
+          (this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'].data.docs.delete ||
+              this.rbac.cluster.bucket[this.options.selected_bucket].data.docs.delete);
+    };
+
+    //
     //
     //
 
@@ -219,11 +232,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     dec.can_add_document = function() {
-      if (!dec.options.selected_collection)
-        return false;
-      else
-        // TODO - need to check permissions on selected collection
-        return true;
+      return (dec.options.selected_collection && dec.upsertAllowed());
     };
 
     //
@@ -1097,10 +1106,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             dec.options.current_result = JSON.stringify(data.errors);
           else
             dec.options.current_result = JSON.stringify(data, null, 2);
-          showErrorDialog("Error getting documents.",
-            "Couldn't retrieve: " + dec.options.selected_bucket + " offset: " + dec.options.offset +
-            " limit " + dec.options.limit + ', Error:' + dec.options.current_result, true);
         }
+        else if (resp.error && resp.error.message && resp.error.permissions) {
+          dec.options.current_result = JSON.stringify(resp.error.message + ': ' + resp.error.permissions);
+        }
+        if (dec.options.current_result)
+          showErrorDialog("Error getting documents.",
+              "Couldn't retrieve: " + dec.options.selected_bucket + " offset: " + dec.options.offset +
+              " limit " + dec.options.limit + ', Error:' + dec.options.current_result, true);
 
         markBusy(false);
       });
@@ -1186,53 +1199,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
     }
 
-    //
-    // when we first get the list of buckets, get the index status for each
-    //
-
-    function bucketsUpdate(metadata) {
-      metadataUpdate(metadata);
-
-      // create an index placeholder for each bucket
-      dec.buckets.forEach(bucketName => dec.indexes[bucketName] = {});
-
-      //
-      // we have all the buckets, now get the indexes from the REST API, and
-      // record whether each collection has a primary or secondary index
-      //
-      var promise = qwHttp.do({
-        url: "../indexStatus",
-        method: "GET"
-      }).then(function success(resp) {
-        if (resp.status == 200 && resp.body && _.isArray(resp.body.indexes)) {
-          resp.body.indexes.forEach(index => {
-            var bucketName = index.bucket;
-            var scopeName = index.scope;
-            var collName = index.collection;
-            var primary = index.definition.startsWith("CREATE PRIMARY");
-            dec.indexes[bucketName] = dec.indexes[bucketName] || {};
-            dec.indexes[bucketName][scopeName] = dec.indexes[bucketName][scopeName] || {};
-            dec.indexes[bucketName][scopeName][collName] = dec.indexes[bucketName][scopeName][collName] || {};
-            if (primary)
-              dec.indexes[bucketName][scopeName][collName].primary = true;
-            else
-              dec.indexes[bucketName][scopeName][collName].secondary = true;
-          });
-        }
-
-        // if we have selected becket/scope/collection, get the initial set of documents
-        if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection &&
-            dec.buckets.indexOf(dec.options.selected_bucket) != -1)
-            retrieveDocs_inner();
-
-      }, function error(resp) {
-        console.log("Error getting indexes: " + JSON.stringify(resp));
-      });
-    }
-
     function metadataUpdate(metadata) {
       dec.buckets = metadata.buckets;
       dec.buckets_ephemeral = metadata.buckets_ephemeral;
+      dec.indexes = qwMetadataService.indexes;
     }
 
     //
@@ -1243,7 +1213,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     function activate() {
       qwMetadataService.metaReady.then(() => {
         // use the collections service to get the list of buckets from the REST API
-        qwCollectionsService.getBuckets().then(meta => bucketsUpdate(meta));
+        qwCollectionsService.getBuckets().then(meta => {
+          metadataUpdate(meta);
+          retrieveDocs();
+        });
       });
     }
   }

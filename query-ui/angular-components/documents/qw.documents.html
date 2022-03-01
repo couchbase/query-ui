@@ -8,12 +8,12 @@
      licenses/APL2.txt.
 -->
 
-<div *ngIf="!dec.docViewer()">
+<div *ngIf="!docViewer()">
   Insufficient permissions to view documents. User must have at least Data Reader on one or more
   collections, and also the ability to view scopes and collections in that bucket.
 </div>
 
-<div class="doc-editor" *ngIf="dec.docViewer()">
+<div class="doc-editor" *ngIf="docViewer()">
 
 
   <mn-element-cargo

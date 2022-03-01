@@ -164,6 +164,7 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
   ngOnDestroy() {
     this.subscription.unsubscribe();
   }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -573,24 +574,24 @@ function makeHTMLTopLevel() {
       result += '<form #' + formName + '="ngForm" name="' + formName + '" style="width: ' + (meta.totalWidth + meta.unnamedWidth + 3.25) * columnWidthPx + 'px" ' +
         ' *ngIf="dec.options.current_result[' + row + ']"' +
         ' (submit)="dec.updateDoc(' + row + ',' + formName + ')">' +
-        '<fieldset class="doc-editor-fieldset" [disabled]="!dec.writeAllowed()">' +
+        '<fieldset class="doc-editor-fieldset" [disabled]="!dec.upsertAllowed()">' +
         '<div class="doc-editor-row" ' +
         '[hidden]="dec.options.current_result[' + row + '].deleted">'; // new row for each object
 
       result += '<span class="doc-editor-cell" style="width:' + columnWidthPx * 1.25 + 'px"> ' +
 
         '<a class="btn square-button" ' +
-        '[attr.disabled]="' + invalidName + ' || ' + docError + ' || !dec.writeAllowed() ? 1 : null" ' +
+        '[attr.disabled]="' + invalidName + ' || ' + docError + ' || !dec.upsertAllowed() ? 1 : null" ' +
         '(click)="dec.editDoc(' + row + ')" ' +
         'title="Edit document as JSON"><span class="icon fa-pencil"></span></a>' +
 
         '<a class="btn square-button" ' +
-        '[attr.disabled]="' + invalidName + ' || ' + docError + ' || !dec.writeAllowed() ? 1 : null" ' +
+        '[attr.disabled]="' + invalidName + ' || ' + docError + ' || !dec.upsertAllowed() ? 1 : null" ' +
         '(click)="dec.copyDoc(' + row + ',' + formName + ')" ' +
         'title="Make a copy of this document"><span class="icon fa-copy"></span></a>' +
 
         '<a class="btn square-button" ' +
-        '[attr.disabled]="!dec.writeAllowed() || ' + docError + '" ' +
+        '[attr.disabled]="!dec.deleteAllowed() || ' + docError + '" ' +
         '(click)="dec.deleteDoc(' + row + ')" ' +
         'title="Delete this document"><span class="icon fa-trash"></span></a>' +
 
@@ -605,7 +606,7 @@ function makeHTMLTopLevel() {
       result += '<span class="doc-editor-cell" style="width:' + columnWidthPx * 2 + 'px">';
 
       if (!docWayTooBig)
-        result += '<a (click)="dec.editDoc(' + row + ', !dec.writeAllowed())">';
+        result += '<a (click)="dec.editDoc(' + row + ', !dec.upsertAllowed())">';
       else
         result += '<a>';
 

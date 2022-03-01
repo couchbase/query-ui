@@ -9,6 +9,7 @@ licenses/APL2.txt.
 */
 
 import { QwHttp }            from '../angular-services/qw.http.js';
+import { QwQueryService}     from "./qw.query.service.js";
 import _                     from 'lodash';
 
 export { QwMetadataService };
@@ -27,17 +28,23 @@ class QwMetadataService {
     static get parameters() {
         return [
             QwHttp,
+            QwQueryService,
         ]
     }
     
-    constructor(qwHttp) {
+    constructor(
+        qwHttp,
+        qwQueryService,
+    ) {
         this.qwHttp = qwHttp;
-
+        this.qqs = qwQueryService;
         this.compat = {init:false};
         this.pools = {init:false};
         this.rbac = {init:false};
-        this.validNodes = [];
+        this.queryNodes = [];
         this.bucketList = [];
+        this.permittedBucketList = [];
+        this.indexes = {};
         this.metaReady = this.updateBuckets();
 
         qwHttp.get('/pools')
@@ -46,7 +53,7 @@ class QwMetadataService {
     }
 
     valid() {
-        return this.validNodes && this.validNodes.length > 0
+        return this.queryNodes && this.queryNodes.length > 0
     };
 
     isEnterprise() {
@@ -78,10 +85,11 @@ class QwMetadataService {
         this.compat.init = true;
 
         // figure out which nodes are running query service
-        this.validNodes = poolDefault.nodes.filter(node => node.services.includes('n1ql'))
+        this.queryNodes = poolDefault.nodes.filter(node => node.services.includes('n1ql'))
             .map(node => node.hostname);
 
         // get bucket names
+        this.bucketList.length = 0;
         if (_.isArray(poolDefault.bucketNames)) {
             this.bucketList.push(...poolDefault.bucketNames.map(bucket => bucket.bucketName));
             this.bucketList.sort();
@@ -100,10 +108,16 @@ class QwMetadataService {
             'cluster.n1ql.meta!read',
             'cluster.n1ql.udf!manage',
             'cluster.n1ql.udf_external!manage',
+            ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!read'),
             ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!upsert'),
+            ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!delete'),
+
+            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].data.docs!read'),
             ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].data.docs!upsert'),
-            ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!write'),
-            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].data.docs!write'),
+            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].data.docs!delete'),
+
+            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].n1ql.udf!manage'),
+            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].n1ql.udf_external!manage'),
         ];
 
         let promise = this.qwHttp.post('/pools/default/checkPermissions',perms.join(','))
@@ -116,6 +130,8 @@ class QwMetadataService {
 
     // decode permissions from the array of 'name':<bool> to a tree
     decodePermissions(permissions) {
+        //console.log("Got permissions: " + JSON.stringify(permissions,null,2));
+
         this.rbac.init = true;
         Object.keys(permissions).forEach(key => {
             let value = permissions[key];
@@ -129,6 +145,28 @@ class QwMetadataService {
                 {perm[pName] = perm[pName] || (i < path.length - 1 ? {} : value); perm = perm[pName];}
             });
         });
+
+        // need to record which buckets we are allowed to access the data
+
+        this.permittedBucketList.length = 0;
+        this.bucketList.forEach(bucketName => {
+            if (this.rbac.cluster.bucket[bucketName].data.docs.read ||
+                this.rbac.cluster.bucket[bucketName].data.docs.upsert ||
+                this.rbac.cluster.bucket[bucketName].data.docs.delete ||
+                this.rbac.cluster.collection[bucketName + ':.:.'].data.docs.read ||
+                this.rbac.cluster.collection[bucketName + ':.:.'].data.docs.upsert ||
+                this.rbac.cluster.collection[bucketName + ':.:.'].data.docs.delete ||
+                this.rbac.cluster.collection[bucketName + ':.:.'].n1ql.udf.manage ||
+                this.rbac.cluster.collection[bucketName + ':.:.'].n1ql.udf_external.manage)
+                this.permittedBucketList.push(bucketName);
+        });
+
+        // get index info, if possible. If query nodes exist, use a query,
+        // which works even if /indexStatus API is forbidden
+        if (this.queryNodes.length > 0)
+            return this.getIndexesN1QL();
+        else
+            return this.getIndexesREST();
     }
 
     // do we have enough permissions to run queries?
@@ -136,6 +174,51 @@ class QwMetadataService {
         return this.rbac.init && ((this.rbac.cluster.collection['.:.:.'].data.docs.read &&
                 this.rbac.cluster.collection['.:.:.'].n1ql.select.execute) ||
             this.rbac.cluster.collection['.:.:.'].n1ql.index.all);
+    }
+
+    // get indexes via N1QL (preferable if possible)
+    getIndexesN1QL() {
+        return this.qqs.executeQueryUtil('select indexes.* from system:indexes')
+            .then(success_resp => {
+                    Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
+                    if (success_resp.status == 200 && success_resp.data && Array.isArray(success_resp.data.results))
+                        success_resp.data.results.forEach(index =>
+                            this.addIndexToMetadata(index.bucket_id,index.scope_id,index.keyspace_id,index.is_primary));
+                },
+                error_resp => {
+                    Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
+                    this.local_metadata.errors.push(JSON.stringify(error_resp));
+                    console.log("Error getting indexes via n1ql: " + JSON.stringify(error_resp));
+                });
+
+    }
+
+    // get indexes from REST API (which doesn't work for less privileged users)
+    getIndexesREST() {
+        return this.qwHttp.do({
+            url: "../indexStatus",
+            method: "GET"
+        }).then(function success(resp) {
+            Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
+            if (resp.status == 200 && resp.body && _.isArray(resp.body.indexes)) {
+                resp.body.indexes.forEach(index =>
+                    this.addIndexToMetadata(index.bucket,index.scope,index.collection,index.definition.startsWith("CREATE PRIMARY")));
+            }
+        }, function error(resp) {
+            Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
+            console.log("Error getting indexes via REST: " + JSON.stringify(resp));
+        })
+    }
+
+    // add an index to the metadata
+    addIndexToMetadata(bucketName,scopeName,collName,primary) {
+        this.indexes[bucketName] = this.indexes[bucketName] || {};
+        this.indexes[bucketName][scopeName] = this.indexes[bucketName][scopeName] || {};
+        this.indexes[bucketName][scopeName][collName] = this.indexes[bucketName][scopeName][collName] || {};
+        if (primary)
+            this.indexes[bucketName][scopeName][collName].primary = true;
+        else
+            this.indexes[bucketName][scopeName][collName].secondary = true;
     }
 }
 
