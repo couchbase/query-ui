@@ -92,6 +92,7 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
         qwQueryService,
         qwQueryPlanService,
       );
+
   }
 
   ngOnDestroy() {
@@ -102,10 +103,18 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
     if (this.wrapper)
       this.wrapper.navigateToQuery(queryText);
   }
+
+  // some queries have error status objects, convert to string for display
+  displayErrors(resultError) {
+    if (!resultError || _.isString(resultError))
+      return(resultError);
+    else
+      return(JSON.stringify(resultError));
+  }
 }
 
 function queryMonController (This,
-                             qWttp,
+                             qwHttp,
                              cdr,
                              ngbModal,
                              ngbModalConfig,

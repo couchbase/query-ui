@@ -1348,7 +1348,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     // make sure we stay on top of the latest query nodes
     //
 
-    this.qc.updateBuckets();
+    //this.qc.updateBuckets();
 
     //
     // now let's make sure the window is the right size

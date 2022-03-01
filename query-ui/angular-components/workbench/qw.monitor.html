@@ -43,7 +43,7 @@ licenses/APL2.txt.
 
   <!--  Insufficient permissions ************************************  -->
   <div id="not_permitted" *ngIf="!qmc.qms.monitoringAllowed()">
-    Insufficient permissions to perform query monitoring.
+    Insufficient permissions to perform query monitoring. Query System Catalog role required.
   </div>
 
   <div class="padding-bottom-6" id="monitoring_tables" *ngIf="qmc.qms.monitoringAllowed()">
@@ -84,7 +84,7 @@ licenses/APL2.txt.
              class="cbui-table-cell flex-grow-3 cursor-pointer"
              ngbTooltip="{{result.statement}}"
              placement="auto"
-             tooltip-append-to-body="true"
+             container="body"
              tooltip-class="break-word">
             {{result.statement}}
           </span>
@@ -180,13 +180,13 @@ licenses/APL2.txt.
           </span>
           <span [ngClass]="result.errorCount ? 'orange-3 cbui-table-cell' : 'cbui-table-cell'" class="flex-grow-half">
             {{result.state}}
-            <span *ngIf="result.errorCount" tooltip-trigger="'mouseenter'" tooltip-append-to-body="true"
-                  class="fa-warning icon orange-3 cursor-pointer" ngbTooltip="{{result.errors}}"></span>
+            <span *ngIf="result.errorCount" container="body"
+                  class="fa-warning icon orange-3 cursor-pointer" ngbTooltip="{{displayErrors(result.errors)}}"></span>
           </span>
           <span class="cbui-table-cell cursor-pointer"
                 ngbTooltip="{{result.requestTime}}"
                 placement="auto top"
-                tooltip-append-to-body="true"
+                container="body"
                 tooltip-class="break-word">
             {{result.requestTime | date:"HH:mm:ss d MMM, y"}}
           </span>
@@ -234,7 +234,7 @@ licenses/APL2.txt.
              class="cbui-table-cell flex-grow-3 cursor-pointer"
              ngbTooltip="{{result.statement}}"
              placement="auto"
-             tooltip-append-to-body="true"
+             container="body"
              tooltip-class="break-word">
             {{result.statement}}
           </span>

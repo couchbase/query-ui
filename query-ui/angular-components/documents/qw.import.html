@@ -101,7 +101,7 @@ licenses/APL2.txt.
           [ngbTooltip]="docIdTipContent"
           tooltip-trigger="mouseenter"
           placement="auto"
-          tooltip-append-to-body="true">
+          container="body">
           <span class="icon fa-circle-thin fa-stack-2x"></span>
           <span class="icon fa-info fa-stack-1x"></span>
          </span>
@@ -130,7 +130,7 @@ licenses/APL2.txt.
           <span
              *ngIf="ic.options.docData && ic.options.docData.length && ic.options.fields.length==0"
              placement="auto"
-             tooltip-append-to-body="true"
+             container="body"
              class="fa-warning icon orange-3 cursor-pointer"
              ngbTooltip="To use as a document ID, the field must be present in all documents. No common (non-object/non-array) fields were found.">
            </span>

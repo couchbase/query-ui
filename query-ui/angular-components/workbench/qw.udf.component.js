@@ -23,7 +23,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
       new Component({
         template,
         selector: "qw-udf-component",
-        //styleUrls: ["../../angular-directives/qw.directives.css"],
+        styleUrls: ["../_p/ui/query/angular-directives/qw.directives.css"],
         encapsulation: ViewEncapsulation.None,
       })
     ]
