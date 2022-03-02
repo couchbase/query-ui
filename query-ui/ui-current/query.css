@@ -37,6 +37,12 @@
   width: 100%;
 }
 
+/* div around the datatable needs absolute positioning and fixed height for scrolling to work */
+.data-table-parent {
+  position: absolute;
+  height: calc(100vh - 360px); /* must be same height as wb-results-wrapper in cbui-components.css */
+}
+
 .doc-editor-fieldset {
     padding: 0;
     border: 0;
@@ -305,8 +311,12 @@ ul.wb-explain-tooltip-list li ul li {
 .break-word {
   word-break: break-word;
 }
-/* need to be able to override parent style for warning icon */
 
+.wb-normal-results {
+  height: 100%;
+}
+
+/* need to be able to override parent style for warning icon */
 .force-orange-3 {
   color: #f9ca7b !important;
 }

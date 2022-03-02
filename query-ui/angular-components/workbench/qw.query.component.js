@@ -99,6 +99,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     this.qc.loadQuery = this.element.nativeElement.querySelector("#loadQuery");
     this.qc.insightsSidebar = this.element.nativeElement.querySelector(".insights-sidebar");
     this.qc.wbMainWrapper = this.element.nativeElement.querySelector(".wb-main-wrapper");
+
+    this.qc.result_subject.next(this.qc.lastResult()); // update results view
   }
 
   ngOnDestroy() {

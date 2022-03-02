@@ -123,7 +123,7 @@ function createTable(json, element, renderer) {
 
     if (meta) {
       usingDataTable = true;
-
+      //console.log("Meta: " + JSON.stringify(meta,null,2));
       // make the table header with the top-level fields
       header = angular.element(createHTMLheader(meta))[0];
       renderer.appendChild(element, header);
@@ -805,6 +805,14 @@ function computeRowOffsets() {
         if (fieldHeight > lineHeight)
           lineHeight = fieldHeight;
       }
+
+      // a result containing top level arrays will have arrayInnerObjects.arrayInnerObjects, need to get
+      // height of each element of the array
+      if (meta.arrayInnerObjects.arrayInnerObjects && Array.isArray(item)) {
+        item.forEach(innerObject => {
+          lineHeight += getItemHeight(innerObject,meta.arrayInnerObjects.arrayInnerObjects);
+        });
+      }
     }
 
     // handle any non-objects
@@ -818,8 +826,7 @@ function computeRowOffsets() {
     meta.offsets[index + 1] =
       meta.offsets[index] + (lineHeight * lineHeightPixels) + lineSpacingPixels; // each line 18px
 
-    //console.log("row: " + index + " has lineHeight: " + lineHeight + " size: " +
-    //((lineHeight * lineHeightPixels) + lineSpacingPixels));
+    //console.log("row: " + index + " has lineHeight: " + lineHeight + " size: " + ((lineHeight * lineHeightPixels) + lineSpacingPixels));
   }
 }
 

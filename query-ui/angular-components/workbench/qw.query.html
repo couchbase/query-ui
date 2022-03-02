@@ -226,7 +226,7 @@
           A more specific index could also help this query. See <a (click)="qc.selectTab(6)">Advice</a> for recommended indexes.
         </div>
       </div>
-      <div class="wb-normal-results" style="height:100%"
+      <div class="wb-normal-results"
            *ngIf="!qc.needsPrimaryIndex() || (qc.canCreateOtherIndexes() && qc.isSelected(6))">
         <div class="wb-results-show-anyway" *ngIf="!qc.showBigDatasets && qc.dataTooBig()">
           <div [innerHtml]="qc.getBigDataMessage()"></div>
@@ -239,9 +239,9 @@
                  (ready)="qc.aceOutputLoaded($event)" [(ngModel)]="qc.lastResult().result">
         </ngx-ace>
 
-        <div class="wb-results-table"
+        <div class="wb-results-table width-9 data-table-parent"
              *ngIf="qc.isSelected(2) && qc.lastResult().data">
-          <qw-json-data-table-comp [subject]="qc.result_subject"></qw-json-data-table-comp>
+          <qw-json-data-table-comp class="" [subject]="qc.result_subject"></qw-json-data-table-comp>
         </div>
 
         <div class="wb-results-chart" *ngIf="qc.isSelected(3)">
