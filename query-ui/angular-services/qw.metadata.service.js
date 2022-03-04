@@ -195,18 +195,19 @@ class QwMetadataService {
 
     // get indexes from REST API (which doesn't work for less privileged users)
     getIndexesREST() {
+        let This = this;
         return this.qwHttp.do({
             url: "../indexStatus",
             method: "GET"
-        }).then(function success(resp) {
-            Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
-            if (resp.status == 200 && resp.body && _.isArray(resp.body.indexes)) {
-                resp.body.indexes.forEach(index =>
-                    this.addIndexToMetadata(index.bucket,index.scope,index.collection,index.definition.startsWith("CREATE PRIMARY")));
+        }).then(success_resp => {
+            Object.keys(This.indexes).forEach(key => {delete This.indexes[key]});
+            if (success_resp.status == 200 && success_resp.body && _.isArray(success_resp.body.indexes)) {
+                success_resp.body.indexes.forEach(index =>
+                    This.addIndexToMetadata(index.bucket,index.scope,index.collection,index.definition.startsWith("CREATE PRIMARY")));
             }
-        }, function error(resp) {
-            Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
-            console.log("Error getting indexes via REST: " + JSON.stringify(resp));
+        }, error_resp => {
+            Object.keys(This.indexes).forEach(key => {delete This.indexes[key]});
+            console.log("Error getting indexes via REST: " + JSON.stringify(error_resp));
         })
     }
 
