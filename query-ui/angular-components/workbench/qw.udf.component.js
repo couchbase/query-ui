@@ -284,6 +284,10 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     }
     this.dialogRef.componentInstance.parameters = fn.definition.parameters || ['...'];
     this.dialogRef.componentInstance.readOnly = !this.manageFunctionsPermitted();
+    this.dialogRef.componentInstance.global_functions_permitted = this.globalFunctionsPermitted();
+    this.dialogRef.componentInstance.scoped_functions_permitted = this.scopedFunctionsPermitted();
+    this.dialogRef.componentInstance.inline_permitted = this.inlinePermitted();
+    this.dialogRef.componentInstance.external_permitted = this.externalPermitted();
 
     this.dialogRef.result
       .then(function ok(new_value) {
@@ -346,6 +350,8 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.scope = lib.scope;
     this.dialogRef.componentInstance.lib_contents = lib.content;
     this.dialogRef.componentInstance.is_new = false;
+    this.dialogRef.componentInstance.global_permitted = this.globalFunctionsPermitted();
+    this.dialogRef.componentInstance.scoped_permitted = this.scopedFunctionsPermitted();
     this.dialogRef.result
       .then(function ok() {}, function cancel(resp) {});
   }

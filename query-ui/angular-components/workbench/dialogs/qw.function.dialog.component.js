@@ -157,8 +157,12 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
         expr = '(' + expr + ')';
       as_expr = expr;
     }
-    else
-      as_expr = '"' + this.library_function + '" AT "' + this.library_name + '"';
+    else {
+      as_expr = '"' + this.library_function + '" AT "';
+      if (this.bucket && this.scope)
+        as_expr += this.bucket + '/' + this.scope + '/';
+      as_expr += this.library_name + '"';
+    }
 
     let query = "CREATE OR REPLACE FUNCTION " +
       scope + '`' + this.name + '` (' + this.parameters.join(',') + ') LANGUAGE ' +
