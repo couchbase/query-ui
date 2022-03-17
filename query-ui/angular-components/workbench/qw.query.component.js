@@ -74,8 +74,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   ngOnInit() {
     if (this.wrapper)
       this.wrapper.wrapped = this; // let parent know who we are for mnCrane functions
-    this.resizeObservable = fromEvent(window,'resize');
-    this.resizeSubscription = this.resizeObservable.subscribe( evt => this.qc && this.qc.updateEditorSizes && this.qc.updateEditorSizes());
 
     // if we receive a query parameter, and it's not the same as the current query,
     // insert it at the end of history
@@ -108,6 +106,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
   ngOnDestroy() {
     this.resizeSubscription.unsubscribe();
+    this.clickSubscription.unsubscribe();
   }
 
   //
@@ -130,6 +129,17 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     // to simplify porting from AngularJS, make previous controller object, 'qc', a member
     // of this Component class
     var qc = {};
+    var toggleInputEditor = _.throttle(toggleInputEditorInner, 100, {trailing: true});
+    function collapseInputEditor() {
+      toggleInputEditor(false);
+    }
+    function expandInputEditor() {
+      toggleInputEditor(true);
+    }
+
+    this.resizeSubscription = fromEvent(window,'resize').subscribe(expandInputEditor);
+    this.clickSubscription = fromEvent(document,'click').subscribe(collapseInputEditor);
+
     this.qc = qc;
     this.foo = "foo";
     qc.foo = "bar";
@@ -174,6 +184,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
     qc.prev = prevResult;
     qc.next = nextResult;
+    qc.stopPropagation = stopPropagation;
 
     qc.hasNext = qwQueryService.hasNextResult;
     qc.hasPrev = qwQueryService.hasPrevResult;
@@ -203,7 +214,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.aceInputChanged = aceInputChanged;
     qc.aceOutputLoaded = aceOutputLoaded;
     qc.aceOutputChanged = aceOutputChanged;
-    qc.updateEditorSizes = updateEditorSizes;
 
     qc.acePlanLoaded = acePlanLoaded;
     qc.acePlanChanged = acePlanChanged;
@@ -226,11 +236,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.unified_save = unified_save;
 
     qc.isDeveloperPreview = function() {return qwQueryService.pools.isDeveloperPreview;};
-
-    // show we expand the query editor or the results pane?
-
-    qc.setUserInterest = function(interest) {if (interest != qwQueryService.workbenchUserInterest) {qwQueryService.workbenchUserInterest = interest;updateEditorSizes();}}
-    qc.getUserInterest = function()         {return(qwQueryService.workbenchUserInterest);}
 
     // for USE menu, get the scopes for the currently selected bucket
     qc.getContextBuckets = getContextBuckets;
@@ -390,7 +395,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     function setShowBigData(show)
     {
       qc.showBigDatasets = show;
-      setTimeout(swapEditorFocus,10);
     }
 
     //
@@ -403,40 +407,28 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
       qc.showBigDatasets = false;
       qwQueryService.selectTab(tabNum);
-      // select focus after a delay to try and force update of the editor
-      setTimeout(swapEditorFocus,10);
     };
 
     //
     // we need to define a wrapper around qw_query_server.nextResult, because if the
     // user creates a new blank query, we need to refocus on it.
     //
+    function stopPropagation($event) {
+      $event.stopPropagation();
+    }
 
-    function nextResult() {
+    function nextResult($event) {
+      stopPropagation($event);
       qc.showBigDatasets = false;
       qwQueryService.nextResult();
       qc.result_subject.next(qc.lastResult());
-      setTimeout(swapEditorFocus,10);
     }
 
-    function prevResult() {
+    function prevResult($event) {
+      stopPropagation($event);
       qc.showBigDatasets = false;
       qwQueryService.prevResult();
       qc.result_subject.next(qc.lastResult());
-      setTimeout(swapEditorFocus,10);
-    }
-
-    //
-    // the text editor doesn't update visually if changed when off screen. Force
-    // update by focusing on it
-    //
-
-    function swapEditorFocus() {
-      if (qc.outputEditor) {
-        qc.outputEditor.focus();
-        qc.inputEditor.focus();
-      }
-      updateEditorSizes();
     }
 
     //
@@ -528,9 +520,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
         // after past grab focus, move to end
 
-        updateEditorSizes();
         //qc.inputEditor.moveCursorToPosition(e.end);
-        qc.inputEditor.focus();
+        expandInputEditor();
 
         // if they pasted more than one line, and we're at the end of the editor, trim
         var pos = qc.inputEditor.getCursorPosition();
@@ -572,9 +563,13 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     function aceInputLoaded(_editor) {
       qc.inputEditor = _editor;
 
+      _editor.on("focus", expandInputEditor);
+
       _editor.setOptions({
         mode: 'ace/mode/n1ql',
         showGutter: true,
+        minLines: 3,
+        maxLines: Infinity
       });
 
       _editor.$blockScrolling = Infinity;
@@ -605,10 +600,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
       if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
         _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
-
-      // if they scroll the query window and it's not already of interest, make it so
-      _editor.getSession().on('changeScrollTop',function() {qc.setUserInterest('editor');});
-      _editor.focus();
 
       //
       // make the query editor "catch" drag and drop files
@@ -808,15 +799,11 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       if (/^((?!chrome).)*safari/i.test(navigator.userAgent))
         _editor.renderer.scrollBarV.width = 20; // fix for missing scrollbars in Safari
 
-      _editor.getSession().on('changeScrollTop',function() {qc.setUserInterest('results');});
-
       qc.outputEditor = _editor;
       _editor.getSession().on("change", qc.aceOutputChanged);
-      updateEditorSizes();
     }
 
     function aceOutputChanged(e) {
-      updateEditorSizes();
 
       // show a placeholder when nothing has been typed
       var curSession = qc.outputEditor.getSession();
@@ -870,13 +857,10 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
 
       //qc.outputEditor = _editor;
       _editor.getSession().on("change", qc.acePlanChanged);
-      updateEditorSizes();
     }
 
     function acePlanChanged(e) {
       //e.$blockScrolling = Infinity;
-
-      updateEditorSizes();
     }
 
     //
@@ -884,66 +868,18 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     // since it doesn't auto-resize
     //
 
-    var updateEditorSizes = _.debounce(updateEditorSizesInner,100);
-    var minEditorHeight = 66;
-
-    function updateEditorSizesInner() {
-      var totalHeight = window.innerHeight - 130; // window minus header size
-      var aceEditorHeight = 0;
-
-      // how much does the query editor need?
-      if (qc.inputEditor) {
-        // give the query editor at least 3 lines, but it might want more if the query has > 3 lines
-        var lines = qc.inputEditor.getSession().getLength();       // how long in the query?
-        var desiredQueryHeight = Math.max(23,lines*22);         // make sure height no less than 23
-
-        // when focused on the query editor, give it up to 3/4 of the total height, but make sure the results
-        // never gets smaller than 270
-        var maxEditorSize = Math.min(totalHeight*3/4,totalHeight - 270);
-
-        // if the user has been clicking on the results, minimize the query editor
-        if (qc.getUserInterest() == 'results' || desiredQueryHeight < minEditorHeight)
-          aceEditorHeight = minEditorHeight;
-        else
-          aceEditorHeight = Math.min(maxEditorSize,desiredQueryHeight);      // don't give it more than it wants
-
-        qc.editorElement.style.height = aceEditorHeight + "px";
-        setTimeout(resizeInputEditor,200); // wait until after transition
+    function toggleInputEditorInner(expandMe) {
+      if (!qc.inputEditor) {
+        return;
       }
-
-      //
-      // Since the query editor might have changed, inform the ACE editor for JSON output that
-      // it might need to resize.
-      //
-
-      if (qwQueryService.outputTab == 1)
-        setTimeout(resizeOutputEditor,200);
-    }
-
-   //
-    // convenience functions for safely refreshing the ACE editors
-    //
-
-    function resizeInputEditor() {
-      try {
-        if (qc.inputEditor && qc.inputEditor.renderer && qc.inputEditor.resize)
-          qc.inputEditor.resize(true);
-      } catch (e) {console.log("Input error: " + e);/*ignore*/}
-    }
-
-    function resizeOutputEditor() {
-      try {
-        if (qc.outputEditor && qc.outputEditor.renderer && qc.outputEditor.resize)
-          qc.outputEditor.resize();
-      } catch (e) {console.log("Output error: " + e);/*ignore*/}
-    }
-    //
-    // keep track of which parts of the UI the user is clicking, indicating their interest
-    //
-
-    qc.handleClick = function(detail) {
-      qc.setUserInterest(detail);
-      updateEditorSizes();
+      if (expandMe) {
+        let lineHeight = qc.inputEditor.renderer.lineHeight;
+        let totalHeight = window.innerHeight;
+        let desiredQuerylines = (totalHeight * 0.5 - 130) / lineHeight;
+        qc.inputEditor.setOption('maxLines', Math.round(desiredQuerylines));
+      } else {
+        qc.inputEditor.setOption('maxLines', 3);
+      }
     }
 
     //
@@ -1110,9 +1046,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       // now update everything
       //qc.inputEditor.setReadOnly(false);
       qc.markerIds = markerIds;
-      qc.setUserInterest('results');
-      updateEditorSizes();
-      focusOnInput();
       qc.result_subject.next(qc.lastResult());
     }
 
@@ -1357,12 +1290,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     //
 
     //this.qc.updateBuckets();
-
-    //
-    // now let's make sure the window is the right size
-    //
-
-    setTimeout(this.qc.updateEditorSizes,100);
   }
 
   //

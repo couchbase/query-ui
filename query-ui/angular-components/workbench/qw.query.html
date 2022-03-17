@@ -25,11 +25,11 @@
     <!-- query editor header, main editor area, and results footer --------------->
     <div class="wb-query-editor">
       <!-- Editor "header row" ----------------------------------------------------->
-      <div class="wb-query-editor-header"  (click)="qc.handleClick('editor')">
+      <div class="wb-query-editor-header">
         <h5>Query Editor</h5>
         <span class="wb-history-controls">
           <span
-             title="View previous queries & results" (click)="qc.prev()"
+             title="View previous queries & results" (click)="qc.prev($event)"
              class="icon angle-icon left"
              [attr.disabled]="!qc.hasPrev() || null">
           </span>
@@ -39,7 +39,7 @@
           </span>
           <span
              title="View subsequent queries & results"
-             (click)="qc.next()"
+             (click)="qc.next($event)"
              class="icon angle-icon right"
              [attr.disabled]="!qc.hasNext() || null">
           </span>
@@ -64,12 +64,16 @@
       </div>
 
       <!-- Ace editor -------------------------------------------------------------->
-      <ngx-ace (click)="qc.handleClick('editor')" class="wb-ace-editor" (ready)="qc.aceInputLoaded($event)"
-               [(ngModel)]="qc.lastResult().query">
+      <ngx-ace
+         (click)="qc.stopPropagation($event)"
+         class="wb-ace-editor"
+         (ready)="qc.aceInputLoaded($event)"
+         style="padding:0!important;"
+         [(ngModel)]="qc.lastResult().query">
       </ngx-ace>
       <!-- wrapper under query editor for button and stats ------------------------->
       <div class="wb-query-editor-footer">
-        <span class="wb-button-wrapper nowrap" (click)="qc.handleClick('results')">
+        <span class="wb-button-wrapper nowrap">
           <button (click)="qc.query({})" class="wb-button-execute">
             <div *ngIf="!qc.lastResult().busy">Execute</div>
             <div *ngIf="qc.lastResult().busy" class="icon-button">
@@ -154,7 +158,7 @@
         <div class="nowrap" style="padding: 0 0 .25rem 0;">
           <span
              [attr.disabled]="qc.lastResult().busy"
-             (click)="$event.stopPropagation(); qc.format(); qc.handleClick('editor');"
+             (click)="$event.stopPropagation(); qc.format();"
              class="wb-format resp-hide-sml nowrap">
             <span class="icon fa-align-right"></span>
             format
@@ -171,7 +175,7 @@
     </div>
 
     <!-- query results ------------------------------------------------------------>
-    <div  (click)="qc.handleClick('results')" class="wb-results-header">
+    <div class="wb-results-header">
       <span class="row">
         <h5 class="margin-right-half">Results</h5>
         <a
@@ -208,7 +212,7 @@
       </span>
     </div>
 
-    <div class="wb-results-wrapper" (click)="qc.handleClick('results')">
+    <div class="wb-results-wrapper">
       <div class="zero-content" *ngIf="qc.needsPrimaryIndex()">
         <p>
           This query requires an index. A primary index is simple & quick to build
