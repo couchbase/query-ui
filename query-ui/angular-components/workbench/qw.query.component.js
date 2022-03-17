@@ -31,6 +31,8 @@ import { QwUnifiedFileDialog }        from './dialogs/qw.unified.file.dialog.com
 import { QwPrefsDialog }              from './dialogs/qw.prefs.dialog.component.js';
 import { QwHistoryDialog }            from './dialogs/qw.history.dialog.component.js';
 
+import { MnAdminService }  from 'mn.admin.service';
+
 import N1qlParser                     from '../../parser/n1ql/myN1qlListener.js';
 
 import template                       from './qw.query.html';
@@ -65,6 +67,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       QwJsonCsvService,
       QwMetadataService,
       QwQueryWorkbenchService,
+      MnAdminService,
     ];
   }
 
@@ -120,6 +123,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
               qwJsonCsvService,
               qwMetadataService,
               qwQueryService,
+              mnAdminService,
   ) {
     super();
 
@@ -135,6 +139,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.qms = qwMetadataService;
     this.qms = qwMetadataService;
     qc.modalService = ngbModal;
+    qc.mnAdminService = mnAdminService;
 
     qc.compat = qwMetadataService.compat;
 
@@ -1251,6 +1256,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         qc.wbMainWrapper.classList.add("width-9");
       }
       qc.fullscreen = !qc.fullscreen;
+      qc.mnAdminService.stream.hideNavSidebar.next(qc.fullscreen);
     }
 
     //
