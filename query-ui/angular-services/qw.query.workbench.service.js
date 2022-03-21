@@ -920,7 +920,8 @@ function getQwQueryService(
 
   function canCreateBlankQuery() {
     return (currentQueryIndex >= 0 &&
-      currentQueryIndex == pastQueries.length - 1 &&
+            currentQueryIndex == pastQueries.length - 1 &&
+            (getCurrentResult().query !== void 0) &&
       getCurrentResult().query.trim() === pastQueries[pastQueries.length - 1].query.trim() &&
       getCurrentResult().status != newQueryTemplate.status);
   }
