@@ -2518,76 +2518,75 @@ function getQwQueryService(
       getSchemaForBucket(bucket);
 
     // for the bucket, get the scopes and collections
-    return qwCollectionsService.refreshScopesAndCollectionsForBucket(bucketName).then(function (metadata) {
+    return qwQueryServiceBase.executeQueryUtil('select keyspaces.* from system:keyspaces where `bucket` = "' + bucketName + '" or `path` = "default:' + bucketName + '"').then(
+        function success(resp) {
+          if (resp && resp.data && Array.isArray(resp.data.results)) {
+            bucket.scopes = {}; // reset scopes and collections to empty
+            bucket.collections = [];
+            // for each keyspace, record scope and collection names in metadata and autocomplete
+            resp.data.results.forEach(keyspace => {
+              // scope first
+              let scopeName = keyspace.scope ? keyspace.scope : "_default"; // empty scope name means default
+              let collName = keyspace.scope ? keyspace.id : "_default";
+              bucket.scopes[scopeName] = true;
+              if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
+                addToken(scopeName, "scope");
+                addToken(bucketName + "." + scopeName, "scope");
+              }
+              addToken('`' + scopeName + '`', "scope");
+              addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
 
-    var scopes = metadata.scopes[bucketName];
-    bucket.scopes = {}; // reset scopes and collections to empty
-    bucket.collections = [];
-    if (scopes) scopes.forEach(function (scopeName) {
-      if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
-        addToken(scopeName, "scope");
-        addToken(bucketName + "." + scopeName, "scope");
-      }
-      addToken('`' + scopeName + '`', "scope");
-      addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
-
-      bucket.scopes[scopeName] = true;
-      var colls = metadata.collections[bucketName][scopeName];
-      // add the collection if it's not there already
-      colls.forEach(collName => {
-          if (!bucket.collections.find(coll => coll.id == collName && coll.scope == scopeName))
-            bucket.collections.push({
-              name: collName,
-              id: collName,
-              expanded: isExpanded(bucketName, scopeName, collName),
-              bucket: bucketName,
-              scope: scopeName,
-              schema: [],
-              indexes: [],
-            });
-
-          if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
-            addToken(collName, "collection");
-            addToken(bucketName + "." + scopeName + "." + collName, "collection");
-          }
-          addToken('`' + collName + '`', "collection");
-          addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
-        }
-      );
-    });
-
-    // make an array of scope names and expansion status
-    bucket.scopeArray = Object.keys(bucket.scopes)
-      .map(function (scope_name) {
-        return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
-      });
-    bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
-
-    // if we are going to show schemas, we need to first get all the indexes, then get the schemas
-    // (which will have the indexed fields marked)
-    if (qwConstantsService.showSchemas) {
-      updateBucketIndexes(bucket)
-        .then(function success() {
-          var collectionsToInfer = [];
-          if (qwConstantsService.showSchemas)
-            bucket.collections.forEach(collection => {
-              if (collection.expanded && (collection.schema.length == 0 || collection.schema_error))
-                collectionsToInfer.push({
-                  bucket: bucket,
-                  scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
-                  collection: collection
+              // now collections
+              if (!bucket.collections.find(coll => coll.id == keyspace.id && coll.scope == keyspace.scope))
+                bucket.collections.push({
+                  name: collName,
+                  id: collName,
+                  expanded: isExpanded(bucketName, scopeName, collName),
+                  bucket: bucketName,
+                  scope: scopeName,
+                  schema: [],
+                  indexes: [],
                 });
+              if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
+                addToken(collName, "collection");
+                addToken(bucketName + "." + scopeName + "." + collName, "collection");
+              }
+              addToken('`' + collName + '`', "collection");
+              addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
             });
 
-          // Should we go infer schemas for the expanded collections?
-          if (collectionsToInfer.length)
-            getCollectionsSchemasBackground(collectionsToInfer, 0);
+            // make an array of scope names and expansion status
+            bucket.scopeArray = Object.keys(bucket.scopes)
+                .map(function (scope_name) {
+                  return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
+                });
+            bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
+
+            // if we are going to show schemas, we need to first get all the indexes, then get the schemas
+            // (which will have the indexed fields marked)
+            if (qwConstantsService.showSchemas) {
+              updateBucketIndexes(bucket)
+                  .then(function success() {
+                    var collectionsToInfer = [];
+                    if (qwConstantsService.showSchemas)
+                      bucket.collections.forEach(collection => {
+                        if (collection.expanded && (collection.schema.length == 0 || collection.schema_error))
+                          collectionsToInfer.push({
+                            bucket: bucket,
+                            scope: bucket.scopeArray.find(scope => scope.id == collection.scope),
+                            collection: collection
+                          });
+                      });
+
+                    // Should we go infer schemas for the expanded collections?
+                    if (collectionsToInfer.length)
+                      getCollectionsSchemasBackground(collectionsToInfer, 0);
+                  });
+
+              refreshAutoCompleteArray();
+            }
+          } // done with valid response
         });
-
-      refreshAutoCompleteArray();
-    }
-
-    });
   }
 
   //
