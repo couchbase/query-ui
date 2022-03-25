@@ -2560,6 +2560,7 @@ function getQwQueryService(
                 .map(function (scope_name) {
                   return {id: scope_name, expanded: isExpanded(bucket.name, scope_name)};
                 });
+            bucket.scopeArray.sort((c1, c2) => c1.id.localeCompare(c2.id));
             bucket.collections.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
             // if we are going to show schemas, we need to first get all the indexes, then get the schemas
