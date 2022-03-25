@@ -63,10 +63,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     if (params.bucket) {
       this.dec.options.offset = 0;
       this.dec.options.selected_bucket = params.bucket;
-      if (params.scope)
-        this.dec.options.selected_scope = params.scope;
-      if (params.collection)
-        this.dec.options.selected_collection = params.collection;
+      // MB-51579 - if params don't specify scope/collection, that's o.k., we just won't get documents until
+      // they are specified
+      this.dec.options.selected_scope = params.scope;
+      this.dec.options.selected_collection = params.collection;
     }
 
     this.formOptions = {
@@ -169,8 +169,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // wheneverthe collection menu is changed, remove any 'where' clause and offset
     dec.collectionMenuCallback = function(event) {
       //console.log("collectionMenuCallback: " + JSON.stringify(event));
-      if (event && (dec.options.selected_bucket != event.bucket || dec.options.selected_scope != event.scope ||
-        dec.options.selected_collection != event.collection))
+      // MB-51579 - avoid race condition, make sure we have buckets specified
+      if (event && dec.buckets.length > 0 &&
+          (dec.options.selected_bucket != event.bucket || dec.options.selected_scope != event.scope ||
+              dec.options.selected_collection != event.collection))
       {
         dec.options.selected_bucket = event.bucket;
         dec.options.selected_scope = event.scope;
@@ -765,6 +767,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         query += '`.`' + dec.options.selected_scope + '`.`' + dec.options.selected_collection;
       query += '` data ';
 
+      // can improve performance if we have a primary index and say so
+      if (has_prim())
+        query += 'use index(`#primary`) ';
+
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
       else if (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end)) {
@@ -776,7 +782,9 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           query += 'where meta().id < "' + dec.options.doc_id_end + '"';
       }
 
-      query += ' order by meta().id ';
+      // if we don't have a primary index, need to sort
+      if (!has_prim())
+        query += ' order by meta().id ';
 
       if (dec.options.limit && dec.options.limit > 0) {
         query += ' limit ' + dec.options.limit + ' offset ' + dec.options.offset;
@@ -1203,7 +1211,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.buckets = metadata.buckets;
       dec.buckets_ephemeral = metadata.buckets_ephemeral;
       dec.indexes = qwMetadataService.indexes;
+      // MB-51579 - when collection unspecified, select default from metadata (if available)
+      if (!dec.options.selected_collection && dec.options.selected_bucket && dec.options.selected_scope &&
+          metadata.collections[dec.options.selected_bucket])
+        dec.options.selected_collection = metadata.collections[dec.options.selected_bucket][dec.options.selected_scope][0];
     }
+
 
     //
     // when we activate, check with the query service to see if we have a query node. If
@@ -1213,9 +1226,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     function activate() {
       qwMetadataService.metaReady.then(() => {
         // use the collections service to get the list of buckets from the REST API
-        qwCollectionsService.getBuckets().then(meta => {
+        qwCollectionsService.refreshBuckets().then(meta => {
           metadataUpdate(meta);
-          retrieveDocs();
+          // MB-51579 - when collection unspecified, don't try to retrieve documents
+          if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection)
+            retrieveDocs();
         });
       });
     }
