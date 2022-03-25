@@ -119,7 +119,7 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
 
     this.dataIsArray = _.isArray(queryResult.explainResult);
     this.dataIsString = _.isString(queryResult.explainResult);
-    if (queryResult.explainResult.analysis) {
+    if (queryResult.explainResult && queryResult.explainResult.analysis) {
       this.data.analysis.indexes.length = 0;
       this.data.analysis.buckets.length = 0;
       this.data.analysis.fields.length = 0;
