@@ -37,9 +37,11 @@
   width: 100%;
 }
 
-/* div around the datatable needs absolute positioning and fixed height for scrolling to work */
+/* div around the datatable needs absolute or relative positioning and fixed height for scrolling to work
+ * absolute positioning doesn't allow it to stretch/expand after it's parent
+ */
 .data-table-parent {
-  position: absolute;
+  position: relative;
   height: calc(100vh - 360px); /* must be same height as wb-results-wrapper in cbui-components.css */
 }
 

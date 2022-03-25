@@ -243,7 +243,7 @@
                  (ready)="qc.aceOutputLoaded($event)" [(ngModel)]="qc.lastResult().result">
         </ngx-ace>
 
-        <div class="wb-results-table width-9 data-table-parent"
+        <div class="wb-results-table data-table-parent"
              *ngIf="qc.isSelected(2) && qc.lastResult().data">
           <qw-json-data-table-comp class="" [subject]="qc.result_subject"></qw-json-data-table-comp>
         </div>
