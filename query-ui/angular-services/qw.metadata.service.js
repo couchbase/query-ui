@@ -45,6 +45,7 @@ class QwMetadataService {
         this.bucketList = [];
         this.permittedBucketList = [];
         this.indexes = {};
+        this.errors = [];
         this.metaReady = this.updateBuckets();
 
         qwHttp.get('/pools')
@@ -182,12 +183,17 @@ class QwMetadataService {
             .then(success_resp => {
                     Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
                     if (success_resp.status == 200 && success_resp.data && Array.isArray(success_resp.data.results))
-                        success_resp.data.results.forEach(index =>
-                            this.addIndexToMetadata(index.bucket_id,index.scope_id,index.keyspace_id,index.is_primary));
+                        success_resp.data.results.forEach(index => {
+                            // indexes on default collections have bucket name in the keyspace_id
+                            if (!index.bucket_id)
+                                this.addIndexToMetadata(index.keyspace_id,"_default","_default",index.is_primary);
+                            else
+                                this.addIndexToMetadata(index.bucket_id,index.scope_id,index.keyspace_id,index.is_primary);
+                        });
                 },
                 error_resp => {
                     Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
-                    this.local_metadata.errors.push(JSON.stringify(error_resp));
+                    this.errors.push(JSON.stringify(error_resp));
                     console.log("Error getting indexes via n1ql: " + JSON.stringify(error_resp));
                 });
 
