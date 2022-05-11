@@ -94,7 +94,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
   docViewer() {
     return this.rbac.init && this.rbac.cluster.collection['.:.:.'].data.docs.read
-        && this.rbac.cluster.collection['.:.:.'].collections.read;
+        && (!this.dec.compat.atLeast70 || this.rbac.cluster.collection['.:.:.'].collections.read);
   }
 
   constructor(
@@ -113,6 +113,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     this.dec = dec;
     this.qms = qwMetadataService;
     this.rbac = this.qms.rbac;
+    dec.docViewer = this.docViewer.bind(this);
     dec.rbac = qwMetadataService.rbac;
     dec.compat = qwMetadataService.compat;
 
@@ -1229,7 +1230,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         qwCollectionsService.refreshBuckets().then(meta => {
           metadataUpdate(meta);
           // MB-51579 - when collection unspecified, don't try to retrieve documents
-          if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection)
+          if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection && dec.docViewer())
             retrieveDocs();
         });
       });

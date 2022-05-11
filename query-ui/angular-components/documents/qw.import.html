@@ -8,14 +8,18 @@ be governed by the Apache License, Version 2.0, included in the file
 licenses/APL2.txt.
 -->
 
-<div *ngIf="!ic.docImporter()">
+<div *ngIf="pre7Cluster()">
+  Import UI not supported on upgraded nodes of mixed 6.x and 7.x clusters. Try importing on a non-upgraded node.
+</div>
+
+<div *ngIf="!pre7Cluster() && !ic.docImporter()">
   Insufficient permissions to import documents. User must have at least Data Writer on one or more
   collections, and also the ability to view scopes and collections on that bucket.
 </div>
 
 <qw-docs-subnav></qw-docs-subnav>
 
-<div *ngIf="ic.docImporter()">
+<div *ngIf="ic.docImporter() && !pre7Cluster()">
   <div class="import-wrapper"> <!-- wraps the 2 cols of main pg components --->
     <div class="width-4 import-col1">
       <div class="formrow row flex-left items-top">

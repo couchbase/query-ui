@@ -23,7 +23,7 @@ angular
   .module(app)
   .config(function (mnPluggableUiRegistryProvider, mnPermissionsProvider) {
     mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!read"); // needed for Documents and Query
-    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!write"); // needed for Import
+    mnPermissionsProvider.set("cluster.collection[.:.:.].data.docs!upsert"); // needed for Import
     mnPermissionsProvider.set("cluster.collection[.:.:.].collections!read"); // needed for Documents
     mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.select!execute");
     mnPermissionsProvider.set("cluster.collection[.:.:.].n1ql.index!all");
@@ -42,7 +42,7 @@ angular
       state: 'app.admin.docs.editor',
       includedByState: 'app.admin.docs',
       plugIn: 'workbenchTab',
-      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read && rbac.cluster.collection['.:.:.'].collections.read",
+      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read",
       index: 0
     });
 
@@ -52,8 +52,7 @@ angular
       state: 'app.admin.query.workbench',
       includedByState: 'app.admin.query',
       plugIn: 'workbenchTab',
-      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read" +
-          " || rbac.cluster.collection['.:.:.'].n1ql.index.all || rbac.cluster.n1ql.meta.read",
+      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read",
       index: 1
     });
 

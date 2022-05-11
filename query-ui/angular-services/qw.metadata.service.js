@@ -100,7 +100,7 @@ class QwMetadataService {
         let perms = [
             'cluster.collection[.:.:.].collections!read',
             'cluster.collection[.:.:.].data.docs!read',
-            'cluster.collection[.:.:.].data.docs!write',
+            'cluster.collection[.:.:.].data.docs!upsert',
             'cluster.collection[.:.:.].n1ql.index!all',
             'cluster.collection[.:.:.].n1ql.select!execute',
             'cluster.collection[.:.:.].n1ql.udf_external!manage',

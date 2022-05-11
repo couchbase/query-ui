@@ -33,7 +33,7 @@ licenses/APL2.txt.
        hasSearch="true">
     </mn-select>
     <span
-       *ngIf="errors"
+       *ngIf="errors && compat.atLeast70"
        placement="auto"
        container="body"
        class="fa-warning icon orange-3 cursor-pointer"

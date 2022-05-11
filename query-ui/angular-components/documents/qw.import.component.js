@@ -52,6 +52,10 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
     this.configForm.get('useKey').valueChanges.subscribe(data => this.options.useKey = data);
   }
 
+  pre7Cluster() {
+    return(!this.compat.atLeast70);
+  }
+
   constructor(cdr, qwDialogService, qwImportService, qwMetadataService, qwQueryService) {
     super();
 
@@ -67,7 +71,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
 
     ic.rbac = qwMetadataService.rbac;
     ic.docImporter = function() {
-      return ic.rbac.init && ic.rbac.cluster.collection['.:.:.'].data.docs.write &&
+      return ic.rbac.init && ic.rbac.cluster.collection['.:.:.'].data.docs.upsert &&
         ic.rbac.cluster.collection['.:.:.'].collections.read;
     };
 
