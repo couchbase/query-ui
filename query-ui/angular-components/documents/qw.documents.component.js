@@ -768,10 +768,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         query += '`.`' + dec.options.selected_scope + '`.`' + dec.options.selected_collection;
       query += '` data ';
 
-      // can improve performance if we have a primary index and say so
-      if (has_prim())
-        query += 'use index(`#primary`) ';
-
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
       else if (!dec.options.show_id && (dec.options.doc_id_start || dec.options.doc_id_end)) {
