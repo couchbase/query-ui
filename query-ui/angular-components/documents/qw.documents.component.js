@@ -779,9 +779,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           query += 'where meta().id < "' + dec.options.doc_id_end + '"';
       }
 
-      // if we don't have a primary index, need to sort
-      if (!has_prim())
-        query += ' order by meta().id ';
+      query += ' order by meta().id ';
 
       if (dec.options.limit && dec.options.limit > 0) {
         query += ' limit ' + dec.options.limit + ' offset ' + dec.options.offset;
