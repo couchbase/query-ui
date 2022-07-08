@@ -798,14 +798,13 @@ function getQwQueryService(
         //console.log("  field[items]: " + field['items']);
         //if (field['items'])
         // console.log("    field[items].subtype: " + field['items'].subtype);
-
-        addToken(prefix + field_name, "field");
+        addToken('`' + prefix + '`.`' + field_name + '`', "field");
         //if (prefix.length == 0 && !field_name.startsWith('`'))
         //  addToken('`' + field_name + '`',"field");
 
         // if the field has sub-properties, make a recursive call
         if (field['properties']) {
-          getFieldNamesFromSchema([field], prefix + field_name + ".");
+          getFieldNamesFromSchema([field], prefix + '`.`' + field_name);
         }
 
         // if the field has 'items', it is an array, make recursive call with array type
