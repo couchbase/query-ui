@@ -93,8 +93,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   }
 
   docViewer() {
-    return this.rbac.init && this.rbac.cluster.collection['.:.:.'].data.docs.read
-        && (!this.dec.compat.atLeast70 || this.rbac.cluster.collection['.:.:.'].collections.read);
+    return this.rbac.init && this.rbac.cluster.collection['.:.:.'].data.docs.read;
   }
 
   constructor(

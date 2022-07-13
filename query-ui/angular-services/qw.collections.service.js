@@ -20,6 +20,7 @@ licenses/APL2.txt.
 import {QwHttp}            from './qw.http.js';
 import {QwMetadataService} from "./qw.metadata.service.js";
 import _                   from 'lodash';
+import { QwQueryService}     from "./qw.query.service.js";
 
 export {QwCollectionsService};
 
@@ -34,16 +35,19 @@ class QwCollectionsService {
     return [
       QwHttp,
       QwMetadataService,
+      QwQueryService
     ]
   }
 
   constructor(
     qwHttp,
     qwMetadataService,
+    qwQueryService
   ) {
     Object.assign(this, getQwCollectionsService(
         qwHttp,
         qwMetadataService,
+        qwQueryService
     ));
   }
 }
@@ -53,7 +57,8 @@ class QwCollectionsService {
 
 function getQwCollectionsService(
   qwHttp,
-  qms) {
+  qms,
+  qwQueryService) {
 
   var qcs = {};
 
@@ -165,11 +170,60 @@ function getQwCollectionsService(
   }
 
 
+  function refreshScopesAndCollectionsForBucket(bucket, proxy) {
+    const canUseEndpoints = qms.rbac && qms.rbac.cluster.collection['.:.:.'].collections.read;
+    return canUseEndpoints ?
+      refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy) :
+      refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy);
+  }
+
+  function refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy) {
+    var meta = getMeta(proxy);
+    meta.errors.length = 0;
+
+    return qwQueryService
+      .executeQueryUtilNew("select * from system:keyspaces")
+      .toPromise()
+      .then((resp) => {
+        const body = JSON.parse(resp.body);
+        // get the scopes, and for each the collection names
+
+        meta.scopes[bucket] = [];
+
+        meta.collections[bucket] = {}; // map indexed on scope name
+
+        meta.scopes[bucket].length = 0; // make sure any old scopes are removed
+        body.results.forEach(function (result) {
+          let item = result.keyspaces;
+          if (item.bucket ? (item.bucket !== bucket) : item.path !== "default:" + bucket) {
+            return;
+          }
+          if (item.scope && item.bucket) {
+            if (!meta.collections[item.bucket][item.scope]) {
+              meta.collections[item.bucket][item.scope] = [];
+              meta.scopes[item.bucket].push(item.scope);
+            }
+            meta.collections[item.bucket][item.scope].push(item.name);
+          } else {
+            if (!meta.collections[bucket]["_default"]) {
+              meta.collections[bucket]["_default"] = ["_default"];
+              meta.scopes[bucket].push("_default");
+            }
+          }
+        });
+
+        meta.scopes[bucket] = meta.scopes[bucket].sort();
+        return(meta);
+      }, (resp) => handleScopesAndCollectionsForBucketError(resp, bucket, meta, "_p/query/query/service"));
+  }
   //
   // for any bucket we need to get the scopes and collections
   //
 
-  function refreshScopesAndCollectionsForBucket(bucket, proxy) {
+  //TODO: most likely we don't need this function, but I don't want to remove it now
+  //just in case.
+
+  function refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy) {
     var meta = getMeta(proxy);
     meta.errors.length = 0;
     var api = "/pools/default/buckets/" + encodeURI(bucket) + "/scopes";
@@ -197,21 +251,23 @@ function getQwCollectionsService(
 
       meta.scopes[bucket] = meta.scopes[bucket].sort();
       return(meta);
-    }, function error(resp) {
-      meta.scopes[bucket] = [];
-      var error = {status: resp.status, url: url};
-      if (resp.error)
-        if (_.isString(resp.error))
-          error.message = resp.error;
-        else
-          Object.assign(error,resp.error);
-      meta.errors.length = 0;
-      meta.errors.push(error);
-      //console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
-      return(meta);
-    });
+    }, (resp) => handleScopesAndCollectionsForBucketError(resp, bucket, meta, url));
 
     return (promise);
+  }
+
+  function handleScopesAndCollectionsForBucketError(resp, bucket, meta, url) {
+    meta.scopes[bucket] = [];
+    var error = {status: resp.status, url: url};
+    if (resp.error)
+      if (_.isString(resp.error))
+        error.message = resp.error;
+    else
+      Object.assign(error,resp.error);
+    meta.errors.length = 0;
+    meta.errors.push(error);
+    //console.log("Error getting collections for " + bucket + ": " + JSON.stringify(resp));
+    return(meta);
   }
 
   function getBuckets(proxy) {
