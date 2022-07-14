@@ -93,8 +93,12 @@ function getQwQueryService(
   qwQueryService.queryPlanService = qwQueryPlanService;
 
   qwQueryService.updateBuckets = () => {
+    // MB-51172 - updating buckets has a side effect of wiping out any saved context bucket. save and restore
+    let tmpBucket = (getCurrentResult() ? getCurrentResult().query_context_bucket : null);
     return qwMetadataService.updateBuckets().then(
-        () => {updateBucketsCallback();},
+        () => {
+          getCurrentResult().query_context_bucket = tmpBucket;
+          updateBucketsCallback();},
         () => {console.log("Error getting buckets in qwQueryService")}
     )
   };
@@ -615,8 +619,6 @@ function getQwQueryService(
   function loadStateFromStorage() {
     // make sure we have local storage
 
-    //console.log("Trying to load from storage...");
-
     if (hasLocalStorage && _.isString(localStorage[localStorageKey])) try {
       var savedState = JSON.parse(localStorage[localStorageKey]);
 
@@ -681,7 +683,6 @@ function getQwQueryService(
 
       if (!qwQueryService.options.transaction_timeout)
         qwQueryService.options.transaction_timeout = 120;
-
     } catch (err) {
       console.log("Error loading state: " + err);
     }
