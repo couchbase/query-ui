@@ -53,12 +53,12 @@
              ngbTooltip="Set a default bucket and scope to use for your queries, so you may write queries with only the collection name."
           >
             <option [ngValue]="null">unset</option>
-            <option *ngFor="let bucket of qc.getContextBuckets()">{{bucket}}</option>
+            <option *ngFor="let bucket of qc.getContextBuckets()" [ngValue]="bucket">{{bucket}}</option>
           </select>
           <select
              *ngIf="qc.lastResult().query_context_bucket"
              [(ngModel)]="qc.lastResult().query_context_scope">
-            <option *ngFor="let name of qc.getContextScopes()">{{name}}</option>
+            <option *ngFor="let name of qc.getContextScopes()" [ngValue]="name">{{name}}</option>
           </select>
         </span>
       </div>

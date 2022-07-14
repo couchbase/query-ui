@@ -263,7 +263,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.aceOutputOptions = {
       mode: 'ace/mode/json',
       showGutter: true,
-      //useWrapMode: true,
+      // useWrapMode: true,
       //onLoad: qc.aceOutputLoaded,
       //onChange: qc.aceOutputChanged,
       //$blockScrolling: Infinity
@@ -790,6 +790,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       _editor.setOptions({
         mode: 'ace/mode/json',
         showGutter: true,
+        wrap: true,
+        indentedSoftWrap: false,
       });
 
       _editor.$blockScrolling = Infinity;

@@ -20,7 +20,7 @@ licenses/APL2.txt.
 <div *ngIf="qms.isEnterprise()">
 <h4 class="margin-top-half">Javascript Function Libraries</h4>
 <div *ngIf="!externalPermitted()" class="margin-bottom-1">
-  <smalL class="margin-left-1">Insufficent permissions to view/edit external function libraries. Either Global Manage External or Scoped Manage External roles required.</smalL>
+  <smalL class="margin-left-1">Insufficient permissions to view/edit external function libraries. Either Global Manage External or Scoped Manage External roles required.</smalL>
 </div>
 <div *ngIf="externalPermitted()" class="qm-table-active cbui-table margin-bottom-2">
   <!-- table wrapper -->
@@ -105,8 +105,8 @@ licenses/APL2.txt.
           <span>{{getFunctionScope(function)}}</span>
         </span>
         <span class="cbui-table-cell flex-grow-half has-hover"
-              ngbTooltip="{{function.identity.name}}">
-          {{function.identity.name}}
+              ngbTooltip="`{{function.identity.name}}`">
+          `{{function.identity.name}}`
         </span>
         <span class="cbui-table-cell flex-grow-half has-hover"
               ngbTooltip="{{getFunctionLanguage(function)}}">
