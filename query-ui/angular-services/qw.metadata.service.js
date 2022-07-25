@@ -137,8 +137,13 @@ class QwMetadataService {
         Object.keys(permissions).forEach(key => {
             let value = permissions[key];
             var path = [];
-            key.split(/[[\]]+/).forEach(subpath => {
-                subpath.includes(':') ? path.push(subpath) : path.push(...subpath.split(/[.!]+/))});
+            let sections = key.split(/[[\]]+/);
+            for (var i=0; i < sections.length; i++)
+                if (i==1)
+                    path.push(sections[i]); // bucket/coll info inside brackets
+                else
+                    path.push(...sections[i].split(/[.!]+/));
+
             let perm = this.rbac;
             // fill out the path as needed
             path.forEach((pName,i) => {
@@ -236,4 +241,3 @@ function encodeCompatVersion(major, minor) {
     }
     return major * 0x10000 + minor;
 }
-
