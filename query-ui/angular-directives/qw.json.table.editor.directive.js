@@ -442,7 +442,7 @@ function getMetaData(object) {
       var data = object[row].data;
       // if the data is a sub-array, or primitive type, they will go in an unnamed column,
       // and figure out how much space it needs
-      if (_.isArray(data) || _.isString(data) || _.isNumber(data) || _.isBoolean(data)) {
+      if (_.isArray(data) || isPrimOrNull(data)) {
         hasNonObject = true;
         var area = getColumnArea(data);
         var width = area.width;
@@ -452,22 +452,22 @@ function getMetaData(object) {
       }
 
       // otherwise it's an object, loop through its keys
-      else _.forEach(object[row].data, function (value, key) {
+      else if (_.isPlainObject(object[row].data)) for (let key in object[row].data) {
         topLevelKeys[key] = true;
         // see how much space this value requires, remember the max
-        var area = getColumnArea(value);
+        var area = getColumnArea(object[row].data[key]);
         var width = area.width;
         rowCounts[row] += area.count;
         if (!columnWidths[key] || width > columnWidths[key])
           columnWidths[key] = width;
-      });
+      }
     }
     totalCount += rowCounts[row];
   }
 
-  _.forIn(topLevelKeys, function (value, key) {
+  for (let key in topLevelKeys) {
     totalWidth += columnWidths[key];
-  });
+  }
 
   // if the total width is > the max number of columns, truncate the data to be presented
   if (totalWidth > maxWidth) {
@@ -639,7 +639,7 @@ function makeHTMLTopLevel() {
 
         // if this row is a subarray or primitive, put it here
         var data = tdata[row].data;
-        if (_.isArray(data) || _.isString(data) || _.isNumber(data) || _.isBoolean(data)) {
+        if (_.isArray(data) || isPrimOrNull(data)) {
           var childSize = {width: 1};
           result += makeHTMLtable(data, '[' + row + '].data', childSize);
         }
@@ -649,7 +649,7 @@ function makeHTMLTopLevel() {
 
       // now the field values, if we are showing tables, but only if we have a non-null document
 
-      if (tdata[row].data || tdata[row].data === 0) {
+      if (_.isPlainObject(tdata[row].data)) {
         if (tooManyItemsInResult)
           result += ' <span class="icon fa-warning orange-3" *ngIf="dec.options.show_tables" ' +
             'title="Too many fields in result set for field editing. Limit result size or click ID to edit document."' +
@@ -668,21 +668,15 @@ function makeHTMLTopLevel() {
             result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width: ' +
               columnWidths[key] * columnWidthPx + 'px;">' + childHTML + '</span>';
           });
+      }
 
-          // otherwise, a truncated version of the JSON
-        //console.log("Column width: " + columnWidthPx);
-        var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
-        if (json.length > max_length)
-          json = json.substring(0, max_length) + '...';
-        result += '<span *ngIf="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5 * columnWidthPx + 'px;">' +
+      // when not showing tables, show a truncated version of the JSON
+      var json = tdata[row].rawJSON || JSON.stringify(tdata[row].data);
+      if (json.length > max_length)
+        json = json.substring(0, max_length) + '...';
+      result += '<span *ngIf="!dec.options.show_tables" class="doc-editor-cell" style="width: ' + 5 * columnWidthPx + 'px;">' +
           '{{dec.options.current_result[' + row + '].display_json}}</span>';
-      }
 
-      // for a null document, output a message saying so
-
-      else {
-        result += '<span class="doc-editor-cell" style="width: ' + 5 * columnWidthPx + 'px;">Empty Document</span>';
-      }
 
       // for some reason I couldn't get the form from $scope, so the following acts as a sentinel that I can search for
       // to see if anything changed in any form of the editor
@@ -757,31 +751,46 @@ function getTooltip(row) {
 // will need.
 
 function getColumnArea(item) {
-  // arrays are complex - an array of primitives is a vertical list of values, but a mixed
-  // array of objects and primitives is shown as a table, with an unnamed column for the
-  // primitives
+  // arrays are complex
+  // - an array of primitives is a vertical list of values.
+  // - an array containing a sub-array shows that sub-array as more items in the same column as primitives
+  // - an array of objects is shown as a table with a column for each distinct object key
   if (_.isArray(item)) { // arrays will list vertically, find max width of any element
     //console.log("Getting width for array: " + JSON.stringify(item));
-    var namedWidth = 1;
-    var unnamedWidth = 0;
-    var count = 0;
-    for (var i = 0; i < item.length; i++) {
-      var elementSize = getColumnArea(item[i]);
-      var elementWidth = elementSize.width;
-      count += elementSize.count;
+    let namedWidth = 0;
+    let nameWidthMap = {}; // arrays of objects are rendered as tables, remember the max width of each column
+    let unnamedWidth = 0;
+    let count = 0;
+    for (let i = 0; i < item.length; i++) {
 
-      // is the item named (object) or unnamed (prim or array)
-      if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i])) {
+      // unnamed column: prim or nested array
+      if (isPrimOrNull(item[i]) || _.isArray(item[i])) {
+        let elementSize = getColumnArea(item[i]);
+        let elementWidth = elementSize.width;
+        count += elementSize.count;
+
         if (elementWidth > unnamedWidth)
           unnamedWidth = elementWidth;
-      } else {
-        if (elementWidth > namedWidth)
-          namedWidth = elementWidth;
+      }
+      // for objects, we need to check each field for the width, since each will get their own column
+      else if (_.isPlainObject(item[i])) {
+        for (let oKey in item[i]) {
+          let colSize = getColumnArea(item[i][oKey]);
+          if (!nameWidthMap[oKey] || nameWidthMap[oKey] < colSize.width)
+            nameWidthMap[oKey] = colSize.width;
+        }
       }
     }
 
-    //console.log("   got array width: " + namedWidth + unnamedWidth);
+    // now we've been through every item in the array we should have the width of each object field,
+    // compute the total
+    for (let mapKey in nameWidthMap) {
+      namedWidth += nameWidthMap[mapKey];
+    }
+
+    //console.log("   got array width for: " + JSON.stringify(item) + ' as ' + namedWidth + ' and ' + unnamedWidth);
     return ({width: namedWidth + unnamedWidth, height: item.length, count: count});
+
   } else if (_.isPlainObject(item)) { // for objects we need to sum up columns for each field
     //console.log("Getting width for object: " + JSON.stringify(item));
     var totalWidth = 0;
@@ -798,12 +807,20 @@ function getColumnArea(item) {
     if (totalWidth == 0)
       totalWidth = 1;
 
-    //console.log("   got object width: " + totalWidth);
+    //console.log("   got object width for: " + JSON.stringify(item) + ' as ' + totalWidth);
     return ({width: totalWidth, height: maxHeight + 1, count: count});
   } else // all primitive types just get 1 column wide.
     return {width: 1, height: 1, count: 1};
 }
 
+//
+// convenience function - for the most part we treat null values the same
+// as primitive types (string, number, boolean), so have a function to detect
+// all four
+//
+function isPrimOrNull(item) {
+  return (item == null) || _.isString(item) || _.isNumber(item) || _.isBoolean(item);
+}
 
 //recursion in Angular is really inefficient, so we will use a javascript
 //routine to convert the object to an HTML representation. It's not true to
@@ -868,76 +885,49 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
       return (result);
     }
 
-    //
-    // another special case: whenever the user does "select * from <bucket>", they
-    // get an array of objects with only one field, whose key is the bucket name and
-    // whose value is an abject. In that case we get a really ugly table, with a subtable
-    // for each row. To work around this, in the case where we found only one column, "peek"
-    // inside to allow access to those inner fields
-    //
-
-    var innerKeys;
-    var fields = Object.keys(itemsKeysToObject);
-    if (fields.length == 1) {
-      var onlyField = fields[0];
-
-      // loop through the array
-      _.forEach(object, function (item, index) {
-        // if the item is an object
-        if (_.isPlainObject(item[onlyField])) {
-          _.forIn(item[onlyField], function (value, key) {
-            if (!innerKeys)
-              innerKeys = {};
-            innerKeys[key] = true;
-          });
-        }
-      });
-    }
-
     // otherwise, we have an array of objects and/or primitives & arrays.
     // Make a table whose columns are the union of all fields in all the objects. If we
     // have a non-object, output it as a full-width cell.
-    var keys = (innerKeys ? innerKeys : itemsKeysToObject);
-
+    var keys = itemsKeysToObject;
+    //console.log("Got keys: " + JSON.stringify(keys));
     // need to keep track of the widths of each column so the headers can know what size to be
-    var columnWidths = {};
-    var unnamedWidth; // width for non-field values, which don't have a name
+    let arrayColumnWidths = {};
+    let unnamedWidth = 0; // width for non-field values, which don't have a name
     _.forIn(keys, function (value, key) { // set default width for each column
-      columnWidths[key] = 1;
+      arrayColumnWidths[key] = 1;
     });
 
     totalSize.width = 0;
-    // get the max width for each column of each row
+
+    //
+    // to lay out the table, we need to get the max width for each column of each row
+    //
+
     _.forEach(object, function (item, index) {
       // limit these arrays to 100 items
       if (index > max_array_len)
         return (false);
       // if the row is an array or primitive, compute the width for the unnamed column
-      if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item)) {
+      if (_.isArray(item) || isPrimOrNull(item)) {
         var width = getColumnArea(item).width;
         if (!unnamedWidth || width > unnamedWidth)
           unnamedWidth = width;
       } else if (_.isPlainObject(item)) {
-        // if we are using innerKeys, get to the inner object
-        if (innerKeys)
-          item = item[onlyField];
-
         // if it's an empty object, just say so
         if (_.keys(item).length > 0)
           _.forIn(keys, function (b, key) {
             var value = item ? item[key] : null;
 
-            if (value && getColumnArea(value).width > columnWidths[key])
-              columnWidths[key] = getColumnArea(value).width;
+            if (value && getColumnArea(value).width > arrayColumnWidths[key])
+              arrayColumnWidths[key] = getColumnArea(value).width;
           });
-
       }
     });
+    //console.log("  column widths: " + JSON.stringify(arrayColumnWidths));
 
     // now we know the widths of each key, compute total width
-    for (var key in columnWidths) {
-      //console.log("For key: " + key + " got width: " + columnWidths[key]);
-      totalSize.width += columnWidths[key];
+    for (var key in arrayColumnWidths) {
+      totalSize.width += arrayColumnWidths[key];
     }
     if (unnamedWidth)
       totalSize.width += unnamedWidth;
@@ -961,7 +951,7 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
         result += '<span class="doc-editor-cell" style="width: ' + unnamedWidth * columnWidthPx + 'px">';
 
         // is this row an array or primitive?
-        if (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item)) {
+        if (_.isArray(item) || isPrimOrNull(item)) {
           var childSize = {width: 1};
           result += makeHTMLtable(item, prefix + "[" + index + "]", childSize, disabled);
         }
@@ -971,15 +961,17 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
       }
 
       if (_.isPlainObject(item)) {
-        // if we are using innerKeys, get to the inner object
-        if (innerKeys)
-          item = item[onlyField];
-
         // if it's an empty object, just say so
         if (_.keys(item).length == 0)
           result += '<span class="doc-editor-cell" style="width: ' + columnWidthPx + 'px">empty object</span>';
 
         else _.forIn(keys, function (b, key) {
+          // not all keys present in all objects, if key not found, add an empty slot
+          if (item[key] === undefined) {
+            result += '<span class="doc-editor-cell" style="width: ' + columnWidthPx*arrayColumnWidths[key] + 'px"></span>';
+            return;
+          }
+
           var value = item ? item[key] : null;
 
           //console.log("  key: " + key + ", value: " + value);
@@ -988,7 +980,6 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
           if (_.isArray(value) || _.isPlainObject(value)) {
             var childSize = {width: 1};
             var childHTML = makeHTMLtable(value, prefix + '[' + index + ']' +
-              (innerKeys ? ('.' + onlyField) : '') +
               '[\'' + key + '\']', childSize, disabled);
             result += '<span class="doc-editor-row" style="width: ' + childSize.width * columnWidthPx + 'px;">' + childHTML + '</span>';
           }
@@ -997,7 +988,6 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
           else {
             var childSize = {width: 1};
             var childHTML = makeHTMLtable(value, prefix + '[' + index + ']' +
-              (innerKeys ? ('.' + onlyField) : '') +
               '[\'' + key + '\']', childSize, disabled);
             result += '<span class="doc-editor-row" style="width: ' + childSize.width * columnWidthPx + 'px;">' + childHTML + '</span>';
           }
@@ -1015,8 +1005,8 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
     });
 
     // done with the array of values, now know how big each column header should be
-    var columnHeaders = '';
-    var arrayWidth = 0;
+    let columnHeaders = '';
+    let arrayWidth = 0;
     // if we have unnamed items, leave a blank-headered column for them
     if (unnamedWidth) {
       columnHeaders += '<span class="data-table-header-cell" style="width: ' +
@@ -1027,8 +1017,9 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
     // now column headers for fields we saw in the array
     _.forIn(keys, function (value, key) {
       columnHeaders += '<span class="data-table-header-cell" style="width: ' +
-        columnWidths[key] * columnWidthPx + 'px;">' + mySanitize(key) + '</span>';
-      arrayWidth += columnWidths[key] * columnWidthPx;
+        arrayColumnWidths[key] * columnWidthPx + 'px;">' + mySanitize(key) + '</span>';
+      arrayWidth += arrayColumnWidths[key] * columnWidthPx;
+      //console.log(`after key ${key} got width ${arrayWidth}`);
     });
 
     // finish the table
@@ -1096,6 +1087,8 @@ function makeHTMLtable(object, prefix, totalSize, disabled) {
         'title="\'Field value too large to edit in spreadsheet mode. Try editing as JSON.\'"' +
         'placement="right" tooltip-append-to-body="true" tooltip-trigger="mouseenter">' +
         '</span></div>';
+    else if (object == null)
+      result += 'null';
     else
       result += '<input type="text" ' + model + inputStyle + no_edit + '/>';
   }
