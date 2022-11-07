@@ -384,14 +384,14 @@ function myCompare(a,b,sortField,meta) {
 //
 
 function createHTMLheader(meta, inner) {
-//console.log("creating header for meta: " + JSON.stringify(meta,null,4));
-//console.log("creating header, meta.innerKeys: " + JSON.stringify(Object.keys(meta.innerKeys)));
-//console.log("creating header, meta.arrayInnerPrims: " + meta.arrayInnerPrims);
-
-//if (meta.arrayInnerObjects) {
-//console.log("creating header, meta.arrayInnerObjects.innerKeys: " + JSON.stringify(Object.keys(meta.arrayInnerObjects.innerKeys)));
-//console.log("creating header, meta.arrayInnerObjects.arrayInnerPrims: " + meta.arrayInnerObjects.arrayInnerPrims);
-//}
+// console.log("creating header for meta: " + JSON.stringify(meta,null,4));
+// console.log("creating header, meta.innerKeys: " + JSON.stringify(Object.keys(meta.innerKeys)));
+// console.log("                 meta.arrayInnerPrims: " + meta.arrayInnerPrims);
+//
+// if (meta.arrayInnerObjects) {
+// console.log("                 meta.arrayInnerObjects.innerKeys: " + JSON.stringify(Object.keys(meta.arrayInnerObjects.innerKeys)));
+// console.log("                 meta.arrayInnerObjects.arrayInnerPrims: " + meta.arrayInnerObjects.arrayInnerPrims);
+// }
 //console.log("     ");
 
   // a header only is appropriate for arrays
@@ -523,17 +523,18 @@ function createHTMLForVisibleRegion(data,meta,scrollTop,height) {
       // if some rows have non-object values, add them first
       if (meta.arrayInnerObjects.arrayInnerPrims)
         if (_.isArray(row_value) || _.isString(row_value) ||
-            _.isNumber(row_value) || _.isBoolean(row_value))
+            _.isNumber(row_value) || _.isBoolean(row_value) || row_value === null)
           rowHTML += createHTMLforValue(row_value,meta.arrayInnerObjects.arrayInnerPrims,row_path);
         else {// regular row, output empty first column
           //var size = meta.arrayInnerObjects.arrayInnerObjects.size + meta.arrayInnerObjects.arrayInnerPrims.size;
-          rowHTML += createHTMLforValue(null,meta.arrayInnerObjects.arrayInnerPrims,row_path);
+          rowHTML += createHTMLforValue(undefined,meta.arrayInnerObjects.arrayInnerPrims,row_path);
         }
 
       // for each possible field
       Object.keys(meta.arrayInnerObjects.innerKeys).sort().forEach(function(fieldName,index) {
         //console.log("Got field: " + fieldName);
-        rowHTML += createHTMLforValue(row_value[fieldName],meta.arrayInnerObjects.innerKeys[fieldName],
+        if (_.isPlainObject(row_value)) // only objects have properties
+          rowHTML += createHTMLforValue(row_value[fieldName],meta.arrayInnerObjects.innerKeys[fieldName],
             row_path + "." + fieldName);
       });
     }
@@ -587,6 +588,8 @@ function createHTMLforValue(item,fieldData,path) {
   // for strings just use the value
   else if (_.isString(item))
     html += mySanitize(item);
+  else if (item === null)
+    html += '<i>null</i>'
 
   // for arrays, if they have inner objects, just show a single header bar listing columns
   //give one line per item
@@ -622,15 +625,15 @@ function createHTMLforValue(item,fieldData,path) {
           //console.log("  item: " + JSON.stringify(item[i]));
           // if we have non-objects in the array as well, output them first
           if (fieldData.arrayInnerPrims) {
-            var primVal = null;
-            if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i]))
+            var primVal = undefined;
+            if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i]) || item[i] === null)
               primVal = item[i];
             html += createHTMLforValue(primVal,fieldData.arrayInnerPrims,path + "[" + i + "]");
           }
 
           // now object keys
           Object.keys(fieldData.arrayInnerObjects.innerKeys).sort().forEach(function(innerKey,index) {
-            var innerVal = null;
+            var innerVal = undefined; // unchanged will result in blank cell since value is missing (vs. null)
             if (_.isPlainObject(item[i]))
               innerVal = item[i][innerKey];
             html += createHTMLforValue(innerVal,fieldData.arrayInnerObjects.innerKeys[innerKey],
@@ -742,10 +745,10 @@ function getMetaDataAndSizes(data) {
   meta.rendered = [];      // have we rendered each row?
 
   //console.log("Got meta: " + JSON.stringify(meta,null,4));
-
   // now that we have summary data for each field, compute actual sizes
   finalizeFieldWidths(meta);
   //console.log("Got meta2: " + JSON.stringify(meta,null,4));
+
 
   // when the user does "select * from default" the result is an array of objects
   // of the form: { "default" : { "some field": "some value", ...}}. We can detect
@@ -755,12 +758,19 @@ function getMetaDataAndSizes(data) {
   if (meta.arrayInnerObjects) {
     var fieldNames = Object.keys(meta.arrayInnerObjects.innerKeys);
     if (fieldNames.length == 1 && (meta.arrayInnerObjects.innerKeys[fieldNames[0]].types.obj || meta.arrayInnerObjects.innerKeys[fieldNames[0]].types.arr)) {
-//    console.log("Before meta: " + JSON.stringify(meta,null,4));
       meta.arrayInnerObjects = meta.arrayInnerObjects.innerKeys[fieldNames[0]];
       meta.outerKey = fieldNames[0];
 
-//    console.log("After meta: " + JSON.stringify(meta,null,4));
+      // need to recompute arrayInnerPrims using the outerKey
+      for (let i=0; i < data.length; i++)
+         if (!_.isPlainObject(data[i][meta.outerKey]))
+           meta.arrayInnerObjects.arrayInnerPrims = getFieldInfo(data[i][meta.outerKey],meta.arrayInnerObjects.arrayInnerPrims);
+      //
+      // // if we found anything, we need to compute widths for it
+      if (meta.arrayInnerObjects.arrayInnerPrims)
+         finalizeFieldWidths(meta.arrayInnerObjects.arrayInnerPrims);
     }
+
   }
 
   computeRowOffsets();
@@ -784,23 +794,26 @@ function computeRowOffsets() {
   for (var index = 0; index < data.length; index++) { // for each data item
     var item = data[index];
     var lineHeight = 1;
-    if (meta.outerKey)
+    let innerPrims = meta.arrayInnerPrims;
+    if (meta.outerKey) {
       item = item[meta.outerKey];
+      innerPrims = meta.arrayInnerObjects.arrayInnerPrims;
+    }
 
     //console.log("Got row value: " + JSON.stringify(item));
 
-    if (meta.arrayInnerObjects) {
-      for (var fieldName in meta.arrayInnerObjects.innerKeys) { // for each possible field
-        var value = item[fieldName];
+    if (meta.arrayInnerObjects && item) {
+      for (let fieldName in meta.arrayInnerObjects.innerKeys) { // for each possible field
+        let value = item[fieldName];
 
-        var fieldHeight = getItemHeight(value,meta.arrayInnerObjects.innerKeys[fieldName]);
+        let fieldHeight = getItemHeight(value,meta.arrayInnerObjects.innerKeys[fieldName]);
         //console.log("Field: " + fieldName + " height: " + fieldHeight);
         if (fieldHeight > lineHeight)
           lineHeight = fieldHeight;
       }
 
       // handle any non-objects
-      if (meta.arrayInnerObjects.arrayInnerPrims && (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
+      if (meta.arrayInnerObjects.arrayInnerPrims && (item === null || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
         var fieldHeight = getItemHeight(item,meta.arrayInnerObjects);
         if (fieldHeight > lineHeight)
           lineHeight = fieldHeight;
@@ -811,13 +824,16 @@ function computeRowOffsets() {
       if (meta.arrayInnerObjects.arrayInnerObjects && Array.isArray(item)) {
         item.forEach(innerObject => {
           lineHeight += getItemHeight(innerObject,meta.arrayInnerObjects.arrayInnerObjects);
+          // inner objects will have height too big since the fields will get pulled into the array header
+          if (_.isPlainObject(innerObject))
+            lineHeight = lineHeight - 1 + 3*line_padding;
         });
       }
     }
 
     // handle any non-objects
-    if (meta.arrayInnerPrims && (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
-      var fieldHeight = getItemHeight(item,meta.arrayInnerPrims);
+    if (innerPrims && (_.isArray(item) || _.isString(item) || _.isNumber(item) || _.isBoolean(item))) {
+      var fieldHeight = getItemHeight(item,innerPrims);
       if (fieldHeight > lineHeight)
         lineHeight = fieldHeight;
     }
@@ -869,6 +885,12 @@ function getFieldInfo(item,fieldData) {
     size = (item.toString().length*1.1) + characterPadding; // numbers are slightly bigger than average
   }
 
+  // might have null values
+  else if (item === null) {
+    fieldData.types.nil = true;
+    size = 5 + characterPadding;
+  }
+
   // for strings, use the length
   else if (_.isString(item)) {
     fieldData.types.str = true;
@@ -892,7 +914,7 @@ function getFieldInfo(item,fieldData) {
     fieldData.types.arr = true;
     for (var i=0; i < item.length; i++)
       // handle arrays and primitives different from objects
-      if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i]))
+      if (_.isArray(item[i]) || _.isString(item[i]) || _.isNumber(item[i]) || _.isBoolean(item[i]) || item[i] === null)
         fieldData.arrayInnerPrims = getFieldInfo(item[i],fieldData.arrayInnerPrims);
       else if (_.isPlainObject(item[i]))
         fieldData.arrayInnerObjects = getFieldInfo(item[i],fieldData.arrayInnerObjects);
@@ -1004,7 +1026,7 @@ function getItemHeight(item,fieldData) {
   //console.log("Item: " + item + ", fieldData: " + JSON.stringify(fieldData));
   // check the field type, some can wrap, others not
   // numbers and bool only get one line, since they don't wrap
-  if (_.isNumber(item) || _.isBoolean(item))
+  if (_.isNumber(item) || _.isBoolean(item) || item === null)
     return line_plus_padding;
 
   // for strings, see how many lines they wrap based on the allowed width
