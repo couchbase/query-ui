@@ -1205,10 +1205,20 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       dec.buckets = metadata.buckets;
       dec.buckets_ephemeral = metadata.buckets_ephemeral;
       dec.indexes = qwMetadataService.indexes;
-      // MB-51579 - when collection unspecified, select default from metadata (if available)
-      if (!dec.options.selected_collection && dec.options.selected_bucket && dec.options.selected_scope &&
-          metadata.collections[dec.options.selected_bucket])
-        dec.options.selected_collection = metadata.collections[dec.options.selected_bucket][dec.options.selected_scope][0];
+      //console.log("metadata update: " + JSON.stringify(metadata));
+      // MB-52940 - for 7.x and above, if we have a bucket but no scope or collection, select the first available
+      if (dec.compat.atLeast70 && dec.options.selected_bucket) {
+        if (!dec.options.selected_scope && metadata.scopes &&
+          Array.isArray(metadata.scopes[dec.options.selected_bucket]) &&
+          metadata.scopes[dec.options.selected_bucket].length)
+          dec.options.selected_scope = metadata.scopes[dec.options.selected_bucket][0];
+        // MB-51579 - when collection unspecified, select default from metadata (if available)
+        if (!dec.options.selected_collections && dec.options.selected_scope &&
+          metadata.collections[dec.options.selected_bucket] &&
+          Array.isArray(metadata.collections[dec.options.selected_bucket][dec.options.selected_scope]) &&
+          metadata.collections[dec.options.selected_bucket][dec.options.selected_scope].length)
+          dec.options.selected_collection = metadata.collections[dec.options.selected_bucket][dec.options.selected_scope][0];
+      }
     }
 
 
