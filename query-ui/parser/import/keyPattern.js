@@ -72,12 +72,12 @@
   }
 */
 var keyPattern = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,4],$V1=[1,5],$V2=[1,7],$V3=[1,8],$V4=[1,9],$V5=[1,10],$V6=[6,7,8,10,11,12,13],$V7=[1,15],$V8=[1,16],$V9=[13,16];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,4],$V1=[1,5],$V2=[1,7],$V3=[1,8],$V4=[1,9],$V5=[1,10],$V6=[1,11],$V7=[6,7,8,10,11,12,13,14],$V8=[1,16],$V9=[1,17],$Va=[14,17];
 var parser = {trace: function trace () { },
 yy: {},
-symbols_: {"error":2,"top":3,"pattern":4,"patternElement":5,"EOF":6,"UUID":7,"MONO_INCR":8,"fieldName":9,"OTHER":10,"IDENTIFIER":11,"BACKTICK_IDENTIFIER":12,"PERCENT":13,"path":14,"pathElement":15,"DOT":16,"$accept":0,"$end":1},
-terminals_: {2:"error",6:"EOF",7:"UUID",8:"MONO_INCR",10:"OTHER",11:"IDENTIFIER",12:"BACKTICK_IDENTIFIER",13:"PERCENT",16:"DOT"},
-productions_: [0,[3,1],[4,2],[4,2],[5,1],[5,1],[5,1],[5,1],[5,1],[5,1],[9,3],[14,1],[14,3],[15,1],[15,1]],
+symbols_: {"error":2,"top":3,"pattern":4,"patternElement":5,"EOF":6,"UUID":7,"MONO_INCR":8,"fieldName":9,"OTHER":10,"IDENTIFIER":11,"BACKTICK_IDENTIFIER":12,"QUOTED_HASH":13,"PERCENT":14,"path":15,"pathElement":16,"DOT":17,"$accept":0,"$end":1},
+terminals_: {2:"error",6:"EOF",7:"UUID",8:"MONO_INCR",10:"OTHER",11:"IDENTIFIER",12:"BACKTICK_IDENTIFIER",13:"QUOTED_HASH",14:"PERCENT",17:"DOT"},
+productions_: [0,[3,1],[4,2],[4,2],[5,1],[5,1],[5,1],[5,1],[5,1],[5,1],[5,1],[9,3],[15,1],[15,3],[16,1],[16,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -96,7 +96,7 @@ case 4:
 this.$ = {UUID: true};
 break;
 case 5:
-this.$ = {MONO_INCR: true};
+this.$ = {MONO_INCR: true}; if ($$[$0].length == 11) this.$.initialVal = 1; else this.$.initialVal = Number($$[$0].slice(11,-2));
 break;
 case 6:
 this.$ = {FIELD: $$[$0]};
@@ -105,24 +105,27 @@ case 7: case 8: case 9:
 this.$ = {OTHER: $$[$0]};
 break;
 case 10:
-this.$ = $$[$0-1];
+this.$ = {OTHER: '#'};
 break;
 case 11:
-this.$ = [$$[$0]];
+this.$ = $$[$0-1];
 break;
 case 12:
-this.$ = [$$[$0-2], ...$$[$0]];
+this.$ = [$$[$0]];
 break;
 case 13:
-this.$ = $$[$0];
+this.$ = [$$[$0-2], ...$$[$0]];
 break;
 case 14:
+this.$ = $$[$0];
+break;
+case 15:
 this.$ = $$[$0].slice(1,-1);
 break;
 }
 },
-table: [{3:1,4:2,5:3,7:$V0,8:$V1,9:6,10:$V2,11:$V3,12:$V4,13:$V5},{1:[3]},{1:[2,1]},{4:12,5:3,6:[1,11],7:$V0,8:$V1,9:6,10:$V2,11:$V3,12:$V4,13:$V5},o($V6,[2,4]),o($V6,[2,5]),o($V6,[2,6]),o($V6,[2,7]),o($V6,[2,8]),o($V6,[2,9]),{11:$V7,12:$V8,14:13,15:14},{1:[2,2]},{1:[2,3]},{13:[1,17]},{13:[2,11],16:[1,18]},o($V9,[2,13]),o($V9,[2,14]),o($V6,[2,10]),{11:$V7,12:$V8,14:19,15:14},{13:[2,12]}],
-defaultActions: {2:[2,1],11:[2,2],12:[2,3],19:[2,12]},
+table: [{3:1,4:2,5:3,7:$V0,8:$V1,9:6,10:$V2,11:$V3,12:$V4,13:$V5,14:$V6},{1:[3]},{1:[2,1]},{4:13,5:3,6:[1,12],7:$V0,8:$V1,9:6,10:$V2,11:$V3,12:$V4,13:$V5,14:$V6},o($V7,[2,4]),o($V7,[2,5]),o($V7,[2,6]),o($V7,[2,7]),o($V7,[2,8]),o($V7,[2,9]),o($V7,[2,10]),{11:$V8,12:$V9,15:14,16:15},{1:[2,2]},{1:[2,3]},{14:[1,18]},{14:[2,12],17:[1,19]},o($Va,[2,14]),o($Va,[2,15]),o($V7,[2,11]),{11:$V8,12:$V9,15:20,16:15},{14:[2,13]}],
+defaultActions: {2:[2,1],12:[2,2],13:[2,3],20:[2,13]},
 parseError: function parseError (str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -601,22 +604,26 @@ case 0:return 7
 break;
 case 1:return 8
 break;
-case 2:return 13
+case 2:return 8
 break;
-case 3:return 16
+case 3:return 14
 break;
-case 4:return 11
+case 4:return 13
 break;
-case 5:return 12
+case 5:return 17
 break;
-case 6:return 10
+case 6:return 11
 break;
-case 7:return 6
+case 7:return 12
+break;
+case 8:return 10
+break;
+case 9:return 6
 break;
 }
 },
-rules: [/^(?:#UUID#)/,/^(?:#MONO_INCR#)/,/^(?:%)/,/^(?:\.)/,/^(?:[\w][\w\d]+)/,/^(?:`(``|[^`])+`)/,/^(?:[^%#]+)/,/^(?:$)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7],"inclusive":true}}
+rules: [/^(?:#UUID#)/,/^(?:#MONO_INCR#)/,/^(?:#MONO_INCR\[([0-9]+)\]#)/,/^(?:%)/,/^(?:##)/,/^(?:\.)/,/^(?:[\w][\w\d]+)/,/^(?:`(``|[^`])+`)/,/^(?:[^%#]+)/,/^(?:$)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9],"inclusive":true}}
 });
 return lexer;
 })();

@@ -12,7 +12,9 @@
 
 "#UUID#"          return 'UUID'
 "#MONO_INCR#"     return 'MONO_INCR'
+"#MONO_INCR["([0-9]+)"]#"     return 'MONO_INCR'
 "%"               return 'PERCENT'
+"##"              return 'QUOTED_HASH'
 "."               return 'DOT'
 [\w][\w\d]+       return 'IDENTIFIER'
 "`"("``"|[^`])+"`"    return 'BACKTICK_IDENTIFIER'
@@ -33,11 +35,12 @@ pattern
 
 patternElement
     : UUID          {$$ = {UUID: true};}
-    | MONO_INCR     {$$ = {MONO_INCR: true};}
+    | MONO_INCR     {$$ = {MONO_INCR: true}; if ($1.length == 11) $$.initialVal = 1; else $$.initialVal = Number($1.slice(11,-2));}
     | fieldName     {$$ = {FIELD: $1};}
     | OTHER         {$$ = {OTHER: $1};}
     | IDENTIFIER    {$$ = {OTHER: $1};}
     | BACKTICK_IDENTIFIER {$$ = {OTHER: $1};}
+    | QUOTED_HASH {$$ = {OTHER: '#'};}
     ;
 
 fieldName
