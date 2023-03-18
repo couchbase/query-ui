@@ -70,7 +70,7 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
     this.element = element;
     this.renderer = renderer;
     this.data = {
-      analysis: {indexes:[], buckets:[], fields:[]},
+      analysis: {indexes:[], buckets:[], fields:[], datasets: []},
     };
     this.dataIsArray = false;
     this.dataIsString = false;
@@ -114,7 +114,6 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
       clearContent();
       return;
     }
-
     simpleTree = null;
 
     this.dataIsArray = _.isArray(queryResult.explainResult);
@@ -123,6 +122,8 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
       this.data.analysis.indexes.length = 0;
       this.data.analysis.buckets.length = 0;
       this.data.analysis.fields.length = 0;
+      this.data.analysis.datasets.length = 0;
+      this.data.mode = queryResult.explainResult.mode; // mb-56014 - make sure mode gets passed to plan viewer
 
       if (_.isPlainObject(queryResult.explainResult.analysis.indexes))
         Object.keys(queryResult.explainResult.analysis.indexes).forEach(index => this.data.analysis.indexes.push(index));
@@ -130,6 +131,10 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
         Object.keys(queryResult.explainResult.analysis.buckets).forEach(bucket => this.data.analysis.buckets.push(bucket));
       if (_.isPlainObject(queryResult.explainResult.analysis.fields))
         Object.keys(queryResult.explainResult.analysis.fields).forEach(field => this.data.analysis.fields.push(field));
+
+      // mb-56014 - get dataset information
+      if (_.isPlainObject(queryResult.explainResult.analysis.datasets))
+        Object.keys(queryResult.explainResult.analysis.datasets).forEach(dataset => this.data.analysis.datasets.push(dataset));
 
       simpleTree = makeSimpleTreeFromPlanNodes(queryResult.explainResult.plan_nodes,null,"null");
 
