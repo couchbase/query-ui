@@ -19,21 +19,21 @@ licenses/APL2.txt.
   <div *ngIf="data && data.analysis">
     <div class="row wb-explain-summary">
 
-      <div *ngIf="data.mode == 'analytics'" class="column">
-        <b>Datasets</b><br> <em *ngFor="let dataset of datasets">{{ dataset }}&nbsp;&nbsp;</em>
+      <div *ngIf="data.mode == 'analytics'" class="column" title="{{data.analysis.datasets.length ? data.analysis.datasets.join('\n') : 'No collections found'}}">
+        <b>Collections</b><br> <em *ngFor="let dataset of data.analysis.datasets">{{ dataset }}&nbsp;&nbsp;</em>
       </div>
 
-      <div class="column">
+      <div class="column" title="{{data.analysis.indexes.length ? data.analysis.indexes.join('\n') : 'No indexes found'}}">
         <b>Indexes</b><br>
-        <em *ngFor="let i of data.analysis.indexes" class="cbui-plan-expensive">{{ i }}&nbsp;&nbsp;</em>
+        <em *ngFor="let i of data.analysis.indexes" class="cbui-plan-expensive" >{{ i }}&nbsp;&nbsp;</em>
       </div>
 
-      <div *ngIf="data.mode != 'analytics'" class="column">
+      <div *ngIf="data.mode != 'analytics'" class="column"  title="{{data.analysis.buckets.length ? data.analysis.buckets.join('\n') : 'No buckets found'}}">
         <b>Buckets</b><br>
         <em *ngFor="let b of data.analysis.buckets">{{ b }}&nbsp;&nbsp;</em>
       </div>
 
-      <div class="column">
+      <div class="column" title="{{data.analysis.fields.length ? data.analysis.fields.join('\n') : 'No fields found'}}">
         <b>Fields</b><br>
         <em *ngFor="let f of data.analysis.fields">{{ f }}&nbsp;&nbsp;</em>
       </div>

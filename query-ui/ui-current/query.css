@@ -175,6 +175,10 @@ textarea.ng-invalid-number {
   flex-grow: 1;
   margin: 0 1.5rem 0 0;
   padding: 0;
+  overflow: hidden; /* MB-56014 - don't let explain summary expand indefinitely */
+  max-width: 25%;
+  text-overflow: ellipsis;
+  cursor: pointer;
 }
 .wb-explain-summary .column:last-child {
   flex-grow: .5;
