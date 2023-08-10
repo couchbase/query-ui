@@ -633,17 +633,25 @@ function makeHTMLTopLevel() {
       result += '</span>';
 
       // if we have unnamed items like arrays or primitives, they go in the next column
-      if (meta.hasNonObject && !tooManyFieldsInDoc) {
-        result += '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width:' +
-          meta.unnamedWidth * columnWidthPx + 'px">';
+      if (meta.hasNonObject) {
+        result +=
+            '<span *ngIf="dec.options.show_tables" class="doc-editor-cell" style="width:' +
+            meta.unnamedWidth * columnWidthPx +
+            'px">';
 
-        // if this row is a subarray or primitive, put it here
-        var data = tdata[row].data;
-        if (_.isArray(data) || isPrimOrNull(data)) {
-          var childSize = {width: 1};
-          result += makeHTMLtable(data, '[' + row + '].data', childSize);
+        if (tooManyFieldsInDoc) {
+          result +=
+              ' <span class="icon fa-warning orange-3" *ngIf="dec.options.show_tables" ' +
+              'title="Too many fields in result set for field editing. Limit result size or click ID to edit document."' +
+              'placement="right"></span><span class="doc-editor-cell">Document too complex for field editing.</span>';
+        } else {
+          // if this row is a subarray or primitive, put it here
+          var data = tdata[row].data;
+          if (_.isArray(data) || isPrimOrNull(data)) {
+            var childSize = {width: 1};
+            result += makeHTMLtable(data, '[' + row + '].data', childSize);
+          }
         }
-
         result += '</span>';
       }
 
@@ -776,6 +784,7 @@ function getColumnArea(item) {
       else if (_.isPlainObject(item[i])) {
         for (let oKey in item[i]) {
           let colSize = getColumnArea(item[i][oKey]);
+          count += colSize.count;
           if (!nameWidthMap[oKey] || nameWidthMap[oKey] < colSize.width)
             nameWidthMap[oKey] = colSize.width;
         }
