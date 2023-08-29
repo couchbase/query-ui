@@ -825,6 +825,16 @@ function GetDetails(plan) {
     pushTruncated(result,'vars: ' + op['variables']);
   if (op['expressions'])
     pushTruncated(result,'expr:' + op['expressions']);
+  if(op['max-time']) {
+    //operator w/ one activity
+    pushTruncated(result,'time:'+ op['max-time']);
+  } else if (op['times']){
+    //operator w/ 2 or more activities
+    for(const activity in op['times']){
+      pushTruncated(result,"activity "+activity +" time:"+op["times"][activity]["max-time"]);
+    }
+  }
+
 
   // all done, return the result
   return(result);
