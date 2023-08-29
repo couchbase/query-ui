@@ -1897,7 +1897,7 @@ function getQwQueryService(
 
             if (queryIsAdvise) {
               if (data && data.status == "success" && data.results && data.results.length > 0)
-                newResult.advice = data.results[0].advice.adviseinfo;
+                newResult.advice = data.results;
               else
                 newResult.advice = newResult.result; // get the error message
             }
@@ -2086,7 +2086,7 @@ function getQwQueryService(
   function runAdvise(queryText, queryResult) {
     queryResult.lastRun = new Date();
 
-    var queryIsAdvisable = /^\s*(select|merge|update|delete)/gi.test(queryText);
+    var queryIsAdvisable = /^\s*(select|merge|update|delete|with)/gi.test(queryText);
 
     if (queryIsAdvisable && !multipleQueries(queryText)) {
       var advise_request = buildQueryRequest("advise " + queryText, false, qwQueryService.options, null, null, queryResult);
@@ -2112,7 +2112,7 @@ function getQwQueryService(
             // now check the status of what came back
             if (data && data.status == "success" && data.results && data.results.length > 0) try {
               //console.log("Advise success: " + JSON.stringify(data.results[0]));
-              queryResult.advice = data.results[0].advice.adviseinfo;
+              queryResult.advice = data.results;
             }
               // need to handle any exceptions that might occur
             catch (exception) {

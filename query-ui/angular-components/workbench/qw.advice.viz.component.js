@@ -85,11 +85,18 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
     }
 
     // we have some kind of advice, let's display it
+    // advice can have subqueries, so lets flatten it into an array of like objects
     else {
       this.error = null;
-      this.advice = _.isArray(advice) ? advice : [advice];
+      this.advice = [];
+      // each advice object in the results has main advice, and possible subquery advice
+      advice.forEach(element => {
+        this.advice.push(element);
+        if (Array.isArray(element['~subqueries'])) {
+          element['~subqueries'].forEach(subelement => {this.advice.push({advice:subelement})});
+        }
+      });
     }
-
   }
 
   // do we have covered indexes to recommend for a given advice element?
@@ -172,7 +179,7 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
 }
 
 
-function queryIsAdvisable(queryResult) {return /^\s*select|merge|update|delete/gmi.test(queryResult.query);}
+function queryIsAdvisable(queryResult) {return /^\s*select|merge|update|delete|with/gmi.test(queryResult.query);}
 
 function multipleQueries(queryResult) {
   var findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\/\*(?:.|[\n\r])*\*\/)|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;

@@ -284,3 +284,9 @@ td.ajtd-type-array {
 .udf-lib-ace-editor {
   height: calc(100% - 95px) !important;
 }
+
+.one-line-truncate {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}

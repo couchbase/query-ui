@@ -17,50 +17,70 @@ licenses/APL2.txt.
   </button -->
 
   <div *ngIf="!error">
-    <div *ngFor="let element of advice; let $index = index" class="margin-bottom-1">
-      <div *ngIf="element.current_indexes && element.current_indexes.length > 0" class="zero-content">
-        <h5>Index<span *ngIf="element.current_indexes.length > 1">es</span> Currently Used</h5>
-        <p class="margin-bottom-0 indent-1"
-           *ngFor="let curIdx of element.current_indexes"
-           class="margin-bottom-half">
+    <!-- for each piece of advice -->
+    <div *ngFor="let query_advice of advice; let $index = index" class="margin-bottom-2">
+
+      <!-- mark main advice if we have subqquery advice -->
+      <h4 *ngIf="query_advice['~subqueries']">
+        Main Query Advice
+      </h4>
+
+      <!-- for subqquery advice show query-->
+      <div *ngIf="query_advice.advice.subquery">
+        <h4>Subquery Advice</h4>
+        <p class="indent-1 one-line-truncate cursor-pointer" title="{{query_advice.advice.subquery}}">
+          Subquery: {{query_advice.advice.subquery}}
+        </p>
+      </div>
+
+      <div *ngIf="query_advice.advice.adviseinfo?.current_indexes?.length > 0" class="indent-1">
+        <h5>Index<span *ngIf="query_advice.advice.adviseinfo.current_indexes.length > 1">es</span> Currently Used</h5>
+        <p class="margin-bottom-0 indent-2"
+           *ngFor="let curIdx of query_advice.advice.adviseinfo.current_indexes"
+           class="margin-bottom-half one-line-truncate cursor-pointer" title="{{curIdx.index_statement}}">
           {{curIdx.index_statement}}
           <em class="text-smaller" *ngIf="curIdx.index_status == 'THIS IS THE BEST INDEX WE CAN RECOMMEND'">
             <span class="icon fa-check success"></span> optimal index
           </em>
         </p>
-        <br>
       </div>
 
       <div
-         *ngIf="has_covered(element)"
-         class="zero-content">
+         *ngIf="has_covered(query_advice.advice.adviseinfo)"
+         class="indent-1">
         <h5>Covering Index Recommendations</h5>
         <div class="margin-bottom-1">
-          <p class="margin-bottom-0" *ngFor="let stmt of get_covered_indexes(element);">{{stmt}}</p>
+          <p class="margin-bottom-0 one-line-truncate cursor-pointer"
+             *ngFor="let stmt of get_covered_indexes(query_advice.advice.adviseinfo);">
+            <span title="{{stmt}}">{{stmt}}</span>
+          </p>
         </div>
         <button (click)="create_option('covering_indexes',$index)">
-          Create & Build Covering Index<span *ngIf="get_covered_indexes(element).length > 1">es</span>
+          Create & Build Covering Index<span *ngIf="get_covered_indexes(query_advice.advice.adviseinfo).length > 1">es</span>
         </button>
       </div>
 
       <div
-         *ngIf="get_regular_indexes(element).length > 0"
-         class="zero-content">
+         *ngIf="get_regular_indexes(query_advice.advice.adviseinfo).length > 0"
+         class="indent-1">
         <h5>Index Recommendations</h5>
         <div class="margin-bottom-1">
-          <p class="margin-bottom-0" *ngFor="let stmt of get_regular_indexes(element)">{{stmt}}</p>
+          <p class="margin-bottom-0 one-line-truncate cursor-pointer"
+             *ngFor="let stmt of get_regular_indexes(query_advice.advice.adviseinfo)">
+            <span title="{{stmt}}">{{stmt}}</span>
+          </p>
         </div>
         <button (click)="create_option('indexes',$index)">
-          Create & Build Index<span *ngIf="get_regular_indexes(element).length > 1">es</span>
+          Create & Build Index<span *ngIf="get_regular_indexes(query_advice.advice.adviseinfo).length > 1">es</span>
         </button>
       </div>
       <div
-         *ngIf="existing_indexes_sufficient(element)"
-         class="success">
+         *ngIf="existing_indexes_sufficient(query_advice.advice.adviseinfo)"
+         class="indent-1 success">
         Existing indexes are sufficient.
       </div>
-      <div *ngIf="no_indexes_possible(element)" class="success">
-        {{element.recommended_indexes}}
+      <div *ngIf="no_indexes_possible(query_advice.advice.adviseinfo)" class="success indent-1">
+        {{query_advice.advice.adviseinfo.recommended_indexes}}
       </div>
     </div>
   </div>
