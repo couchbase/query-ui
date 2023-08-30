@@ -1658,13 +1658,21 @@ function getQwQueryService(
                 }
 
                 var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
+
+                // we might have optional subqueries to analyze
+                let subqueries = data.results[0]['~subqueries'];
+                if (Array.isArray(subqueries)) {
+                  subqueries
+                      .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
+                }
+
                 newResult.explainResultText = JSON.stringify(
                     {optimizer_hints: data.results[0].optimizer_hints, plan: data.results[0].plan}, null, '    ');
                 newResult.explainResult =
                   {
                     explain: data.results[0],
                     analysis: lists,
-                    plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
+                    plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.results[0].plan, null, lists, subqueries)
                   };
 
                 if (_.isArray(lists.warnings) && lists.warnings.length > 0)
@@ -1851,11 +1859,19 @@ function getQwQueryService(
 
             if (data.profile && data.profile.executionTimings) try {
               var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings, null);
+
+              // we might have optional subqueries to analyze
+              let subqueries = data.profile.executionTimings['~subqueries'];
+              if (Array.isArray(subqueries)) {
+                subqueries
+                    .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
+              }
+
               newResult.explainResult =
                 {
                   explain: data.profile.executionTimings,
                   analysis: lists,
-                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.profile.executionTimings, null, lists)
+                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.profile.executionTimings, null, lists, subqueries)
                 };
               newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
 
@@ -1875,11 +1891,19 @@ function getQwQueryService(
 
             if (queryIsExplain && data.results && data.results[0] && data.results[0].plan) try {
               var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
+
+              // we might have optional subqueries to analyze
+              let subqueries = data.results[0]['~subqueries'];
+              if (Array.isArray(subqueries)) {
+                subqueries
+                    .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
+              }
+
               newResult.explainResult =
                 {
                   explain: data.results[0],
                   analysis: lists,
-                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodes(data.results[0].plan, null, lists)
+                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.results[0].plan, null, lists, subqueries, subqueries)
                   /*,
                 buckets: qwQueryService.buckets,
                 tokens: qwQueryService.autoCompleteTokens*/

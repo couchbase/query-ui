@@ -360,7 +360,7 @@ function makeD3TreeFromSimpleTree(root, element) {
     .attr("ry", lineHeight)
     .attr("x", function(d) {return(-1/2*getWidth(d))}) // make the rect centered on our x/y coords
     .attr("y", function(d) {return getHeight(d)*-1/2})
-    .attr("class", function(d) { return d.data.level; })
+    .attr("class", function(d) {return d.data.hidden ? 'hidden' : d.data.level; })
   // drop-shadow filter
     .style("filter", "url(#drop-shadow)");
 
@@ -368,7 +368,7 @@ function makeD3TreeFromSimpleTree(root, element) {
   nodeEnter.append("text")
     .attr("dy", function(d) {return getHeight(d)*-1/2 + lineHeight}) // m
     .attr("class", "wb-explain-node-text")
-    .text(function(d) { return d.data.name })
+    .text(function(d) { return d.data.hidden ? '' : d.data.name })
   ;
 
   // handle up to 4 lines of details
@@ -400,6 +400,8 @@ function makeD3TreeFromSimpleTree(root, element) {
     .attr("class", function(l) { // clone nodes are duplicates. if we have a link between 2, we need to hide it
       if (l.target.cloneOf && l.source.cloneOf)
         return("wb-clone-link");
+      else if (l.target.data.hidden || l.source.data.hidden)
+        return("hidden");
       else
         return("wb-explain-link");
     })
@@ -636,6 +638,12 @@ function makeSimpleTreeFromPlanNodes(plan,next,parent,nodeCache) {
   else if (plan.operator.operatorId)
     nodeCache[plan.operator.operatorId] = result;
 
+  // if we are showing different trees for the main query and subqueries, the root should be hidden
+
+  if (opName == "All Queries") {
+    result.hidden = true;
+  }
+
   // if the plan has a 'predecessor', it is either a single plan node that should be
   // our child, or an array marking multiple children
 
@@ -747,7 +755,8 @@ function GetDetails(plan) {
   case "NestedLoopNest":
   case "HashJoin":
   case "HashNest":
-    pushTruncated(result,"on: " + op.on_clause);
+    if (op.on_clause)
+      pushTruncated(result,"on: " + op.on_clause);
     break;
 
   case "Limit":
@@ -785,6 +794,11 @@ function GetDetails(plan) {
   case "Filter":
     if (op.condition)
       pushTruncated(result,op.condition);
+    break;
+
+  case "Subquery":
+    if (op.subquery)
+      pushTruncated(result,op.subquery);
     break;
   }
 

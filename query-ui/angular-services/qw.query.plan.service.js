@@ -39,6 +39,7 @@ function getQwQueryPlanService() {
 
   //
   qwQueryPlanService.convertN1QLPlanToPlanNodes = convertN1QLPlanToPlanNodes;
+  qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper = convertN1QLPlanToPlanNodesWrapper;
   qwQueryPlanService.convertAnalyticsPlanToPlanNodes = convertAnalyticsPlanToPlanNodes;
   qwQueryPlanService.analyzePlan = analyzePlan;
   qwQueryPlanService.analyzeAnalyticsPlan = analyzeAnalyticsPlan;
@@ -209,7 +210,31 @@ function getQwQueryPlanService() {
   //             'unset_terms' (array of {"path":"..."})
   //  Let?
 
-  function convertN1QLPlanToPlanNodes(plan, predecessor, lists) {
+  // wrapper for handling subqueries: need to add parallel tree to hold subqueries
+
+  function convertN1QLPlanToPlanNodesWrapper(plan, predecessor, lists, subqueries) {
+    let tree = convertN1QLPlanToPlanNodes(plan, predecessor, lists, subqueries);
+
+    if (Array.isArray(subqueries) && subqueries.length > 0) {
+      const mainTree = new PlanNode(tree, {'#operator':'Main Query'});
+
+      const subqueryTrees = [];
+      subqueries.forEach(sq => {
+        const sqTree = convertN1QLPlanToPlanNodes(sq.plan || sq.executionTimings,null,lists, subqueries);
+        const sqNode = new PlanNode(sqTree,{'#operator':'Subquery', 'subquery':sq.subquery})
+        subqueryTrees.push(sqNode)
+      });
+      const sqTree = new PlanNode(subqueryTrees, {'#operator':'Sub Queries'});
+
+      return new PlanNode([mainTree,sqTree], {'#operator':'All Queries'});
+    }
+    else {
+      return tree;
+    }
+  }
+
+
+  function convertN1QLPlanToPlanNodes(plan, predecessor, lists, subqueries) {
 
     // sanity check
     if (!plan || _.isString(plan))
@@ -218,11 +243,11 @@ function getQwQueryPlanService() {
     // special case: prepared queries
 
     if (plan.operator)
-      return(convertN1QLPlanToPlanNodes(plan.operator,null,lists));
+      return(convertN1QLPlanToPlanNodes(plan.operator,null,lists, subqueries));
 
     // special case #2: plan with query timings is wrapped in an outer object
     if (plan.plan && !plan['#operator'])
-      return(convertN1QLPlanToPlanNodes(plan.plan,null,lists));
+      return(convertN1QLPlanToPlanNodes(plan.plan,null,lists, subqueries));
 
     //console.log("Inside analyzePlan");
 
@@ -244,7 +269,7 @@ function getQwQueryPlanService() {
     // if we have a sequence, we analyze the children and append them to the predecessor
     if (operatorName === "Sequence" && plan['~children']) {
       for (var i = 0; i < plan['~children'].length; i++)
-        predecessor = convertN1QLPlanToPlanNodes(plan['~children'][i],predecessor,lists);
+        predecessor = convertN1QLPlanToPlanNodes(plan['~children'][i],predecessor,lists, subqueries);
 
       return(predecessor);
     }
@@ -254,7 +279,7 @@ function getQwQueryPlanService() {
 
     else if (operatorName === "Parallel" && plan['~child']) {
       //console.log("Got Parallel block, predecessor: " + JSON.stringify(predecessor));
-      var subsequence = convertN1QLPlanToPlanNodes(plan['~child'],predecessor,lists);
+      var subsequence = convertN1QLPlanToPlanNodes(plan['~child'],predecessor,lists, subqueries);
       var subseq_end = null;
 
       // mark the elements of a parallel subsequence for later annotation
@@ -274,7 +299,7 @@ function getQwQueryPlanService() {
 
     // Prepare operators have their plan inside prepared.operator
     else if (operatorName === "Prepare" && plan.prepared && plan.prepared.operator) {
-      return(convertN1QLPlanToPlanNodes(plan.prepared.operator,null,lists));
+      return(convertN1QLPlanToPlanNodes(plan.prepared.operator,null,lists, subqueries));
     }
 
     // ExceptAll and InterceptAll have 'first' and 'second' subqueries
@@ -282,10 +307,10 @@ function getQwQueryPlanService() {
       var children = [];
 
       if (plan['first'])
-        children.push(convertN1QLPlanToPlanNodes(plan['first'],null,lists));
+        children.push(convertN1QLPlanToPlanNodes(plan['first'],null,lists, subqueries));
 
       if (plan['second'])
-        children.push(convertN1QLPlanToPlanNodes(plan['second'],null,lists));
+        children.push(convertN1QLPlanToPlanNodes(plan['second'],null,lists, subqueries));
 
       if (children.length > 0)
         return(new PlanNode(children,plan,null,lists.total_time));
@@ -301,13 +326,13 @@ function getQwQueryPlanService() {
         children.push(predecessor);
 
       if (plan['insert'])
-        children.push(convertN1QLPlanToPlanNodes(plan['insert'],null,lists));
+        children.push(convertN1QLPlanToPlanNodes(plan['insert'],null,lists, subqueries));
 
       if (plan['delete'])
-        children.push(convertN1QLPlanToPlanNodes(plan['delete'],null,lists));
+        children.push(convertN1QLPlanToPlanNodes(plan['delete'],null,lists, subqueries));
 
       if (plan['update'])
-        children.push(convertN1QLPlanToPlanNodes(plan['update'],null,lists));
+        children.push(convertN1QLPlanToPlanNodes(plan['update'],null,lists, subqueries));
 
       if (children.length > 0)
         return(new PlanNode(children,plan,null,lists.total_time));
@@ -319,13 +344,13 @@ function getQwQueryPlanService() {
     // the authorize op
     else if (operatorName === "Authorize" && plan['~child']) {
       var authorizeNode = new PlanNode(predecessor,plan,null,lists.total_time);
-      var authorizeChildren = convertN1QLPlanToPlanNodes(plan['~child'],authorizeNode,lists);
+      var authorizeChildren = convertN1QLPlanToPlanNodes(plan['~child'],authorizeNode,lists, subqueries);
       return(authorizeChildren);
     }
 
     // DistinctScan operators have a single child called 'scan'
     else if (operatorName === "DistinctScan" && plan['scan']) {
-      return(new PlanNode(convertN1QLPlanToPlanNodes(plan['scan'],null,lists),plan,null,lists.total_time));
+      return(new PlanNode(convertN1QLPlanToPlanNodes(plan['scan'],null,lists, subqueries),plan,null,lists.total_time));
     }
 
     // UNION operators will have an array of predecessors drawn from their "children".
@@ -337,7 +362,7 @@ function getQwQueryPlanService() {
       // what to do? for now put it on every child of the Union
 
       for (var i = 0; i < plan['~children'].length; i++)
-        unionChildren.push(convertN1QLPlanToPlanNodes(plan['~children'][i],predecessor,lists));
+        unionChildren.push(convertN1QLPlanToPlanNodes(plan['~children'][i],predecessor,lists, subqueries));
 
       var unionNode = new PlanNode(unionChildren,plan,null,lists.total_time);
 
@@ -357,7 +382,7 @@ function getQwQueryPlanService() {
       //&& plan["~child"]["~children"]) {
       // do we have a
       var inner = predecessor;
-      var outer = convertN1QLPlanToPlanNodes(plan['~child'],null,lists);
+      var outer = convertN1QLPlanToPlanNodes(plan['~child'],null,lists, subqueries);
       return(new PlanNode([inner,outer],plan,null,lists.total_time));
     }
 
@@ -368,7 +393,7 @@ function getQwQueryPlanService() {
       var scanChildren = [];
 
       for (var i = 0; i < plan['scans'].length; i++)
-        scanChildren.push(convertN1QLPlanToPlanNodes(plan['scans'][i],null,lists));
+        scanChildren.push(convertN1QLPlanToPlanNodes(plan['scans'][i],null,lists, subqueries));
 
       return(new PlanNode(scanChildren,plan,null,lists.total_time));
     }
@@ -385,18 +410,47 @@ function getQwQueryPlanService() {
 
     else if (operatorName == "With") {
       var withNode = new PlanNode(predecessor,plan,null,lists.total_time);
-      var withChildren = convertN1QLPlanToPlanNodes(plan['~child'],withNode,lists);
+      var withChildren = convertN1QLPlanToPlanNodes(plan['~child'],withNode,lists, subqueries);
       return(withChildren);
-
     }
 
     // for all other operators, create a plan node
     else {
-      return(new PlanNode(predecessor,plan,null,lists.total_time));
+      // predecessor may get supplemented with a subquery node
+      let predPlusSubquery = predecessor;
+      // if there are subqueries, and this query matches any of them, add a stub node as a child indicating so
+      if (Array.isArray(subqueries) && planOpHasSubquery(plan,subqueries)) {
+        const sqNode = new PlanNode(null, {'#operator':'subquery','info':'See subquery tree for details'});
+        predPlusSubquery = [];
+        if (predecessor)
+          predPlusSubquery.push(predecessor);
+        predPlusSubquery.push(sqNode);
+      }
+      return(new PlanNode(predPlusSubquery,plan,null,lists.total_time));
     }
 
   }
 
+  //
+  // does an operator possibly have a subquery associated with it? Check all the places a subquery can appear
+  // against a list of subqueries
+  //
+
+  function planOpHasSubquery(plan,subqueries) {
+    let expressions = []; // strings that might contain subquery text
+    // subqueries might appear in the text of the following fields
+    const exprFields = ['keyspace','key','condition','expr','on_keys','limit'];
+    // the following fields contain arrays of type {expr: <string>} where <string> might contain a subquery
+    const exprArrayFields = ['sort_terms','result_terms'];
+    // the following fields contain an array of strings that might include a subquery
+    const arrayFields = ['group_keys'];
+
+    exprFields.forEach(key => {if (plan[key]) expressions.push(plan[key])});
+    exprArrayFields.forEach(key => {if (plan[key]) expressions.push(...plan[key].map(element => element.expr))});
+    arrayFields.forEach(key => {if (plan[key]) expressions.push(...plan[key])});
+
+    return (expressions.some(expr => subqueries.some(sq => expr.includes(sq.subquery))))
+  }
 
   //
   // structure analyzing explain plans. A plan is an object with an "#operator" field, and possibly
@@ -616,7 +670,8 @@ function getQwQueryPlanService() {
     case "NestedLoopNest":
     case "HashJoin":
     case "HashNest":
-      pushTruncated(result,"on: " + op.on_clause);
+      if (op.on_clause)
+        pushTruncated(result,"on: " + op.on_clause);
       break;
 
     case "Limit":
