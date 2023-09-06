@@ -2541,42 +2541,58 @@ function getQwQueryService(
     if (!qwMetadataService.compat.atLast70 && bucket.schema.length == 0 && !bucket.schema_error)
       getSchemaForBucket(bucket);
 
+    const query =
+        `select keyspaces.*, "keyspace" \`type\` from system:keyspaces where \`bucket\` = "${bucketName}" or \`path\` = "default:${bucketName}"
+         union select scopes.*, "scope" as \`type\` from system:scopes where \`bucket\` = "${bucketName}";`;
     // for the bucket, get the scopes and collections
-    return qwQueryServiceBase.executeQueryUtil('select keyspaces.* from system:keyspaces where `bucket` = "' + bucketName + '" or `path` = "default:' + bucketName + '"').then(
+    return qwQueryServiceBase.executeQueryUtil(query).then(
         function success(resp) {
           if (resp && resp.data && Array.isArray(resp.data.results)) {
             bucket.scopes = {}; // reset scopes and collections to empty
             bucket.collections = [];
             // for each keyspace, record scope and collection names in metadata and autocomplete
             resp.data.results.forEach(keyspace => {
-              // scope first
-              let scopeName = keyspace.scope ? keyspace.scope : "_default"; // empty scope name means default
-              let collName = keyspace.scope ? keyspace.id : "_default";
-              bucket.scopes[scopeName] = true;
-              if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
-                addToken(scopeName, "scope");
-                addToken(bucketName + "." + scopeName, "scope");
-              }
-              addToken('`' + scopeName + '`', "scope");
-              addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
+              if (keyspace.type === 'keyspace') {
+                // scope first
+                let scopeName = keyspace.scope ? keyspace.scope : "_default"; // empty scope name means default
+                let collName = keyspace.scope ? keyspace.id : "_default";
+                bucket.scopes[scopeName] = true;
+                if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
+                  addToken(scopeName, "scope");
+                  addToken(bucketName + "." + scopeName, "scope");
+                }
+                addToken('`' + scopeName + '`', "scope");
+                addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
 
-              // now collections
-              if (!bucket.collections.find(coll => coll.id == keyspace.id && coll.scope == keyspace.scope))
-                bucket.collections.push({
-                  name: collName,
-                  id: collName,
-                  expanded: isExpanded(bucketName, scopeName, collName),
-                  bucket: bucketName,
-                  scope: scopeName,
-                  schema: [],
-                  indexes: [],
-                });
-              if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
-                addToken(collName, "collection");
-                addToken(bucketName + "." + scopeName + "." + collName, "collection");
+                // now collections
+                if (!bucket.collections.find(coll => coll.id == keyspace.id && coll.scope == keyspace.scope))
+                  bucket.collections.push({
+                    name: collName,
+                    id: collName,
+                    expanded: isExpanded(bucketName, scopeName, collName),
+                    bucket: bucketName,
+                    scope: scopeName,
+                    schema: [],
+                    indexes: [],
+                  });
+                if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes) && !collName.match(needsQuotes)) {
+                  addToken(collName, "collection");
+                  addToken(bucketName + "." + scopeName + "." + collName, "collection");
+                }
+                addToken('`' + collName + '`', "collection");
+                addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
               }
-              addToken('`' + collName + '`', "collection");
-              addToken('`' + bucketName + '`.`' + scopeName + '`.`' + collName + '`', "collection");
+              // handle scopes with no collections here
+              else if (keyspace.type === 'scope') {
+                const scopeName = keyspace.name;
+                bucket.scopes[scopeName] = true;
+                if (!bucketName.match(needsQuotes) && !scopeName.match(needsQuotes)) {
+                  addToken(scopeName, "scope");
+                  addToken(bucketName + "." + scopeName, "scope");
+                }
+                addToken('`' + scopeName + '`', "scope");
+                addToken('`' + bucketName + '`.`' + scopeName + '`', "scope");
+              }
             });
 
             // make an array of scope names and expansion status
