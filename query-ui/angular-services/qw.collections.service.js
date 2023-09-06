@@ -180,9 +180,13 @@ function getQwCollectionsService(
   function refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy) {
     var meta = getMeta(proxy);
     meta.errors.length = 0;
+    // system:keyspaces doesn't return scopes with no collections, so get those from system:scopes
+    const query = `select keyspaces.*, "keyspace" as \`type\` ` +
+        `from system:keyspaces where \`bucket\` = "${bucket}" or \`path\` = "default:${bucket}" union ` +
+        `select scopes.*, \"scope\" as \`type\` from system:scopes where \`bucket\` = "${bucket}";`;
 
     return qwQueryService
-      .executeQueryUtilNew("select * from system:keyspaces")
+      .executeQueryUtilNew(query)
       .toPromise()
       .then((resp) => {
         const body = JSON.parse(resp.body);
@@ -193,22 +197,29 @@ function getQwCollectionsService(
         meta.collections[bucket] = {}; // map indexed on scope name
 
         meta.scopes[bucket].length = 0; // make sure any old scopes are removed
-        body.results.forEach(function (result) {
-          let item = result.keyspaces;
-          if (item.bucket ? (item.bucket !== bucket) : item.path !== "default:" + bucket) {
-            return;
+        body.results.forEach(function (item) {
+          // results from system:keyspaces
+          if (item.type === "keyspace") {
+            if (item.bucket ? (item.bucket !== bucket) : item.path !== "default:" + bucket) {
+              return;
+            }
+            if (item.scope && item.bucket) {
+              if (!meta.collections[item.bucket][item.scope]) {
+                meta.collections[item.bucket][item.scope] = [];
+                meta.scopes[item.bucket].push(item.scope);
+              }
+              meta.collections[item.bucket][item.scope].push(item.name);
+            } else {
+              if (!meta.collections[bucket]["_default"]) {
+                meta.collections[bucket]["_default"] = ["_default"];
+                meta.scopes[bucket].push("_default");
+              }
+            }
           }
-          if (item.scope && item.bucket) {
-            if (!meta.collections[item.bucket][item.scope]) {
-              meta.collections[item.bucket][item.scope] = [];
-              meta.scopes[item.bucket].push(item.scope);
-            }
-            meta.collections[item.bucket][item.scope].push(item.name);
-          } else {
-            if (!meta.collections[bucket]["_default"]) {
-              meta.collections[bucket]["_default"] = ["_default"];
-              meta.scopes[bucket].push("_default");
-            }
+
+          else if (item.type === "scope" && item.name && item.bucket && !meta.collections[item.bucket][item.name]) {
+            meta.collections[item.bucket][item.name] = [];
+            meta.scopes[item.bucket].push(item.name);
           }
         });
 
