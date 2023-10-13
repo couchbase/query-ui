@@ -644,14 +644,21 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
 
       // otherwise just save the doc using the REST api
-      else return qwHttp.do({
-        method: "POST",
-        url: Url,
-        data: {
+      else {
+        var payload = {
           flags: 0x02000006,
           value: newJson
+        };
+        if (dec.compat.atLeast76) {
+          payload.preserveTTL = true;
         }
-      });
+
+        return qwHttp.do({
+          method: "POST",
+          url: Url,
+          data: payload
+        });
+      }
     }
 
     //
