@@ -20,7 +20,7 @@ licenses/APL2.txt.
       <h4 class="row margin-right-half width-12 max-width-5 flex-left">
         <span *ngIf="new_doc" class="row flex-left">
           <label class="margin-right-half">ID</label>
-          <input type="text" [(ngModel)]="doc_id" [ngModelOptions]="{standalone: true}">
+          <input type="text" [(ngModel)]="doc_id" [ngModelOptions]="{standalone: true}" maxlength="250">
         </span>
         <div *ngIf="!new_doc" class="ellipsis">
           {{doc_id}}

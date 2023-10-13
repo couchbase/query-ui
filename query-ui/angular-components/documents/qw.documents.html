@@ -109,6 +109,7 @@
       </div>
       <input
          type="text"
+         maxlength="250"
          formControlName="doc_id"
          *ngIf="dec.options.show_id"
          [attr.disabled]="dec.options.where_clause || null"
