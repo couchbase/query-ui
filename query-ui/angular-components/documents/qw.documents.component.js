@@ -1220,7 +1220,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           metadata.scopes[dec.options.selected_bucket].length)
           dec.options.selected_scope = metadata.scopes[dec.options.selected_bucket][0];
         // MB-51579 - when collection unspecified, select default from metadata (if available)
-        if (!dec.options.selected_collections && dec.options.selected_scope &&
+        if (!dec.options.selected_collection && dec.options.selected_scope &&
           metadata.collections[dec.options.selected_bucket] &&
           Array.isArray(metadata.collections[dec.options.selected_bucket][dec.options.selected_scope]) &&
           metadata.collections[dec.options.selected_bucket][dec.options.selected_scope].length)
