@@ -232,23 +232,26 @@
       </div>
       <div class="wb-normal-results"
            *ngIf="!qc.needsPrimaryIndex() || (qc.canCreateOtherIndexes() && qc.isSelected(6))">
-        <div class="wb-results-show-anyway" *ngIf="!qc.showBigDatasets && qc.dataTooBig()">
+        <div class="wb-results-show-anyway" *ngIf="qc.lastResult().tooBigForUI">
+          <div [innerHtml]="qc.getBigDataForUIMessage()"></div>
+        </div>
+        <div class="wb-results-show-anyway" *ngIf="!qc.showBigDatasets && qc.dataTooBig() && !qc.lastResult().tooBigForUI">
           <div [innerHtml]="qc.getBigDataMessage()"></div>
           <a (click)="qc.setShowBigData(true)" class="text-medium link-heavy">Show anyway <span
              class="icon fa-angle-right"></span></a>
         </div>
 
         <ngx-ace class="wb-results-json"
-                 *ngIf="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets)"
+                 *ngIf="qc.isSelected(1) && (!qc.dataTooBig() || qc.showBigDatasets) && !qc.lastResult().tooBigForUI"
                  (ready)="qc.aceOutputLoaded($event)" [(ngModel)]="qc.lastResult().result">
         </ngx-ace>
 
         <div class="wb-results-table data-table-parent"
-             *ngIf="qc.isSelected(2) && qc.lastResult().data">
+             *ngIf="qc.isSelected(2) && qc.lastResult().data && !qc.lastResult().tooBigForUI">
           <qw-json-data-table-comp class="" [subject]="qc.result_subject"></qw-json-data-table-comp>
         </div>
 
-        <div class="wb-results-chart" *ngIf="qc.isSelected(3)">
+        <div class="wb-results-chart" *ngIf="qc.isSelected(3) && !qc.lastResult().tooBigForUI">
           <qw-json-chart [subject]="qc.result_subject"></qw-json-chart>
         </div>
 

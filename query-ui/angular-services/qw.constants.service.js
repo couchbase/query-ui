@@ -99,6 +99,9 @@ function getQwConstantsService() {
   // Error result of searching a document with a non-existing ID
   qwConstantsService.docNotFoundError = "ERROR: Document not found.";
 
+  // Too big for UI limit - 250MB
+  qwConstantsService.maxSizeForUI = 262144000;
+
   //
   //
   // all done creating the service, now return it

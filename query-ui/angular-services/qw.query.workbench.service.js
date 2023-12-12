@@ -10,6 +10,8 @@ licenses/APL2.txt.
 
 import {NgbModal}               from '@ng-bootstrap/ng-bootstrap';
 
+import { HttpEventType } from '@angular/common/http';
+
 import {QwCollectionsService}   from "./qw.collections.service.js";
 import {QwConstantsService}     from "./qw.constants.service.js";
 import {QwFixLongNumberService} from "./qw.fix.long.number.service.js";
@@ -1218,7 +1220,7 @@ function getQwQueryService(
       qwQueryService.options.query_timeout = 600;
 
     // build basic query request
-    let queryRequest = qwQueryServiceBase.buildQueryRequest(queryText,qwQueryService.options.query_timeout);
+    let queryRequest = qwQueryServiceBase.buildQueryRequest(queryText,qwQueryService.options.query_timeout,is_user_query);
     let queryData = queryRequest.data;
 
     // are there options we need to add to the query request?
@@ -1325,6 +1327,7 @@ function getQwQueryService(
     // if the user edited an already-run query, add the edited query to the end of the history
 
     var query = getCurrentResult();
+    query.tooBigForUI = false;
     if (query.savedQuery && query.savedQuery != query.query && query.lastRun) {
       var result = executingQueryTemplate.clone();
       result.query = query.query.trim();
@@ -1761,6 +1764,7 @@ function getQwQueryService(
 
     if ((queryIsExplain && explainOnly) || !explainOnly) {
 
+      // user query
       var request = buildQueryRequest(queryText, true, qwQueryService.options, txId, txImplicit, newResult);
       newResult.client_context_id = request.data.client_context_id;
       //console.log("Got client context id: " + newResult.client_context_id);
@@ -1777,70 +1781,253 @@ function getQwQueryService(
       }
       var query_promise;
 
-      if (qwHttp.do)
-        query_promise = qwHttp.do(request);
-      else
-        query_promise = qwHttp(request);
+      if (qwHttp.do) {
+        var observable = qwHttp.do(request, true);
+        var observableDone = false;
+        var response;
+        observable.subscribe(resp => {
+           switch (resp.type) {
+             case HttpEventType.DownloadProgress:
+               if (resp.loaded > qwConstantsService.maxSizeForUI) {
+                 newResult.tooBigForUI = true;
+                 cancelQuery(newResult);
+                 observableDone = true;
+               }
+               break;
+             case HttpEventType.Response:
+               observableDone = true;
 
-      //console.log("Running request:" + JSON.stringify(request,null,2));
-      // SUCCESS!
-      query_promise
-        .then(function success(resp) {
-            var data = resp.data, status = resp.status;
-            //console.log("Success for query: " + queryText);
-            //console.log("Success Data: " + JSON.stringify(data));
-            //console.log("Success Status: " + JSON.stringify(status));
+               if (resp.status == 200 && resp.body) {
+                 if (_.isString(resp.body)) try {
+                   response = JSON.parse(resp.body);
+                 } catch (e) {}
+                 else {
+                   response = resp.body;
+                 }
 
-            // Even though we got a successful HTTP response, it might contain warnings or errors
-            // We need to be able to show both errors and partial results, or if there are no results
-            // just the errors
+                 var data = response;
+                 var status = data.status;
+                 //console.log("Success for query: " + queryText);
+                 //console.log("Success Data: " + JSON.stringify(data));
+                 //console.log("Success Status: " + JSON.stringify(status));
 
-            var result; // hold the result, or a combination of errors and result
+                 // Even though we got a successful HTTP response, it might contain warnings or errors
+                 // We need to be able to show both errors and partial results, or if there are no results
+                 // just the errors
 
-          if (!data) {
-            result = {status: "No data returned from server"};
-            data = {status: status};
+                 var result; // hold the result, or a combination of errors and result
+
+                 if (!data) {
+                   result = {status: "No data returned from server"};
+                   data = {status: status};
+                 }
+                 // empty result, fill it with any errors or warnings
+                 else if (!_.isArray(data.results) || data.results.length == 0) {
+                   if (data.errors)
+                     result = data.errors;
+                   else if (data.warnings)
+                     result = data.warnings;
+
+                   // otherwise show some context, make it obvious that results are empty
+                   else {
+                     result = {};
+                     result.results = data.results;
+                   }
+                 }
+                 // non-empty result: use it
+                 else
+                   result = data.results;
+
+                 // if we have results, but also errors, record them in the result's warning object
+                 if (data.warnings && data.errors)
+                   newResult.warnings = "'" + JSON.stringify(data.warnings, null, 2) + JSON.stringify(data.errors, null, 2) + "'";
+                 else if (data.warnings)
+                   newResult.warnings = "'" + JSON.stringify(data.warnings, null, 2) + "'";
+                 else if (data.errors)
+                   newResult.warnings = "'" + JSON.stringify(data.errors, null, 2) + "'";
+                 if (data.status == "stopped") {
+                   result = {status: "Query stopped on server."};
+                 }
+
+                 // if we got no metrics, create a dummy version
+                 if (!data.metrics) {
+                   data.metrics = {elapsedTime: "0.0s", executionTime: "0.0s", resultCount: 0, resultSize: "0"};
+                 }
+
+                 // get the stmtType to keep track of transactions
+                 if (data.controls) {
+                   newResult.stmtType = data.controls.stmtType;
+                   newResult.use_cbo = data.controls.use_cbo;
+                 }
+
+                 newResult.status = data.status;
+                 newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
+                 newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
+                 newResult.resultCount = data.metrics.resultCount;
+                 if (data.metrics.mutationCount)
+                   newResult.mutationCount = data.metrics.mutationCount;
+                 newResult.resultSize = data.metrics.resultSize;
+                 newResult.sortCount = data.metrics.sortCount;
+                 if (data.rawJSON)
+                   newResult.result = data.rawJSON;
+                 else
+                   newResult.result = angular.toJson(result, true);
+                 newResult.data = result;
+                 newResult.requestID = data.requestID;
+
+                 // did we get query timings in the result? If so, update the plan
+
+                 if (data.profile && data.profile.executionTimings) try {
+                   var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings, null);
+
+                   // we might have optional subqueries to analyze
+                   let subqueries = data.profile.executionTimings['~subqueries'];
+                   if (Array.isArray(subqueries)) {
+                     subqueries
+                     .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
+                   }
+
+                   newResult.explainResult =
+                     {
+                       explain: data.profile.executionTimings,
+                       analysis: lists,
+                       plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.profile.executionTimings, null, lists, subqueries)
+                     };
+                   newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
+
+                   // let's check all the fields to make sure they are all valid
+                   var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
+                   if (problem_fields.length > 0)
+                     newResult.explainResult.problem_fields = problem_fields;
+                 }
+
+                   // need to handle any exceptions that might occur
+                 catch (exception) {
+                   console.log("Exception analyzing query plan: " + exception);
+                   newResult.explainResult = "Internal error generating query plan: " + exception;
+                 }
+
+                 // if this was an explain query, analyze the results to get us a graphical plan
+
+                 if (queryIsExplain && data.results && data.results[0] && data.results[0].plan) try {
+                   var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
+
+                   // we might have optional subqueries to analyze
+                   let subqueries = data.results[0]['~subqueries'];
+                   if (Array.isArray(subqueries)) {
+                     subqueries
+                     .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
+                   }
+
+                   newResult.explainResult =
+                     {
+                       explain: data.results[0],
+                       analysis: lists,
+                       plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.results[0].plan, null, lists, subqueries, subqueries)
+                       /*,
+                     buckets: qwQueryService.buckets,
+                     tokens: qwQueryService.autoCompleteTokens*/
+                     };
+                   newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
+                 }
+                   // need to handle any exceptions that might occur
+                 catch (exception) {
+                   console.log("Exception analyzing query plan: " + exception);
+                   newResult.explainResult = "Internal error generating query plan: " + exception;
+                   //newResult.explainResultText = "Internal error generating query plan: " + exception;
+                 }
+
+                 // if the query was "advice select...", make sure the result gets put into advice
+
+                 if (queryIsAdvise) {
+                   if (data && data.status == "success" && data.results && data.results.length > 0)
+                     newResult.advice = data.results;
+                   else
+                     newResult.advice = newResult.result; // get the error message
+                 }
+                 if (all_done_ready) {
+                   finishQuery(newResult);
+                 }
+               }
+               break;
+           }
+         }, resp => {
+          observableDone = true;
+          if (_.isString(resp.error)) try {
+            resp.data = JSON.parse(resp.error);
+          } catch (e) {}
+
+          var data = resp.data, status = resp.status;
+          //console.log("Error for query: " + queryText);
+          //console.log("Error resp: " + JSON.stringify(resp));
+          //console.log("Error Data: " + JSON.stringify(data));
+
+          // if we don't get query metrics, estimate elapsed time
+          if (!data || !data.metrics) {
+            var post_ms = new Date().getTime();
+            newResult.elapsedTime = (post_ms - pre_post_ms) + "ms";
+            newResult.executionTime = newResult.elapsedTime;
           }
-            // empty result, fill it with any errors or warnings
-          else if (!_.isArray(data.results) || data.results.length == 0) {
-              if (data.errors)
-                result = data.errors;
-              else if (data.warnings)
-                result = data.warnings;
 
-              // otherwise show some context, make it obvious that results are empty
-              else {
-                result = {};
-                result.results = data.results;
-              }
+          // no result at all? failure
+          if (data === undefined) {
+            newResult.result = '{"status": "Failure contacting server."}';
+            newResult.data = {status: "Failure contacting server."};
+            newResult.status = "errors";
+            newResult.resultCount = 0;
+            newResult.resultSize = 0;
+            if (all_done_ready) {
+              finishQuery(newResult);
             }
-            // non-empty result: use it
-            else
-              result = data.results;
+            return;
+          }
 
-            // if we have results, but also errors, record them in the result's warning object
-            if (data.warnings && data.errors)
-              newResult.warnings = "'" + JSON.stringify(data.warnings, null, 2) + JSON.stringify(data.errors, null, 2) + "'";
-            else if (data.warnings)
-              newResult.warnings = "'" + JSON.stringify(data.warnings, null, 2) + "'";
-            else if (data.errors)
-              newResult.warnings = "'" + JSON.stringify(data.errors, null, 2) + "'";
-            if (data.status == "stopped") {
-              result = {status: "Query stopped on server."};
+          // data is null? query interrupted
+          if (data === null) {
+            newResult.result = '{"status": "Query interrupted."}';
+            newResult.data = {status: "Query interrupted."};
+            newResult.status = "errors";
+            newResult.resultCount = 0;
+            newResult.resultSize = 0;
+            if (all_done_ready) {
+              finishQuery(newResult);
+            }
+            return;
+          }
+
+          // result is a string? it must be an error message
+          if (_.isString(data)) {
+            newResult.data = {status: data};
+            if (status && status == 504) {
+              newResult.data.status_detail =
+                "The query workbench only supports queries running for " + qwQueryService.options.query_timeout +
+                " seconds. This value can be changed in the preferences dialog. You can also use cbq from the " +
+                "command-line for longer running queries. " +
+                "Certain DML queries, such as index creation, will continue in the " +
+                "background despite the user interface timeout.";
             }
 
-            // if we got no metrics, create a dummy version
-            if (!data.metrics) {
-              data.metrics = {elapsedTime: "0.0s", executionTime: "0.0s", resultCount: 0, resultSize: "0"};
+            newResult.result = JSON.stringify(newResult.data, null, '  ');
+            newResult.status = "errors";
+            if (all_done_ready) {
+              finishQuery(newResult);
             }
+            return;
+          }
 
-            // get the stmtType to keep track of transactions
-            if (data.controls) {
-              newResult.stmtType = data.controls.stmtType;
-              newResult.use_cbo = data.controls.use_cbo;
-            }
+          if (data.errors) {
+            if (_.isArray(data.errors) && data.errors.length >= 1)
+              data.errors[0].query = queryText;
+            newResult.data = data.errors;
+            newResult.result = JSON.stringify(data.errors, null, '  ');
+          }
 
-            newResult.status = data.status;
+          if (status)
+            newResult.status = status;
+          else
+            newResult.status = "errors";
+
+          if (data.metrics) {
             newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
             newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
             newResult.resultCount = data.metrics.resultCount;
@@ -1848,173 +2035,29 @@ function getQwQueryService(
               newResult.mutationCount = data.metrics.mutationCount;
             newResult.resultSize = data.metrics.resultSize;
             newResult.sortCount = data.metrics.sortCount;
-            if (data.rawJSON)
-              newResult.result = data.rawJSON;
-            else
-              newResult.result = angular.toJson(result, true);
-            newResult.data = result;
+          }
+
+          if (data.requestID)
             newResult.requestID = data.requestID;
 
-            // did we get query timings in the result? If so, update the plan
+          // make sure to only finish if the explain query is also done
+          if (newResult.explainDone) {
+            // when we have errors, don't show the plan tabs
+            if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
+              qwQueryService.selectTab(1);
+          }
 
-            if (data.profile && data.profile.executionTimings) try {
-              var lists = qwQueryPlanService.analyzePlan(data.profile.executionTimings, null);
+          if (all_done_ready) {
+            finishQuery(newResult);
+          }
+        });
+      } else {
+        query_promise = qwHttp(request);
+      }
 
-              // we might have optional subqueries to analyze
-              let subqueries = data.profile.executionTimings['~subqueries'];
-              if (Array.isArray(subqueries)) {
-                subqueries
-                    .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
-              }
-
-              newResult.explainResult =
-                {
-                  explain: data.profile.executionTimings,
-                  analysis: lists,
-                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.profile.executionTimings, null, lists, subqueries)
-                };
-              newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
-
-              // let's check all the fields to make sure they are all valid
-              var problem_fields = getProblemFields(newResult.explainResult.analysis.fields);
-              if (problem_fields.length > 0)
-                newResult.explainResult.problem_fields = problem_fields;
-            }
-
-              // need to handle any exceptions that might occur
-            catch (exception) {
-              console.log("Exception analyzing query plan: " + exception);
-              newResult.explainResult = "Internal error generating query plan: " + exception;
-            }
-
-            // if this was an explain query, analyze the results to get us a graphical plan
-
-            if (queryIsExplain && data.results && data.results[0] && data.results[0].plan) try {
-              var lists = qwQueryPlanService.analyzePlan(data.results[0].plan, null);
-
-              // we might have optional subqueries to analyze
-              let subqueries = data.results[0]['~subqueries'];
-              if (Array.isArray(subqueries)) {
-                subqueries
-                    .forEach(subPlan => subPlan['~children'] && analyzePlan(subPlan['~children'], lists));
-              }
-
-              newResult.explainResult =
-                {
-                  explain: data.results[0],
-                  analysis: lists,
-                  plan_nodes: qwQueryPlanService.convertN1QLPlanToPlanNodesWrapper(data.results[0].plan, null, lists, subqueries, subqueries)
-                  /*,
-                buckets: qwQueryService.buckets,
-                tokens: qwQueryService.autoCompleteTokens*/
-                };
-              newResult.explainResultText = JSON.stringify(newResult.explainResult.explain, null, '  ');
-            }
-              // need to handle any exceptions that might occur
-            catch (exception) {
-              console.log("Exception analyzing query plan: " + exception);
-              newResult.explainResult = "Internal error generating query plan: " + exception;
-              //newResult.explainResultText = "Internal error generating query plan: " + exception;
-            }
-
-            // if the query was "advice select...", make sure the result gets put into advice
-
-            if (queryIsAdvise) {
-              if (data && data.status == "success" && data.results && data.results.length > 0)
-                newResult.advice = data.results;
-              else
-                newResult.advice = newResult.result; // get the error message
-            }
-
-
-          },
-          /* error response from qwHttp */
-          function error(resp) {
-            var data = resp.data, status = resp.status;
-            //console.log("Error for query: " + queryText);
-            //console.log("Error resp: " + JSON.stringify(resp));
-            //console.log("Error Data: " + JSON.stringify(data));
-
-            // if we don't get query metrics, estimate elapsed time
-            if (!data || !data.metrics) {
-              var post_ms = new Date().getTime();
-              newResult.elapsedTime = (post_ms - pre_post_ms) + "ms";
-              newResult.executionTime = newResult.elapsedTime;
-            }
-
-            // no result at all? failure
-            if (data === undefined) {
-              newResult.result = '{"status": "Failure contacting server."}';
-              newResult.data = {status: "Failure contacting server."};
-              newResult.status = "errors";
-              newResult.resultCount = 0;
-              newResult.resultSize = 0;
-              return;
-            }
-
-            // data is null? query interrupted
-            if (data === null) {
-              newResult.result = '{"status": "Query interrupted."}';
-              newResult.data = {status: "Query interrupted."};
-              newResult.status = "errors";
-              newResult.resultCount = 0;
-              newResult.resultSize = 0;
-              return;
-            }
-
-            // result is a string? it must be an error message
-            if (_.isString(data)) {
-              newResult.data = {status: data};
-              if (status && status == 504) {
-                newResult.data.status_detail =
-                  "The query workbench only supports queries running for " + qwQueryService.options.query_timeout +
-                  " seconds. This value can be changed in the preferences dialog. You can also use cbq from the " +
-                  "command-line for longer running queries. " +
-                  "Certain DML queries, such as index creation, will continue in the " +
-                  "background despite the user interface timeout.";
-              }
-
-              newResult.result = JSON.stringify(newResult.data, null, '  ');
-              newResult.status = "errors";
-              return;
-            }
-
-            if (data.errors) {
-              if (_.isArray(data.errors) && data.errors.length >= 1)
-                data.errors[0].query = queryText;
-              newResult.data = data.errors;
-              newResult.result = JSON.stringify(data.errors, null, '  ');
-            }
-
-            if (status)
-              newResult.status = status;
-            else
-              newResult.status = "errors";
-
-            if (data.metrics) {
-              newResult.elapsedTime = simplifyTimeValue(data.metrics.elapsedTime);
-              newResult.executionTime = simplifyTimeValue(data.metrics.executionTime);
-              newResult.resultCount = data.metrics.resultCount;
-              if (data.metrics.mutationCount)
-                newResult.mutationCount = data.metrics.mutationCount;
-              newResult.resultSize = data.metrics.resultSize;
-              newResult.sortCount = data.metrics.sortCount;
-            }
-
-            if (data.requestID)
-              newResult.requestID = data.requestID;
-
-            // make sure to only finish if the explain query is also done
-            if (newResult.explainDone) {
-              // when we have errors, don't show the plan tabs
-              if (qwQueryService.isSelected(4) || qwQueryService.isSelected(5))
-                qwQueryService.selectTab(1);
-            }
-
-            return (Promise.resolve()); // don't want to short circuit resolution of other promises
-          });
-
-      promises.push(query_promise);
+      if (query_promise) {
+        promises.push(query_promise);
+      }
     }
 
     //
@@ -2033,12 +2076,27 @@ function getQwQueryService(
     // when the queries are done, call finishQuery
 
     var all_done = Promise.all(promises);
+    var all_done_ready = false;
     all_done.then(
       function success() {
-        finishQuery(newResult);
+        all_done_ready = true;
+        if (observableDone) {
+          finishQuery(newResult);
+        } else if (observableDone === undefined) {
+          // this is the case when only explain query is made (user clicks Explain button)
+          // observableDone is not initialised, so we don't need to wait for the observable result
+          finishQuery(newResult);
+        }
       },
       function fail() {
-        finishQuery(newResult);
+        all_done_ready = true;
+        if (observableDone) {
+          finishQuery(newResult);
+        } else if (observableDone === undefined) {
+          // this is the case when only explain query is made (user clicks Explain button)
+          // observableDone is not initialised, so we don't need to wait for the observable result
+          finishQuery(newResult);
+        }
       }
     );
     return(all_done);

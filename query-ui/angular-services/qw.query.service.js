@@ -56,7 +56,7 @@ class QwQueryService {
 
   // create a query request object for internal queries (no user options)
   // timeout should be an integer number of seconds
-  buildQueryRequest(queryText, timeout) {
+  buildQueryRequest(queryText, timeout, is_user_query) {
 
     var queryRequest = {
       url: '../_p/query/query/service',
@@ -76,7 +76,8 @@ class QwQueryService {
       mnHttp: {
         isNotForm: true,
         group: "global"
-      }
+      },
+      reportProgress: is_user_query,
     };
 
     // our queries run through a ns_server proxy, so it needs a timeout at least

@@ -296,6 +296,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     qc.dataTooBig = dataTooBig;
     qc.setShowBigData = setShowBigData;
     qc.getBigDataMessage = getBigDataMessage;
+    qc.getBigDataForUIMessage = getBigDataForUIMessage;
 
     // should we have the extra explain tabs?
 
@@ -395,6 +396,18 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     function setShowBigData(show)
     {
       qc.showBigDatasets = show;
+    }
+
+    //
+    // get a string to describe why the dataset is too large for UI
+    //
+
+    function getBigDataForUIMessage() {
+      var message = "The statement results are larger than the workbench limit of " +
+        qwConstantsService.maxSizeForUI / (2 ** 20) + "MB and cannot be displayed.<br>" +
+        "Please use another client product to access them.";
+
+      return (message);
     }
 
     //

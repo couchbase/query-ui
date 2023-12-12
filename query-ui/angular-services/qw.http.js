@@ -46,7 +46,7 @@ class QwHttp {
   }
 
   //simulate old $http from angular 1.x
-  do(config) {
+  do(config, progressObserver) {
 
     if (!config || !config.url || !config.method)
       return(null);
@@ -55,7 +55,7 @@ class QwHttp {
     case 'GET':
       return this.get(config.url,config);
     case 'POST':
-      return this.post(config.url,config.data,config);
+      return this.post(config.url,config.data,config, progressObserver);
     case 'PUT':
       return this.put(config.url,config.data,config);
     case 'DELETE':
@@ -76,7 +76,7 @@ class QwHttp {
   //  transformResponse - method to call on response
 
   configToOptions(config) {
-   var options = {observe: 'response'};
+   var options = {observe: 'events'};
    if (config.headers) {
      // can't pass options to HttpHeaders constructor, because it can't
      // handle headers with numeric values
@@ -87,6 +87,9 @@ class QwHttp {
 
    if (config.params)
      options.params = config.params;
+
+    if (config.reportProgress)
+      options.reportProgress = config.reportProgress;
    return(options);
   }
 
@@ -99,12 +102,16 @@ class QwHttp {
   };
 
 
-  post(url, data, config) {
+  post(url, data, config, progressObserver) {
     config = config || {};
     config.url = url;
     config.method = 'POST';
 
-    return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
+    var obs = this.http.post(config.url,data,this.configToOptions(config));
+    if (progressObserver) {
+      return obs;
+    }
+    return(obs.toPromise().then(this.handleSuccess,this.handleFailure));
   }
 
   put(url, data, config) {
