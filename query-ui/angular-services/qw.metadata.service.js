@@ -83,6 +83,7 @@ class QwMetadataService {
         this.compat.atLeast66 = thisNode.clusterCompatibility >= encodeCompatVersion(6, 6);
         this.compat.atLeast70 = thisNode.clusterCompatibility >= encodeCompatVersion(7, 0);
         this.compat.atLeast71 = thisNode.clusterCompatibility >= encodeCompatVersion(7, 1);
+        this.compat.atLeast72 = thisNode.clusterCompatibility >= encodeCompatVersion(7, 2);
         this.compat.atLeast76 = thisNode.clusterCompatibility >= encodeCompatVersion(7, 6);
         this.compat.init = true;
 
