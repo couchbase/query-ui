@@ -731,6 +731,13 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         return;
       }
 
+      // MB-60650 - prevent user from typing in high values for offset if we are using KV api
+      if (dec.options.offset > 1000 && dec.how_to_query() === "KV" && !(dec.options.doc_id && dec.options.show_id)) {
+        dec.options.current_result = "Invalid value for 'offset': Offset must be <= 1000 unless query service and primary index available.";
+        refreshResults();
+        return;
+      }
+
       if (!_.isString(dec.options.selected_bucket) || dec.options.selected_bucket == "") {
         dec.options.current_result = "No selected bucket.";
         refreshResults();
@@ -1032,6 +1039,11 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       if (dec.options.queryBusy) // don't have 2 retrieves going at once
         return;
+
+      // MB-60650 - ensure offset never > 1000. The UI shouldn't permit this, but double check here.
+      if (dec.options.offset > 1000) {
+        dec.options.offset = 1000;
+      }
 
       dec.options.current_query = dec.options.selected_bucket + "." + dec.options.selected_scope + "." +
         dec.options.selected_collection;
