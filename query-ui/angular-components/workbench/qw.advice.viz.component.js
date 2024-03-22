@@ -140,9 +140,10 @@ class QwAdviceVizComponent extends MnLifeCycleHooksToStream {
   // create the recommended indexes
   create_option(type,index) {
     var This = this; // for callbacks
-    var queries = [];
-    if (this.advice[index].recommended_indexes && _.isArray(this.advice[index].recommended_indexes[type])) {
-      this.advice[index].recommended_indexes[type].forEach(function(reco) {
+    var queries = []
+    const advice = this.advice[index]?.advice?.adviseinfo;
+    if (advice?.recommended_indexes[type]) {
+      advice.recommended_indexes[type].forEach(function(reco) {
         queries.push(reco.index_statement);
       });
 
