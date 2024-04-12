@@ -1782,6 +1782,8 @@ function getQwQueryService(
       var query_promise;
 
       if (qwHttp.do) {
+        const special = new SpecialPromise();
+        query_promise = special.innerPromise;
         var observable = qwHttp.do(request, true);
         var observableDone = false;
         var response;
@@ -1792,10 +1794,12 @@ function getQwQueryService(
                  newResult.tooBigForUI = true;
                  cancelQuery(newResult);
                  observableDone = true;
+                 special.resolve(resp);
                }
                break;
              case HttpEventType.Response:
                observableDone = true;
+               special.resolve(resp);
 
                if (resp.status == 200 && resp.body) {
                  if (_.isString(resp.body)) try {
@@ -1953,6 +1957,7 @@ function getQwQueryService(
            }
          }, resp => {
           observableDone = true;
+          special.reject(resp);
           if (_.isString(resp.error)) try {
             resp.data = JSON.parse(resp.error);
           } catch (e) {}
@@ -2100,6 +2105,15 @@ function getQwQueryService(
       }
     );
     return(all_done);
+  }
+
+  class SpecialPromise  {
+    constructor() {
+      this.innerPromise = new Promise((resolve,reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      })
+    }
   }
 
   //
