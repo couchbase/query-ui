@@ -98,6 +98,7 @@ class QwJsonTableEditor2 extends MnLifeCycleHooksToStream {
   // so we use ViewChild and a factory to create and compile the component
 
   addComponent(template) {
+    template = template.replaceAll('\0','\\0');
     class TemplateComponent {
       constructor() {
       }
