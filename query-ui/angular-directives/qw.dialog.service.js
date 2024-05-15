@@ -133,11 +133,12 @@ class QwDialogService {
 
             var docInfo = resp.data;
             var docId = docInfo.meta.id;
+            const allMeta = {meta: docInfo.meta, xattrs: docInfo.xattrs};
 
             // did we get a json doc back? if so, and if the doc is editable, handle any changes
             if (docInfo && docInfo.json && docInfo.meta) {
               var promise = This.showDocEditorDialog(readonly,header,docId,js_beautify(docInfo.json,{"indent_size": 2}),
-                                                     JSON.stringify(docInfo.meta,null,2),false);
+                                                     JSON.stringify(allMeta,null,2),false);
               if (readonly)    // no editing
                 return(promise.then(()=>Promise.resolve("done"),()=>Promise.resolve("done")));
 
