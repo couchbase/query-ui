@@ -9,6 +9,7 @@ licenses/APL2.txt.
 */
 
 import { Injectable } from "@angular/core";
+import js_beautify    from "js-beautify";
 
 export { QwFixLongNumberService };
 
@@ -143,7 +144,7 @@ function getQwFixLongNumberService() {
         var rawResult = findResult(rawBytes);
 
         if (rawResult)
-          result.rawJSON = '\t' + rawResult;
+          result.rawJSON = js_beautify(rawResult);
         else
           result.rawJSON = rawBytes;
 
@@ -177,7 +178,7 @@ function getQwFixLongNumberService() {
         //console.log("  Got match: " + matchArray[1] + " with lastMatch: " + regex.lastIndex);
         //console.log("  remainder: " + curBytes.substring(regex.lastIndex,regex.lastIndex + 10));
         var matchLen = matchArray[1].length;
-        newBytes += curBytes.substring(0,regex.lastIndex - matchLen) + '"' +
+        newBytes += curBytes.substring(0,regex.lastIndex - matchLen - 1) + '"' +
           matchArray[1].substring(1) + '"';
         curBytes = curBytes.substring(regex.lastIndex - 1);
         regex.lastIndex = 0;
