@@ -1359,17 +1359,19 @@ function getQwQueryService(
     // in sequence
     var queries = [];
     var curQuery = '';
+    var stripComments = /\/\*.*?\*\/|--*$/g;
     var findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\/\*(?:.|[\n\r])*\*\/)|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;
-    var matchArray = findSemicolons.exec(queryText);
-
+    let stripText = queryText.replace(stripComments, '');
+    var matchArray = findSemicolons.exec(stripText);
+    
     while (matchArray != null) {
       //console.log("Got matchArray: " + JSON.stringify(matchArray));
       curQuery += matchArray[0];
       if (matchArray[0] == ';') {
-        queries.push(curQuery);
+        queries.push(curQuery.trim());
         curQuery = '';
       }
-      matchArray = findSemicolons.exec(queryText);
+      matchArray = findSemicolons.exec(stripText);
     }
 
     if (curQuery.length > 0)
