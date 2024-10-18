@@ -1805,7 +1805,8 @@ function getQwQueryService(
 
                if (resp.status == 200 && resp.body) {
                  if (_.isString(resp.body)) try {
-                   response = JSON.parse(resp.body);
+                   // turn any super long numbers into strings for display
+                   response = qwFixLongNumberService.fixLongInts(resp.body);
                  } catch (e) {}
                  else {
                    response = resp.body;
