@@ -62,6 +62,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     var params = this.uiRouter.globals.params;
     if (params.bucket) {
       this.dec.options.offset = 0;
+      // MB-61437 - if  the bucket is changing, reset the WHERE clause
+      if (this.dec.options.selected_bucket !== params.bucket) {
+        this.dec.options.where_clause = '';
+      }
       this.dec.options.selected_bucket = params.bucket;
       // MB-51579 - if params don't specify scope/collection, that's o.k., we just won't get documents until
       // they are specified
@@ -309,6 +313,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.where_clause.length > 0) {
         if (!has_prim() && !has_sec()) {
           dec.options.current_result = "WHERE clause not supported unless bucket has primary or secondary index.";
+          dec.options.where_clause = '';
           return (false);
         }
         return (N1QL);
