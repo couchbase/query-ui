@@ -1357,27 +1357,7 @@ function getQwQueryService(
 
     // if we have multiple queries, pull them apart into an array so we can run them
     // in sequence
-    var queries = [];
-    var curQuery = '';
-    var stripComments = /\/\*.*?\*\/|--*$/g;
-    var findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\/\*(?:.|[\n\r])*\*\/)|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;
-    let stripText = queryText.replace(stripComments, '');
-    var matchArray = findSemicolons.exec(stripText);
-    
-    while (matchArray != null) {
-      //console.log("Got matchArray: " + JSON.stringify(matchArray));
-      curQuery += matchArray[0];
-      if (matchArray[0] == ';') {
-        queries.push(curQuery.trim());
-        curQuery = '';
-      }
-      matchArray = findSemicolons.exec(stripText);
-    }
-
-    if (curQuery.length > 0)
-      queries.push(curQuery); // get final query if unterminated with ;
-
-    //console.log("Got queries: " + JSON.stringify(queries));
+    var queries = splitQueries(queryText);
 
     // if we have a single query, run it. If we have multiple queries, run each one in sequence,
     // stopping if we see an error by chaining the promises together
@@ -1418,6 +1398,65 @@ function getQwQueryService(
         });
 
     return (queryExecutionPromise);
+  }
+
+  //
+  // if a query string contains multiple queries separated by `;`, split them apart into an array
+  //
+
+  function splitQueries(queryText) {
+    var queries = [];
+    var curQuery = '';
+
+    // we want to detect either type of comments, but not within strings
+    var stripComments = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|\/\*.*?\*\/|--.*$\n?/gm;
+    const comments = [];
+    let queryNoComments = queryText;
+    queryNoComments = queryNoComments.replace(stripComments, (match) => {
+      if (!match.startsWith('"') && !match.startsWith("'")) {
+        comments.push(match);
+        return '^&&^';
+      }
+      else {
+        return match;
+      }
+    });
+
+    // now comments are gone, look for semicolons not inside strings
+    const findSemicolons = /("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(`(?:[^`]|``)*`)|((?:[^;"'`\/]|\/(?!\*))+)|(;)/g;
+    let matchArray = findSemicolons.exec(queryNoComments);
+
+    while (matchArray != null) {
+      curQuery += matchArray[0];
+      if (matchArray[0] == ';') {
+        queries.push(curQuery.trim());
+        curQuery = '';
+      }
+      matchArray = findSemicolons.exec(queryNoComments);
+    }
+
+    if (curQuery.length > 0)
+      queries.push(curQuery); // get final query if unterminated with ;
+
+    // restore comments
+    for (let index = 0; index < queries.length; index++) {
+      queries[index] = queries[index].replace(/("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(`(?:[^`]|``)*`)|\^&&\^/gi, (input) => {
+        if (input === '^&&^') {
+          return comments.shift() || '';
+        } else {
+          return input;
+        }
+      });
+
+
+      // if a query has nothing but comments, remove it from the batch
+      if (queries[index].replace(stripComments,'').trim().length === 0) {
+        queries.splice(index, 1);
+        index--;
+      }
+    }
+
+    return (queries);
   }
 
   //
