@@ -33,7 +33,6 @@
   <form name="searchForm">
   <div [formGroup]="searchForm" class="controls resp-med">
     <qw-collection-menu
-       class="column"
        label="Keyspace"
        [initialSelection]="dec.options"
        (onSelection)="dec.collectionMenuCallback($event)">

@@ -13,7 +13,7 @@ import {QwMetadataService} from './qw.metadata.service.js';
 import {QwQueryWorkbenchService}    from './qw.query.workbench.service.js';
 import {QwHttp}            from './qw.http.js';
 import _                   from 'lodash';
-import {MnAlertsService}    from '../../../../ui/app/mn.alerts.service.js';
+import {MnAlerts}          from '../../../../ui/app/ajs.upgraded.providers.js';
 
 export {QwImportService};
 
@@ -26,7 +26,7 @@ class QwImportService {
 
   static get parameters() {
     return [
-      MnAlertsService,
+      MnAlerts,
       QwDialogService,
       QwMetadataService,
       QwQueryWorkbenchService,
@@ -35,14 +35,14 @@ class QwImportService {
   }
 
   constructor(
-    mnAlertService,
+    mnAlerts,
     qwDialogService,
     qwMetadataService,
     qwQueryService,
     qwHttp) {
 
     Object.assign(this, getQwImportService(
-      mnAlertService,
+      mnAlerts,
       qwDialogService,
       qwMetadataService,
       qwQueryService,
@@ -54,7 +54,7 @@ class QwImportService {
 // so that they can continue to run even if the user navigates away to a different part of the UI
 
 function getQwImportService(
-  mnAlertService,
+  mnAlerts,
   qwDialogService,
   qwMetadataService,
   qwQueryService,
@@ -127,8 +127,8 @@ function getQwImportService(
   // use N1QL to create a query to insert a set of documents
   //
 
-  var maxQuerySize = 4 * 1024 * 1024; // make sure maxQuerySize is at least maxDocSize plus the size of "INSERT INTO..."
-  var maxDocSizeMB = 1;
+  var maxQuerySize = 14 * 1024 * 1024; // make sure maxQuerySize is at least maxDocSize plus the size of "INSERT INTO..."
+  var maxDocSizeMB = 10;
   var maxDocSize = maxDocSizeMB * 1024 * 1024;
 
   function saveDocsViaN1QL(docNum) {
@@ -162,8 +162,10 @@ function getQwImportService(
       // can't import very big documents
       if (docText.length > maxDocSize) {
         qis.options.last_import_status = "Import Error at Document " + docNum + ", GUI can't import documents " +
-          maxDocSizeMB + "MiB or larger, use cbimport.";
-        mnAlertService.error("Import Failed: " + qis.options.last_import_status);
+          maxDocSizeMB + "MiB or larger, use cbimport instead.";
+        mnAlerts.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,
+            'error',
+            10000);
         qis.options.importing = false;
         return;
       }
@@ -183,8 +185,9 @@ function getQwImportService(
               if (resp.data.errors.length > 5) // avoid super long error messages
                 resp.data.errors.length = 5;
               qis.options.last_import_status = "Error importing documents: " + JSON.stringify(resp.data.errors);
-              mnAlertService.error("Import Failed: " + qis.options.last_import_status);
-              //console.log(query.substr(0,250));
+              mnAlerts.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,
+                  'error',
+                  10000);
               qis.options.importing = false;
             } else {
               qis.options.last_import_status = "Imported " + (docNum + 1) + " of " + qis.options.docData.length + " docs " + " from: " + qis.options.fileName;
@@ -195,7 +198,9 @@ function getQwImportService(
               // otherwise done with import
               else {
                 qis.options.importing = false;
-                mnAlertService.success(qis.options.last_import_status);
+                mnAlerts.formatAndSetAlerts(qis.options.last_import_status,
+                    'success',
+                    5000);
                 resetOptions();
               }
             }
@@ -215,7 +220,9 @@ function getQwImportService(
             else
               qis.options.last_import_status = "unknown status from server.";
 
-            mnAlertService.error("Import Failed: " + qis.options.last_import_status);
+            mnAlerts.formatAndSetAlerts("Import Failed: " + qis.options.last_import_status,
+                'error',
+                10000);
           });
         return;
       }

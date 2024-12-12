@@ -191,7 +191,7 @@ class QwImportComponent extends MnLifeCycleHooksToStream {
        if (ic.options.fileSize > 5) {
          qwDialogService.showNoticeDialog("Loading Data File...",
          "Loading file " + fileName + ", size: " + ic.options.fileSize +
-                               "MiB, which may take a while.");
+             "MiB, which may take a while to load and import. Consider using cbimport instead.");
        }
 
       var reader = new FileReader();
