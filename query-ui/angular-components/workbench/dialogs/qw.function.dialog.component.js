@@ -38,7 +38,8 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
         "function_type",
         "library_name",
         "library_function",
-        "expression",
+        "expression_sql",
+        "expression_javascript",
         "is_new",
         "global_functions_permitted",
         "scoped_functions_permitted",
@@ -58,10 +59,12 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
+    this.expression_sql = this.function_type == 'inline_sql' ? this.expression: '';
+    this.expression_javascript = this.function_type == 'inline_javascript' ? this.expression: '';
     this.initialNamespace = {selected_bucket: this.bucket, selected_scope: this.scope};
     // make sure we have a valid function_type
     if (!this.function_type)
-      this.function_type = this.inline_permitted ? 'inline' : 'javascript';
+      this.function_type = this.inline_permitted ? 'inline_sql' : 'external_javascript';
     // and a valid library name (if javascript function)
     if (this.function_type == 'javascript' && !this.library_name)
       this.library_name = this.libraries()[0] ? this.libraries()[0].name : null;
@@ -74,11 +77,13 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     // we make a form group for only those options that need validation
     this.formGroup = new FormGroup({
       name: new FormControl(this.name,[Validators.pattern("^[a-zA-Z0-9][a-zA-Z0-9_\-]{0,99}$")]),
-      expression: new FormControl(this.expression,[Validators.required]),
+      expression_sql: new FormControl(this.expression_sql,[Validators.required]),
+      expression_javascript: new FormControl(this.expression_javascript,[Validators.required]),
     });
 
     this.formGroup.get('name').valueChanges.subscribe(data => this.name = data);
-    this.formGroup.get('expression').valueChanges.subscribe(data => this.expression = data);
+    this.formGroup.get('expression_sql').valueChanges.subscribe(data => this.expression_sql = data);
+    this.formGroup.get('expression_javascript').valueChanges.subscribe(data => this.expression_javascript = data);
   }
 
   ngAfterViewInit() {
@@ -136,10 +141,11 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
 
   ok_to_save() {
     return(
-      (this.name != null && this.name.trim().length > 0) &&    // need function name...
-      (!this.is_new || !this.functionNameUsed(this.name)) &&   // ...that is not already used
-      ((this.function_type == 'inline' && this.expression) ||  // ...and is appropriately defined
-      (this.function_type == 'javascript' && this.library_name && this.library_function)));
+        (this.name != null && this.name.trim().length > 0) &&    // need function name...
+        (!this.is_new || !this.functionNameUsed(this.name)) &&   // ...that is not already used
+        ((this.function_type == 'inline_sql' && this.expression_sql) ||  // ...and is appropriately defined
+         ((this.function_type == 'inline_javascript')  && this.expression_javascript) ||  // ...and is appropriately defined
+         (this.function_type == 'external_javascript' && this.library_name && this.library_function)));
   }
 
   // uses qw.query.service to create/update the function
@@ -150,12 +156,33 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
       'default:`' + this.bucket + '`.`' + this.scope + '`.' : '';
     var as_expr;
 
-    // inline functions need parens around them if not already there
-    if (this.function_type == 'inline') {
-      let expr = this.expression.trim();
-      if (!expr.match(/^\([\s\S]+\)$/))
-        expr = '(' + expr + ')';
-      as_expr = expr;
+    let language = '';
+    let expr = '';
+
+    switch (this.function_type) {
+      case 'inline_sql':
+        language = 'INLINE';
+        expr = this.expression_sql.trim();
+        // inline functions need parens around them if not already there
+        if (!expr.match(/^\([\s\S]+\)$/))
+          expr = '(' + expr + ')';
+        as_expr = expr;
+        break;
+
+      case 'inline_javascript':
+        expr = this.expression_javascript.trim();
+        language = 'JAVASCRIPT';
+        // inline javascript functions must begin and end with single quotes
+        if (!expr.match(/^'[\s\S]+'$/))
+          expr = "'" + expr + "'";
+        as_expr = expr;
+        break;
+
+      case 'external_javascript':
+        language = 'JAVASCRIPT';
+        break;
+    }
+    if (this.function_type.startsWith('inline')) {
     }
     else {
       as_expr = '"' + this.library_function + '" AT "';
@@ -166,7 +193,7 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
 
     let query = "CREATE OR REPLACE FUNCTION " +
       scope + '`' + this.name + '` (' + this.parameters.join(',') + ') LANGUAGE ' +
-      this.function_type + ' AS ' + as_expr;
+      language + ' AS ' + as_expr;
 
     this.qqs.executeQueryUtil(query, false)
       .then(function success(resp) {
@@ -211,5 +238,9 @@ class QwFunctionDialog extends MnLifeCycleHooksToStream {
     return(index);
   }
 
-
+  getInlinePlaceholder() {
+    let name = this.name || 'function_name';
+    let params = this.parameters.length == 1 && this.parameters[0] == '...' ? 'args' : this.parameters.join(',');
+    return`JavaScript function, e.g.,\n\nfunction ${name}(${params}) { return 'result'; }`
+  }
 }

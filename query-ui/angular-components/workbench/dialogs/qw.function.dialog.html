@@ -77,12 +77,13 @@ licenses/APL2.txt.
                 (change)="check_lib()"
                 name="function_type"
                 [ngModelOptions]="{standalone: true}">
-          <option *ngIf="inline_permitted" value="inline">inline</option>
-          <option *ngIf="external_permitted" value="javascript">javascript</option>
+          <option *ngIf="inline_permitted" value="inline_sql">inline sql++</option>
+          <option *ngIf="inline_permitted" value="inline_javascript">inline javascript</option>
+          <option *ngIf="external_permitted" value="external_javascript">library javascript</option>
         </select>
       </div>
 
-      <div class="formrow" *ngIf="function_type=='javascript'">
+      <div class="formrow" *ngIf="function_type=='external_javascript'">
         <label>Javascript Library</label>
         <select [(ngModel)]="library_name" name="type"
                 [ngModelOptions]="{standalone: true}"
@@ -91,7 +92,7 @@ licenses/APL2.txt.
         </select>
       </div>
 
-      <div class="formrow" *ngIf="function_type=='javascript'">
+      <div class="formrow" *ngIf="function_type=='external_javascript'">
         <label>Library Function Name</label>
         <input type="text"
                [(ngModel)]="library_function"
@@ -100,14 +101,26 @@ licenses/APL2.txt.
                required name="library_function">
       </div>
 
-      <div class="formrow" *ngIf="function_type=='inline'">
-        <label>Expression</label>
+      <div class="formrow" *ngIf="function_type=='inline_sql'">
+        <label>SQL++ Expression</label>
         <textarea class="monospaced full-width"
-                  formControlName="expression"
-                  placeholder="N1QL expression, e.g. args[0] + 1"
-                  [ngClass]="{'ng-invalid-number': formGroup.get('expression').invalid}"
-                  required name="expression"></textarea>
+                  formControlName="expression_sql"
+                  placeholder="SQL++ expression, e.g. args[0] + 1"
+                  [ngClass]="{'ng-invalid-number': formGroup.get('expression_sql').invalid}"
+                  required name="expression"
+                  rows="5"></textarea>
       </div>
+
+      <div class="formrow" *ngIf="function_type=='inline_javascript'">
+        <label>Javascript Function Body</label>
+        <textarea class="monospaced full-width"
+                  formControlName="expression_javascript"
+                  [placeholder]="getInlinePlaceholder()"
+                  [ngClass]="{'ng-invalid-number': formGroup.get('expression_javascript').invalid}"
+                  required name="expression"
+                  rows="5"></textarea>
+      </div>
+
 
       <div *ngIf="error">
         <h6 class="label red">Error creating/updating function:</h6>

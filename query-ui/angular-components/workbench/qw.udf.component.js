@@ -243,7 +243,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.header = "Add Function";
     this.dialogRef.componentInstance.name = "";
     this.dialogRef.componentInstance.bucket = null;
-    this.dialogRef.componentInstance.function_type = this.inlinePermitted() ? 'inline' : 'javascript';
+    this.dialogRef.componentInstance.function_type = this.inlinePermitted() ? 'inline_sql' : 'external_javascript';
     this.dialogRef.componentInstance.expression = "";
     this.dialogRef.componentInstance.parameters = ['...'];
     this.dialogRef.componentInstance.library_name = null;
@@ -273,13 +273,19 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.dialogRef.componentInstance.type = fn.definition['#language'];
     switch (fn.definition['#language']) {
       case 'javascript':
-        this.dialogRef.componentInstance.library_name = fn.definition.library;
-        this.dialogRef.componentInstance.library_function = fn.definition.object;
-        this.dialogRef.componentInstance.function_type = 'javascript';
+        if (fn.definition.library) {
+          this.dialogRef.componentInstance.library_name = fn.definition.library;
+          this.dialogRef.componentInstance.library_function = fn.definition.object;
+          this.dialogRef.componentInstance.function_type = 'external_javascript';
+        }
+        else {
+          this.dialogRef.componentInstance.expression = fn.definition.text;
+          this.dialogRef.componentInstance.function_type = 'inline_javascript';
+        }
         break;
       case 'inline':
         this.dialogRef.componentInstance.expression = fn.definition.text;
-        this.dialogRef.componentInstance.function_type = 'inline';
+        this.dialogRef.componentInstance.function_type = 'inline_sql';
         break;
     }
     this.dialogRef.componentInstance.parameters = fn.definition.parameters || ['...'];
