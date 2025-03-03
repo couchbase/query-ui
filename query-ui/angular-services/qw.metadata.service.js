@@ -130,6 +130,25 @@ class QwMetadataService {
         return(promise);
     }
 
+    //
+    // get permissions for every collection in a bucket based on the metadata. We do this when the user
+    // selects a bucket in a selector and the scopes are collections are fetched.
+    //
+    getAllCollectionPermissions(bucketName,scopes) {
+        let This = this;
+        let permissions = [];
+        const scopeNames = Object.keys(scopes);
+        scopeNames.forEach(scopeName => {
+            scopes[scopeName].forEach(collName => {
+                permissions.push('cluster.collection[' + bucketName + ':' + scopeName + ':' + collName + '].data.docs!read');
+                permissions.push('cluster.collection[' + bucketName + ':' + scopeName + ':' + collName + '].data.docs!upsert');
+                permissions.push('cluster.collection[' + bucketName + ':' + scopeName + ':' + collName + '].data.docs!delete');
+            });
+        })
+
+        return this.qwHttp.post('/pools/default/checkPermissions',permissions.join(','))
+          .then(result => This.decodePermissions(result.data));
+    }
 
     // decode permissions from the array of 'name':<bool> to a tree
     decodePermissions(permissions) {

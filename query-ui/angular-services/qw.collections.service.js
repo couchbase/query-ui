@@ -170,10 +170,23 @@ function getQwCollectionsService(
 
 
   function refreshScopesAndCollectionsForBucket(bucket, proxy) {
+    var meta = getMeta(proxy);
     const canUseEndpoints = qms.rbac && qms.rbac.cluster.collection['.:.:.'].collections.read;
-    return canUseEndpoints ?
+    let promise = canUseEndpoints ?
       refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy) :
       refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy);
+
+    // when we get the list of scopes and collections, check the permissions
+    return promise.then((meta) =>
+      qms.getAllCollectionPermissions(bucket,meta.collections[bucket])
+        .then(() => {
+          // remove any collections that we don't have permission to read
+          Object.keys(meta.collections[bucket]).forEach(scope => {
+            meta.collections[bucket][scope] = meta.collections[bucket][scope].filter(collection =>
+              qms.rbac.cluster.collection[`${bucket}:${scope}:${collection}`]?.data.docs.read);
+          });
+          return meta;
+        }));
   }
 
   function refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy) {

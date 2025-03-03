@@ -170,7 +170,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
 
-    // wheneverthe collection menu is changed, remove any 'where' clause and offset
+    // whenever the collection menu is changed, remove any 'where' clause and offset
     dec.collectionMenuCallback = function(event) {
       //console.log("collectionMenuCallback: " + JSON.stringify(event));
       // MB-51579 - avoid race condition, make sure we have buckets specified
@@ -195,20 +195,24 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     };
 
     //
-    // what are we allowed to do?
+    // what are we allowed to access?
     //
-
     dec.upsertAllowed = function() {
-      return this.rbac.init && this.options.selected_bucket &&
-          this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'] &&
-          (this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'].data.docs.upsert ||
-              this.rbac.cluster.bucket[this.options.selected_bucket].data.docs.upsert);
+      if (!this.rbac.init || !this.options.selected_collection || !this.rbac.cluster.collection) {
+        return false;
+      }
+
+      // return the cached value
+      return this.rbac.cluster.collection[`${this.options.selected_bucket}:${this.options.selected_scope}:${this.options.selected_collection}`]?.data.docs.upsert;
     };
+
     dec.deleteAllowed = function() {
-      return this.rbac.init && this.options.selected_bucket &&
-          this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'] &&
-          (this.rbac.cluster.collection[this.options.selected_bucket + ':.:.'].data.docs.delete ||
-              this.rbac.cluster.bucket[this.options.selected_bucket].data.docs.delete);
+      if (!this.rbac.init || !this.options.selected_collection || !this.rbac.cluster.collection) {
+        return false;
+      }
+
+      // return the cached value
+      return this.rbac.cluster.collection[`${this.options.selected_bucket}:${this.options.selected_scope}:${this.options.selected_collection}`]?.data.docs.delete;
     };
 
     //
@@ -220,7 +224,6 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.nextBatch = nextBatch;
     dec.prevBatch = prevBatch;
 
-    //dec.clickedOn = function(row) {console.log("clicked on: " + row);};
     dec.updateDoc = updateDoc;
     dec.copyDoc = copyDoc;
     dec.deleteDoc = deleteDoc;
