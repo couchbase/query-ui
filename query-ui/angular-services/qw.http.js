@@ -12,6 +12,7 @@ import angular from "angular";
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { QwFixLongNumberService } from "./qw.fix.long.number.service.js";
 
 import _ from "lodash";
 
@@ -24,10 +25,12 @@ class QwHttp {
 
   static get parameters() { return [
     HttpClient,
+    QwFixLongNumberService
   ]}
 
-  constructor(http) {
+  constructor(http, qwFixLongNumberService) {
     this.http = http;
+    this.qwFixLongNumberService = qwFixLongNumberService;
   }
 
   // for transition to using RXJS, unpack the HttpRequest and send it
@@ -95,7 +98,7 @@ class QwHttp {
     config.url = url;
     config.method = 'GET';
 
-    return(this.http.get(url,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
+    return(this.http.get(url,this.configToOptions(config)).toPromise().then(this.handleSuccess.bind(this),this.handleFailure.bind(this)));
   };
 
 
@@ -104,7 +107,7 @@ class QwHttp {
     config.url = url;
     config.method = 'POST';
 
-    return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
+    return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess.bind(this),this.handleFailure.bind(this)));
   }
 
   put(url, data, config) {
@@ -112,7 +115,7 @@ class QwHttp {
     config.url = url;
     config.method = 'PUT';
 
-    return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
+    return(this.http.post(config.url,data,this.configToOptions(config)).toPromise().then(this.handleSuccess.bind(this),this.handleFailure.bind(this)));
   }
 
   delete(url, config) {
@@ -120,14 +123,14 @@ class QwHttp {
     config.url = url;
     config.method = 'DELETE';
 
-    return(this.http.delete(config.url,this.configToOptions(config)).toPromise().then(this.handleSuccess,this.handleFailure));
+    return(this.http.delete(config.url,this.configToOptions(config)).toPromise().then(this.handleSuccess.bind(this),this.handleFailure.bind(this)));
   }
 
 
   handleSuccess(resp) {
     if (resp && resp.status == 200 && resp.body) {
       if (_.isString(resp.body)) try {
-        resp.data = JSON.parse(resp.body);
+        resp.data = this.qwFixLongNumberService.fixLongInts(resp.body);
       } catch (e) {}
       else
         resp.data = resp.body;
