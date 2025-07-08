@@ -2114,9 +2114,8 @@ function getQwQueryService(
 
     if (!explainOnly && !queryIsExplain && !queryIsAdvise && !queryIsTransaction &&
       qwMetadataService.isEnterprise()) {
-      var advise_promise = runAdvise(queryText, newResult);
-      if (advise_promise != null)
-        promises.push(advise_promise);
+      // MB-67524 / CBSE-20377 - don't wait for advise to finish before showing results
+      runAdvise(queryText, newResult);
     }
 
     // return a promise wrapping the one or two promises
