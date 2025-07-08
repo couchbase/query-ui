@@ -24,14 +24,14 @@ import { QwDialogService }            from '../../angular-directives/qw.dialog.s
 import { QwConstantsService }         from '../../angular-services/qw.constants.service.js';
 import { QwJsonCsvService }           from '../../angular-services/qw.json.csv.service.js';
 import { QwMetadataService }          from "../../angular-services/qw.metadata.service.js";
-import { QwQueryWorkbenchService }             from '../../angular-services/qw.query.workbench.service.js';
+import { QwQueryWorkbenchService }    from '../../angular-services/qw.query.workbench.service.js';
 
 import { QwFileImportDialog }         from './dialogs/qw.file.import.dialog.component.js';
 import { QwUnifiedFileDialog }        from './dialogs/qw.unified.file.dialog.component.js';
 import { QwPrefsDialog }              from './dialogs/qw.prefs.dialog.component.js';
 import { QwHistoryDialog }            from './dialogs/qw.history.dialog.component.js';
 
-import { MnAdminService }  from 'mn.admin.service';
+import { MnAdminService }             from 'mn.admin.service';
 
 import N1qlParser                     from '../../parser/n1ql/myN1qlListener.js';
 
@@ -1334,29 +1334,37 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         });
       }
 
-    // bring up the dialog
-    this.dialogRef = this.qc.modalService.open(QwPrefsDialog);
-    this.dialogRef.componentInstance.options = prefOptions;
+    // the dialog needs to know the current query service use-cbo option
+    qwQueryService.getQueryServiceSettings().then(
+        (settings) => {
+          // bring up the dialog
+          this.dialogRef = this.qc.modalService.open(QwPrefsDialog);
+          this.dialogRef.componentInstance.options = prefOptions;
+          this.dialogRef.componentInstance.queryServiceOptions = settings.data;
 
-    this.dialogRef.result
-      .then(function success(res) {
-      // any named or positional parameters are entered as JSON, and must be parsed into
-      // actual values
-      if (prefOptions.positional_parameters)
-        for (var i=0; i < prefOptions.positional_parameters.length; i++)
-          prefOptions.positional_parameters[i] =
-            JSON.parse(prefOptions.positional_parameters[i]);
+          this.dialogRef.result
+            .then(function success(res) {
+                // any named or positional parameters are entered as JSON, and must be parsed into
+                // actual values
+                if (prefOptions.positional_parameters)
+                  for (var i=0; i < prefOptions.positional_parameters.length; i++)
+                    prefOptions.positional_parameters[i] =
+                      JSON.parse(prefOptions.positional_parameters[i]);
 
-      if (prefOptions.named_parameters)
-        for (var i=0; i < prefOptions.named_parameters.length; i++)
-          prefOptions.named_parameters[i].value =
-            JSON.parse(prefOptions.named_parameters[i].value);
+                if (prefOptions.named_parameters)
+                  for (var i=0; i < prefOptions.named_parameters.length; i++)
+                    prefOptions.named_parameters[i].value =
+                      JSON.parse(prefOptions.named_parameters[i].value);
 
-      qwQueryService.set_options(prefOptions);
-      qwQueryService.saveStateToStorage();
-    },
-        function cancel() {});
-
+                qwQueryService.set_options(prefOptions);
+                qwQueryService.saveStateToStorage();
+              },
+              function cancel() {});
+        },
+        (error) => {
+          showErrorMessage(`Error loading query service settings: ${error}`);
+        }
+    )
   }
 
 }

@@ -43,9 +43,21 @@ licenses/APL2.txt.
         <label for="for-auto-format" class="checkbox">Automatically format queries before executing</label>
       </div>
       <div class="formrow" *ngIf="mode != 'analytics' && options.isEnterprise">
-        <input id="for-cbo" name="cbo" type="checkbox" [(ngModel)]="options.use_cbo"
-               [ngModelOptions]="{standalone: true}">
-        <label for="for-cbo" class="checkbox">Use Cost-Based Optimizer</label>
+        <div>
+          <label class="inline">Use CBO for Workbench Queries</label>
+          <span
+              class="fa-stack icon-info"
+              ngbTooltip="The Query Service has a global setting (in the Query Settings panel) controlling whether to use Cost-Based Optimizer (CBO) by default. For Workbench queries, you can follow the global setting, or override it.">
+           <span class="icon fa-circle-thin fa-stack-2x"></span>
+           <span class="icon fa-info fa-stack-1x"></span>
+          </span>
+
+            <select [(ngModel)]="options.use_cbo" name="scan_consistency" [ngModelOptions]="{standalone: true}">
+              <option [ngValue]="undefined">Query Service global setting (currently "{{queryServiceOptions.queryUseCBO ? 'On' : 'Off'}}")</option>
+              <option [ngValue]="true">On</option>
+              <option [ngValue]="false">Off</option>
+            </select>
+        </div>
       </div>
       <div class="formrow" [hidden]="mode == 'analytics'">
         <input id="for-dont-save" name="dont_save" type="checkbox" [(ngModel)]="options.dont_save_queries"
