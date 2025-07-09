@@ -290,7 +290,7 @@ function getQwQueryService(
     expanded: {},
     query_timeout: 600,
     transaction_timeout: 120,
-    use_cbo: true,
+    use_cbo: undefined, // default to server setting, might also be true or false
   };
 
   qwQueryService.get_auto_format = function() {return qwQueryService.options.auto_format;};
@@ -341,6 +341,10 @@ function getQwQueryService(
   qwQueryService.query_plan_options = {
     orientation: 1
   };
+
+  qwQueryService.getQueryServiceSettings = function() {
+    return qwHttp.get('/settings/querySettings');
+  }
 
   //
   // this structure holds the current query text, the current query result,
@@ -679,9 +683,6 @@ function getQwQueryService(
 
       if (qwQueryService.options.dont_save_queries !== true && qwQueryService.options.dont_save_queries !== false)
         qwQueryService.options.dont_save_queries = false;
-
-      if (qwQueryService.options.use_cbo !== true && qwQueryService.options.use_cbo !== false)
-        qwQueryService.options.use_cbo = true;
 
       if (!qwQueryService.options.transaction_timeout)
         qwQueryService.options.transaction_timeout = 120;
