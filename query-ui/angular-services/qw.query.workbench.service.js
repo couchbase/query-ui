@@ -1613,11 +1613,12 @@ function getQwQueryService(
 
     //
     // run the explain version of the query, if appropriate
+    // we can't explain DDL statements, transactions, prepared statements, or explain or advise statements
     //
 
-    if (!queryIsExplain && !queryIsTransaction && !queryIsAdvise &&
-      (explainOnly || (qwConstantsService.autoExplain && !queryIsPrepare))) {
+    const queryIsExplainable = /^\s*(select|merge|update|delete|with)/gi.test(queryText);
 
+    if (queryIsExplainable && (explainOnly || qwConstantsService.autoExplain)) {
       var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options, null, null, newResult);
       if (!explain_request) {
         newResult.result = '{"status": "query failed"}';
