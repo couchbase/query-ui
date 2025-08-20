@@ -1244,8 +1244,11 @@ function getQwQueryService(
         for (var i = 0; i < queryOptions.named_parameters.length; i++)
           queryData[queryOptions.named_parameters[i].name] = queryOptions.named_parameters[i].value;
 
+      // MB-68089 - always include use_cbo whether or not the query is from the user
+      queryData.use_cbo = queryOptions.use_cbo;
+
+      // however transactions are only coming from user queries
       if (is_user_query) {
-        queryData.use_cbo = queryOptions.use_cbo;
         queryData.txtimeout = JSON.stringify(queryOptions.transaction_timeout) + "s";
       }
     }
