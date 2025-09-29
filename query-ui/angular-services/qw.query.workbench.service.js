@@ -342,8 +342,12 @@ function getQwQueryService(
     orientation: 1
   };
 
+  // this API endpoint requires Administrative privileges, however some users may not have that,
+  // so return a dummy object if we get a 403 error
   qwQueryService.getQueryServiceSettings = function() {
-    return qwHttp.get('/settings/querySettings');
+    return qwHttp.get('/settings/querySettings')
+      .then(response => response,
+        error => Promise.resolve({data: {queryUseCBO: undefined}}));
   }
 
   //

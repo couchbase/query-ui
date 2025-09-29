@@ -118,4 +118,15 @@ class QwPrefsDialog extends MnLifeCycleHooksToStream {
     return null;
   }
 
+  getCBOstatus() {
+    if (this.queryServiceOptions?.queryUseCBO === undefined) {
+      return 'unknown';
+    }
+    else if (this.queryServiceOptions.queryUseCBO === true) {
+      return 'on';
+    }
+    else {
+      return 'off';
+    }
+  }
 }

@@ -1366,5 +1366,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         }
     )
   }
+}
 
+function showErrorMessage(message) {
+  qwDialogService.showErrorDialog("Error",message,true);
 }
