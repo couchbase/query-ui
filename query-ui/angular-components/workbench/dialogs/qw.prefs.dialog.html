@@ -53,7 +53,8 @@ licenses/APL2.txt.
           </span>
 
             <select [(ngModel)]="options.use_cbo" name="scan_consistency" [ngModelOptions]="{standalone: true}">
-              <option [ngValue]="undefined">Query Service global setting (currently "{{queryServiceOptions.queryUseCBO ? 'On' : 'Off'}}")</option>
+              <option [ngValue]="undefined">Query Service global setting
+                 <span *ngIf="queryServiceOptions.queryUseCBO !== undefined">(currently "{{queryServiceOptions.queryUseCBO ? 'On' : 'Off'}}")</span></option>
               <option [ngValue]="true">On</option>
               <option [ngValue]="false">Off</option>
             </select>
