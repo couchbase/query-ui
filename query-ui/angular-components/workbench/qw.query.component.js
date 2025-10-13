@@ -605,8 +605,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       // make the query editor "catch" drag and drop files
       //
 
-      qc.editorElement.addEventListener('dragover',qc.handleDragOver,false);
-      qc.editorElement.addEventListener('drop',qc.handleFileDrop,false);
+      qc.editorElement.addEventListener('dragover',handleDragOver,false);
+      qc.editorElement.addEventListener('drop',handleFileDrop,false);
       _editor.getSession().on("change", qc.aceInputChanged);
     }
 
@@ -685,7 +685,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     //
 
     function loadHistoryFileList(files) {
-      qc.input_selection.selected.item = 0; // reset
       // make sure we have a file
       if (files.length == 0)
         return;
@@ -1280,6 +1279,11 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       var advice = qc.lastResult().advice;
       return(advice && advice.recommended_indexes && advice.recommended_indexes.indexes);
     }
+
+    function showErrorMessage(message) {
+      qc.qwDialogService.showErrorDialog("Error",message,true);
+    }
+
   }
 
   //
@@ -1343,7 +1347,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       qwQueryService.saveStateToStorage();
     },
         function cancel() {});
-
   }
-
 }
+
