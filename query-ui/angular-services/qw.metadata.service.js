@@ -111,6 +111,7 @@ class QwMetadataService {
             'cluster.n1ql.meta!read',
             'cluster.n1ql.udf!manage',
             'cluster.n1ql.udf_external!manage',
+            'cluster.settings!read',
             ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!read'),
             ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!upsert'),
             ...this.bucketList.map(bucketName => 'cluster.bucket[' + bucketName + '].data.docs!delete'),

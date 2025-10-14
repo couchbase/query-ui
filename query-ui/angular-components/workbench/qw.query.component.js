@@ -618,8 +618,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       // make the query editor "catch" drag and drop files
       //
 
-      qc.editorElement.addEventListener('dragover',qc.handleDragOver,false);
-      qc.editorElement.addEventListener('drop',qc.handleFileDrop,false);
+      qc.editorElement.addEventListener('dragover',handleDragOver,false);
+      qc.editorElement.addEventListener('drop',handleFileDrop,false);
       _editor.getSession().on("change", qc.aceInputChanged);
     }
 
@@ -698,7 +698,6 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
     //
 
     function loadHistoryFileList(files) {
-      qc.input_selection.selected.item = 0; // reset
       // make sure we have a file
       if (files.length == 0)
         return;
@@ -706,7 +705,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       // make sure the file ends .n1ql
       var file = files.item(0);
       if (!file.name.toLowerCase().endsWith(".json")) {
-        showErrorMessage("Can't load: " + file.name + ".\nHistory import only supports files ending in '.json'")
+        qwDialogService.showErrorDialog("Import Error","Can't load: " + file.name + ".\nHistory import only supports files ending in '.json'")
         return;
       }
 
@@ -716,7 +715,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
         try {
           var newHistory = JSON.parse(reader.result);
           if (!_.isArray(newHistory.pastQueries)) {
-            showErrorMessage("Unrecognized query history format.");
+            qwDialogService.showErrorDialog("Import Error","Unrecognized query history format.");
             return;
           }
 
@@ -727,7 +726,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
             }
           });
         } catch (e) {
-          showErrorMessage("Error processing history file: " + e);
+          qwDialogService.showErrorDialog("Import Error","Error processing history file: " + e);
         }
       });
       reader.readAsText(files[0]);
@@ -776,7 +775,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       // make sure the file ends in .txt or .n1ql
       var file = files.item(0);
       if (!file.name.toLowerCase().endsWith(".n1ql") && !file.name.toLowerCase().endsWith(".txt")) {
-        showErrorMessage("Can't load: " + file.name + ".\nQuery import only supports files ending in '.txt'");
+        qwDialogService.showErrorDialog("Import Error","Can't load: " + file.name + ".\nQuery import only supports files ending in '.txt'");
         return;
       }
 
@@ -1293,6 +1292,7 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       var advice = qc.lastResult().advice;
       return(advice && advice.recommended_indexes && advice.recommended_indexes.indexes);
     }
+
   }
 
   //
@@ -1335,7 +1335,10 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
       }
 
     // the dialog needs to know the current query service use-cbo option
-    qwQueryService.getQueryServiceSettings().then(
+    const queryServiceSettings = this.qc.rbac.cluster.settings.read ?
+      qwQueryService.getQueryServiceSettings() : Promise.resolve({data: {queryUseCBO: undefined}});
+
+    queryServiceSettings.then(
         (settings) => {
           // bring up the dialog
           this.dialogRef = this.qc.modalService.open(QwPrefsDialog);
@@ -1362,12 +1365,14 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
               function cancel() {});
         },
         (error) => {
-          showErrorMessage(`Error loading query service settings: ${error}`);
+          let errorMsg = JSON.stringify(error);
+          if (error?.error)
+            errorMsg = JSON.stringify(error.error);
+          else if (error?.message)
+            errorMsg = JSON.stringify(error.message);
+          this.qc.qwDialogService.showErrorDialog("",`Error loading query service settings: ${errorMsg}`,null,true);
         }
     )
   }
 }
 
-function showErrorMessage(message) {
-  qwDialogService.showErrorDialog("Error",message,true);
-}
