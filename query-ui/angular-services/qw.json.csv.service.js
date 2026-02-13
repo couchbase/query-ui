@@ -70,7 +70,11 @@ function getQwJsonCsvService() {
     //console.log("Converting result to CSV: " + _.isArray(docArray) + ", " + docArray.length);
 
     // we need an array
-    if (!_.isArray(docArray) || docArray.length == 0)
+    if (!_.isArray(docArray))
+      return([docArray]);
+
+    // we need an array with stuff in it
+    if (docArray.length == 0)
       return(data);
 
     // figure out what fields we have available, by looking at each doc
@@ -121,6 +125,12 @@ function getQwJsonCsvService() {
   //
 
   function getFields(doc,fieldInfo) {
+    // if we have a raw value, indicate as much
+    if (!_.isPlainObject(doc)) {
+     fieldInfo[''] = {nonobj:true};
+     return;
+    }
+
     // assume docs are objects. docs are permitted to be raw values like a string or
     // number, but that can't be flattened into CSV
     for (var key in doc) {
@@ -165,6 +175,11 @@ function getQwJsonCsvService() {
   //
 
   function convertDocToArray(doc,fieldInfo,valArray) {
+    // if the document is a raw value, we just output it as the only value in the array
+    if (fieldInfo['']?.nonobj && !_.isPlainObject(doc)) {
+      valArray.push(doc);
+      return;
+    }
 
     // for each field...
     Object.keys(fieldInfo).sort().forEach(function(fieldName,index) {
