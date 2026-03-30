@@ -27,7 +27,7 @@ import { CommonModule }                     from '@angular/common';
 import _                                    from "lodash";
 
 import {select as d3Select,
-  event as d3Event}                         from "d3-selection";
+  event as d3Event, mouse as d3Mouse}       from "d3-selection";
 import {linkVertical as d3LinkVertical,
         linkHorizontal as d3LinkHorizontal} from "d3-shape";
 
@@ -95,6 +95,7 @@ class QwExplainViz extends MnLifeCycleHooksToStream {
     //console.log("Directive ngAfterInit, input: " + this.qwJsonDataTable2);
     outerElement = this.element.nativeElement.querySelector('.wb-results-explain');
     wrapperElement = this.element.nativeElement.querySelector('.wb-explain-d3-wrapper');
+    mainElement = window.document.querySelector('.main-content');
 
     // when used in the workbench, we get an observable tied to the current
     // query result
@@ -155,6 +156,7 @@ var queryService;
 var outerElement;
 var wrapperElement;
 var simpleTree; // underlying data
+var mainElement;
 
 function makeTree(element) {
   clearContent();
@@ -529,6 +531,11 @@ function makeTooltip(d) {
 
   // the tooltip is relative to the query plan div, so we need to know its offset.
   var outerBox = outerElement.getBoundingClientRect();
+  // tooltip is positioned absolutely, so compute location relative to top-level container
+  var mainBox = mainElement?.getBoundingClientRect() || [0,0,0,0];
+  var relativeTop = outerBox.top - mainBox.top;
+
+  var containerPadding = 8;
   // create the new tooltip
   var tooltip_div = d3Select(".wb-results-explain")
       .append("div")
@@ -538,14 +545,36 @@ function makeTooltip(d) {
   //  return tooltip_div.style("display", "none");
   //})
   ;
+  var mouseCoords = d3Mouse(mainElement);
+
+  var pointerX = mouseCoords[0];
+  var pointerY = mouseCoords[1];
 
   if (d.data.tooltip && d.data.tooltip.length > 0) {
+    var maxTooltipWidth = Math.max(200, outerBox.width - containerPadding * 2);
+    var maxTooltipHeight = Math.max(120, outerBox.height - containerPadding * 2);
+
     tooltip_div.transition().duration(300).style("display", "block");
-    var header_div = tooltip_div.append("div");
-    header_div.html('<a class="ui-dialog-titlebar-close modal-close" onclick="console.log(\"click\")"> X </a>');
     tooltip_div.html(d.data.tooltip)
-        .style("left", (d3Event.x - outerBox.left) + "px")
-        .style("top", (d3Event.y - outerElement.offsetTop/2) + "px");
+        .style("max-width", maxTooltipWidth + "px")
+        .style("max-height", maxTooltipHeight + "px")
+        .style("overflow", "auto");
+
+    // Place near the click point, then clamp inside the visible explain area.
+    var tooltipNode = tooltip_div.node();
+    var tooltipBox = tooltipNode ? tooltipNode.getBoundingClientRect() : null;
+    var tooltipWidth = tooltipBox ? tooltipBox.width : 0;
+    var tooltipHeight = tooltipBox ? tooltipBox.height : 0;
+    // don't allow bottom of tooltip to go off the panel
+    const maxTop = relativeTop + (outerBox.height - tooltipHeight);
+
+    var left = Math.max(containerPadding,
+      Math.min(pointerX, outerBox.width - tooltipWidth - containerPadding));
+    var top = pointerY < maxTop ? pointerY : maxTop;
+
+    tooltip_div
+      .style("left", left + "px")
+      .style("top", top + "px");
     }
 
   d3Event.stopPropagation();

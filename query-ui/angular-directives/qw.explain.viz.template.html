@@ -38,14 +38,14 @@ licenses/APL2.txt.
         <em *ngFor="let f of data.analysis.fields">{{ f }}&nbsp;&nbsp;</em>
       </div>
 
-      <div class="column row flex-grow-half flex-right">
+      <div class="column row flex-grow-half flex-right margin-top-half">
         <span (click)="leftRight()" class="icon fa-caret-square-o-left wb-explain-plan-orient"  [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(1)}" title="change plan direction"></span>
         <span (click)="rightLeft()" class="icon fa-caret-square-o-right wb-explain-plan-orient" [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(3)}" title="change plan direction"></span>
         <span (click)="bottomTop()" class="icon fa-caret-square-o-down wb-explain-plan-orient"  [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(4)}" title="change plan direction"></span>
         <span (click)="topDown()" class="icon fa-caret-square-o-up wb-explain-plan-orient" [ngClass]="{'wb-explain-plan-selected-orient' : orientIs(2)}" title="change plan direction"></span>
       </div>
 
-      <div class="column row flex-right">
+      <div class="column row flex-right margin-top-half">
         <span (click)="zoomIn()"  class="icon fa-search-minus wb-explain-plan-zoom" title="zoom out - or use scroll wheel"></span>
         <span (click)="zoomOut()" class="icon fa-search-plus wb-explain-plan-zoom" title="zoom in - or use scroll wheel"></span>
       </div>
