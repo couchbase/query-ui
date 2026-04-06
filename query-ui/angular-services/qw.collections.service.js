@@ -170,10 +170,27 @@ function getQwCollectionsService(
 
 
   function refreshScopesAndCollectionsForBucket(bucket, proxy) {
-    const canUseEndpoints = qms.rbac && qms.rbac.cluster.collection['.:.:.'].collections.read;
-    return canUseEndpoints ?
-      refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy) :
-      refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy);
+    // if we are fetching data from a remote cluster, we don't have any permission info, must use API and hope
+    // for the best
+    if (proxy || !qms.rbac) {
+      return refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy);
+    }
+
+    // otherwise, which API do we have permission to use, if any?
+    const canUseEndpoints = qms.rbac?.cluster.collection[`${bucket}:.:.`].collections.read;
+    const canUseQuery = qms.rbac?.cluster.n1ql.meta.read;
+    if (canUseEndpoints)
+      return refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy);
+    else if (canUseQuery)
+      return refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy);
+
+    // no permissions - return an error
+    const meta = getMeta(proxy);
+    meta.errors.length = 0;
+    meta.errors.push(`No permission to read scopes and collections for ${bucket}. User needs either 'cluster.collection[${bucket}:.:.].collections!read' or 'cluster.n1ql.meta!read'`);
+    meta.scopes[bucket] = [];
+    meta.collections[bucket] = {};
+    return Promise.resolve(meta);
   }
 
   function refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy) {

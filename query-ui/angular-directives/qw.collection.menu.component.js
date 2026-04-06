@@ -251,7 +251,13 @@ class QwCollectionMenu extends MnLifeCycleHooksToStream {
         this.scopes[selectedBucket].indexOf(selectedScope) < 0))
         this.keyspaceForm.get("scopeName").setValue(this.scopes[selectedBucket][0]);
 
-    // make sure we have collections to work with
+    // if no scopes, blank out scope selection
+    else if (this.scopes[selectedBucket].length === 0) {
+      this.keyspaceForm.get("scopeName").setValue('');
+      this.keyspaceForm.get("collectionName").setValue('');
+    }
+
+      // make sure we have collections to work with
     if (!selectedScope || !this.collections[selectedBucket] ||
       !this.collections[selectedBucket][selectedScope])
       return;

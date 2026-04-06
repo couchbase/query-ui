@@ -344,7 +344,7 @@ function createHTMLFromJson(json) {
 
   // if json not array, it must be error message string
   else {
-    resultHTML = wrapperStart + json + wrapperEnd;
+    resultHTML = `${wrapperStart} <div class="error text-small"> ${json} </div> ${wrapperEnd}`;
   }
 
   return (resultHTML);
