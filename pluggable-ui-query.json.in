@@ -5,10 +5,5 @@
     "query": {
       "portName": "query_port"
     }
-  },
-  "version-dirs": [
-    {"version": [7, 0], "dir": "ui-current"}
-  ],
-  "doc-root": "@BIN_PREFIX@query-ui",
-  "module": "main.js"
+  }
 }
