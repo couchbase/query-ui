@@ -72,6 +72,32 @@ class QwMetadataService {
                 error => {This.compat = {err: error}});
     }
 
+    // find out what permissions we have on a selected collection
+    checkCollectionPerms(bucket, scope, collection) {
+        const fullName = `${bucket}:${scope}:${collection}`;
+        const perms = [
+            `cluster.collection[${fullName}].data.docs!read`,
+            `cluster.collection[${fullName}].data.docs!upsert`,
+            `cluster.collection[${fullName}].data.docs!delete`,
+            `cluster.collection[${fullName}].n1ql.select!execute`,
+        ];
+
+        // do we need to get the permissions?
+        if (this.rbac.cluster.collection[fullName]?.data?.docs?.read === undefined ||
+          this.rbac.cluster.collection[fullName]?.data?.docs?.upsert === undefined ||
+          this.rbac.cluster.collection[fullName]?.data?.docs?.delete === undefined ||
+          this.rbac.cluster.collection[fullName]?.n1ql?.select?.execute === undefined) {
+            return this.qwHttp.post('/pools/default/checkPermissions',perms.join(','))
+              .then(result => {
+                  this.decodePermissions(result.data,true)
+                },
+                err => {this.rbac = err});
+        }
+        else
+            return Promise.resolve();
+    }
+
+
     decodePoolsDefault(poolDefault) {
         let This = this;
         // figure out compat version
@@ -122,6 +148,9 @@ class QwMetadataService {
 
             ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].n1ql.udf!manage'),
             ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].n1ql.udf_external!manage'),
+
+          // permissions needed for reading scopes & collections
+            ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].collections!read'),
         ];
 
         let promise = this.qwHttp.post('/pools/default/checkPermissions',perms.join(','))
@@ -152,7 +181,7 @@ class QwMetadataService {
     }
 
     // decode permissions from the array of 'name':<bool> to a tree
-    decodePermissions(permissions) {
+    decodePermissions(permissions, skipIndexes) {
         //console.log("Got permissions: " + JSON.stringify(permissions,null,2));
 
         this.rbac.init = true;
@@ -191,10 +220,12 @@ class QwMetadataService {
 
         // get index info, if possible. If query nodes exist, use a query,
         // which works even if /indexStatus API is forbidden
-        if (this.queryNodes.length > 0)
-            return this.getIndexesN1QL();
-        else
-            return this.getIndexesREST();
+        if (!skipIndexes) {
+            if (this.queryNodes.length > 0)
+                return this.getIndexesN1QL();
+            else
+                return this.getIndexesREST();
+        }
     }
 
     // do we have enough permissions to run queries?

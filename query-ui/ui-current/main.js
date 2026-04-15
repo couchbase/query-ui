@@ -42,7 +42,7 @@ angular
       state: 'app.admin.docs.editor',
       includedByState: 'app.admin.docs',
       plugIn: 'workbenchTab',
-      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read",
+      ngShow: "rbac.cluster.collection['.:.:.'].data.docs.read || rbac.cluster.collection['.:.:.'].data.docs.upsert",
       index: 0
     });
 
