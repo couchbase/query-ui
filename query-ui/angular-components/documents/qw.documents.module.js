@@ -50,7 +50,7 @@ let documentsStates = [
       name: 'app.admin.docs.editor',
       data: {
         title: "Documents",  // appears in breadcrumbs in title bar
-        permissions: "cluster.collection['.:.:.'].data.docs.read",
+        permissions: "cluster.collection['.:.:.'].data.docs.read || cluster.collection['.:.:.'].data.docs.upsert",
       },
       params: { // can parameters be sent via the URL?
         bucket: {

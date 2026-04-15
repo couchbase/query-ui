@@ -97,7 +97,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
   }
 
   docViewer() {
-    return this.rbac.init && this.rbac.cluster.collection['.:.:.'].data.docs.read;
+    return this.rbac.init && (this.rbac.cluster.collection['.:.:.'].data.docs.read || this.rbac.cluster.collection['.:.:.'].data.docs.upsert);
   }
 
   constructor(
@@ -169,6 +169,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     dec.how_to_query = how_to_query;
     dec.can_use_n1ql = can_use_n1ql;
     dec.has_indexes = has_indexes;
+    dec.get_n1ql_placeholder = get_n1ql_placeholder;
 
     // whenever the collection menu is changed, remove any 'where' clause and offset
     dec.collectionMenuCallback = function(event) {
@@ -184,8 +185,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         dec.searchForm.get('where_clause').setValue('');
         dec.searchForm.get('offset').setValue(0);
 
-        if (event.bucket && event.scope && event.collection)
-          retrieveDocs_inner();
+        if (event.bucket && event.scope && event.collection) {
+          // get permissions for new collection
+          qwMetadataService.checkCollectionPerms(dec.options.selected_bucket, dec.options.selected_scope, dec.options.selected_collection).then(function () {
+            retrieveDocs_inner();
+          });
+        }
       }
     };
 
@@ -197,22 +202,25 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
     // what are we allowed to access?
     //
-    dec.upsertAllowed = function() {
-      if (!this.rbac.init || !this.options.selected_collection || !this.rbac.cluster.collection) {
-        return false;
-      }
 
-      // return the cached value
-      return this.rbac.cluster.collection[`${this.options.selected_bucket}:${this.options.selected_scope}:${this.options.selected_collection}`]?.data.docs.upsert;
+    dec.upsertAllowed = function() {
+      if (!this.rbac.init || !this.options.selected_bucket || !this.options.selected_scope || !this.options.selected_collection)
+        return false;
+
+      const fullName = `${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`;
+
+      return (this.rbac.cluster.collection[fullName]?.data?.docs?.upsert ||
+        this.rbac.cluster.bucket[this.options.selected_bucket].data.docs.upsert);
     };
 
     dec.deleteAllowed = function() {
-      if (!this.rbac.init || !this.options.selected_collection || !this.rbac.cluster.collection) {
+      if (!this.rbac.init || !this.options.selected_bucket || !this.options.selected_scope || !this.options.selected_collection)
         return false;
-      }
 
-      // return the cached value
-      return this.rbac.cluster.collection[`${this.options.selected_bucket}:${this.options.selected_scope}:${this.options.selected_collection}`]?.data.docs.delete;
+      const fullName = `${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`;
+
+      return (this.rbac.cluster.collection[fullName]?.data?.docs?.delete ||
+        this.rbac.cluster.bucket[this.options.selected_bucket].data.docs.delete);
     };
 
     //
@@ -292,8 +300,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         return (false);
       }
 
+      // corner case - can't query if we can't read documents
+      if (dec.rbac.cluster.collection[`${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`]?.data?.docs?.read !== true) {
+        dec.options.current_result = "No permission to read documents.";
+        return (false);
+      }
+
       // always use KV for single doc lookups by ID
       if (dec.options.show_id && dec.options.doc_id)
+        return KV;
+
+      // N1QL is not available if the user lacks n1ql.select permissions on the current collection
+      if (dec.rbac.cluster.collection[`${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`]?.n1ql.select.execute !== true)
         return KV;
 
       // key range lookup or limit/offset with no WHERE clause
@@ -333,7 +351,18 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     //
 
     function can_use_n1ql() {
-      return (has_prim() || has_sec());
+      // N1QL is not available if the user lacks n1ql.select permissions on the current collection
+      return (dec.rbac.cluster.collection[`${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`]?.n1ql.select.execute === true
+        && (has_prim() || has_sec()));
+    }
+
+    function get_n1ql_placeholder() {
+      if (dec.rbac.cluster.collection[`${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`]?.n1ql.select.execute !== true)
+        return 'no query permissions';
+      else if (!has_indexes())
+        return 'no indexes available...';
+      else
+        return 'optional...';
     }
 
     //
@@ -764,6 +793,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         case false: // error status
           showErrorDialog("Document Error", dec.options.current_result, true);
           dec.options.current_query = dec.options.selected_bucket;
+          refreshResults();
           break;
       }
     }
@@ -1261,7 +1291,10 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
           metadataUpdate(meta);
           // MB-51579 - when collection unspecified, don't try to retrieve documents
           if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection && dec.docViewer())
-            retrieveDocs();
+            // get permissions for new collection
+            qwMetadataService.checkCollectionPerms(dec.options.selected_bucket, dec.options.selected_scope, dec.options.selected_collection).then(function () {
+              retrieveDocs_inner();
+            });
         });
       });
     }

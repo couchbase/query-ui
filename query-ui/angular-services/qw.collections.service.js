@@ -170,23 +170,27 @@ function getQwCollectionsService(
 
 
   function refreshScopesAndCollectionsForBucket(bucket, proxy) {
-    var meta = getMeta(proxy);
-    const canUseEndpoints = qms.rbac && qms.rbac.cluster.collection['.:.:.'].collections.read;
-    let promise = canUseEndpoints ?
-      refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy) :
-      refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy);
+    // if we are fetching data from a remote cluster, we don't have any permission info, must use API and hope
+    // for the best
+    if (proxy || !qms.rbac) {
+      return refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy);
+    }
 
-    // when we get the list of scopes and collections, check the permissions
-    return promise.then((meta) =>
-      qms.getAllCollectionPermissions(bucket,meta.collections[bucket])
-        .then(() => {
-          // remove any collections that we don't have permission to read
-          Object.keys(meta.collections[bucket]).forEach(scope => {
-            meta.collections[bucket][scope] = meta.collections[bucket][scope].filter(collection =>
-              qms.rbac.cluster.collection[`${bucket}:${scope}:${collection}`]?.data.docs.read);
-          });
-          return meta;
-        }));
+    // otherwise, which API do we have permission to use, if any?
+    const canUseEndpoints = qms.rbac?.cluster.collection[`${bucket}:.:.`].collections.read;
+    const canUseQuery = qms.rbac?.cluster.n1ql.meta.read;
+    if (canUseEndpoints)
+      return refreshScopesAndCollectionsForBucketUsingApi(bucket, proxy);
+    else if (canUseQuery)
+      return refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy);
+
+    // no permissions - return an error
+    const meta = getMeta(proxy);
+    meta.errors.length = 0;
+    meta.errors.push(`No permission to read scopes and collections for ${bucket}. User needs either 'cluster.collection[${bucket}:.:.].collections!read' or 'cluster.n1ql.meta!read'`);
+    meta.scopes[bucket] = [];
+    meta.collections[bucket] = {};
+    return Promise.resolve(meta);
   }
 
   function refreshScopesAndCollectionsForBucketUsingQuery(bucket, proxy) {
