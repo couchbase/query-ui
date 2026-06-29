@@ -100,6 +100,11 @@ class QwMetadataService {
 
     decodePoolsDefault(poolDefault) {
         let This = this;
+        // debounce call
+        if (This.checkPermissionPromise) {
+            return This.checkPermissionPromise;
+        }
+
         // figure out compat version
         let thisNode = poolDefault.nodes.find(node => node.thisNode);
 
@@ -153,11 +158,12 @@ class QwMetadataService {
             ...this.bucketList.map(bucketName => 'cluster.collection[' + bucketName + ':.:.].collections!read'),
         ];
 
-        let promise = this.qwHttp.post('/pools/default/checkPermissions',perms.join(','))
-            .then(result => This.decodePermissions(result.data),
-                err => {this.rbac = err});
+        This.checkPermissionPromise = this.qwHttp.post('/pools/default/checkPermissions',perms.join(','))
+          .then(result => This.decodePermissions(result.data),
+            err => {this.rbac = err})
+          .finally(() => {This.checkPermissionPromise = null;});
 
-        return(promise);
+        return(This.checkPermissionPromise);
     }
 
 
@@ -218,8 +224,11 @@ class QwMetadataService {
 
     // get indexes via N1QL (preferable if possible)
     getIndexesN1QL() {
-        return this.qqs.executeQueryUtil('select indexes.* from system:indexes')
-            .then(success_resp => {
+        const This = this;
+        // debounce request
+        if (this.indexPromise == null)
+            this.indexPromise = this.qqs.executeQueryUtil('select indexes.* from system:indexes')
+              .then(success_resp => {
                     Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
                     if (success_resp.status == 200 && success_resp.data && Array.isArray(success_resp.data.results))
                         success_resp.data.results.forEach(index => {
@@ -234,8 +243,10 @@ class QwMetadataService {
                     Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
                     this.errors.push(JSON.stringify(error_resp));
                     console.log("Error getting indexes via n1ql: " + JSON.stringify(error_resp));
-                });
+                })
+              .finally(() => {This.indexPromise = null;});
 
+        return This.indexPromise;
     }
 
     // get indexes from REST API (which doesn't work for less privileged users)
