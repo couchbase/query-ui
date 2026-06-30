@@ -1629,6 +1629,7 @@ function getQwQueryService(
     var queryIsExplain = /^\s*explain/gi.test(queryText);
     var queryIsPrepare = /^\s*prepare/gi.test(queryText);
     var queryIsAdvise = /^\s*advise/gi.test(queryText);
+    var queryIsExecute = /^\s*execute/gi.test(queryText);
     var queryIsTransaction = /^\s*(begin|start|commit|rollback|savepoint)/gi.test(queryText);
     var explain_promise;
 
@@ -1661,12 +1662,10 @@ function getQwQueryService(
 
     //
     // run the explain version of the query, if appropriate
-    // we can't explain DDL statements, transactions, prepared statements, or explain or advise statements
     //
+    const explainForbidden = queryIsExplain || queryIsAdvise || queryIsPrepare || queryIsTransaction || queryIsExecute;
 
-    const queryIsExplainable = /^\s*(select|merge|update|delete|with)/gi.test(queryText);
-
-    if (queryIsExplainable && (explainOnly || qwConstantsService.autoExplain)) {
+    if (!explainForbidden && (explainOnly || qwConstantsService.autoExplain)) {
       var explain_request = buildQueryRequest("explain " + queryText, false, qwQueryService.options, null, null, newResult);
       if (!explain_request) {
         newResult.result = '{"status": "query failed"}';
@@ -2125,6 +2124,14 @@ function getQwQueryService(
       qwMetadataService.isEnterprise()) {
       // MB-67524 / CBSE-20377 - don't wait for advise to finish before showing results
       runAdvise(queryText, newResult);
+    }
+
+    // sanity check - if promises array empty, update newResult to indicate nothing to do
+    if (promises.length == 0) {
+      const message = (explainForbidden && explainOnly) ? 'EXPLAIN not allowed for this query type.' : 'Internal error. Nothing to execute.';
+      newResult.data = {status: message};
+      newResult.status = newResult.data.status;
+      newResult.result = JSON.stringify(newResult.data);
     }
 
     // return a promise wrapping the one or two promises
