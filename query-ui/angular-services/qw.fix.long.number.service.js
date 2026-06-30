@@ -41,6 +41,7 @@ function getQwFixLongNumberService() {
   qflns.fixLongInts = fixLongInts;
   qflns.hasLongInt = hasLongInt;
   qflns.hasLongFloat = hasLongFloat;
+  qflns.findKey = findKey;
 
   //
   // javascript can't handle long ints - any number more than 53 bits cannot be represented
@@ -199,49 +200,63 @@ function getQwFixLongNumberService() {
   // the raw bytes without parsing them.
   //
 
+  function isJSONWhitespace(char) {
+    var code = char.charCodeAt(0);
+    return code === 0x20 || code === 0x09 || code === 0x0a || code === 0x0d;
+  }
+
   function findResult(buffer) {
+    return findKey(buffer, 'results');
+  }
+
+  function findKey(buffer, key) {
     // the stuff coming back from the server is a JSON object: "{" followed by
     // quoted field names, ":", and a JSON value (which is recursive). Since we want
-    // to find the results without parsing, find the "results: " key, then figure
-    // out where it ends.
+    // to find the key without parsing, find the quoted key name, then figure
+    // out where its value ends.
 
     var curLoc = 0;
-    var whitespace = /\s/;
     var len = buffer.length;
 
-    while (curLoc < len && whitespace.test(buffer.charAt(curLoc))) curLoc++; // ignore whitespace
+    while (curLoc < len && isJSONWhitespace(buffer.charAt(curLoc))) curLoc++; // ignore whitespace
 
-    if (curLoc >= len && buffer.charAt(curLoc) != '{')
+    if (curLoc >= len && buffer.charAt(curLoc) !== '{')
       return null; // expect object start
-    else
-      curLoc++;
+    curLoc++;
 
     // loop through each field/value until we see a close brace
 
     while (curLoc < len) {
       // past the opening of the object, now look for quoted field names followed by ":"
-      while (curLoc < len && whitespace.test(buffer.charAt(curLoc))) curLoc++; // ignore whitespace
+      while (curLoc < len && isJSONWhitespace(buffer.charAt(curLoc))) curLoc++; // ignore whitespace
 
-      if (curLoc >= len || buffer.charAt(curLoc) != '"') // expect open quote
+      if (curLoc >= len || buffer.charAt(curLoc) !== '"') // expect open quote
         return null; // expect field name start, otherwise we are done
-      else
-        curLoc++;
+      curLoc++;
 
       var fieldStart = curLoc++;
-      curLoc = moveToEndOfString(buffer,curLoc);
-      if (curLoc >= len) return(null); //make sure we didn't go off the end
+      curLoc = moveToEndOfString(buffer, curLoc);
+      if (curLoc >= len) return null; // make sure we didn't go off the end
 
-      var fieldName = buffer.substring(fieldStart,curLoc);
+      var fieldName = buffer.substring(fieldStart, curLoc);
       //console.log("Got field: " + fieldName);
 
-      var valueStart = curLoc + 3;
-      curLoc = moveToEndOfValue(buffer,curLoc + 1); // start after close quote
+      // curLoc points at the close quote for the field name. The value starts after any whitespace
+      // and a colon, so advance curLoc to the start of the value.
+      curLoc++; // past close quote
+      while (curLoc < len && (isJSONWhitespace(buffer.charAt(curLoc)) || buffer.charAt(curLoc) === ':')) {
+        curLoc++;
+      }
+
+      var valueStart = curLoc;
+      curLoc = moveToEndOfValue(buffer, curLoc); // start at beginning of value
 
       //console.log("raw: " + buffer.substring(fieldStart-1,curLoc-1));
 
-      if (curLoc < len && fieldName == "results")
-        return(buffer.substring(valueStart,curLoc-1));
+      if (curLoc < len && fieldName === key)
+        return buffer.substring(valueStart, curLoc - 1);
     }
+    return null;
   }
 
   //

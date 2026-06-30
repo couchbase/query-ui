@@ -544,11 +544,34 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     // function to edit the JSON of a document
     //
 
-    function editDoc(row, readonly) {
+    async function editDoc(row, readonly) {
       if (dec.updatingRow >= 0)
         return;
 
       var doc_string;
+
+      // When getting multiple documents from the KV API, metadata and xattrs are not provided. Also, documents
+      // retrieved from the query service never have xattrs, and binary documents have no binary content when
+      // retrieved from the query service. Documents without real metadata have fake metadata with only the `id`
+      // and `type`. However we can get metadata and xattrs if we fetch a single document from the KV API.
+      if (
+        Object.keys(dec.options.current_result[row].meta).length === 2 ||
+        !dec.options.current_result[row].xattrs ||
+        (dec.options.current_result[row].meta.type === 'base64' &&
+          dec.options.current_result[row].base64 &&
+          dec.options.current_result[row].base64.startsWith('<binary'))
+      ) {
+        try {
+          var metaUrl = get_base_url() + '/docs/' + myEncodeURIComponent(dec.options.current_result[row].id);
+          var metaResult = await qwHttp.do({url: metaUrl, method: 'GET'});
+          Object.assign(dec.options.current_result[row].meta, metaResult.data.meta);
+          dec.options.current_result[row].xattrs = metaResult.data.xattrs;
+          // if the document came from the query service, it won't have the base64 data, so get it here
+          if (dec.options.current_result[row].meta.type === 'base64' && metaResult.data.base64) {
+            dec.options.current_result[row].base64 = decodePossibleBase64(metaResult.data.base64);
+          }
+        } catch (e) {} // ignore errors, we'll use the metadata we have
+      }
 
       // if we have raw JSON with long numbers, let the user edit that
       if (dec.options.current_result[row].rawJSON)
@@ -812,12 +835,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         (dec.compat.atLeast70 && (!dec.options.selected_scope || !dec.options.selected_collection)))
         return;
 
-      // start making a query that only returns doc IDs
-      var query = 'select meta().id from `' + dec.options.selected_bucket;
+      // start making a query that returns doc IDs and document content
+      // TODO: we could retrieve all the metadata and xattrs if the query included `meta() as meta`, however
+      // due to MB-72359 in the query engine, that option is broken for now.
+      var query = 'select doc, meta() as meta from `' + dec.options.selected_bucket;
       // no scopes/collections for mixed clusters
       if (dec.options.selected_scope)
         query += '`.`' + dec.options.selected_scope + '`.`' + dec.options.selected_collection;
-      query += '` data ';
+      query += '` doc ';
 
       if (dec.options.where_clause && dec.options.where_clause.length > 0)
         query += 'where ' + dec.options.where_clause;
@@ -850,16 +875,15 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
             //console.log("Editor Q Success Status: " + JSON.stringify(status));
 
             dec.options.current_result = [];
-            var idArray = [];
 
-            for (var i = 0; i < data.results.length; i++)
-              idArray.push(data.results[i].id);
-
-            // we get a list of document IDs, create an array and retrieve detailed docs for each
             if (data && data.status && data.status == 'success') {
-              getDocsForIdArray(idArray).then(function () {
-                markBusy(false);
-              });
+              var sizeWarning = {warnedYet: false};
+              var rawJsonArray = data.rawJSON ? extractDocumentsFromRawJSON(data.rawJSON) : [];
+              dec.options.current_result.length = data.results.length;
+              for (var i = 0; i < data.results.length; i++) {
+                processDocRow(i, rawJsonArray[i] !== undefined ? rawJsonArray[i] : null, data.results[i], sizeWarning);
+              }
+              markBusy(false);
             } else if (data.errors) {
               var errorText = "";
               for (var i = 0; i < data.errors.length; i++) {
@@ -1054,6 +1078,160 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     }
 
     //
+    // decode a possible base64 string, ignoring errors
+    //
+
+    function decodePossibleBase64(str) {
+      try {
+        return atob(str);
+      } catch (e) {
+        return str;
+      }
+    }
+
+    //
+    // given the raw JSON string of a results array (from data.rawJSON), scan once and return
+    // an array of raw JSON strings, one per top-level result object
+    //
+
+    function extractDocumentsFromRawJSON(rawJSON) {
+      var results = [];
+      var inString = false;
+      var escapeNext = false;
+      var braceDepth = 0;
+      var currentObjectStart = null;
+
+      for (var i = 0; i < rawJSON.length; i++) {
+        var char = rawJSON[i];
+
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+
+        if (char === '"') {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (char === '{') {
+            if (braceDepth === 0) {
+              currentObjectStart = i;
+            }
+            braceDepth++;
+          } else if (char === '}') {
+            braceDepth--;
+            if (braceDepth === 0 && currentObjectStart !== null) {
+              results.push(rawJSON.substring(currentObjectStart, i + 1));
+              currentObjectStart = null;
+            }
+          }
+        }
+      }
+
+      return results;
+    }
+
+    //
+    // process a single { doc, meta } row from N1QL (select doc, meta() as meta),
+    // where rawJsonForDoc is the pre-extracted raw JSON string for this row (may be null)
+    //
+
+    function processDocRow(position, rawJsonForDoc, row, sizeWarning) {
+      var docMeta = Object.assign({}, row.meta);
+      delete docMeta.xattrs; // xattrs from N1QL are unreliable (MB-72359)
+
+      if (row.doc && typeof row.doc === 'object') {
+        var docJson = JSON.stringify(row.doc);
+
+        if (!sizeWarning.warnedYet && docJson.length > largeDoc) {
+          sizeWarning.warnedYet = true;
+          showErrorDialog('Warning: large documents.',
+            'Some of the documents in the result set are large, and processing them may take some time.', true);
+        }
+
+        var rawJSON = rawJsonForDoc ? qwFixLongNumberService.findKey(rawJsonForDoc, 'doc') : null;
+
+        dec.options.current_result[position] = {
+          id: row.meta.id,
+          docSize: docJson.length,
+          data: row.doc,
+          meta: docMeta,
+          rawJSON: rawJSON,
+          rawJSONError: rawJSON ? null : 'Could not extract raw JSON for this document.'
+        };
+
+        update_display_json(position, rawJSON || docJson);
+      }
+      // binary documents are returned from the query service as a string of the form '<binary (1024b)>'
+      else if (row.doc && typeof row.doc === 'string' && row.doc.startsWith('<binary') && row.doc.endsWith('>')) {
+        dec.options.current_result[position] = {
+          id: row.meta.id,
+          base64: row.doc, // sql++ doesn't return base64 values
+          meta: docMeta
+        };
+        update_display_json(position, row.doc);
+      }
+      // otherwise the document is a primitive type (string, boolean, number, array)
+      else {
+        var docJson = JSON.stringify(row.doc);
+        var rawJSON = rawJsonForDoc ? qwFixLongNumberService.findKey(rawJsonForDoc, 'doc') : null;
+        dec.options.current_result[position] = {
+          id: row.meta.id,
+          data: row.doc,
+          meta: docMeta,
+          rawJSON: rawJSON,
+          rawJSONError: rawJSON ? null : 'Could not extract raw JSON for this document.'
+        };
+        update_display_json(position, rawJSON || docJson);
+      }
+    }
+
+    //
+    // process a single row from the document API (include_docs=true),
+    // where row.doc has shape { json: <string> } for JSON docs or { base64: <string> } for binary docs
+    //
+
+    function processDocApiRow(position, row, sizeWarning) {
+      var docInfo = row.doc;
+      if (docInfo && typeof docInfo.json === 'string') {
+        if (!sizeWarning.warnedYet && docInfo.json.length > largeDoc) {
+          sizeWarning.warnedYet = true;
+          showErrorDialog('Warning: large documents.',
+            'Some of the documents in the result set are large, and processing them may take some time.', true);
+        }
+        var fixedDoc = qwFixLongNumberService.fixLongInts('{ "data": ' + docInfo.json + '}');
+        dec.options.current_result[position] = {
+          id: row.id,
+          docSize: docInfo.json.length,
+          data: fixedDoc.data,
+          meta: {id: row.id, type: 'json'},
+          rawJSON: fixedDoc.rawJSON ? docInfo.json : null,
+          rawJSONError: fixedDoc.rawJSONError
+        };
+        update_display_json(position, docInfo.json);
+      } else if (docInfo && docInfo.base64 !== undefined) {
+        dec.options.current_result[position] = {
+          id: row.id,
+          base64: decodePossibleBase64(docInfo.base64),
+          meta: {id: row.id, type: 'base64'}
+        };
+      } else {
+        dec.options.current_result[position] = {
+          id: row.id,
+          data: null,
+          meta: {id: row.id, type: 'json'}
+        };
+      }
+    }
+
+    //
     // Show an error dialog
     //
 
@@ -1123,7 +1301,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
       // otherwise use skip, offset, and optionally start & end keys
       var rest_url = get_base_url() +
-        "/docs?skip=" + dec.options.offset + "&include_docs=false&limit=" + dec.options.limit;
+        "/docs?skip=" + dec.options.offset + "&include_docs=true&limit=" + dec.options.limit;
 
       if (!dec.options.show_id && dec.options.doc_id_start)
         rest_url += "&startkey=%22" + myEncodeURIComponent(dec.options.doc_id_start) + '%22';
@@ -1142,17 +1320,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
           //console.log("Got REST results: " + JSON.stringify(data));
 
-          // we asked for a set up of document ids
+          // process rows returned with include_docs=true
           if (data && data.rows) {
-            var idArray = [];
+            var sizeWarning = {warnedYet: false};
+            dec.options.current_result.length = data.rows.length;
             for (var i = 0; i < data.rows.length; i++) {
-              idArray.push(data.rows[i].id);
+              processDocApiRow(i, data.rows[i], sizeWarning);
             }
-
-            getDocsForIdArray(idArray).then(function () {
-              //console.log("results: " + JSON.stringify(dec.options.current_result));
-              markBusy(false);
-            });
+            markBusy(false);
           }
           //console.log("Current Result: " + JSON.stringify(dec.options.current_result));
         }
