@@ -238,6 +238,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
 
     var N1QL = "N1QL";
     var KV = "KV";
+    var ERROR = "ERROR";
+    var WARNING = "WARNING";
 
     var largeDoc = 1024 * 1024;
 
@@ -277,30 +279,30 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       // make sure that there is a current bucket selected
       if (!dec.options.selected_bucket) {
         dec.options.current_result = "No bucket selected.";
-        return (false);
+        return (ERROR);
       }
 
       if (dec.compat.atLeast70 && !dec.options.selected_scope) {
         dec.options.current_result = "No scope selected.";
-        return (false);
+        return (ERROR);
       }
 
       if (dec.compat.atLeast70 && !dec.options.selected_collection) {
         dec.options.current_result = "No collection selected.";
-        return (false);
+        return (ERROR);
       }
 
       // do we have any buckets?
       if (dec.buckets.length == 0) {
         dec.options.current_query = dec.options.selected_bucket;
         dec.options.current_result = "No buckets found.";
-        return (false);
+        return (ERROR);
       }
 
       // corner case - can't query if we can't read documents
       if (dec.rbac.cluster.collection[`${dec.options.selected_bucket}:${dec.options.selected_scope}:${dec.options.selected_collection}`]?.data?.docs?.read !== true) {
         dec.options.current_result = "No permission to read documents.";
-        return (false);
+        return (ERROR);
       }
 
       // always use KV for single doc lookups by ID
@@ -319,8 +321,7 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         else if (dec.buckets_ephemeral[dec.options.selected_bucket]) { // ephemeral, no primary key
           dec.options.current_result =
             "Ephemeral buckets can only be queried by document ID, or via a primary or secondary GSI index.";
-          refreshResults();
-          return (false);
+          return (WARNING);
         } else
           return (KV);
       }
@@ -331,14 +332,14 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       if (dec.options.where_clause.length > 0) {
         if (!has_prim() && !has_sec()) {
           dec.options.current_result = "WHERE clause not supported unless bucket has primary or secondary index.";
-          return (false);
+          return (ERROR);
         }
         return (N1QL);
       }
 
       // shouldn't get here
       dec.options.current_result = "Internal error running document query.";
-      return (false);
+      return (ERROR);
     }
 
     //
@@ -809,7 +810,12 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
         case KV:
           retrieveDocs_rest();
           break;
-        case false: // error status
+        case WARNING:
+          dec.options.current_query = dec.options.selected_bucket;
+          refreshResults();
+          break;
+        case ERROR: // error status
+        default:
           showErrorDialog("Document Error", dec.options.current_result, true);
           dec.options.current_query = dec.options.selected_bucket;
           refreshResults();
