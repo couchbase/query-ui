@@ -1,3 +1,12 @@
+/* Ace code editor (Used in the Query WB & other places like UDF editor) --- */
+.wb-ace-editor {
+  transition: height 0.3s ease-out;
+}
+
+.ace_editor {
+  transition: height 0.3s ease-out;
+}
+
 /* document editor --------------------------------------------------------- */
 .doc-editor {
   margin-bottom: -50px;
