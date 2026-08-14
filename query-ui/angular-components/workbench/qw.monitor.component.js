@@ -65,9 +65,6 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
     ];
   }
 
-  ngOnInit() {
-  }
-
   constructor(
     qwHttp,
     cdr,
@@ -93,9 +90,6 @@ class QwMonitorComponent extends MnLifeCycleHooksToStream {
         qwQueryPlanService,
       );
 
-  }
-
-  ngOnDestroy() {
   }
 
   // only our parent knows about UI routing

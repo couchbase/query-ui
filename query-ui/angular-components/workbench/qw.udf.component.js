@@ -49,6 +49,7 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
+    super.ngOnInit();
     this.qms.metaReady.then((val) =>
     {
       // update the UDF info if we have a valid service
@@ -80,9 +81,6 @@ class QwUdfComponent extends MnLifeCycleHooksToStream {
     this.lib_sort_direction = 1;
 
     this.rbac = qwMetadataService.rbac;
-  }
-
-  ngOnDestroy() {
   }
 
   // do we have permissions to view/manage external libraries?
