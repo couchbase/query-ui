@@ -2323,8 +2323,12 @@ function getQwQueryService(
 
   // new style monitoring query using HttpClient
   function runMonitoringQuery() {
-    var query = getMonitoringQuery(qwQueryService.getMonitoringSelectedTab());
-    return(executeQueryUtilNew(query,false));
+    if (monitoringOptions.autoUpdate) {
+      var query = getMonitoringQuery(qwQueryService.getMonitoringSelectedTab());
+      return(executeQueryUtilNew(query,false));
+    }
+    else
+      return Promise.resolve();
   }
 
   function processMonitoringQueryResults(response) {

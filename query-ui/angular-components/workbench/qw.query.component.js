@@ -72,6 +72,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   }
 
   ngOnInit() {
+    super.ngOnInit();
+
     if (this.wrapper)
       this.wrapper.wrapped = this; // let parent know who we are for mnCrane functions
 
@@ -107,6 +109,8 @@ class QwQueryComponent extends MnLifeCycleHooksToStream {
   ngOnDestroy() {
     this.resizeSubscription.unsubscribe();
     this.clickSubscription.unsubscribe();
+
+    super.ngOnDestroy();
   }
 
   //
