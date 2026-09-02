@@ -17,10 +17,10 @@ licenses/APL2.txt.
 </h5>
 <div *ngIf="bucket.expanded" class="text-smaller margin-bottom-half">
 
+   <div class="margin-left-1 error" *ngIf="bucket.schema_error">{{bucket.schema_error}}</div>
   <!--   for mixed clusters, a bucket will have its own schema, otherwise it will be at the collection level -->
 
   <div *ngIf="!compat.atLeast70">
-    <div *ngIf="bucket.schema_error">{{bucket.schema_error}}</div>
     <span *ngFor="let flavor of bucket.schema">
       <div (click)="flavor.Show = !flavor.Show" class="disclosure tight row" [ngClass]="{disclosed: flavor.Show}"
            [hidden]="flavor.Summary" [hidden]="!flavor['%docs']">

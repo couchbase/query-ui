@@ -242,7 +242,7 @@ class QwMetadataService {
                 error_resp => {
                     Object.keys(this.indexes).forEach(key => {delete this.indexes[key]});
                     this.errors.push(JSON.stringify(error_resp));
-                    console.log("Error getting indexes via n1ql: " + JSON.stringify(error_resp));
+                    //console.log("Error getting indexes via n1ql: " + JSON.stringify(error_resp));
                 })
               .finally(() => {This.indexPromise = null;});
 

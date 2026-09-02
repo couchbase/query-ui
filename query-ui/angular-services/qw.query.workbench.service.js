@@ -1978,8 +1978,12 @@ function getQwQueryService(
 
           // no result at all? failure
           if (data === undefined) {
-            newResult.result = '{"status": "Failure contacting server."}';
-            newResult.data = {status: "Failure contacting server."};
+            // running queries in a mixed cluster to a different version query service fail with 503 error
+            if (resp.status === 503 && resp.error === "Service n1ql not running on this node, and compatible service is not found.")
+              newResult.data = {status: `Version mismatch between local node and query service node. Connect to UI on query service node and re-run query.`};
+            else
+              newResult.data = {status: `Error ${resp.status} from server. ${resp.error ? resp.error : ""}`};
+            newResult.result = JSON.stringify(newResult.data);
             newResult.status = "errors";
             newResult.resultCount = 0;
             newResult.resultSize = 0;
@@ -2633,6 +2637,7 @@ function getQwQueryService(
     return qwQueryServiceBase.executeQueryUtil(query).then(
         function success(resp) {
           if (resp && resp.data && Array.isArray(resp.data.results)) {
+            bucket.schema_error = null;
             bucket.scopes = {}; // reset scopes and collections to empty
             bucket.collections = [];
             // for each keyspace, record scope and collection names in metadata and autocomplete
@@ -2711,8 +2716,15 @@ function getQwQueryService(
 
               refreshAutoCompleteArray();
             }
-          } // done with valid response
-        });
+          }
+        },
+      // done with valid response
+      function error(resp) {
+          if (resp.error === 'Service n1ql not running on this node, and compatible service is not found.')
+            bucket.schema_error = `Version mismatch between local node and query service node. Connect to UI on query service node.`;
+          else
+            bucket.schema_error = `Error ${resp.status} fetching bucket information. ${resp.error ? resp.error : ''}`;
+      });
   }
 
   //
