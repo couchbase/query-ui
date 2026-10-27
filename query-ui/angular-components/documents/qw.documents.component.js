@@ -1439,13 +1439,16 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
       }
     }
 
-    function metadataUpdate(metadata) {
+    async function metadataUpdate(metadata) {
       dec.buckets = metadata.buckets;
       dec.buckets_ephemeral = metadata.buckets_ephemeral;
       dec.indexes = qwMetadataService.indexes;
       //console.log("metadata update: " + JSON.stringify(metadata));
       // MB-52940 - for 7.x and above, if we have a bucket but no scope or collection, select the first available
       if (dec.compat.atLeast70 && dec.options.selected_bucket) {
+        if (metadata.buckets.includes(dec.options.selected_bucket)) {
+          await qwCollectionsService.refreshScopesAndCollectionsForBucket(dec.options.selected_bucket, null);
+        }
         if (!dec.options.selected_scope && metadata.scopes &&
           Array.isArray(metadata.scopes[dec.options.selected_bucket]) &&
           metadata.scopes[dec.options.selected_bucket].length)
@@ -1468,8 +1471,8 @@ class QwDocumentsComponent extends MnLifeCycleHooksToStream {
     function activate() {
       qwMetadataService.metaReady.then(() => {
         // use the collections service to get the list of buckets from the REST API
-        qwCollectionsService.refreshBuckets().then(meta => {
-          metadataUpdate(meta);
+        qwCollectionsService.refreshBuckets().then(async (meta) => {
+          await metadataUpdate(meta);
           // MB-51579 - when collection unspecified, don't try to retrieve documents
           if (dec.options.selected_bucket && dec.options.selected_scope && dec.options.selected_collection && dec.docViewer())
             // get permissions for new collection
